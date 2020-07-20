@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="今天我们来到了 2019 年的最后一天，也是 2010 年代的最后一天。按照惯例，每年的年底都会给自己写一个年终总结，只是因为之前学生时代的新历年底总是忙于考试，最后的年终总结总是以旧历年底作为分割点。从今年开始，虽然依旧是学生，但是那些考试的记忆已经渐渐离我远去，似乎可以开心地给自己每一年定一个 DDL —— 在每年新历的 12 月 31 日，给自己过去的一年做一个好好的总结，给自己未来的一年有">
+<meta property="og:type" content="article">
+<meta property="og:title" content="2019 未来へ">
+<meta property="og:url" content="http://houmin.cc/posts/2ecc368/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="今天我们来到了 2019 年的最后一天，也是 2010 年代的最后一天。按照惯例，每年的年底都会给自己写一个年终总结，只是因为之前学生时代的新历年底总是忙于考试，最后的年终总结总是以旧历年底作为分割点。从今年开始，虽然依旧是学生，但是那些考试的记忆已经渐渐离我远去，似乎可以开心地给自己每一年定一个 DDL —— 在每年新历的 12 月 31 日，给自己过去的一年做一个好好的总结，给自己未来的一年有">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2019-10-13_fight.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2019-10-11_stair.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/album/Period/artwork/2019-12-16_lakeside.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/album/Cosmos/artwork/2019-11-21_moutain-and-cloud.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2019-11-21_play.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2019-11-21_elemobile.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2019-12-31_investment.jpg">
+<meta property="og:updated_time" content="2020-07-20T01:30:36.292Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2019-10-13_fight.jpg">
+
+<link rel="canonical" href="http://houmin.cc/posts/2ecc368/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>2019 未来へ | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+<link rel="stylesheet" href="/assets/css/APlayer.min.css" class="aplayer-style-marker">
+<script src="/assets/js/APlayer.min.js" class="aplayer-script-marker"></script>
+<script src="/assets/js/Meting.min.js" class="meting-script-marker"></script>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/2ecc368/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          2019 未来へ
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-31 22:47:19" itemprop="dateCreated datePublished" datetime="2019-12-31T22:47:19+08:00">2019-12-31</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B2%81%E6%9C%AB%E5%9B%B4%E7%82%89/" itemprop="url" rel="index">
+                    <span itemprop="name">岁末围炉</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/2ecc368/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/2ecc368/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>9 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>今天我们来到了 2019 年的最后一天，也是 2010 年代的最后一天。按照惯例，每年的年底都会给自己写一个年终总结，只是因为之前学生时代的新历年底总是忙于考试，最后的年终总结总是以旧历年底作为分割点。从今年开始，虽然依旧是学生，但是那些考试的记忆已经渐渐离我远去，似乎可以开心地给自己每一年定一个 DDL —— 在每年新历的 12 月 31 日，给自己过去的一年做一个好好的总结，给自己未来的一年有一个好好的规划。</p>
+<p><code>2019 未来へ</code> 是这个系列的第一篇，期待 UP 主在后续的日子里也能够保持持续更新。<code>未来へ</code> 是日本女子组合 kiroro 的一首讲母女情的歌曲，这里只是借用其歌曲名，向着2020，向着未来。</p>
+
+    <div id="aplayer-cXNLdznh" class="aplayer aplayer-tag-marker meting-tag-marker" data-id="22746144" data-server="netease" data-type="song" data-mode="circulation" data-autoplay="false" data-mutex="true" data-listmaxheight="340px" data-preload="auto" data-theme="#555"></div>
+<a id="more"></a>
+<blockquote>
+<p>ほら 足元を見てごらん</p>
+<p>これがあなたの歩む道</p>
+<p>ほら 前を見てごらん</p>
+<p>あれがあなたの未来</p>
+<p>夢はいつも空高くあるから</p>
+<p>届かなくて怖いね</p>
+<p>だけど追い続けるの</p>
+<p>自分の物語だからこそ</p>
+<p>諦めたくない</p>
+</blockquote>
+<p>从新历的角度来看，就会越发觉得一年时光匆匆。2019 年的春节在 2 月 5 日，从元旦开始，整个心思就已经开始想着如何回家放假过年了。等到年假回来学校开学，就感觉二月份已经快要逝去了。身为一个即将毕业的老学长，今年的主要重点当然是找工作，从过完年回来，到国庆之前，一直兵荒马乱着找工作的事情。当然，生活不能总是只有工作，还得有生活。</p>
+<h2 id="工作"><a href="#工作" class="headerlink" title="工作"></a>工作</h2><p>2019 年以在香侬的实习结束作为开始。说起来，其实自己在香侬断断续续呆了将近一年。从最开始的 KBQA 项目，到后来基础架构组的工作，自己也越发确定了之后的工作方向。</p>
+<p>在实习的前期，自己还在想之后是不是要找算法方向的工作，还会去看关于深度学习相关的材料。算法是不难，自己也能够很快的理解。但是一个问题在于，之前没有实际做过相关的项目。当 JW 可能想让我做搜索相关的事情，自己没有相关的经验，没有果断接下来。自那之后，便和算法没有了太多的联系，开始专注在基础架构相关的事情上。</p>
+<p>和 Shibo，CR 他们一起，基于云原生的生态体系，把整个公司的微服务架构给搭了起来，然后专注在 ceph 一块。接触的面很多，但是一个很大的问题在于，基础架构的人很少，但是整个微服务生态牵扯的事情有很多。这就决定了大家做的事情都不会太深，经常得去解决这种细枝末节的事情。</p>
+<p>春节前从公司离职了，开始想好好的准备开年春招实习的事情，期待能够去 Google 实习，准备起 LeetCode。然而事实证明，寒假回家的我果然是不会学习的。开年回来，依次面各家公司，Google、Hulu、阿里、腾讯、微软、旷视等公司，Google 和 Hulu 挂了，最后阴差阳错拿到了 MSRA 的 offer。</p>
+<p>MSRA是一段难忘的经历，我喜欢那里的工作方式和工作态度。可以说，这是我经历的所有实习中体验最好的一次。事先准备好的工作目标，每周的讨论与更新，工作的方向和内容，周围同事的素质，还有每天不限量的酸奶，都让我特别喜欢。在这个过程中，自己也存在各种问题可以改进，总能够做的更好。遗憾的是，最后没有能够在 MSRA 留用，在面试、在做题上面还是有很多可以改进的地方。</p>
+<p>与 MSRA 转正面试并行，拿到了阿里、腾讯、美团、商汤、旷视和华为的 offer，没有去面字节，Hulu 都没有给面试机会。感觉自己在秋招中后期越发的佛系，拿到了几个 offer 之后都不想去投递新的公司了，本来以为 MSRA 转正是可以通过的，所以当时连 Airbnb 都没有投递，导致最后一个外企的 offer 也没有拿到。</p>
+<p>现在想一下，其实当时正是秋招的时候，自己的目标可以更加明确一些。很多公司拿了 offer 根本就不会去，可以拿来练手，但是不需要太多。然后就是自己过于自信，接到 MSRA HR 电话之后以为自己基本稳了，但是不到最后一刻，各种问题总有可能出现。</p>
+<p>Anyway，到最后自己拿的几个 offer 也还算不错，最后还是选择了腾讯。也不知道之后能不能拿到北京户口，也不知道自己之后会不会留在北京。未来变化太大，可能现在想的很好的事情，最后会完全改变。</p>
+<p>在整个秋招期间，想了很多的问题，其实主要就是关于未来方向选择的问题：</p>
+<ol>
+<li><p><strong>是选择技术方向还是选择业务方向</strong> </p>
+<p>两个典型的选择，比如去华为软件研究院做底层基础软件，专注于自己的方向，很少和业务线的人打交道；另外一个选择，就是去抖音业务产品线，针对具体的功能产品直接负责，会经常和业务线、产品线的人打交道，但是做的技术深度可能就不太多。两个方向各有自己的利弊，做技术的可以深度钻研技术，可以一直做到技术专家类型，但是长期如此对于业务线缺乏了解；做业务的熟悉产品，产品成功自己也可以获得经济上不错的回报，但是可能就需要一直盯着业务，持续性 on call 这种。</p>
+<p>以前我是非常排斥业务方向的，因为我觉得这都是些啥，没有技术含量，个人技术上没有成长。但是后来逐渐改变了自己的想法，所有的公司，都是通过业务获得收益的。没有具承载的具体业务，对应的技术研究也就没有意义。</p>
+<p>这个世界是一个多元的世界，身为技术人，往往会沉溺于自己对于技术的孤芳自赏，而忘却了这世上万千的更多复杂有意义的事情。一个人的厉害之处，在于能够把别人做不成的事情给做成。不论是做技术，还是做产品，或者是做投资，都是如此。</p>
+<p>对于自己以后的发展方向，并不需要局限在某个点上，还是要有全局眼光。我是做云计算，当然有自己专注的方向，但是对于整个行业的发展和变化也要有所关注，云计算和 人工智能，和 IoT，和 5G 的结合。这将是未来 10 年会迅猛发展的方向。</p>
+</li>
+<li><p><strong>未来要去哪个城市</strong></p>
+<p>关于城市的选择，自己并没有特别的倾向，留在北京可以，去上海好像也不错，杭州可以考虑，深圳和广州也都是不错的选择。现在自己一个人选择很轻松。也许以后有那个她之后，会有更多的牵绊。在那之前，也可以考虑去国外待一段时间，感受一下那边的工作状态。</p>
+<p>也许，自己的这种没有特别倾向，更多的是缺乏对于城市，对于自己的思考吧。不同的城市有自己不同的品性，就像不同的人一样。关于这一点，需要我以后更多的去感受吧。</p>
+</li>
+<li><p><strong>小公司还是大公司</strong></p>
+</li>
+<li><p><strong>外企还是国内企业</strong></p>
+</li>
+<li><p><strong>是否考虑体制内</strong></p>
+</li>
+<li><p><strong>工作与生活的关系</strong></p>
+</li>
+</ol>
+<p>种种的这些问题，或多或少会有自己的答案。随着时间的推移，自己的答案有的会越发坚定，有的会慢慢改变。</p>
+<p><em>Time will tell.</em></p>
+<h2 id="生活"><a href="#生活" class="headerlink" title="生活"></a>生活</h2><p>我一直认为，<code>人是一个可动态变化的实体</code>。人是可以改变的，你永远可以变得更好。今天，我想在这句话后面再加一句，<code>但是与此同时，人内在的惰性会拒绝改变</code>。</p>
+<p>你永远想要自己变得更好，你也总是在嘴上喊着要上自己变得更好。但是呢，实际的结果总是会让你失望，比如每年的年终总结和新年计划。这里的问题在哪呢？</p>
+<p>方法论是这样的：</p>
+<ul>
+<li>想要变得更好，你首先得提出自己的目标，比如新年计划</li>
+<li>有了目标之后，就会想办法去一点一点的让目标实现</li>
+</ul>
+<p>然而实际的常态是，往往是起初兴致很高，但是后来却慢慢忘却了自己的这个目标，最后是自己也渐渐羞于提起。是即，偶然性觉醒，日常性摸鱼。</p>
+<p>这里面最重要的是，<strong>数据</strong>。任何目标都可以提出，但是具体的实现，需要去一步一步的执行。在执行的过程中，可能会发现目标的不合理，要去定期校正自己的目标。每隔一段时间，需要根据数据去总结去反思。我永远相信，数据是不会骗人的。</p>
+<h3 id="摄影"><a href="#摄影" class="headerlink" title="摄影"></a>摄影</h3><p>找完工作之后，实验室的四人组就越发浪了起来。定期的约饭约酒，大家都玩的很嗨。PT喜欢摄影，经常给我们拍照。</p>
+<p>比如这种</p>
+<p><img alt="电影般的剧情" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2019-10-13_fight.jpg"></p>
+<p>或者这种</p>
+<p><img alt="楼梯上的沉思" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2019-10-11_stair.jpg"></p>
+<p>一直以来自己也喜欢用手机随手拍，在 PT 的影响下，终于在九月底给自己也买了一个 Sony A7m3，算是开始正式踏入了摄影的门。有了自己的微单之后，才开始去认真的想该如何拍摄。以前自己喜欢用手机记录生活，拍的时候取景、构图都没有任何的主管想法，后期也基本上无感。刚开始拿到相机之后，也是这么无意识的随便拍，但是拍着拍着，发现自己有很多的废片。现在觉得，每拍一张照片，都要有自己的想法，好不容易出来一张作品，要能够反映当时自己感受的状态。</p>
+<p>一方面，要求自己去更好的感受生活，更好的去观察；另外一方面，也要去更好的提高自己的摄影技术。今天的封面图是我拍的，这也是我今年最喜欢的一张照片。</p>
+<p>下面还有一张，拍的是学校的冬日未名湖</p>
+<p><img alt="冬日未名湖" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/album/Period/artwork/2019-12-16_lakeside.jpg"></p>
+<p>在学习李涛老师的后期课程的时候，他讲的一点我非常认同，美是相通的。不管是摄影，还是绘画，或者是音乐，都有其内在的美感，不需要经过任何艺术训练的人都可以感受到它的美。</p>
+<p>Ansel Adams 说，</p>
+<blockquote>
+<p>我们不只是用相机拍照，我们带到摄影中去的是所有我们读过的书、看过的电影、听过的音乐、走过的路、爱过的人。</p>
+</blockquote>
+<p>摄影不仅仅是记录，它也可以传达情感。理论上是这样的，但是对于我而言，实操上还是有很多可进步的空间的。毕竟，<code>能够感受到一个东西的美</code>和 <code>观察出它为什么美</code> 这中间还是有 gap 的，更多的是需要自己刻意的训练。</p>
+<p>不管怎么样，总算是开了一个头。对于 2020 年的期待呢，在摄影上能够更加有所进步，争取每个月都能出一张自己超级喜欢的作品，最后年终的时候能够设计出一份属于自己的年历。</p>
+<h3 id="旅行"><a href="#旅行" class="headerlink" title="旅行"></a>旅行</h3><p>今年只有一次旅行，也就是 11 月四人组一起去云南的大理和丽江。大理很美，苍山洱海，风景令人心醉。</p>
+<p><img alt="这是我们从苍山回到洱海旁酒店的路上，山岚和云彩特别的漂亮" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/album/Cosmos/artwork/2019-11-21_moutain-and-cloud.jpg"></p>
+<p>一路回来，骑着电动车特别的舒服，玩的非常开心</p>
+<p><img alt="机车play" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2019-11-21_play.jpg"></p>
+<p><img alt="PT拍的我和HT，可以忽略我和PT之间的调色差异，哈哈哈" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2019-11-21_elemobile.jpg"></p>
+<p>之后我们去的丽江古城，其中最难忘的还是丽江的玉龙雪山。景色超美，越来越喜欢去这种自然景观的地方了，古城什么的，还是算了吧。</p>
+<p>2019 年只有一次旅行，而现在已经规划了 2020 的两场旅行。一个是和老妈和老姐的广东过年之旅，一个是和 PF 的湖南之行。除此之外，期待明年能够出国走一趟。</p>
+<h3 id="音乐"><a href="#音乐" class="headerlink" title="音乐"></a>音乐</h3><p>2019 年的另外一个重大收获就是，我学会弹琴了。哦不，还不是钢琴，而是卡林巴琴。</p>
+<p>这里是我在练习 20 天之后弹奏青花瓷的效果</p>
+<p><iframe src="//player.bilibili.com/player.html?aid=80837939&cid=138355848&page=1" width="450" height="800" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe><br>在此之前，我对乐理一无所知，小学时候接受的音乐教育基本为零。非常感谢皮皮老师的指导和入坑推荐，我自己去学习了一下乐理的相关知识，学学简谱和五线谱啥的，然后就可以开始练习了。</p>
+<p>音乐不就是不同频率的波形的相互作用吗，学过傅氏变换的人还会怕这些乐理知识吗，哈哈哈。虽然现在表演还是很挫，但是我还是很有信心能够呈现出更完美的状态的。虽然只练习了三个星期左右，从最简单的小星星，到现在能够完整的弹下来青花瓷，自己感到非常开心。现在每天晚上都会花一个小时左右的时间去练习，不断的加深自己的肌肉记忆，做一个顽强的正确机。</p>
+<p>卡林巴琴算是开始，期待之后能够入手更多的乐器。就想皮皮老师说的一样，卡林巴就像乐器里面的 Python一样，钢琴可能更像C++。你既然已经学会了 C++，Python和 Go等等语言，那么有了卡林巴，之后其他乐器未尝不可能。</p>
+<p>2020 年，在现在的基础上，从单音青花瓷，到加上伴奏，到扩展到其他的乐曲。如果可以的话，可以入门一个新的乐器，期待明年变成社畜的我还能够有时间在这上面。</p>
+<h3 id="投资"><a href="#投资" class="headerlink" title="投资"></a>投资</h3><p>其实在 2018 年的时候已经入坑了股市，但是自己啥都不懂，完全是凭感觉买。从 18年 4 月份开始，正好碰到了当时的一波熊市，一直亏亏亏。好在投入也不算太多，损失还在可接受范围内。</p>
+<p>2019 年，仍然不是太能够搞懂股市相关操作，稀里糊涂的买卖，最后倒也有将近 40 个点的收益。</p>
+<p><img alt="2019年股市投资收益" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2019-12-31_investment.jpg"></p>
+<p>可能是运气吧，无论如何也算是一个不错的结果。</p>
+<p>2020 年，希望自己对于投资，对于股市能够有更多的认识，明白自己每次操作逻辑。除了股市之外，还有基金市场。</p>
+<p>给自己定一个小目标，期待自己明年在投资上至少能够有 20 个点的收入，最好能够到 40 个点的收入。</p>
+<h3 id="健身"><a href="#健身" class="headerlink" title="健身"></a>健身</h3><p>这一年的锻炼荒废了很多。</p>
+<p>健身房的无氧运动经常性的不去，五四操场的跑步也没有坚持下来。唯一坚持下来的，就是每周和 Y 老师的羽毛球运动。发现自己越来越喜欢上了羽毛球，每次打完球之后的那种感觉真的很畅快。双打的时候，那种快节奏的拼杀让我感觉非常刺激。</p>
+<p>2019 年，给自己配置了一个好的羽毛球拍 天斧 88d 和一个还不错的羽毛球鞋，自己的技术也在慢慢的提高。</p>
+<p>2020 年，期待自己的技术能够进一步提高，或者能够参加啥比赛感觉感觉。</p>
+<p>除此之外，健身房和跑步也不能够荒废。</p>
+<p>数据是最重忠实的记录者，每周 3 次跑步，每次 5 公里，期待明年能够达到 700 公里的跑步量。</p>
+<h3 id="阅读"><a href="#阅读" class="headerlink" title="阅读"></a>阅读</h3><p>略</p>
+<h3 id="观影"><a href="#观影" class="headerlink" title="观影"></a>观影</h3><p>略</p>
+<h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><p>本来还想接着说一下阅读和观影的事情，但是发现今年不论是阅读量还是观影量都有很大的减少。以前确实也翻了很多的书，但是发现自己在输出方面还是做得很差。看是看了，但是是否真的落到实处了，自己能够在合适的时候很好的输出，也是一个需要锻炼和培养的能力。</p>
+<p>今年的我仍然是单身一个人。现在发现，有时候会忘了自己单身的事情，因为发现有很多很多有意思的事情可以做。明年 会怎样呢？一切顺其自然吧，你总会碰到你喜欢她并且她也喜欢你的女孩子呀。</p>
+<hr>
+<p>再见，2019</p>
+<p>你好，2020</p>
+<p>新年快乐！</p>
+
+    </div>
+
+    
+    
+    
+      
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/2ecc368/" title="2019 未来へ">http://houmin.cc/posts/2ecc368/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/cf1a9e29/" rel="next" title="春游南国">
+                  <i class="fa fa-chevron-left"></i> 春游南国
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/3e030bdb/" rel="prev" title="Carpe Diem">
+                  Carpe Diem <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#工作"><span class="nav-number">1.</span> <span class="nav-text">工作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#生活"><span class="nav-number">2.</span> <span class="nav-text">生活</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#摄影"><span class="nav-number">2.1.</span> <span class="nav-text">摄影</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#旅行"><span class="nav-number">2.2.</span> <span class="nav-text">旅行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#音乐"><span class="nav-number">2.3.</span> <span class="nav-text">音乐</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#投资"><span class="nav-number">2.4.</span> <span class="nav-text">投资</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#健身"><span class="nav-number">2.5.</span> <span class="nav-text">健身</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#阅读"><span class="nav-number">2.6.</span> <span class="nav-text">阅读</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#观影"><span class="nav-number">2.7.</span> <span class="nav-text">观影</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其他"><span class="nav-number">2.8.</span> <span class="nav-text">其他</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

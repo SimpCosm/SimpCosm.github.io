@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="本文记录了常用的shell笔记">
+<meta name="keywords" content="linux,shell">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Shell笔记">
+<meta property="og:url" content="http://houmin.cc/posts/f8586b35/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="本文记录了常用的shell笔记">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-07-14T11:57:25.277Z">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://houmin.cc/posts/f8586b35/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Shell笔记 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/f8586b35/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Shell笔记
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-01-30 14:54:54" itemprop="dateCreated datePublished" datetime="2017-01-30T14:54:54+08:00">2017-01-30</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/f8586b35/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/f8586b35/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>22k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>39 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文记录了常用的shell笔记</p>
+<a id="more"></a>
+<h2 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h2><h3 id="通配符"><a href="#通配符" class="headerlink" title="通配符"></a>通配符</h3><ul>
+<li><code>?</code>字符代表单个字符，<code>?</code>不能匹配空字符。</li>
+<li><code>*</code>代表任意数量的字符，可以匹配空字符。</li>
+<li><code>[...]</code>匹配方括号之中的任意一个字符，比如<code>[aeiou]</code>可以匹配五个元音字母。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 假设当前目录下存在，文件 a.txt、b.txt、c.txt、ab.txt、report1.txt、report2.txt 和 report3.txt</span></span><br><span class="line">$ ls ?.txt</span><br><span class="line">a.txt b.txt c.txt</span><br><span class="line"></span><br><span class="line">$ ls ??.txt</span><br><span class="line">ab.txt</span><br><span class="line"></span><br><span class="line">$ ls [ab].txt</span><br><span class="line">a.txt b.txt</span><br><span class="line"></span><br><span class="line">$ ls *[ab].txt</span><br><span class="line">ab.txt a.txt b.txt</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>[start-end]</code>表示一个连续的范围。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ ls [a-c].txt</span><br><span class="line">a.txt b.txt c.txt</span><br><span class="line"></span><br><span class="line">$ ls report[0-9].txt</span><br><span class="line">report1.txt report2.txt report3.txt</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>[^...]</code>和<code>[!...]</code>表示匹配不在方括号里面的字符（不包括空字符）。这两种写法是等价的。这种模式下也可以使用连续范围的写法<code>[!start-end]</code></li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ ls [^a].txt</span><br><span class="line">b.txt c.txt</span><br><span class="line"></span><br><span class="line">$ ls report[!2-3].txt</span><br><span class="line">report1.txt</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>{...}</code> 表示匹配大括号里面的所有模式，模式之间使用逗号分隔。它可以用于多字符的模式。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">echo</span> d&#123;a,e,i,u,o&#125;g</span><br><span class="line">dag deg dig dug dog</span><br><span class="line"></span><br><span class="line">$ <span class="built_in">echo</span> &#123;cat,dog&#125;</span><br><span class="line">cat dog</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>{...}</code>与<code>[...]</code>有一个很重要的区别。如果匹配的文件不存在，<code>[...]</code>会失去模式的功能，变成一个单纯的字符串，而<code>{...}</code>依然可以展开。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 不存在 a.txt 和 b.txt</span></span><br><span class="line">$ ls [ab].txt</span><br><span class="line">ls: [ab].txt: No such file or directory</span><br><span class="line"></span><br><span class="line">$ ls &#123;a,b&#125;.txt</span><br><span class="line">ls: a.txt: No such file or directory</span><br><span class="line">ls: b.txt: No such file or directory</span><br></pre></td></tr></table></figure>
+<ul>
+<li>大括号可以嵌套。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">echo</span> &#123;j&#123;p,pe&#125;g,png&#125;</span><br><span class="line">jpg jpeg png</span><br></pre></td></tr></table></figure>
+<ul>
+<li>大括号也可以与其他模式联用。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">echo</span> &#123;cat,d*&#125;</span><br><span class="line">cat dawg dg dig dog doug dug</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>{start..end}</code>会匹配连续范围的字符。如果遇到无法解释的扩展，模式会原样输出。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">echo</span> d&#123;a..d&#125;g</span><br><span class="line">dag dbg dcg ddg</span><br><span class="line"></span><br><span class="line">$ <span class="built_in">echo</span> &#123;11..15&#125;</span><br><span class="line">11 12 13 14 15</span><br><span class="line"></span><br><span class="line">$ <span class="built_in">echo</span> &#123;a1..3c&#125;</span><br><span class="line">&#123;a1..3c&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="编译链接"><a href="#编译链接" class="headerlink" title="编译链接"></a>编译链接</h3><h4 id="ld"><a href="#ld" class="headerlink" title="ld"></a>ld</h4><p>ld命令是二进制工具集GNU Binutils的一员，是GNU链接器，用于将目标文件与库链接为可执行程序或库文件。</p>
+<h4 id="ldd"><a href="#ldd" class="headerlink" title="ldd"></a>ldd</h4><h4 id="ldconfig"><a href="#ldconfig" class="headerlink" title="ldconfig"></a>ldconfig</h4><h3 id="查找搜索"><a href="#查找搜索" class="headerlink" title="查找搜索"></a>查找搜索</h3><h4 id="find"><a href="#find" class="headerlink" title="find"></a>find</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># find [path] -name []</span></span><br><span class="line">$ find / -name hello[a-z].<span class="built_in">log</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 根据文件时间戳搜索</span></span><br><span class="line">$ find / -<span class="built_in">type</span> f -atime -7 <span class="comment"># 搜索近七天内被访问过的所有文件</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 根据文件大小搜索</span></span><br><span class="line">$ find . -<span class="built_in">type</span> f -size +10k</span><br><span class="line"></span><br><span class="line"><span class="comment"># 删除匹配文件</span></span><br><span class="line">$ find . <span class="built_in">type</span> f -name <span class="string">"*.txt"</span> -delete</span><br><span class="line"></span><br><span class="line"><span class="comment"># 搜索但跳过指定目录</span></span><br><span class="line">$ find . -path <span class="string">"./sk"</span> -prune -o -name <span class="string">"*.txt"</span> <span class="comment"># -o means logical OR</span></span><br></pre></td></tr></table></figure>
+<h4 id="grep"><a href="#grep" class="headerlink" title="grep"></a>grep</h4><h4 id="ack"><a href="#ack" class="headerlink" title="ack"></a>ack</h4><h4 id="ag"><a href="#ag" class="headerlink" title="ag"></a>ag</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h3 id="磁盘和文件系统"><a href="#磁盘和文件系统" class="headerlink" title="磁盘和文件系统"></a>磁盘和文件系统</h3><h4 id="fdisk"><a href="#fdisk" class="headerlink" title="fdisk"></a>fdisk</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 列出块设备信息：以树形展示你的磁盘以及磁盘分区信息</span></span><br><span class="line">$ lsblk</span><br><span class="line">NAME   MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT</span><br><span class="line">sda      8:0    0 931.5G  0 disk</span><br><span class="line">└─sda1   8:1    0 931.5G  0 part /data</span><br><span class="line">sdb      8:16   0 119.2G  0 disk</span><br><span class="line">├─sdb1   8:17   0   512M  0 part /boot/efi</span><br><span class="line">└─sdb2   8:18   0 118.8G  0 part /</span><br><span class="line"></span><br><span class="line"><span class="comment"># 检查文件系统的磁盘空间占用情况</span></span><br><span class="line">$ df -Tlh</span><br><span class="line">Filesystem     Type      Size  Used Avail Use% Mounted on</span><br><span class="line">tmpfs          tmpfs     1.6G  1.9M  1.6G   1% /run</span><br><span class="line">/dev/sdb2      ext4      117G  110G  613M 100% /</span><br><span class="line">/dev/sdb1      vfat      511M  6.1M  505M   2% /boot/efi</span><br><span class="line">/dev/sda1      ext4      916G  611G  260G  71% /data</span><br><span class="line"></span><br><span class="line"><span class="comment"># fdisk磁盘分区，分区有大小限制为2T</span></span><br><span class="line">$ fdisk -l <span class="comment"># 查看系统上的硬盘</span></span><br><span class="line">Disk /dev/sda: 931.5 GiB, 1000204886016 bytes, 1953525168 sectors</span><br><span class="line">Units: sectors of 1 * 512 = 512 bytes</span><br><span class="line">Sector size (logical/physical): 512 bytes / 4096 bytes</span><br><span class="line">I/O size (minimum/optimal): 4096 bytes / 4096 bytes</span><br><span class="line">Disklabel <span class="built_in">type</span>: gpt</span><br><span class="line">Disk identifier: 67A1E9ED-BCBF-44B4-93FD-8FA305437B2E</span><br><span class="line"></span><br><span class="line">Device     Start        End    Sectors   Size Type</span><br><span class="line">/dev/sda1   2048 1953525134 1953523087 931.5G Linux filesystem</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Disk /dev/sdb: 119.2 GiB, 128035676160 bytes, 250069680 sectors</span><br><span class="line">Units: sectors of 1 * 512 = 512 bytes</span><br><span class="line">Sector size (logical/physical): 512 bytes / 512 bytes</span><br><span class="line">I/O size (minimum/optimal): 512 bytes / 512 bytes</span><br><span class="line">Disklabel <span class="built_in">type</span>: gpt</span><br><span class="line">Disk identifier: 0AA99923-E2A0-4D46-9A95-71036FC86EEF</span><br><span class="line"></span><br><span class="line">Device       Start       End   Sectors   Size Type</span><br><span class="line">/dev/sdb1     2048   1050623   1048576   512M EFI System</span><br><span class="line">/dev/sdb2  1050624 250068991 249018368 118.8G Linux filesystem</span><br><span class="line"></span><br><span class="line"><span class="comment"># parted磁盘分区，相对fdisk可以对更大的磁盘进行划分</span></span><br></pre></td></tr></table></figure>
+<h4 id="mount"><a href="#mount" class="headerlink" title="mount"></a>mount</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># mkfs [options] [-t &lt;vfs-type&gt;] &lt;device&gt;</span></span><br><span class="line">mkfs -t ext4 /dev/sdc1</span><br><span class="line"></span><br><span class="line"><span class="comment"># mount</span></span><br><span class="line"><span class="comment"># mount [options] [device] [mount-point]</span></span><br><span class="line"><span class="comment"># -t vfstype 指定文件系统的类型</span></span><br><span class="line"><span class="comment"># -o options 主要用来描述设备或档案的挂接方式</span></span><br><span class="line"><span class="comment"># 		loop：用来把一个文件当成硬盘分区挂接上系统</span></span><br><span class="line"><span class="comment">#			ro：采用只读方式挂接设备</span></span><br><span class="line"><span class="comment">#			rw：采用读写方式挂接设备</span></span><br><span class="line"><span class="comment">#			iocharset：指定访问文件系统所用字符集</span></span><br><span class="line">mount -t ext4 /dev/sdc1 /mnt/lfs</span><br><span class="line"></span><br><span class="line"><span class="comment"># umount</span></span><br><span class="line">umount /mnt/lfs</span><br></pre></td></tr></table></figure>
+<h4 id="dd"><a href="#dd" class="headerlink" title="dd"></a>dd</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 将本地的/dev/hdb整盘备份到/dev/hdd</span></span><br><span class="line">$ dd <span class="keyword">if</span>=/dev/hdb of=/dev/hdd</span><br><span class="line"><span class="comment"># 将/dev/hdb全盘数据备份到指定路径的image文件</span></span><br><span class="line">$ dd <span class="keyword">if</span>=/dev/hdb of=/root/image</span><br><span class="line"><span class="comment"># 将备份文件恢复到指定盘</span></span><br><span class="line">$ dd <span class="keyword">if</span>=/root/image of=/dev/hdb</span><br><span class="line"><span class="comment"># 备份/dev/hdb全盘数据，并利用gzip工具进行压缩，保存到指定路径</span></span><br><span class="line">$ dd <span class="keyword">if</span>=/dev/hdb | gzip &gt; /root/image.gz</span><br><span class="line"><span class="comment"># 压缩的备份文件恢复到指定盘</span></span><br><span class="line">$ gzip -dc /root/image.gz | dd of=/dev/hdb</span><br><span class="line"></span><br><span class="line"><span class="comment"># 备份与恢复MBR</span></span><br><span class="line"><span class="comment">## 备份磁盘开始的512个字节大小的MBR信息到指定文件：</span></span><br><span class="line">$ dd <span class="keyword">if</span>=/dev/hda of=/root/image count=1 bs=512 <span class="comment"># count=1指仅拷贝一个块；bs=512指块大小为512个字节</span></span><br><span class="line"><span class="comment">## 恢复：</span></span><br><span class="line">$ dd <span class="keyword">if</span>=/root/image of=/dev/had <span class="comment"># 将备份的MBR信息写到磁盘开始部分</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 拷贝内存内容到硬盘</span></span><br><span class="line">$ dd <span class="keyword">if</span>=/dev/mem of=/root/mem.bin bs=1024 (指定块大小为1k)</span><br><span class="line"><span class="comment"># 拷贝光盘内容到指定文件夹，并保存为cd.iso文件</span></span><br><span class="line">$ dd <span class="keyword">if</span>=/dev/cdrom(hdc) of=/root/cd.iso</span><br><span class="line"></span><br><span class="line"><span class="comment"># 增加swap分区文件大小</span></span><br><span class="line"><span class="comment">## 第一步：创建一个大小为256M的文件：</span></span><br><span class="line">$ dd <span class="keyword">if</span>=/dev/zero of=/swapfile bs=1024 count=262144</span><br><span class="line"><span class="comment">## 第二步：把这个文件变成swap文件：</span></span><br><span class="line">$ mkswap /swapfile</span><br><span class="line"><span class="comment">## 第三步：启用这个swap文件：</span></span><br><span class="line">$ swapon /swapfile</span><br><span class="line"><span class="comment">## 第四步：编辑/etc/fstab文件，使在每次开机时自动加载swap文件：</span></span><br><span class="line">$ swapfile    swap    swap    default   0 0</span><br><span class="line"></span><br><span class="line"><span class="comment"># 销毁磁盘数据</span></span><br><span class="line">$ dd <span class="keyword">if</span>=/dev/urandom of=/dev/hda1</span><br><span class="line"><span class="comment"># 注意：利用随机的数据填充硬盘，在某些必要的场合可以用来销毁数据。</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 测试硬盘的读写速度</span></span><br><span class="line"><span class="variable">$dd</span> <span class="keyword">if</span>=/dev/zero bs=1024 count=1000000 of=/root/1Gb.file</span><br><span class="line">$ dd <span class="keyword">if</span>=/root/1Gb.file bs=64k | dd of=/dev/null</span><br><span class="line"><span class="comment"># 通过以上两个命令输出的命令执行时间，可以计算出硬盘的读、写速度。</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 确定硬盘的最佳块大小：</span></span><br><span class="line">$ dd <span class="keyword">if</span>=/dev/zero bs=1024 count=1000000 of=/root/1Gb.file</span><br><span class="line">$ dd <span class="keyword">if</span>=/dev/zero bs=2048 count=500000 of=/root/1Gb.file</span><br><span class="line">$ dd <span class="keyword">if</span>=/dev/zero bs=4096 count=250000 of=/root/1Gb.file</span><br><span class="line">$ dd <span class="keyword">if</span>=/dev/zero bs=8192 count=125000 of=/root/1Gb.file</span><br><span class="line"><span class="comment"># 通过比较以上命令输出中所显示的命令执行时间，即可确定系统最佳的块大小。</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 修复硬盘：</span></span><br><span class="line">$ dd <span class="keyword">if</span>=/dev/sda of=/dev/sda</span><br><span class="line"><span class="comment"># 当硬盘较长时间(一年以上)放置不使用后，磁盘上会产生magnetic flux point，当磁头读到这些区域时会遇到困难，并可能导致I/O错误。当这种情况影响到硬盘的第一个扇区时，可能导致硬盘报废。上边的命令有可能使这些数据起死回生。并且这个过程是安全、高效的。</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 利用netcat远程备份</span></span><br><span class="line">$ dd <span class="keyword">if</span>=/dev/hda bs=16065b | netcat &lt; targethost-IP &gt; 1234</span><br><span class="line"><span class="comment"># 在源主机上执行此命令备份/dev/hda</span></span><br><span class="line">$ netcat -l -p 1234 | dd of=/dev/hdc bs=16065b</span><br><span class="line"><span class="comment"># 在目的主机上执行此命令来接收数据并写入/dev/hdc</span></span><br><span class="line">$ netcat -l -p 1234 | bzip2 &gt; partition.img</span><br><span class="line">$ netcat -l -p 1234 | gzip &gt; partition.img</span><br><span class="line"><span class="comment"># 以上两条指令是目的主机指令的变化分别采用bzip2、gzip对数据进行压缩，并将备份文件保存在当前目录。</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 将一个很大的视频文件中的第i个字节的值改成0x41（也就是大写字母A的ASCII值）</span></span><br><span class="line">$ <span class="built_in">echo</span> A | dd of=bigfile seek=<span class="variable">$i</span> bs=1 count=1 conv=notrunc</span><br></pre></td></tr></table></figure>
+<h3 id="设备管理"><a href="#设备管理" class="headerlink" title="设备管理"></a>设备管理</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># mknod 创建块设备或者字符设备文件</span></span><br><span class="line"><span class="comment"># mknod [OPTION]... NAME TYPE [MAJOR MINOR]</span></span><br><span class="line">$ mknod /dev/sdb4 b 1 1 <span class="comment"># 创建一个块设备</span></span><br><span class="line">$ mknod /dev/console5 c 5 1 <span class="comment"># 创建一个字符设备</span></span><br></pre></td></tr></table></figure>
+<h3 id="用户管理"><a href="#用户管理" class="headerlink" title="用户管理"></a>用户管理</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 增加用户</span></span><br><span class="line">$ adduser houmin</span><br><span class="line"></span><br><span class="line"><span class="comment"># 把用户加到组</span></span><br><span class="line">$ usermod -aG sudo houmin</span><br></pre></td></tr></table></figure>
+<h3 id="软链接和硬链接"><a href="#软链接和硬链接" class="headerlink" title="软链接和硬链接"></a>软链接和硬链接</h3><ul>
+<li>硬链接：通过索引 <code>inode</code>来映射到文件数据。<code>linux</code>允许多个文件名指向同一 <code>inode</code>。删除硬链接并不会导致数据实体被删除，只有最后一个链接被删除，同时磁盘有新数据要存放时，才能导致数据实体删除。</li>
+<li>软链接：也称符号链接，类似于windows系统中的快捷方式，与硬链接不同，软链接就是一个普通文件，只是数据块内容有点特殊，文件用户数据块中存放的内容是另一文件的路径名的指向，通过这个方式可以快速定位到软连接所指向的源文件实体。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建硬链接</span></span><br><span class="line">ln [target] [link_name]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建软链接</span></span><br><span class="line">ln -s [target] [link_name]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 修改软链接</span></span><br><span class="line">ln -snf [new_target] [link_name]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 删除软链接</span></span><br><span class="line">rm -rf [link_name]</span><br></pre></td></tr></table></figure>
+<h3 id="远程同步文件"><a href="#远程同步文件" class="headerlink" title="远程同步文件"></a>远程同步文件</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># scp: secure copy，用于远程的文件的复制</span></span><br><span class="line"><span class="comment"># -r 递归复制整个目录</span></span><br><span class="line">scp [option] [<span class="built_in">source</span>] [dest]</span><br><span class="line"></span><br><span class="line"><span class="comment"># rsync: remote sync, 用于数据镜像备份，可用于增量更新</span></span><br><span class="line"><span class="comment"># -a, --archive 归档模式，表示以递归方式传输文件，并保持所有文件属性，等于-rlptgoD</span></span><br><span class="line"><span class="comment"># -v, --verbose 详细模式输出</span></span><br><span class="line"><span class="comment"># -z, --compress 对备份的文件在传输时进行压缩处理</span></span><br><span class="line"><span class="comment"># -u 加上该选项后，如果DEST中的文件比SRC新，则不同步</span></span><br><span class="line"><span class="comment"># -P, --partial --progress 保留那些因故没有完全传输的文件，以是加快随后的再次传输</span></span><br><span class="line"><span class="comment"># --delete 删除DEST中SRC没有的文件</span></span><br><span class="line"><span class="comment"># --exclude 过滤指定文件，如--exclude “logs”会把文件名包含logs的文件或者目录过滤掉，不同步</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># rsync [option] [source] [dest]</span></span><br><span class="line">$ rsync -avP houmin@host1:~/data alice@host2:/data/</span><br></pre></td></tr></table></figure>
+<h3 id="包管理工具"><a href="#包管理工具" class="headerlink" title="包管理工具"></a>包管理工具</h3><h4 id="apt"><a href="#apt" class="headerlink" title="apt"></a>apt</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># apt 命令就是 apt-get、apt-cache 和 apt-config 中最常用命令选项的集合</span></span><br><span class="line">$ sudo apt update     <span class="comment"># 更新包索引文</span></span><br><span class="line">$ sudo apt install nginx    <span class="comment"># 安装包</span></span><br><span class="line">$ sudo apt install vim=2:8.0.1453-1ubuntu1  <span class="comment"># 安装指定版本的包</span></span><br><span class="line">$ sudo apt install name.deb    <span class="comment"># 安装本地的 deb 包文件</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 安装系统中有更新的包</span></span><br><span class="line">$ sudo apt update</span><br><span class="line">$ sudo apt upgrade</span><br><span class="line"></span><br><span class="line"><span class="comment"># 删除包</span></span><br><span class="line"><span class="comment"># 其中 remove 命令会保留配置文件，而 purge 命令会把配置文件一起删除</span></span><br><span class="line">$ sudo apt remove nmap</span><br><span class="line">$ sudo apt purge nmap</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看包的信息</span></span><br><span class="line">$ apt show vim</span><br><span class="line"></span><br><span class="line"><span class="comment"># 输出指定条件的包列表</span></span><br><span class="line">$ apt list vim*</span><br><span class="line"></span><br><span class="line"><span class="comment"># 搜索包</span></span><br><span class="line">$ apt search docker</span><br></pre></td></tr></table></figure>
+<h3 id="压缩解压"><a href="#压缩解压" class="headerlink" title="压缩解压"></a>压缩解压</h3><h4 id="tar"><a href="#tar" class="headerlink" title="tar"></a>tar</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 解压</span></span><br><span class="line">$ tar -xf file.tar        <span class="comment"># 解压 tar包</span></span><br><span class="line">$ tar -xzf file.tar.gz    <span class="comment"># 解压tar.gz</span></span><br><span class="line">$ tar -xjf file.tar.bz2   <span class="comment"># 解压 tar.bz2</span></span><br><span class="line">$ tar -xJf file.tar.xz    <span class="comment"># 解压 tar.xz</span></span><br><span class="line">$ tar -xZf file.tar.Z     <span class="comment"># 解压tar.Z</span></span><br><span class="line">$ unrar e file.rar        <span class="comment"># 解压rar</span></span><br><span class="line">$ unzip file.zip          <span class="comment"># 解压zip</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 压缩</span></span><br><span class="line">$ tar -cvf jpg.tar *.jpg</span><br><span class="line">$ tar -czf jpg.tar.gz *.jpg</span><br><span class="line">$ tar -cjf jpg.tar.bz2 *.jpg</span><br><span class="line">$ tar -cZf jpg.tar.Z *.jpg</span><br><span class="line">$ rar a jpg.rar *.jpg</span><br><span class="line">$ zip jpg.zip *.jpg</span><br></pre></td></tr></table></figure>
+<h4 id="cpio"><a href="#cpio" class="headerlink" title="cpio"></a>cpio</h4><p>cpio是一个非常古老的归档工具，已逐渐被tar替代，但是有些功能是tar不存在的，所以还是分享下它的用法。</p>
+<p>cpio用于创建、解压归档文件，也可以对归档文件执行拷入拷出的动作，即向归档文件中追加文件，或从归档文件中提取文件。它也支持tar格式的归档文件，但是对压缩后的tar(如.tar.gz格式)就没法支持了，cpio毕竟不会调用对应的(解)压缩工具。</p>
+<p>cpio一般从标准输入获取数据，写入到标准输出，所以一般会结合管道、输入重定向、输出重定向使用。命令格式如下</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ cpio –o [abcv]</span><br><span class="line">$ cpio –i [bcdmrtuv] [patterns]</span><br><span class="line">$ cpio –p [adlmuv] [directory]</span><br></pre></td></tr></table></figure>
+<p>对应上述三种命令，cpio有三种运行模式：</p>
+<ul>
+<li><p><strong>Copy-out模式</strong></p>
+<p>此模式下，cpio将向归档文件中拷入文件，即进行归档操作，所以称为<strong>归档模式</strong>。它会从标准输入中读取待归档的文件，将它们归档到目标目标中，若未指定归档的目标，将归档到标准输出中。</p>
+</li>
+<li><p><strong>Copy-in模式</strong></p>
+<p>此模式下，cpio将从归档文件中提取文件，或者列出归档文件中的文件列表。它将从标准输入中读取归档文件。</p>
+</li>
+<li><p><strong>Copy-pass模式</strong></p>
+<p>此模式下，从一个目录向另一个目录或从一个文件系统向另一个文件系统复制文件，合并copy-out和copy-in命令的功能。</p>
+</li>
+</ul>
+<p>上面命令的选项如下：</p>
+<figure class="highlight diff"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="deletion">-o 将文件拷贝打包成文件或者将文件输出到设备上。</span></span><br><span class="line"><span class="deletion">-i 将打包文件解压或者将设备上的备份还原到系统。</span></span><br><span class="line"><span class="deletion">-t 查看cpio打包的文件内容或者输出到设备上的文件内容。</span></span><br><span class="line"><span class="deletion">-v 显示打包过程中的文件名称。</span></span><br><span class="line"><span class="deletion">-d 在cpio还原文件的过程中，自动的建立相应的目录。</span></span><br><span class="line"><span class="deletion">-c Use the old POSIX portable character format</span></span><br><span class="line"><span class="deletion">-B 让默认的Blocks可以增大到5120 bytes，默认Blocks为512 bytes，这样做的好处是可以加快存取速度。</span></span><br><span class="line"><span class="deletion">-H Produce the output archive in the specified format.</span></span><br></pre></td></tr></table></figure>
+<p>下面是 cpio 的常见使用案例：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 将etc目录备份</span></span><br><span class="line">$ find ./etc -<span class="built_in">print</span> | cpio -ov &gt; etc.cpio</span><br><span class="line"><span class="comment"># 恢复文件</span></span><br><span class="line">$ cpio -idv &lt; /root/etc.cpio</span><br><span class="line"><span class="comment"># 只是查看etc.cpio文件</span></span><br><span class="line">$ cpio -tv &lt; etc.cpio</span><br></pre></td></tr></table></figure>
+<h3 id="定时任务"><a href="#定时任务" class="headerlink" title="定时任务"></a>定时任务</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># crontab</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># crontab 文件含义</span></span><br><span class="line"><span class="comment"># minute hour day month week command</span></span><br><span class="line"><span class="comment"># 30 21 * * * /etc/init.d/smb restart # 每晚的21:30重启smb</span></span><br><span class="line"><span class="comment"># * */1 * * * /etc/init.d/smb restart # 每一小时重启smb </span></span><br><span class="line"><span class="comment"># 0,15,30,45 18-06 * * * /bin/echo `date` &gt; dev/tty1 # 每天的18点到6点的每隔15分钟执行</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 编辑 crontab 文件</span></span><br><span class="line">$ crontab -e</span><br><span class="line"></span><br><span class="line"><span class="comment"># 列出 crontab 文件</span></span><br><span class="line">$ crontab -l</span><br><span class="line">0,15,30,45 18-06 * * * /bin/<span class="built_in">echo</span> `date` &gt; dev/tty1</span><br></pre></td></tr></table></figure>
+<h3 id="bash-profile-和-bashrc"><a href="#bash-profile-和-bashrc" class="headerlink" title="bash_profile 和 bashrc"></a>bash_profile 和 bashrc</h3><h2 id="进阶使用"><a href="#进阶使用" class="headerlink" title="进阶使用"></a>进阶使用</h2><h3 id="xargs"><a href="#xargs" class="headerlink" title="xargs"></a>xargs</h3><p><code>xargs</code>命令的作用，是将标准输入转为命令行参数。大多数命令（比如<code>rm</code>, <code>mkdir</code>,<code>ls</code>) 与管道一起使用时，都需要 <code>xargs</code> 将标准输入专为命令行参数。关于 <code>xargs</code>与管道的区别，可以参考<a href="https://www.cnblogs.com/wangqiguo/p/6464234.html" target="_blank" rel="external nofollow noopener noreferrer">这篇文章</a>。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 其命令格式如下</span></span><br><span class="line">$ xargs [-options] [<span class="built_in">command</span>]</span><br><span class="line">$ find . -name <span class="string">"*.txt"</span> | xargs grep <span class="string">"abc"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># -d 参数可定制分隔符</span></span><br><span class="line">$ <span class="built_in">echo</span> -e <span class="string">"a\tb\tc"</span> | xargs -d <span class="string">"\t"</span> <span class="built_in">echo</span></span><br><span class="line">a b c</span><br><span class="line"></span><br><span class="line"><span class="comment"># -I指定每一项命令行参数的替代字符串</span></span><br><span class="line">$ cat foo.txt</span><br><span class="line">one</span><br><span class="line">two</span><br><span class="line">three</span><br><span class="line"></span><br><span class="line">$ cat foo.txt | xargs -I file sh -c <span class="string">'echo file; mkdir file'</span></span><br><span class="line"></span><br><span class="line">$ ls</span><br><span class="line">one two three</span><br><span class="line"></span><br><span class="line"><span class="comment"># xargs默认只用一个进程执行命令，--max-procs 参数指定同时用多少个进程并行执行命令，0 表示不限制</span></span><br><span class="line">$ docker ps -q | xargs -n 1 --max-procs 0 docker <span class="built_in">kill</span></span><br></pre></td></tr></table></figure>
+<h3 id="parallel"><a href="#parallel" class="headerlink" title="parallel"></a>parallel</h3><h3 id="watch"><a href="#watch" class="headerlink" title="watch"></a>watch</h3><h3 id="tmux"><a href="#tmux" class="headerlink" title="tmux"></a>tmux</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h3 id="chroot"><a href="#chroot" class="headerlink" title="chroot"></a>chroot</h3><p>chroot，即 change root directory (更改 root 目录)。在 linux 系统中，系统默认的目录结构都是以 /，即以根 (root) 开始的。而在使用 chroot 之后，系统的目录结构将以指定的位置作为 / 位置。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># chroot [options] NEWROOT [COMMANDS]</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>增加了系统的安全性，限制了用户的权力：</strong></li>
+</ul>
+<p>在经过 chroot 之后，在新根下将访问不到旧系统的根目录结构和文件，这样就增强了系统的安全性。这个一般是在登录 (<a href="http://man.linuxde.net/login" target="_blank" rel="external nofollow noopener noreferrer">login</a>) 前使用 chroot，以此达到用户不能访问一些特定的文件。</p>
+<ul>
+<li><strong>建立一个与原系统隔离的系统目录结构，方便用户的开发：</strong></li>
+</ul>
+<p>使用 chroot 后，系统读取的是新根下的目录和文件，这是一个与原系统根下文件不相关的目录结构。在这个新的环境中，可以用来测试软件的静态编译以及一些与系统不相关的独立开发。</p>
+<ul>
+<li><strong>切换系统的根目录位置，引导 Linux 系统启动以及急救系统等：</strong></li>
+</ul>
+<p>chroot 的作用就是切换系统的根位置，而这个作用最为明显的是在系统初始引导磁盘的处理过程中使用，从初始 RAM 磁盘 (initrd) 切换系统的根位置并执行真正的 <a href="http://man.linuxde.net/init" target="_blank" rel="external nofollow noopener noreferrer">init</a>。另外，当系统出现一些问题时，我们也可以使用 chroot 来切换到一个临时的系统。</p>
+<h2 id="编写脚本"><a href="#编写脚本" class="headerlink" title="编写脚本"></a>编写脚本</h2><h3 id="set-x"><a href="#set-x" class="headerlink" title="set -x"></a>set -x</h3><h3 id="source-的区别"><a href="#source-的区别" class="headerlink" title="source 的区别"></a>source 的区别</h3><h2 id="文本处理"><a href="#文本处理" class="headerlink" title="文本处理"></a>文本处理</h2><h3 id="awk"><a href="#awk" class="headerlink" title="awk"></a>awk</h3><h3 id="sed"><a href="#sed" class="headerlink" title="sed"></a>sed</h3><h2 id="系统调试"><a href="#系统调试" class="headerlink" title="系统调试"></a>系统调试</h2><h3 id="查看进程"><a href="#查看进程" class="headerlink" title="查看进程"></a>查看进程</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -p: 同时显示每个进程的 PID</span></span><br><span class="line"><span class="comment"># -u: 同时列出每个进程所属账号名称</span></span><br><span class="line">$ pstree -up</span><br><span class="line"></span><br><span class="line">$ ps -aux</span><br></pre></td></tr></table></figure>
+<h3 id="杀死进程"><a href="#杀死进程" class="headerlink" title="杀死进程"></a>杀死进程</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ pgrep [进程名] <span class="comment"># 等同于 ps aux | grep [进程名]</span></span><br><span class="line">$ pkill [进程名] <span class="comment"># 等同于 pgrep [进程名] | xargs kill -9</span></span><br></pre></td></tr></table></figure>
+<h3 id="查看网络端口"><a href="#查看网络端口" class="headerlink" title="查看网络端口"></a>查看网络端口</h3><p><code>netstat</code> 是一款命令行工具，可用于列出系统上所有的网络套接字连接情况，包括 tcp, udp 以及 unix 套接字，另外它还能列出处于监听状态（即等待接入请求）的套接字，参考<a href="https://linux.cn/article-2434-1.html" target="_blank" rel="external nofollow noopener noreferrer">这篇文章</a>。</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># netstat 参数</span></span><br><span class="line"><span class="comment"># -t 列出TCP协议的连接，-u 列出UDP协议的连接</span></span><br><span class="line"><span class="comment"># -n 禁用域名解析，只列出IP地址，可提升查找速度</span></span><br><span class="line"><span class="comment"># -l 列出正在监听的套接字</span></span><br><span class="line"><span class="comment"># -p 查看进程信息</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 列出正在监听中的连接</span></span><br><span class="line">$ sudo netstat -lntp</span><br><span class="line">$ netstat -lntp</span><br><span class="line"></span><br><span class="line"><span class="comment"># 打印 active 状态的连接</span></span><br><span class="line">$ netstat -atnp | grep ESTA</span><br><span class="line">(Not all processes could be identified, non-owned process info</span><br><span class="line"> will not be shown, you would have to be root to see it all.)</span><br><span class="line">tcp        0      0 192.168.1.2:49156       173.255.230.5:80        ESTABLISHED 1691/chrome     </span><br><span class="line">tcp        0      0 192.168.1.2:33324       173.194.36.117:443      ESTABLISHED 1691/chrome</span><br></pre></td></tr></table></figure>
+<h3 id="查看打开文件"><a href="#查看打开文件" class="headerlink" title="查看打开文件"></a>查看打开文件</h3><p>lsof（list open files）是一个列出当前系统打开文件的工具。在linux环境下，任何事物都以文件的形式存在，通过文件不仅仅可以访问常规数据，还可以访问网络连接和硬件。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ lsof -i <span class="comment"># 列出所有的网络的连接</span></span><br><span class="line">$ lsof -i tcp <span class="comment"># 列出所有TCP连接</span></span><br><span class="line">$ lsof -i :3306 <span class="comment"># 列出谁在使用某个端口</span></span><br><span class="line">$ lsof -i udp:80 <span class="comment"># 列出谁在使用某个特定的UDP端口</span></span><br><span class="line">$ lsof -p 234 <span class="comment"># 列出进程234打开的所有文件</span></span><br><span class="line">$ lsof -u houmin <span class="comment">#列出用户houmin打开的所有文件</span></span><br><span class="line">$ lsof -c mysql <span class="comment"># 列出所有以mysql这个进程开头的程序的文件</span></span><br></pre></td></tr></table></figure>
+<h3 id="查看磁盘占用"><a href="#查看磁盘占用" class="headerlink" title="查看磁盘占用"></a>查看磁盘占用</h3><h3 id="任务管理器-top"><a href="#任务管理器-top" class="headerlink" title="任务管理器 top"></a>任务管理器 top</h3><p>top命令是Linux下常用的性能分析工具，能够实时显示系统中各个进程的资源占用状况。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">top - 16:27:05 up 157 days, 18:43,  6 users,  load average: 0.00, 0.00, 0.00</span><br><span class="line">Tasks: 121 total,   2 running, 119 sleeping,   0 stopped,   0 zombie</span><br><span class="line">%Cpu(s):  0.3 us,  0.0 sy,  0.0 ni, 99.7 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st</span><br><span class="line">KiB Mem :  2048028 total,   340732 free,   198124 used,  1509172 buff/cache</span><br><span class="line">KiB Swap:        0 total,        0 free,        0 used.  1631636 avail Mem</span><br><span class="line"></span><br><span class="line">  PID USER      PR  NI    VIRT    RES    SHR S %CPU %MEM     TIME+ COMMAND</span><br><span class="line">10109 root      10 -10  132768  17288  14768 S  0.3  0.8   8:55.79 AliYunDun</span><br><span class="line">12503 houmin    20   0   42720  16312   2764 S  0.3  0.8   0:41.47 tmux</span><br><span class="line">    1 root      20   0  119584   5224   3468 S  0.0  0.3   1:02.52 systemd</span><br><span class="line">    2 root      20   0       0      0      0 S  0.0  0.0   0:00.02 kthreadd</span><br><span class="line">    3 root      20   0       0      0      0 S  0.0  0.0   0:30.96 ksoftirqd/0</span><br><span class="line">    5 root       0 -20       0      0      0 S  0.0  0.0   0:00.00 kworker/0:0H</span><br><span class="line">    7 root      20   0       0      0      0 R  0.0  0.0  14:00.55 rcu_sched</span><br><span class="line">    8 root      20   0       0      0      0 S  0.0  0.0   0:00.00 rcu_bh</span><br><span class="line">    9 root      rt   0       0      0      0 S  0.0  0.0   0:00.00 migration/0</span><br><span class="line">   10 root      rt   0       0      0      0 S  0.0  0.0   0:41.19 watchdog/0</span><br><span class="line">   11 root      20   0       0      0      0 S  0.0  0.0   0:00.00 kdevtmpfs</span><br></pre></td></tr></table></figure>
+<p>关于 top 的显示的具体意义，可以参考 <a href="http://houmin.cc">To be done</a></p>
+<h3 id="跟踪进程中的系统调用-strace"><a href="#跟踪进程中的系统调用-strace" class="headerlink" title="跟踪进程中的系统调用 strace"></a>跟踪进程中的系统调用 strace</h3><h3 id="跟踪进程栈-ptrack"><a href="#跟踪进程栈-ptrack" class="headerlink" title="跟踪进程栈 ptrack"></a>跟踪进程栈 ptrack</h3><h3 id="监视内存使用-vmstat"><a href="#监视内存使用-vmstat" class="headerlink" title="监视内存使用 vmstat"></a>监视内存使用 vmstat</h3><h3 id="监视-I-O子系统-iostat-iotop-dstat"><a href="#监视-I-O子系统-iostat-iotop-dstat" class="headerlink" title="监视 I/O子系统 iostat/iotop/dstat"></a>监视 I/O子系统 iostat/iotop/dstat</h3><h3 id="找出系统瓶颈-sar"><a href="#找出系统瓶颈-sar" class="headerlink" title="找出系统瓶颈 sar"></a>找出系统瓶颈 sar</h3><h3 id="查看程序依赖库-ldd"><a href="#查看程序依赖库-ldd" class="headerlink" title="查看程序依赖库 ldd"></a>查看程序依赖库 ldd</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ldd: list dynamic dependencies, 用于查看动态库的依赖关系</span></span><br><span class="line"><span class="comment"># ldd 常用来解决程式因缺少某个库文件而不能运行的一些问题。</span></span><br><span class="line">$ ldd /bin/ls</span><br><span class="line">	linux-vdso.so.1 =&gt;  (0x00007ffe25deb000)</span><br><span class="line">	libselinux.so.1 =&gt; /lib/x86_64-linux-gnu/libselinux.so.1 (0x00007f8e79815000)</span><br><span class="line">	libc.so.6 =&gt; /lib/x86_64-linux-gnu/libc.so.6 (0x00007f8e7944b000)</span><br><span class="line">	libpcre.so.3 =&gt; /lib/x86_64-linux-gnu/libpcre.so.3 (0x00007f8e791db000)</span><br><span class="line">	libdl.so.2 =&gt; /lib/x86_64-linux-gnu/libdl.so.2 (0x00007f8e78fd7000)</span><br><span class="line">	/lib64/ld-linux-x86-64.so.2 (0x00007f8e79a37000)</span><br><span class="line">	libpthread.so.0 =&gt; /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007f8e78dba000)</span><br><span class="line"><span class="comment"># 第一列：程序需要依赖什么库</span></span><br><span class="line"><span class="comment"># 第二列: 系统提供的与程序需要的库所对应的库</span></span><br><span class="line"><span class="comment"># 第三列：库加载的开始地址</span></span><br></pre></td></tr></table></figure>
+<div class="note info">
+            <p>原理： ldd不是个可执行程式，而只是个shell脚本； ldd显示可执行模块的dependency的工作原理，其实质是通过 <code>ld-linux.so</code>（elf动态库的装载器）来实现的。ld-linux.so模块会先于executable模块程式工作，并获得控制权，因此当上述的那些环境变量被设置时，ld-linux.so选择了显示可执行模块的dependency。</p><p>关于 <code>ld-linux.so</code>，可以参见我的<a href="../">另一篇文章</a></p>
+          </div>
+<h3 id="文件格式分析"><a href="#文件格式分析" class="headerlink" title="文件格式分析"></a>文件格式分析</h3><h4 id="readelf"><a href="#readelf" class="headerlink" title="readelf"></a>readelf</h4><p>这个工具和objdump命令提供的功能类似，但是它显示的信息更为具体，并且它不依赖BFD库(BFD库是一个GNU项目，它的目标就是希望通过一种统一的接口来处理不同的目标文件）</p>
+<p>关于 <code>ELF</code>可以参考 <a href="../">这篇文章</a></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br></pre></td><td class="code"><pre><span class="line">$ readelf -all a.out</span><br><span class="line">ELF Header:</span><br><span class="line">  Magic:   7f 45 4c 46 01 01 01 00 00 00 00 00 00 00 00 00</span><br><span class="line">  Class:                             ELF32</span><br><span class="line">  Data:                              2<span class="string">'s complement, little endian</span></span><br><span class="line"><span class="string">  Version:                           1 (current)</span></span><br><span class="line"><span class="string">  OS/ABI:                            UNIX - System V</span></span><br><span class="line"><span class="string">  ABI Version:                       0</span></span><br><span class="line"><span class="string">  Type:                              EXEC (Executable file)</span></span><br><span class="line"><span class="string">  Machine:                           Intel 80386</span></span><br><span class="line"><span class="string">  Version:                           0x1</span></span><br><span class="line"><span class="string">  Entry point address:               0x8048330</span></span><br><span class="line"><span class="string">  Start of program headers:          52 (bytes into file)</span></span><br><span class="line"><span class="string">  Start of section headers:          4412 (bytes into file)</span></span><br><span class="line"><span class="string">  Flags:                             0x0</span></span><br><span class="line"><span class="string">  Size of this header:               52 (bytes)</span></span><br><span class="line"><span class="string">  Size of program headers:           32 (bytes)</span></span><br><span class="line"><span class="string">  Number of program headers:         9</span></span><br><span class="line"><span class="string">  Size of section headers:           40 (bytes)</span></span><br><span class="line"><span class="string">  Number of section headers:         30</span></span><br><span class="line"><span class="string">  Section header string table index: 27</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Section Headers:</span></span><br><span class="line"><span class="string">  [Nr] Name              Type            Addr     Off    Size   ES Flg Lk Inf Al</span></span><br><span class="line"><span class="string">  [ 0]                   NULL            00000000 000000 000000 00      0   0  0</span></span><br><span class="line"><span class="string">  [ 1] .interp           PROGBITS        08048154 000154 000013 00   A  0   0  1</span></span><br><span class="line"><span class="string">  [ 2] .note.ABI-tag     NOTE            08048168 000168 000020 00   A  0   0  4</span></span><br><span class="line"><span class="string">  [ 3] .note.gnu.build-i NOTE            08048188 000188 000024 00   A  0   0  4</span></span><br><span class="line"><span class="string">  [ 4] .gnu.hash         GNU_HASH        080481ac 0001ac 000020 04   A  5   0  4</span></span><br><span class="line"><span class="string">  [ 5] .dynsym           DYNSYM          080481cc 0001cc 000050 10   A  6   1  4</span></span><br><span class="line"><span class="string">  [ 6] .dynstr           STRTAB          0804821c 00021c 00004c 00   A  0   0  1</span></span><br><span class="line"><span class="string">  [ 7] .gnu.version      VERSYM          08048268 000268 00000a 02   A  5   0  2</span></span><br><span class="line"><span class="string">  [ 8] .gnu.version_r    VERNEED         08048274 000274 000020 00   A  6   1  4</span></span><br><span class="line"><span class="string">  [ 9] .rel.dyn          REL             08048294 000294 000008 08   A  5   0  4</span></span><br><span class="line"><span class="string">  [10] .rel.plt          REL             0804829c 00029c 000018 08   A  5  12  4</span></span><br><span class="line"><span class="string">  [11] .init             PROGBITS        080482b4 0002b4 00002e 00  AX  0   0  4</span></span><br><span class="line"><span class="string">  [12] .plt              PROGBITS        080482f0 0002f0 000040 04  AX  0   0 16</span></span><br><span class="line"><span class="string">  [13] .text             PROGBITS        08048330 000330 00018c 00  AX  0   0 16</span></span><br><span class="line"><span class="string">  [14] .fini             PROGBITS        080484bc 0004bc 00001a 00  AX  0   0  4</span></span><br><span class="line"><span class="string">  [15] .rodata           PROGBITS        080484d8 0004d8 000011 00   A  0   0  4</span></span><br><span class="line"><span class="string">  [16] .eh_frame_hdr     PROGBITS        080484ec 0004ec 000034 00   A  0   0  4</span></span><br><span class="line"><span class="string">  [17] .eh_frame         PROGBITS        08048520 000520 0000c4 00   A  0   0  4</span></span><br><span class="line"><span class="string">  [18] .ctors            PROGBITS        08049f14 000f14 000008 00  WA  0   0  4</span></span><br><span class="line"><span class="string">  [19] .dtors            PROGBITS        08049f1c 000f1c 000008 00  WA  0   0  4</span></span><br><span class="line"><span class="string">  [20] .jcr              PROGBITS        08049f24 000f24 000004 00  WA  0   0  4</span></span><br><span class="line"><span class="string">  [21] .dynamic          DYNAMIC         08049f28 000f28 0000c8 08  WA  6   0  4</span></span><br><span class="line"><span class="string">  [22] .got              PROGBITS        08049ff0 000ff0 000004 04  WA  0   0  4</span></span><br><span class="line"><span class="string">  [23] .got.plt          PROGBITS        08049ff4 000ff4 000018 04  WA  0   0  4</span></span><br><span class="line"><span class="string">  [24] .data             PROGBITS        0804a00c 00100c 000008 00  WA  0   0  4</span></span><br><span class="line"><span class="string">  [25] .bss              NOBITS          0804a014 001014 000008 00  WA  0   0  4</span></span><br><span class="line"><span class="string">  [26] .comment          PROGBITS        00000000 001014 00002a 01  MS  0   0  1</span></span><br><span class="line"><span class="string">  [27] .shstrtab         STRTAB          00000000 00103e 0000fc 00      0   0  1</span></span><br><span class="line"><span class="string">  [28] .symtab           SYMTAB          00000000 0015ec 000410 10     29  45  4</span></span><br><span class="line"><span class="string">  [29] .strtab           STRTAB          00000000 0019fc 0001f9 00      0   0  1</span></span><br><span class="line"><span class="string">Key to Flags:</span></span><br><span class="line"><span class="string">  W (write), A (alloc), X (execute), M (merge), S (strings)</span></span><br><span class="line"><span class="string">  I (info), L (link order), G (group), T (TLS), E (exclude), x (unknown)</span></span><br><span class="line"><span class="string">  O (extra OS processing required) o (OS specific), p (processor specific)</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">There are no section groups in this file.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Program Headers:</span></span><br><span class="line"><span class="string">  Type           Offset   VirtAddr   PhysAddr   FileSiz MemSiz  Flg Align</span></span><br><span class="line"><span class="string">  PHDR           0x000034 0x08048034 0x08048034 0x00120 0x00120 R E 0x4</span></span><br><span class="line"><span class="string">  INTERP         0x000154 0x08048154 0x08048154 0x00013 0x00013 R   0x1</span></span><br><span class="line"><span class="string">      [Requesting program interpreter: /lib/ld-linux.so.2]</span></span><br><span class="line"><span class="string">  LOAD           0x000000 0x08048000 0x08048000 0x005e4 0x005e4 R E 0x1000</span></span><br><span class="line"><span class="string">  LOAD           0x000f14 0x08049f14 0x08049f14 0x00100 0x00108 RW  0x1000</span></span><br><span class="line"><span class="string">  DYNAMIC        0x000f28 0x08049f28 0x08049f28 0x000c8 0x000c8 RW  0x4</span></span><br><span class="line"><span class="string">  NOTE           0x000168 0x08048168 0x08048168 0x00044 0x00044 R   0x4</span></span><br><span class="line"><span class="string">  GNU_EH_FRAME   0x0004ec 0x080484ec 0x080484ec 0x00034 0x00034 R   0x4</span></span><br><span class="line"><span class="string">  GNU_STACK      0x000000 0x00000000 0x00000000 0x00000 0x00000 RW  0x4</span></span><br><span class="line"><span class="string">  GNU_RELRO      0x000f14 0x08049f14 0x08049f14 0x000ec 0x000ec R   0x1</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"> Section to Segment mapping:</span></span><br><span class="line"><span class="string">  Segment Sections...</span></span><br><span class="line"><span class="string">   00</span></span><br><span class="line"><span class="string">   01     .interp</span></span><br><span class="line"><span class="string">   02     .interp .note.ABI-tag .note.gnu.build-id .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_r .rel.dyn .rel.plt .init .plt .text .fini .rodata .eh_frame_hdr .eh_frame</span></span><br><span class="line"><span class="string">   03     .ctors .dtors .jcr .dynamic .got .got.plt .data .bss</span></span><br><span class="line"><span class="string">   04     .dynamic</span></span><br><span class="line"><span class="string">   05     .note.ABI-tag .note.gnu.build-id</span></span><br><span class="line"><span class="string">   06     .eh_frame_hdr</span></span><br><span class="line"><span class="string">   07</span></span><br><span class="line"><span class="string">   08     .ctors .dtors .jcr .dynamic .got</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Dynamic section at offset 0xf28 contains 20 entries:</span></span><br><span class="line"><span class="string">  Tag        Type                         Name/Value</span></span><br><span class="line"><span class="string"> 0x00000001 (NEEDED)                     Shared library: [libc.so.6]</span></span><br><span class="line"><span class="string"> 0x0000000c (INIT)                       0x80482b4</span></span><br><span class="line"><span class="string"> 0x0000000d (FINI)                       0x80484bc</span></span><br><span class="line"><span class="string"> 0x6ffffef5 (GNU_HASH)                   0x80481ac</span></span><br><span class="line"><span class="string"> 0x00000005 (STRTAB)                     0x804821c</span></span><br><span class="line"><span class="string"> 0x00000006 (SYMTAB)                     0x80481cc</span></span><br><span class="line"><span class="string"> 0x0000000a (STRSZ)                      76 (bytes)</span></span><br><span class="line"><span class="string"> 0x0000000b (SYMENT)                     16 (bytes)</span></span><br><span class="line"><span class="string"> 0x00000015 (DEBUG)                      0x0</span></span><br><span class="line"><span class="string"> 0x00000003 (PLTGOT)                     0x8049ff4</span></span><br><span class="line"><span class="string"> 0x00000002 (PLTRELSZ)                   24 (bytes)</span></span><br><span class="line"><span class="string"> 0x00000014 (PLTREL)                     REL</span></span><br><span class="line"><span class="string"> 0x00000017 (JMPREL)                     0x804829c</span></span><br><span class="line"><span class="string"> 0x00000011 (REL)                        0x8048294</span></span><br><span class="line"><span class="string"> 0x00000012 (RELSZ)                      8 (bytes)</span></span><br><span class="line"><span class="string"> 0x00000013 (RELENT)                     8 (bytes)</span></span><br><span class="line"><span class="string"> 0x6ffffffe (VERNEED)                    0x8048274</span></span><br><span class="line"><span class="string"> 0x6fffffff (VERNEEDNUM)                 1</span></span><br><span class="line"><span class="string"> 0x6ffffff0 (VERSYM)                     0x8048268</span></span><br><span class="line"><span class="string"> 0x00000000 (NULL)                       0x0</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Relocation section '</span>.rel.dyn<span class="string">' at offset 0x294 contains 1 entries:</span></span><br><span class="line"><span class="string"> Offset     Info    Type            Sym.Value  Sym. Name</span></span><br><span class="line"><span class="string">08049ff0  00000206 R_386_GLOB_DAT    00000000   __gmon_start__</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Relocation section '</span>.rel.plt<span class="string">' at offset 0x29c contains 3 entries:</span></span><br><span class="line"><span class="string"> Offset     Info    Type            Sym.Value  Sym. Name</span></span><br><span class="line"><span class="string">0804a000  00000107 R_386_JUMP_SLOT   00000000   printf</span></span><br><span class="line"><span class="string">0804a004  00000207 R_386_JUMP_SLOT   00000000   __gmon_start__</span></span><br><span class="line"><span class="string">0804a008  00000307 R_386_JUMP_SLOT   00000000   __libc_start_main</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">There are no unwind sections in this file.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Symbol table '</span>.dynsym<span class="string">' contains 5 entries:</span></span><br><span class="line"><span class="string">   Num:    Value  Size Type    Bind   Vis      Ndx Name</span></span><br><span class="line"><span class="string">     0: 00000000     0 NOTYPE  LOCAL  DEFAULT  UND</span></span><br><span class="line"><span class="string">     1: 00000000     0 FUNC    GLOBAL DEFAULT  UND printf@GLIBC_2.0 (2)</span></span><br><span class="line"><span class="string">     2: 00000000     0 NOTYPE  WEAK   DEFAULT  UND __gmon_start__</span></span><br><span class="line"><span class="string">     3: 00000000     0 FUNC    GLOBAL DEFAULT  UND __libc_start_main@GLIBC_2.0 (2)</span></span><br><span class="line"><span class="string">     4: 080484dc     4 OBJECT  GLOBAL DEFAULT   15 _IO_stdin_used</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Symbol table '</span>.symtab<span class="string">' contains 65 entries:</span></span><br><span class="line"><span class="string">   Num:    Value  Size Type    Bind   Vis      Ndx Name</span></span><br><span class="line"><span class="string">     0: 00000000     0 NOTYPE  LOCAL  DEFAULT  UND</span></span><br><span class="line"><span class="string">     1: 08048154     0 SECTION LOCAL  DEFAULT    1</span></span><br><span class="line"><span class="string">     2: 08048168     0 SECTION LOCAL  DEFAULT    2</span></span><br><span class="line"><span class="string">     3: 08048188     0 SECTION LOCAL  DEFAULT    3</span></span><br><span class="line"><span class="string">     4: 080481ac     0 SECTION LOCAL  DEFAULT    4</span></span><br><span class="line"><span class="string">     5: 080481cc     0 SECTION LOCAL  DEFAULT    5</span></span><br><span class="line"><span class="string">     6: 0804821c     0 SECTION LOCAL  DEFAULT    6</span></span><br><span class="line"><span class="string">     7: 08048268     0 SECTION LOCAL  DEFAULT    7</span></span><br><span class="line"><span class="string">     8: 08048274     0 SECTION LOCAL  DEFAULT    8</span></span><br><span class="line"><span class="string">     9: 08048294     0 SECTION LOCAL  DEFAULT    9</span></span><br><span class="line"><span class="string">    10: 0804829c     0 SECTION LOCAL  DEFAULT   10</span></span><br><span class="line"><span class="string">    11: 080482b4     0 SECTION LOCAL  DEFAULT   11</span></span><br><span class="line"><span class="string">    12: 080482f0     0 SECTION LOCAL  DEFAULT   12</span></span><br><span class="line"><span class="string">    13: 08048330     0 SECTION LOCAL  DEFAULT   13</span></span><br><span class="line"><span class="string">    14: 080484bc     0 SECTION LOCAL  DEFAULT   14</span></span><br><span class="line"><span class="string">    15: 080484d8     0 SECTION LOCAL  DEFAULT   15</span></span><br><span class="line"><span class="string">    16: 080484ec     0 SECTION LOCAL  DEFAULT   16</span></span><br><span class="line"><span class="string">    17: 08048520     0 SECTION LOCAL  DEFAULT   17</span></span><br><span class="line"><span class="string">    18: 08049f14     0 SECTION LOCAL  DEFAULT   18</span></span><br><span class="line"><span class="string">    19: 08049f1c     0 SECTION LOCAL  DEFAULT   19</span></span><br><span class="line"><span class="string">    20: 08049f24     0 SECTION LOCAL  DEFAULT   20</span></span><br><span class="line"><span class="string">    21: 08049f28     0 SECTION LOCAL  DEFAULT   21</span></span><br><span class="line"><span class="string">    22: 08049ff0     0 SECTION LOCAL  DEFAULT   22</span></span><br><span class="line"><span class="string">    23: 08049ff4     0 SECTION LOCAL  DEFAULT   23</span></span><br><span class="line"><span class="string">    24: 0804a00c     0 SECTION LOCAL  DEFAULT   24</span></span><br><span class="line"><span class="string">    25: 0804a014     0 SECTION LOCAL  DEFAULT   25</span></span><br><span class="line"><span class="string">    26: 00000000     0 SECTION LOCAL  DEFAULT   26</span></span><br><span class="line"><span class="string">    27: 00000000     0 FILE    LOCAL  DEFAULT  ABS crtstuff.c</span></span><br><span class="line"><span class="string">    28: 08049f14     0 OBJECT  LOCAL  DEFAULT   18 __CTOR_LIST__</span></span><br><span class="line"><span class="string">    29: 08049f1c     0 OBJECT  LOCAL  DEFAULT   19 __DTOR_LIST__</span></span><br><span class="line"><span class="string">    30: 08049f24     0 OBJECT  LOCAL  DEFAULT   20 __JCR_LIST__</span></span><br><span class="line"><span class="string">    31: 08048360     0 FUNC    LOCAL  DEFAULT   13 __do_global_dtors_aux</span></span><br><span class="line"><span class="string">    32: 0804a014     1 OBJECT  LOCAL  DEFAULT   25 completed.6086</span></span><br><span class="line"><span class="string">    33: 0804a018     4 OBJECT  LOCAL  DEFAULT   25 dtor_idx.6088</span></span><br><span class="line"><span class="string">    34: 080483c0     0 FUNC    LOCAL  DEFAULT   13 frame_dummy</span></span><br><span class="line"><span class="string">    35: 00000000     0 FILE    LOCAL  DEFAULT  ABS crtstuff.c</span></span><br><span class="line"><span class="string">    36: 08049f18     0 OBJECT  LOCAL  DEFAULT   18 __CTOR_END__</span></span><br><span class="line"><span class="string">    37: 080485e0     0 OBJECT  LOCAL  DEFAULT   17 __FRAME_END__</span></span><br><span class="line"><span class="string">    38: 08049f24     0 OBJECT  LOCAL  DEFAULT   20 __JCR_END__</span></span><br><span class="line"><span class="string">    39: 08048490     0 FUNC    LOCAL  DEFAULT   13 __do_global_ctors_aux</span></span><br><span class="line"><span class="string">    40: 00000000     0 FILE    LOCAL  DEFAULT  ABS a.c</span></span><br><span class="line"><span class="string">    41: 08049f14     0 NOTYPE  LOCAL  DEFAULT   18 __init_array_end</span></span><br><span class="line"><span class="string">    42: 08049f28     0 OBJECT  LOCAL  DEFAULT   21 _DYNAMIC</span></span><br><span class="line"><span class="string">    43: 08049f14     0 NOTYPE  LOCAL  DEFAULT   18 __init_array_start</span></span><br><span class="line"><span class="string">    44: 08049ff4     0 OBJECT  LOCAL  DEFAULT   23 _GLOBAL_OFFSET_TABLE_</span></span><br><span class="line"><span class="string">    45: 08048480     2 FUNC    GLOBAL DEFAULT   13 __libc_csu_fini</span></span><br><span class="line"><span class="string">    46: 08048482     0 FUNC    GLOBAL HIDDEN    13 __i686.get_pc_thunk.bx</span></span><br><span class="line"><span class="string">    47: 0804a00c     0 NOTYPE  WEAK   DEFAULT   24 data_start</span></span><br><span class="line"><span class="string">    48: 00000000     0 FUNC    GLOBAL DEFAULT  UND printf@@GLIBC_2.0</span></span><br><span class="line"><span class="string">    49: 0804a014     0 NOTYPE  GLOBAL DEFAULT  ABS _edata</span></span><br><span class="line"><span class="string">    50: 080484bc     0 FUNC    GLOBAL DEFAULT   14 _fini</span></span><br><span class="line"><span class="string">    51: 08049f20     0 OBJECT  GLOBAL HIDDEN    19 __DTOR_END__</span></span><br><span class="line"><span class="string">    52: 0804a00c     0 NOTYPE  GLOBAL DEFAULT   24 __data_start</span></span><br><span class="line"><span class="string">    53: 00000000     0 NOTYPE  WEAK   DEFAULT  UND __gmon_start__</span></span><br><span class="line"><span class="string">    54: 0804a010     0 OBJECT  GLOBAL HIDDEN    24 __dso_handle</span></span><br><span class="line"><span class="string">    55: 080484dc     4 OBJECT  GLOBAL DEFAULT   15 _IO_stdin_used</span></span><br><span class="line"><span class="string">    56: 00000000     0 FUNC    GLOBAL DEFAULT  UND __libc_start_main@@GLIBC_</span></span><br><span class="line"><span class="string">    57: 08048410    97 FUNC    GLOBAL DEFAULT   13 __libc_csu_init</span></span><br><span class="line"><span class="string">    58: 0804a01c     0 NOTYPE  GLOBAL DEFAULT  ABS _end</span></span><br><span class="line"><span class="string">    59: 08048330     0 FUNC    GLOBAL DEFAULT   13 _start</span></span><br><span class="line"><span class="string">    60: 080484d8     4 OBJECT  GLOBAL DEFAULT   15 _fp_hw</span></span><br><span class="line"><span class="string">    61: 0804a014     0 NOTYPE  GLOBAL DEFAULT  ABS __bss_start</span></span><br><span class="line"><span class="string">    62: 080483e4    40 FUNC    GLOBAL DEFAULT   13 main</span></span><br><span class="line"><span class="string">    63: 00000000     0 NOTYPE  WEAK   DEFAULT  UND _Jv_RegisterClasses</span></span><br><span class="line"><span class="string">    64: 080482b4     0 FUNC    GLOBAL DEFAULT   11 _init</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Histogram for `.gnu.hash'</span> bucket list length (total of 2 buckets):</span><br><span class="line"> Length  Number     % of total  Coverage</span><br><span class="line">      0  1          ( 50.0%)</span><br><span class="line">      1  1          ( 50.0%)    100.0%</span><br><span class="line"></span><br><span class="line">Version symbols section <span class="string">'.gnu.version'</span> contains 5 entries:</span><br><span class="line"> Addr: 0000000008048268  Offset: 0x000268  Link: 5 (.dynsym)</span><br><span class="line">  000:   0 (*<span class="built_in">local</span>*)       2 (GLIBC_2.0)     0 (*<span class="built_in">local</span>*)       2 (GLIBC_2.0)</span><br><span class="line">  004:   1 (*global*)</span><br><span class="line"></span><br><span class="line">Version needs section <span class="string">'.gnu.version_r'</span> contains 1 entries:</span><br><span class="line"> Addr: 0x0000000008048274  Offset: 0x000274  Link: 6 (.dynstr)</span><br><span class="line">  000000: Version: 1  File: libc.so.6  Cnt: 1</span><br><span class="line">  0x0010:   Name: GLIBC_2.0  Flags: none  Version: 2</span><br><span class="line"></span><br><span class="line">Notes at offset 0x00000168 with length 0x00000020:</span><br><span class="line">  Owner                 Data size   Description</span><br><span class="line">  GNU                  0x00000010   NT_GNU_ABI_TAG (ABI version tag)</span><br><span class="line">    OS: Linux, ABI: 2.6.15</span><br><span class="line"></span><br><span class="line">Notes at offset 0x00000188 with length 0x00000024:</span><br><span class="line">  Owner                 Data size   Description</span><br><span class="line">  GNU                  0x00000014   NT_GNU_BUILD_ID (unique build ID bitstring)</span><br><span class="line">    Build ID: 17fb9651029b6a8543bfafec9eea23bd16454e65</span><br></pre></td></tr></table></figure>
+<h4 id="objdump"><a href="#objdump" class="headerlink" title="objdump"></a>objdump</h4><p>objdump工具用来显示二进制文件的信息，就是以一种可阅读的格式让你更多地了解二进制文件可能带有的附加信息。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 反汇编</span></span><br><span class="line">$ objdump -d main.o</span><br></pre></td></tr></table></figure>
+<h4 id="nm"><a href="#nm" class="headerlink" title="nm"></a>nm</h4><p>nm指令是names的简称，通过该指令可以列举文件中的符号。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">$ cat &gt; hello.c &lt;&lt; <span class="string">"EOF"</span></span><br><span class="line"><span class="comment">#include &lt;stdio.h&gt;</span></span><br><span class="line">int <span class="function"><span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"hello world\n"</span>);</span><br><span class="line">    <span class="built_in">return</span> 0;</span><br><span class="line">&#125;</span><br><span class="line">EOF</span><br><span class="line">$ gcc hello.c -o hello</span><br><span class="line">$ name hello</span><br><span class="line">0000000000601038 B __bss_start</span><br><span class="line">0000000000601038 b completed.7594</span><br><span class="line">0000000000601028 D __data_start</span><br><span class="line">0000000000601028 W data_start</span><br><span class="line">0000000000400460 t deregister_tm_clones</span><br><span class="line">00000000004004e0 t __do_global_dtors_aux</span><br><span class="line">0000000000600e18 t __do_global_dtors_aux_fini_array_entry</span><br><span class="line">0000000000601030 D __dso_handle</span><br><span class="line">0000000000600e28 d _DYNAMIC</span><br><span class="line">0000000000601038 D _edata</span><br><span class="line">0000000000601040 B _end</span><br><span class="line">00000000004005b4 T _fini</span><br><span class="line">0000000000400500 t frame_dummy</span><br><span class="line">0000000000600e10 t __frame_dummy_init_array_entry</span><br><span class="line">00000000004006f8 r __FRAME_END__</span><br><span class="line">0000000000601000 d _GLOBAL_OFFSET_TABLE_</span><br><span class="line">                 w __gmon_start__</span><br><span class="line">00000000004005d0 r __GNU_EH_FRAME_HDR</span><br><span class="line">00000000004003c8 T _init</span><br><span class="line">0000000000600e18 t __init_array_end</span><br><span class="line">0000000000600e10 t __init_array_start</span><br><span class="line">00000000004005c0 R _IO_stdin_used</span><br><span class="line">                 w _ITM_deregisterTMCloneTable</span><br><span class="line">                 w _ITM_registerTMCloneTable</span><br><span class="line">0000000000600e20 d __JCR_END__</span><br><span class="line">0000000000600e20 d __JCR_LIST__</span><br><span class="line">                 w _Jv_RegisterClasses</span><br><span class="line">00000000004005b0 T __libc_csu_fini</span><br><span class="line">0000000000400540 T __libc_csu_init</span><br><span class="line">                 U __libc_start_main@@GLIBC_2.2.5</span><br><span class="line">0000000000400526 T main</span><br><span class="line">                 U puts@@GLIBC_2.2.5</span><br><span class="line">00000000004004a0 t register_tm_clones</span><br><span class="line">0000000000400430 T _start</span><br><span class="line">0000000000601038 D __TMC_END__</span><br></pre></td></tr></table></figure>
+<h2 id="内核参数设置"><a href="#内核参数设置" class="headerlink" title="内核参数设置"></a>内核参数设置</h2><p>Sysctl 是一个在运行时检查和改变内核参数的工具，它是在 <a href="https://en.wikipedia.org/wiki/procfs" target="_blank" rel="external nofollow noopener noreferrer">procfs</a> 中实现的。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># sysctl -a														# 显示所有的系统参数</span></span><br><span class="line"><span class="comment"># sysctl -w kernel.domainname="example.com"		# 临时改变某个指定参数的值</span></span><br><span class="line"><span class="comment"># sysctl -p /etc/sysctl.conf		# 载入sysctl配置文件</span></span><br></pre></td></tr></table></figure>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://github.com/jlevy/the-art-of-command-line/blob/master/README-zh.md" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/jlevy/the-art-of-command-line/blob/master/README-zh.md</a></li>
+<li><a href="https://www.zhihu.com/question/25910725" target="_blank" rel="external nofollow noopener noreferrer">https://www.zhihu.com/question/25910725</a></li>
+<li><a href="https://linuxtools-rst.readthedocs.io/zh_CN/latest/tool/lsof.html" target="_blank" rel="external nofollow noopener noreferrer">https://linuxtools-rst.readthedocs.io/zh_CN/latest/tool/lsof.html</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/f2195e8a/" rel="bookmark">GDB笔记</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/e27e5d75/" rel="bookmark">Linux启动过程</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/7c0e6000/" rel="bookmark">理解 initramfs</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/63a566a0/" rel="bookmark">Ubuntu自动选择镜像源</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/f8586b35/" title="Shell笔记">http://houmin.cc/posts/f8586b35/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/linux/" rel="tag"><i class="fa fa-tag"></i> linux</a>
+              <a href="/tags/shell/" rel="tag"><i class="fa fa-tag"></i> shell</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/cf8e9225/" rel="next" title="Regular Expression">
+                  <i class="fa fa-chevron-left"></i> Regular Expression
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/f2195e8a/" rel="prev" title="GDB笔记">
+                  GDB笔记 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#基本使用"><span class="nav-number">1.</span> <span class="nav-text">基本使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#通配符"><span class="nav-number">1.1.</span> <span class="nav-text">通配符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#编译链接"><span class="nav-number">1.2.</span> <span class="nav-text">编译链接</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#ld"><span class="nav-number">1.2.1.</span> <span class="nav-text">ld</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ldd"><span class="nav-number">1.2.2.</span> <span class="nav-text">ldd</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ldconfig"><span class="nav-number">1.2.3.</span> <span class="nav-text">ldconfig</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查找搜索"><span class="nav-number">1.3.</span> <span class="nav-text">查找搜索</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#find"><span class="nav-number">1.3.1.</span> <span class="nav-text">find</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#grep"><span class="nav-number">1.3.2.</span> <span class="nav-text">grep</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ack"><span class="nav-number">1.3.3.</span> <span class="nav-text">ack</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ag"><span class="nav-number">1.3.4.</span> <span class="nav-text">ag</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#磁盘和文件系统"><span class="nav-number">1.4.</span> <span class="nav-text">磁盘和文件系统</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#fdisk"><span class="nav-number">1.4.1.</span> <span class="nav-text">fdisk</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#mount"><span class="nav-number">1.4.2.</span> <span class="nav-text">mount</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#dd"><span class="nav-number">1.4.3.</span> <span class="nav-text">dd</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#设备管理"><span class="nav-number">1.5.</span> <span class="nav-text">设备管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#用户管理"><span class="nav-number">1.6.</span> <span class="nav-text">用户管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#软链接和硬链接"><span class="nav-number">1.7.</span> <span class="nav-text">软链接和硬链接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#远程同步文件"><span class="nav-number">1.8.</span> <span class="nav-text">远程同步文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#包管理工具"><span class="nav-number">1.9.</span> <span class="nav-text">包管理工具</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#apt"><span class="nav-number">1.9.1.</span> <span class="nav-text">apt</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#压缩解压"><span class="nav-number">1.10.</span> <span class="nav-text">压缩解压</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#tar"><span class="nav-number">1.10.1.</span> <span class="nav-text">tar</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#cpio"><span class="nav-number">1.10.2.</span> <span class="nav-text">cpio</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#定时任务"><span class="nav-number">1.11.</span> <span class="nav-text">定时任务</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bash-profile-和-bashrc"><span class="nav-number">1.12.</span> <span class="nav-text">bash_profile 和 bashrc</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#进阶使用"><span class="nav-number">2.</span> <span class="nav-text">进阶使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#xargs"><span class="nav-number">2.1.</span> <span class="nav-text">xargs</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#parallel"><span class="nav-number">2.2.</span> <span class="nav-text">parallel</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#watch"><span class="nav-number">2.3.</span> <span class="nav-text">watch</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#tmux"><span class="nav-number">2.4.</span> <span class="nav-text">tmux</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#chroot"><span class="nav-number">2.5.</span> <span class="nav-text">chroot</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编写脚本"><span class="nav-number">3.</span> <span class="nav-text">编写脚本</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#set-x"><span class="nav-number">3.1.</span> <span class="nav-text">set -x</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#source-的区别"><span class="nav-number">3.2.</span> <span class="nav-text">source 的区别</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#文本处理"><span class="nav-number">4.</span> <span class="nav-text">文本处理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#awk"><span class="nav-number">4.1.</span> <span class="nav-text">awk</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sed"><span class="nav-number">4.2.</span> <span class="nav-text">sed</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#系统调试"><span class="nav-number">5.</span> <span class="nav-text">系统调试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#查看进程"><span class="nav-number">5.1.</span> <span class="nav-text">查看进程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#杀死进程"><span class="nav-number">5.2.</span> <span class="nav-text">杀死进程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看网络端口"><span class="nav-number">5.3.</span> <span class="nav-text">查看网络端口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看打开文件"><span class="nav-number">5.4.</span> <span class="nav-text">查看打开文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看磁盘占用"><span class="nav-number">5.5.</span> <span class="nav-text">查看磁盘占用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#任务管理器-top"><span class="nav-number">5.6.</span> <span class="nav-text">任务管理器 top</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#跟踪进程中的系统调用-strace"><span class="nav-number">5.7.</span> <span class="nav-text">跟踪进程中的系统调用 strace</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#跟踪进程栈-ptrack"><span class="nav-number">5.8.</span> <span class="nav-text">跟踪进程栈 ptrack</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#监视内存使用-vmstat"><span class="nav-number">5.9.</span> <span class="nav-text">监视内存使用 vmstat</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#监视-I-O子系统-iostat-iotop-dstat"><span class="nav-number">5.10.</span> <span class="nav-text">监视 I/O子系统 iostat/iotop/dstat</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#找出系统瓶颈-sar"><span class="nav-number">5.11.</span> <span class="nav-text">找出系统瓶颈 sar</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看程序依赖库-ldd"><span class="nav-number">5.12.</span> <span class="nav-text">查看程序依赖库 ldd</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文件格式分析"><span class="nav-number">5.13.</span> <span class="nav-text">文件格式分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#readelf"><span class="nav-number">5.13.1.</span> <span class="nav-text">readelf</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#objdump"><span class="nav-number">5.13.2.</span> <span class="nav-text">objdump</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#nm"><span class="nav-number">5.13.3.</span> <span class="nav-text">nm</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内核参数设置"><span class="nav-number">6.</span> <span class="nav-text">内核参数设置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">7.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

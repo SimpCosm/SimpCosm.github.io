@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="「朝花夕拾」是我给自己安排的每周总结。在 2020 年的年度计划里面，我给自己定的一个目标就是在 2020 年度每一周，能够有一份自己的总结，用以复盘自己在过去做过的事情，思考过的问题。这里是 2020 年朝花夕拾第一篇 Carpe Diem，今天我们来聊一聊数据和时间管理。">
+<meta name="keywords" content="时间管理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Carpe Diem">
+<meta property="og:url" content="http://houmin.cc/posts/3e030bdb/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="「朝花夕拾」是我给自己安排的每周总结。在 2020 年的年度计划里面，我给自己定的一个目标就是在 2020 年度每一周，能够有一份自己的总结，用以复盘自己在过去做过的事情，思考过的问题。这里是 2020 年朝花夕拾第一篇 Carpe Diem，今天我们来聊一聊数据和时间管理。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-04_recue-time.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-04_trello.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-04_trello-list.png">
+<meta property="og:image" content="https://pic1.zhimg.com/v2-95047deef1fca85441ce9a6319eef3cc_r.jpg">
+<meta property="og:updated_time" content="2020-07-20T01:30:36.292Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-04_recue-time.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/3e030bdb/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Carpe Diem | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+<link rel="stylesheet" href="/assets/css/APlayer.min.css" class="aplayer-style-marker">
+<script src="/assets/js/APlayer.min.js" class="aplayer-script-marker"></script>
+<script src="/assets/js/Meting.min.js" class="meting-script-marker"></script>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/3e030bdb/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Carpe Diem
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-01-04 10:58:40" itemprop="dateCreated datePublished" datetime="2020-01-04T10:58:40+08:00">2020-01-04</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%9D%E8%8A%B1%E5%A4%95%E6%8B%BE/" itemprop="url" rel="index">
+                    <span itemprop="name">朝花夕拾</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/3e030bdb/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/3e030bdb/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>6 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>「朝花夕拾」是我给自己安排的每周总结。在 2020 年的年度计划里面，我给自己定的一个目标就是在 2020 年度每一周，能够有一份自己的总结，用以复盘自己在过去做过的事情，思考过的问题。这里是 2020 年朝花夕拾第一篇 <code>Carpe Diem</code>，今天我们来聊一聊数据和时间管理。</p>
+
+    <div id="aplayer-ydtFJAIG" class="aplayer aplayer-tag-marker meting-tag-marker" data-id="499957703" data-server="netease" data-type="song" data-mode="circulation" data-autoplay="false" data-mutex="true" data-listmaxheight="340px" data-preload="auto" data-theme="#555"></div>
+<a id="more"></a>
+<p>在2019 年的年终总结里面，提到了一个思路，<code>用数据记录生活</code>。我下了一个粗暴的论断，<code>数据不会骗人</code>。这句话的前提是在展现数据的时候采用公平客观的方式，否则的话 —— <a href="https://www.zhihu.com/question/19578400" target="_blank" rel="external nofollow noopener noreferrer">「数据会说谎」的真实例子有哪些？</a></p>
+<p>话说回来，生活中的数据无处不在。大到国家统计局统计的国计民生的宏观经济数据，小到生活中每天点的外卖数据、滴滴的出行数据、微信的聊天数据，在当今的大数据时代，已经完全可以通过技术手段利用数据解析出你个人的生活。一个典型的例子，就是抖音等移动应用可以通过对你行为的追踪，精确地构建出你的 <code>用户画像</code> 。很多时候，可能你都不如抖音了解你自己。</p>
+<p>想起来之前在百度实习的时候发生的事情，当时我们内容团队在做百度 Feed 流的智能推荐，所以当时我也做了一段时间的手机百度的用户。要做智能推荐，要做千人千面，那么必须要对不同的用户做出精准的用户画像。（不然，如果给Robin 推荐了娱乐相关的内容，不仅是推荐的正确率大大降低，还会被 Robin 在群里直接发问。对，17 年那会 Robin 会直接和 Feed 流这边团队的人每日追踪 Feed 流的效果）。当时内部有一个用户画像系统，对于系统内的每一个用户，可以直接给出非常详细的用户画像描述。通过各种 tag 和图之间的关系，可以完整地看到一个用户在各个方面的特征。我尝试看了一下我自己的用户画像，当时真的是惊了。它非常诚实的记录了我的每一次浏览、每一次点击、每一次搜索，并被很精准的抽出了我的特征。我甚至都没有意识到我会那么频繁的关注小米新闻（果然当时是个米粉），我对于科技内容方面的关于也是远远大于其他内容（这还算符合预期的）。</p>
+<p>人是一个容易遗忘的物种。你可能不太记得你点外卖最长点的那家，你可能不太记得你花费了那么多的时间在刷短视频上，你可能不太清楚过去一年你购物上花费最多的一笔资金，你可能不太记得你过去一年 12 点之后才睡觉的比例……凡此总总，你所使用的应用，都在忠实客观地记录着这一切。所以，一年一度的年度总结里，互联网公司们就会出来刷存在感了。「来，看呀，这是你过去一年在我们这里经历的故事呀」。但是，他们没有告诉你的是，这些数据他们一直都在记录着，而且这里的年度总结里面只是一些他们想告诉你的数据。更多的数据，涉及到商业利益的，他们从不会告诉你。</p>
+<p>从理论上讲，如果当前各大互联网公司的数据能够共享的话，或者加上政府机构、医疗机构、电信系统、教育系统等等系统数据的话，对了还有满大街的摄像头数据，我们完全可以清楚的记录你这一生的所有，这在技术上完全是可行的。正如马云所说，<code>未来数据是生产资料，计算是生产力，互联网是生产关系</code>。整体上，整个社会、整个世界都是在朝着这个方向前进的。</p>
+<p>所以，这篇文章的主题是要控诉万恶的资本、万恶的政府，正是因为他们我们的生活才没有一点点隐私吗？哦不，我今天想聊的并不是这，也许以后可以再仔细聊一聊这个话题。实际上，身为技术人，我也是这个宏大系统的一份子，我也在推动着世界在朝着这个方向继续前进。并且，我是支持这个趋势的，数据化、智能化是未来。我们见过太多原始化的数据记录方式了，卷帙浩繁的法院系统的案卷信息，公安系统、教育系统、医疗系统莫不如是，技术上我们完全具有信息化智能化的能力，而且我也以为我们应当如此。至于上面说的问题，更多的是从技术和伦理的一个矛盾罢了，在合理的系统设计下，是可以解决上述问题的。</p>
+<p>那么，回归我想说的主题，「数据与时间管理」（今天真的是扯太远了）</p>
+<p><code>Carpe diem</code> 出自于 Horace 的 「Ode」中</p>
+<blockquote>
+<p>carpe diem, quam minimum credula postero</p>
+</blockquote>
+<p>意思是 <code>seize the day, put very little trust in tomorrow</code>。以这个作为本期朝花夕拾标题的用意在于，期待自己能够好好的过好每一天，对得起自己每一天的生活。</p>
+<hr>
+<p>还是那个观点，人本性是懒惰的，人本身是想要待在自己的舒适区里面的。为什么有时候刷抖音会一直刷下去呢？抖音几千个工程师就为了让你在上面呆的时间更长一点，专门针对人性的弱点进攻，沉迷于此完全合理。所以呢，为了能够更好的时间管理，你需要运用工具，突破自己的舒适区。</p>
+<p>关于时间管理，目前主要将其分成了以下四个部分</p>
+<h2 id="时间追踪"><a href="#时间追踪" class="headerlink" title="时间追踪"></a>时间追踪</h2><p>时间追踪就是记录自己每天的时间花在了哪里。时间是不会作假的，通过记录时间，你会清楚的看到你每天的时间花在了哪里，就可以看出来你是一个怎样的人。而不是自己的错觉，觉得自己有多么多么努力。</p>
+<p>对于计算设备上的时间追踪，我使用的是 RescueTime 这个工具，它会常驻在内存，记录你在各个软件上使用的时间。包括移动平台和非移动平台。比如这里是我在今天各个平台上花费的时间统计：</p>
+<p><img alt="RescueTime" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-04_recue-time.png"></p>
+<p>对于非计算设备上的时间记录呢？当然也有很多工具，比如 <code>iHour</code>，但是 iHour 的问题就在于每次做完一件事情时候你得手动去记录下来。另外一个可以的选择就是利用日历，比如 <code>Google Calender</code>，这是一个全平台通用的日历工具，而且你手机或者是笔记本上的日历都可以导入谷歌日历。另外一个优点就是，谷歌日历采用标准的 iCalender 的数据存储。即使谷歌日历不能用了之后也可以转到其他平台。不像小米手机自带的日历，不能导出。</p>
+<p>因为你本来就需要通过日历来做行程安排，所以另一方面也可以通过日历来记录自己的时间。当你把谷歌日历用到了极致之后，你甚至可以用谷歌日历来记日记，比如<a href="https://james-sun.blogspot.com/2013/05/google-calendar.html" target="_blank" rel="external nofollow noopener noreferrer">这个例子</a>。</p>
+<p>记录时间只是一个中性的行为，但是它可以帮助你更好的复盘。比如通过 RescueTime 我可以清楚地知道我每天在各个平台上面花费的时间，至少能够给自己以警醒。另外，通过谷歌日历，我可以查到在过去任意一段时间我干了啥。通过给自己设置一个每日总结的 list，可以督促自己每天用谷歌日历来复盘自己一天的生活。</p>
+<h2 id="任务清单"><a href="#任务清单" class="headerlink" title="任务清单"></a>任务清单</h2><p>任务清单就是为了帮助你完成计划，可以记录计划进度，添加任务，任务可以有分类，也可以设置任务重要优先级。日历当然也能够设置任务清单，但是它总是会和时间强相关，并不是专为任务清单而设计的。</p>
+<p>常见的任务清单有比如 <code>TickTick</code>和 <code>WunderList</code>，但是使用了一下不能够任务导出让我心里总是会有一些担心。</p>
+<p>后来我想到了 <code>Trello</code>，这个是我在香侬实习的时候 Shibo 推荐我们使用的。Trello 适合小团队协作，可以完成更多的工作。它采用看板的思路，通过看板、列表和卡片的形式组织项目并区分优先级。除了小团队，当然也可以给个人使用，可以参考 <a href="https://www.zhihu.com/question/28683908/answer/139282848" target="_blank" rel="external nofollow noopener noreferrer">这个知乎问题</a>了解更多关于 Trello 使用的方法。</p>
+<p>使用了一下之后发现，Trello 不仅支持 Markdown 格式，还可以将数据以 JSON 的格式导出，还可以和其他的工具比如 slack、github 协同工作，简直专门为程序猿设计，完美！</p>
+<p>每一个工具只干一件事，然后可以和其他工具协同工作，这不就是 UNIX 的KISS设计哲学吗？</p>
+<p>这里是我当前的一个看板，主要用于个人计划管理，也许以后工作会专门在开一个看板。</p>
+<p><img alt="Trello" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-04_trello.png"></p>
+<p>对每一个 card 还能有自己详细的计划</p>
+<p><img alt="比如这里是我的 2020 年度音乐计划" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-04_trello-list.png"></p>
+<h2 id="习惯养成"><a href="#习惯养成" class="headerlink" title="习惯养成"></a>习惯养成</h2><p>坚持 21 天就可以养成一个习惯。除了上述的工具，还可以有习惯养成打卡工具，我这里选用的是小日常。</p>
+<p><img alt="萌萌的界面" data-src="https://pic1.zhimg.com/v2-95047deef1fca85441ce9a6319eef3cc_r.jpg"></p>
+<p>这里的习惯养成主要就是督促自己养成一些生活中的小习惯啦，比如早睡早起、热水泡脚等习惯，作为上面的工具的一个辅助。</p>
+<h2 id="番茄工作法"><a href="#番茄工作法" class="headerlink" title="番茄工作法"></a>番茄工作法</h2><p>最后一个就是番茄工作法，如何能够让自己在工作的时候尽量的投入到其中。一个解决的思路就是番茄工作法，就是说工作一段时间比如 30 分钟之后，休息 5 分钟，可以看手机、起来动一动啥的。</p>
+<p>这方面的工具有很多，比如番茄时钟，番茄土豆之类的，我这里选用的是 <code>forest</code></p>
+<hr>
+<p>上面说的种种，都只是这几天选择的工具，并在确定的工具下设定了自己的工作流模式。2020 年的第一周，一切都只是刚刚开始，所有的数据记录和打卡也都是刚刚开始，每周总结朝花夕拾也才刚刚开始。期待自己在 2020 年底的时候，看着所有的这些数据，能够自豪的作出自己的年终总结。</p>
+
+    </div>
+
+    
+    
+    
+      
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/3e030bdb/" title="Carpe Diem">http://houmin.cc/posts/3e030bdb/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E6%97%B6%E9%97%B4%E7%AE%A1%E7%90%86/" rel="tag"><i class="fa fa-tag"></i> 时间管理</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/2ecc368/" rel="next" title="2019 未来へ">
+                  <i class="fa fa-chevron-left"></i> 2019 未来へ
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/9bccd097/" rel="prev" title="【计算机体系结构】Cache Memory">
+                  【计算机体系结构】Cache Memory <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#时间追踪"><span class="nav-number">1.</span> <span class="nav-text">时间追踪</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#任务清单"><span class="nav-number">2.</span> <span class="nav-text">任务清单</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#习惯养成"><span class="nav-number">3.</span> <span class="nav-text">习惯养成</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#番茄工作法"><span class="nav-number">4.</span> <span class="nav-text">番茄工作法</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

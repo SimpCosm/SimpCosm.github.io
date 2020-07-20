@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Hexo是一个基于NodeJS简洁高效的博客框架, 本文详细介绍了自己基于Hexo和NexT主题搭建自己个人网站，并且部署到AWS和阿里云ECS服务上的过程。并且深度定制了自己的个人网站，仅作为自己的一个备忘和对他人的一份有些许价值的参考。">
+<meta name="keywords" content="Hexo,blog">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo NexT 深度定制">
+<meta property="og:url" content="http://houmin.cc/posts/a63a603e/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="Hexo是一个基于NodeJS简洁高效的博客框架, 本文详细介绍了自己基于Hexo和NexT主题搭建自己个人网站，并且部署到AWS和阿里云ECS服务上的过程。并且深度定制了自己的个人网站，仅作为自己的一个备忘和对他人的一份有些许价值的参考。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yearito-1256884783.image.myqcloud.com/hexo-theme-beautify/back-to-top.gif">
+<meta property="og:image" content="https://blogimage-1258928558.cos.ap-guangzhou.myqcloud.com/blog-establish/hexo-admin.png">
+<meta property="og:updated_time" content="2020-07-14T08:24:44.098Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yearito-1256884783.image.myqcloud.com/hexo-theme-beautify/back-to-top.gif">
+
+<link rel="canonical" href="http://houmin.cc/posts/a63a603e/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Hexo NexT 深度定制 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+<link rel="stylesheet" href="/assets/css/APlayer.min.css" class="aplayer-style-marker">
+<script src="/assets/js/APlayer.min.js" class="aplayer-script-marker"></script>
+<script src="/assets/js/Meting.min.js" class="meting-script-marker"></script>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/a63a603e/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Hexo NexT 深度定制
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-10-21 09:31:25" itemprop="dateCreated datePublished" datetime="2019-10-21T09:31:25+08:00">2019-10-21</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/a63a603e/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/a63a603e/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>27k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>48 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Hexo是一个基于NodeJS简洁高效的博客框架, 本文详细介绍了自己基于Hexo和NexT主题搭建自己个人网站，并且部署到AWS和阿里云ECS服务上的过程。并且深度定制了自己的个人网站，仅作为自己的一个备忘和对他人的一份有些许价值的参考。</p>
+<a id="more"></a>
+<h2 id="阿里云服务器端"><a href="#阿里云服务器端" class="headerlink" title="阿里云服务器端"></a>阿里云服务器端</h2><h3 id="购买ECS服务"><a href="#购买ECS服务" class="headerlink" title="购买ECS服务"></a>购买ECS服务</h3><p>之前是利用GitHub Pages + Hexo 部署的博客，因为强迫症想要更加全面的掌控自己的博客，决定在自己的服务器上部署Hexo博客。</p>
+<p>现在各大厂商都有自己的ECS服务，同时针对学生也有固定的学生优惠。我选择的是阿里云云翼计划的云服务器ECS服务。</p>
+<p>配置如下</p>
+<ul>
+<li>1核CPU Intel Xeon E5-2682 v4</li>
+<li>2G DDR4 内存</li>
+<li>1M带宽 VPC专有网络, I/O 优化</li>
+<li>40G系统盘</li>
+</ul>
+<p>这一套下来官网价格得要1452RMB，用学生优惠下来只需要114RMB，显然实惠很多。</p>
+<h3 id="购买域名"><a href="#购买域名" class="headerlink" title="购买域名"></a>购买域名</h3><p>既然都已经有了自己的服务器了，自然就想，为何不整一套自己的域名呢？</p>
+<p>域名可以在国外知名域名注册厂家Godaddy和NameCheap等购买，也可以使用国内的阿里云万网和腾讯云的域名注册服务购买。但是看着国外域名随随便便一年十几刀的费用，我还是老老实实用万网的服务买的域名。</p>
+<p><code>houmin.cc</code>用160RMB买了10年的域名服务，从2017年到2027年。</p>
+<p>因为某些不可知的因素，cc域名从2018年起不能在国内备案了，导致我现在这个域名也一直不能备案，不过还是可以解析的。购买域名服务后，修改域名解析服务，将域名指向我们自己的阿里云服务器。</p>
+<h3 id="服务器环境搭建"><a href="#服务器环境搭建" class="headerlink" title="服务器环境搭建"></a>服务器环境搭建</h3><h4 id="配置安全组规则"><a href="#配置安全组规则" class="headerlink" title="配置安全组规则"></a>配置安全组规则</h4><p>由于阿里云是默认不授权80端口的访问的，所以我们要手动配置。</p>
+<p>打开阿里云服务器管理控制台-&gt;点击左侧安全组-&gt;点击右侧的配置规则-&gt;点击添加安全组规则</p>
+<h4 id="配置服务器环境"><a href="#配置服务器环境" class="headerlink" title="配置服务器环境"></a>配置服务器环境</h4><p>服务器采用的是Ubuntu 16.04，作为一个网站，必定要有一个web server，这里采用的是Nginx</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install nginx</span><br></pre></td></tr></table></figure>
+<p>这个时候打开浏览器，输入服务器的公网IP地址，就可以看到Nginx的默认网页了。</p>
+<p>关于Nginx当前采用的是默认配置，我们的目标是让这个网站的默认地址指向我们的博客，是不是默认的这个欢迎界面。这就需要我们去修改Nginx的默认配置。Nginx的配置文件在Ubuntu下放在了<code>/etc/nginx</code>的目录下，我们可以看到该目录下有<code>sites-available</code>和<code>sites-enabled</code>，其中<code>sites-enabled</code>里面的default就是<code>sites-available</code>下面default的一个软链接。打开default我们可以看到</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> Default server configuration</span></span><br><span class="line"><span class="meta">#</span></span><br><span class="line">server &#123;</span><br><span class="line">	listen 80 default_server;</span><br><span class="line">	listen [::]:80 default_server;</span><br><span class="line"></span><br><span class="line"><span class="meta">	#</span><span class="bash"> SSL configuration</span></span><br><span class="line"><span class="meta">	#</span></span><br><span class="line"><span class="meta">	#</span><span class="bash"> listen 443 ssl default_server;</span></span><br><span class="line"><span class="meta">	#</span><span class="bash"> listen [::]:443 ssl default_server;</span></span><br><span class="line"><span class="meta">	#</span></span><br><span class="line"><span class="meta">	#</span><span class="bash"> Note: You should <span class="built_in">disable</span> gzip <span class="keyword">for</span> SSL traffic.</span></span><br><span class="line"><span class="meta">	#</span><span class="bash"> See: https://bugs.debian.org/773332</span></span><br><span class="line"><span class="meta">	#</span></span><br><span class="line"><span class="meta">	#</span><span class="bash"> Read up on ssl_ciphers to ensure a secure configuration.</span></span><br><span class="line"><span class="meta">	#</span><span class="bash"> See: https://bugs.debian.org/765782</span></span><br><span class="line"><span class="meta">	#</span></span><br><span class="line"><span class="meta">	#</span><span class="bash"> Self signed certs generated by the ssl-cert package</span></span><br><span class="line"><span class="meta">	#</span><span class="bash"> Don<span class="string">'t use them in a production server!</span></span></span><br><span class="line"><span class="meta">	#</span></span><br><span class="line"><span class="meta">	#</span><span class="bash"> include snippets/snakeoil.conf;</span></span><br><span class="line"></span><br><span class="line">	root /var/www/html;</span><br><span class="line"></span><br><span class="line"><span class="meta">	#</span><span class="bash"> Add index.php to the list <span class="keyword">if</span> you are using PHP</span></span><br><span class="line">	index index.html index.htm index.nginx-debian.html;</span><br><span class="line"></span><br><span class="line">	server_name _;</span><br><span class="line"></span><br><span class="line">	location / &#123;</span><br><span class="line"><span class="meta">		#</span><span class="bash"> First attempt to serve request as file, <span class="keyword">then</span></span></span><br><span class="line"><span class="meta">		#</span><span class="bash"> as directory, <span class="keyword">then</span> fall back to displaying a 404.</span></span><br><span class="line">		try_files $uri $uri/ =404;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">	#</span><span class="bash"> pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000</span></span><br><span class="line"><span class="meta">	#</span></span><br><span class="line"><span class="meta">	#</span><span class="bash">location ~ \.php$ &#123;</span></span><br><span class="line"><span class="meta">	#</span><span class="bash">	include snippets/fastcgi-php.conf;</span></span><br><span class="line"><span class="meta">	#</span></span><br><span class="line"><span class="meta">	#</span><span class="bash">	<span class="comment"># With php7.0-cgi alone:</span></span></span><br><span class="line"><span class="meta">	#</span><span class="bash">	fastcgi_pass 127.0.0.1:9000;</span></span><br><span class="line"><span class="meta">	#</span><span class="bash">	<span class="comment"># With php7.0-fpm:</span></span></span><br><span class="line"><span class="meta">	#</span><span class="bash">	fastcgi_pass unix:/run/php/php7.0-fpm.sock;</span></span><br><span class="line"><span class="meta">	#</span><span class="bash">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="meta">	#</span><span class="bash"> deny access to .htaccess files, <span class="keyword">if</span> Apache<span class="string">'s document root</span></span></span><br><span class="line"><span class="meta">	#</span><span class="bash"> concurs with nginx<span class="string">'s one</span></span></span><br><span class="line"><span class="meta">	#</span></span><br><span class="line"><span class="meta">	#</span><span class="bash">location ~ /\.ht &#123;</span></span><br><span class="line"><span class="meta">	#</span><span class="bash">	deny all;</span></span><br><span class="line"><span class="meta">	#</span><span class="bash">&#125;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当前Nginx监听在80端口，默认没有打开HTTPS，同时网站的源代码放在了<code>/var/www/html</code>目录下。进入这个目录，我们也确实可以看到一个<code>index.nginx-debian.html</code>文件。这就是我们看到的默认Nginx的欢迎页面。</p>
+<p>为了创建我们自己的网站，我们需要类似的有同样的配置</p>
+<ul>
+<li>创建存放网站源文件的目录，这里我们创建的是<code>/var/www/houmin.cc</code></li>
+<li>创建我们自己网站的配置文件，在<code>/etc/nginx/sites-available</code>中，这里我们叫<code>houmin.cc</code></li>
+<li>在<code>/etc/nginx/sites-enabled</code>中删去default，并且创建一个对<code>houmin.cc</code>配置文件的软链接。</li>
+<li>删除<code>/etc/nginx/sites-enabled</code>中的default</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> sudo mkdir -p /var/www/houmin.cc</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">cd</span> /etc/nginx/sites-enabled</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> sudo ln -s /etc/nginx/sites-available/houmin.cc houmin.cc</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> sudo rm /etc/nginx/sites-enabled/default</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> sudo systemctl restart nginx.service</span></span><br></pre></td></tr></table></figure>
+<p>其中新的配置文件中只是修改了网站root的目录，其他地方没有做修改。这时候在<code>/var/www/houmin.cc</code>目录下放置一个新的html文件，输入公网IP应该可以新的网页了。</p>
+<h4 id="配置Git服务"><a href="#配置Git服务" class="headerlink" title="配置Git服务"></a>配置Git服务</h4><p>网站的源文件通过git进行版本管理，每一次更新源文件之后，可以通过git的hook操作自动更新到Nginx的目录下。因此，我们需要在服务器上面搭建一个自己的git服务器，具体的操作如下：</p>
+<ul>
+<li>创建git用户，并且授予其sudo权限<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> sudo adduser git</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> sudo usermod -aG sudo git</span></span><br></pre></td></tr></table></figure>
+这时候在服务器上以git用户登陆，可以在<code>/home/git</code>目录下创建repositories目录，专门用作git服务器放置repo的地方。</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git@cosmos:~/repositories$ git init --bare blog.git</span><br><span class="line">Initialized empty Git repository in /home/git/repositories/blog.git/</span><br></pre></td></tr></table></figure>
+<p>这时候在客户端应该是可以clone这个repo的<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> git <span class="built_in">clone</span> git@houmin.cc:/home/git/repositories/blog.git</span></span><br><span class="line">Cloning into 'blog'...</span><br><span class="line">git@houmin.cc's password:</span><br><span class="line">warning: You appear to have cloned an empty repository.</span><br><span class="line"><span class="meta">$</span><span class="bash"> touch hello.md</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">echo</span> <span class="string">"Hello, Git"</span> &gt;&gt; hello.md</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> git add hello.md</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> git commit -m <span class="string">"Add hello.md"</span></span></span><br><span class="line"><span class="meta">$</span><span class="bash"> git push -u origin</span></span><br><span class="line">git@houmin.cc's password:</span><br><span class="line">Counting objects: 3, done.</span><br><span class="line">Writing objects: 100% (3/3), 219 bytes | 219.00 KiB/s, done.</span><br><span class="line">Total 3 (delta 0), reused 0 (delta 0)</span><br><span class="line">To houmin.cc:/home/git/repositories/blog.git</span><br><span class="line"> * [new branch]      master -&gt; master</span><br><span class="line">Branch 'master' set up to track remote branch 'master' from 'origin'.</span><br></pre></td></tr></table></figure><br>为了避免输入密码，可以在本地机器执行<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> ssh-copy-id git@houmin.cc</span></span><br></pre></td></tr></table></figure></p>
+<p>为了实现自动部署，我们需要利用git的hook功能。</p>
+<p>我们进入到blog.git目录，<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git@cosmos:~/repositories/blog.git/hooks$ cat post-receive</span><br><span class="line">git --work-tree=/var/www/houmin.cc --git-dir=/home/git/repositories/blog.git checkout -f</span><br><span class="line">git@cosmos:~/repositories/blog.git/hooks$ chmod +x post-receive</span><br><span class="line">git@cosmos:~$ sudo chown -R git:git /var/www/houmin.cc</span><br></pre></td></tr></table></figure><br>这里通过创建<code>post-receive</code>这个hook，在每次<code>git push</code>将项目最新的文件复制到work tree下</p>
+<p>通过这种方式，是可以看到<code>/var/www/houmin.cc</code>目录下的文件实时的发生更新。为了能够使用git用户更新houmin.cc目录下的文件，需要将该目录的所有者更改为git。</p>
+<p>这时候通过ip访问，是可以看到Nginx的默认网页的。</p>
+<h4 id="阿里云劫持未备案的请求"><a href="#阿里云劫持未备案的请求" class="headerlink" title="阿里云劫持未备案的请求"></a>阿里云劫持未备案的请求</h4><p>这个时候，如果通过域名访问的话，会告诉你houmin.cc没有备案。也就是说，通过访问 <code>http://houmin.cc</code>阿里云会自动识别这个域名所属的服务器没有备案过，会自动劫持请求。</p>
+<p>啊是的，你现在也不让我备案了啊(工信部在2018年停掉了<code>cc</code>域名的备案)，怎么办呢？查阅资料发现，<a href="https://juejin.im/post/5c62bf5f51882562c5505fa4" target="_blank" rel="external nofollow noopener noreferrer">有人说</a>可以通过开启HTTPS解决这个问题，再仔细一看这个是在2019年上半年的解决方案，阿里云在2019年年中的时候就将没有备案的云服务器通过https的请求也给劫持了。</p>
+<p>然后在整https的时候也试了好几种方案，</p>
+<ul>
+<li>let’s encrypt</li>
+<li>acme.sh自动</li>
+<li>cloudflare免费十年证书</li>
+</ul>
+<p>采用这三种方案的时候，都因为访问阿里云服务器被劫持了导致没能成功。为了解决这个问题，可以有两个方案</p>
+<ul>
+<li>重新申请可以备案的域名，老老实实备案，这个需要20天的时间</li>
+<li>使用国外的云服务，比如AWS，可以先<a href="https://www.luofan.net/post/105.html" target="_blank" rel="external nofollow noopener noreferrer">免费白嫖一年</a> </li>
+</ul>
+<p>这两个方案我同时都在进行，一边买了<code>houmin.site</code>十年的域名，一边又申请了AWS的免费一年的EC2服务。</p>
+<p>现在的状态：</p>
+<ul>
+<li>备案时间较长，仍在进行中</li>
+<li>EC2服务申请成功后，将<code>houmin.cc</code>解析到EC2上，这时候是可以成功通过域名访问网站的。</li>
+</ul>
+<p>关于HTTPS的部分，可以参考 <a href="#开启HTTPS">开启HTTPS</a></p>
+<h2 id="客户端环境搭建"><a href="#客户端环境搭建" class="headerlink" title="客户端环境搭建"></a>客户端环境搭建</h2><h3 id="配置信息"><a href="#配置信息" class="headerlink" title="配置信息"></a>配置信息</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">OS: Ubuntu 18.04 LTS</span><br><span class="line">NodeJS: 8.10.0</span><br><span class="line">Hexo: 4.0.0</span><br><span class="line">NexT: 7.5.0</span><br></pre></td></tr></table></figure>
+<h3 id="安装NodeJS"><a href="#安装NodeJS" class="headerlink" title="安装NodeJS"></a>安装NodeJS</h3><ul>
+<li>从官网下载系统对应的源码</li>
+<li>依次执行以下命令解压编译安装</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ tar -xzvf node-v8.10.0-linux-x64.tar.xz</span><br><span class="line">$ make</span><br><span class="line">$ sudo make install</span><br></pre></td></tr></table></figure>
+<h3 id="安装Hexo"><a href="#安装Hexo" class="headerlink" title="安装Hexo"></a>安装Hexo</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ npm install -g hexo</span><br></pre></td></tr></table></figure>
+<h3 id="建站"><a href="#建站" class="headerlink" title="建站"></a>建站</h3><p>安装 Hexo 完成后，请执行下列命令，Hexo 将会在指定文件夹中新建所需要的文件。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ hexo init &lt;folder&gt;</span><br><span class="line">$ <span class="built_in">cd</span> &lt;folder&gt;</span><br><span class="line">$ npm install</span><br></pre></td></tr></table></figure>
+<p>新建完成后，指定文件夹的目录如下</p>
+<figure class="highlight sqf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">.</span><br><span class="line">├── <span class="variable">_config</span>.yml</span><br><span class="line">├── package.json</span><br><span class="line">├── scaffolds</span><br><span class="line">├── source</span><br><span class="line">|   ├── <span class="variable">_drafts</span></span><br><span class="line">|   └── <span class="variable">_posts</span></span><br><span class="line">└── themes</span><br></pre></td></tr></table></figure>
+<p>接下来安装 Hexo 关于启动服务器的插件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ npm install hexo-server --save</span><br></pre></td></tr></table></figure>
+<p>这个时候可以启动服务器, 本地查看打开 <a href="http://localhost:4000" target="_blank" rel="external nofollow noopener noreferrer">http://localhost:4000</a> 查看效果效果, 如果不指定端口，默认为4000<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure></p>
+<h3 id="主题和配置"><a href="#主题和配置" class="headerlink" title="主题和配置"></a>主题和配置</h3><p>这里选择的主题为NexT，下面介绍配置主题的主要步骤</p>
+<ul>
+<li>前往 <a href="https://github.com/iissnan/hexo-theme-next/releases" target="_blank" rel="external nofollow noopener noreferrer">NexT主题发布界面</a>下载主题压缩包</li>
+<li>解压并将目录更名为next</li>
+<li>将 next 移动至 blog/themes/ 目录下</li>
+<li>将 blog 目录下的 _config.yml 文件中的 theme 属性值改为 next</li>
+<li>此时主题更换成功，可启动 server 验证效果</li>
+</ul>
+<h3 id="将博客部署到阿里云"><a href="#将博客部署到阿里云" class="headerlink" title="将博客部署到阿里云"></a>将博客部署到阿里云</h3><ul>
+<li>在阿里云的git服务器上新建blog的仓库<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git@cosmos:~/repositories$ git init --bare blog.git</span><br><span class="line"><span class="comment"># add post-receive hook</span></span><br></pre></td></tr></table></figure></li>
+<li><p>安装 hexo 关于 git 的组件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ npm install hexo-deployer-git --save</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在<code>_config.yml</code> 中为 git 添加配置</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">deploy:</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">git</span></span><br><span class="line">  <span class="attr">repository:</span> <span class="string">git@houmin.cc:/home/git/repositories/blog.git</span></span><br><span class="line">  <span class="attr">branch:</span> <span class="string">master</span></span><br></pre></td></tr></table></figure></li>
+<li>执行(每次修改都要执行这些命令才能在github pages看到效果)<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate <span class="comment"># generate static files</span></span><br><span class="line">$ hexo deploy <span class="comment">#Deploy to remote sites</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h2 id="Next主题基本功能配置"><a href="#Next主题基本功能配置" class="headerlink" title="Next主题基本功能配置"></a>Next主题基本功能配置</h2><h3 id="Hexo依赖安装"><a href="#Hexo依赖安装" class="headerlink" title="Hexo依赖安装"></a>Hexo依赖安装</h3><p>下面是当前配置下需要安装的dependency</p>
+<figure class="highlight shell"><figcaption><span>hexo安装依赖package.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  "name": "hexo-site",</span><br><span class="line">  "version": "0.0.0",</span><br><span class="line">  "private": true,</span><br><span class="line">  "scripts": &#123;</span><br><span class="line">    "build": "hexo generate",</span><br><span class="line">    "clean": "hexo clean",</span><br><span class="line">    "deploy": "hexo deploy",</span><br><span class="line">    "server": "hexo server"</span><br><span class="line">  &#125;,</span><br><span class="line">  "hexo": &#123;</span><br><span class="line">    "version": "4.0.0"</span><br><span class="line">  &#125;,</span><br><span class="line">  "dependencies": &#123;</span><br><span class="line">    "canvas-nest.js": "^2.0.4",</span><br><span class="line">    "hexo": "^4.0.0",</span><br><span class="line">    "hexo-abbrlink": "^2.0.5",</span><br><span class="line">    "hexo-admin": "^2.3.0",</span><br><span class="line">    "hexo-deployer-git": "^2.0.0",</span><br><span class="line">    "hexo-douban": "^1.1.3",</span><br><span class="line">    "hexo-generator-archive": "^1.0.0",</span><br><span class="line">    "hexo-generator-category": "^1.0.0",</span><br><span class="line">    "hexo-generator-feed": "^2.0.0",</span><br><span class="line">    "hexo-generator-index": "^1.0.0",</span><br><span class="line">    "hexo-generator-searchdb": "^1.1.0",</span><br><span class="line">    "hexo-generator-sitemap": "^1.2.0",</span><br><span class="line">    "hexo-generator-tag": "^1.0.0",</span><br><span class="line">    "hexo-related-popular-posts": "^3.0.6",</span><br><span class="line">    "hexo-renderer-ejs": "^1.0.0",</span><br><span class="line">    "hexo-renderer-marked": "^2.0.0",</span><br><span class="line">    "hexo-renderer-stylus": "^1.1.0",</span><br><span class="line">    "hexo-server": "^1.0.0",</span><br><span class="line">    "hexo-symbols-count-time": "^0.6.3",</span><br><span class="line">    "hexo-tag-aplayer": "^3.0.4",</span><br><span class="line">    "hexo-tag-dplayer": "^0.3.3"</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以在博客目录下执行下面命令即可安装上所有的依赖</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> sudo npm install --production</span></span><br></pre></td></tr></table></figure>
+<h3 id="定制favicon"><a href="#定制favicon" class="headerlink" title="定制favicon"></a>定制favicon</h3><figure class="highlight yaml"><figcaption><span>文件位置: blog/themes/next/_config.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">favicon:</span></span><br><span class="line">  <span class="attr">small:</span> <span class="string">/images/favicon-16x16-next.png</span>  <span class="comment"># 网站小图标</span></span><br><span class="line">  <span class="attr">medium:</span> <span class="string">/images/favicon-32x32-next.png</span>   <span class="comment"># 中等图标</span></span><br><span class="line">  <span class="attr">apple_touch_icon:</span> <span class="string">/images/apple-touch-icon-next.png</span>  <span class="comment"># app_touch上显示图标   </span></span><br><span class="line">  <span class="attr">safari_pinned_tab:</span> <span class="string">/images/logo.svg</span>   <span class="comment"># 在Safari浏览器中显示图标</span></span><br><span class="line">  <span class="comment">#android_manifest: /images/manifest.json  # 安卓默认显示同普通情况下</span></span><br><span class="line">  <span class="comment">#ms_browserconfig: /images/browserconfig.xml</span></span><br></pre></td></tr></table></figure>
+<p>网站 favicon 图标可以放到你的 next 主题目录下面的<code>source/images</code>中，然后按照上述相对路径方式引用，这里 favicon 图标不需要非得是 ico 格式的，也可以是 png 或其它图片格式。</p>
+<p>如果是有第三方图床放图片链接的，也可以直接改成图片链接。</p>
+<h3 id="社交信息"><a href="#社交信息" class="headerlink" title="社交信息"></a>社交信息</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">social:</span></span><br><span class="line">  <span class="attr">GitHub:</span> <span class="string">https://github.com/SimpCosm</span> <span class="string">||</span> <span class="string">github</span></span><br><span class="line">  <span class="attr">E-Mail:</span> <span class="string">mailto:weihoumin@gmail.com</span> <span class="string">||</span> <span class="string">envelope</span></span><br><span class="line">  <span class="attr">Douban:</span> <span class="string">http://douban.com/people/SimpCosm</span> <span class="string">||</span> <span class="string">douban</span></span><br></pre></td></tr></table></figure>
+<p>这里有一个问题就是豆瓣没有对应的<code>font awesome</code>图标</p>
+<h3 id="友情链接"><a href="#友情链接" class="headerlink" title="友情链接"></a>友情链接</h3><h3 id="阅读更多"><a href="#阅读更多" class="headerlink" title="阅读更多"></a>阅读更多</h3><p>如果不开启阅读更多按钮的话，默认是展示文章中所有内容的，这显然体验不好。</p>
+<p>一般都会在文章中插入<code>&lt;!--more--&gt;</code>这种注释形式表示首页展示到注释处为止。或者会使用如下官方配置文件中自带的方式。一般都推荐使用注释的方式，因为下面这种<code>auto_excerpt</code>方式不会保留前面的行文样式，但是注释方式会保留样式。</p>
+<p>搜索 auto_excerpt，找到如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">auto_excerpt:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">length:</span> <span class="number">150</span> <span class="comment">#到多少字数后不显示</span></span><br></pre></td></tr></table></figure>
+<h3 id="侧边栏头像设置"><a href="#侧边栏头像设置" class="headerlink" title="侧边栏头像设置"></a>侧边栏头像设置</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Sidebar Avatar</span></span><br><span class="line"><span class="attr">avatar:</span></span><br><span class="line">  <span class="comment"># 如果放在本地(source/images): /images/avatar.gif</span></span><br><span class="line">  <span class="comment"># 如果第三方图床，直接写地址</span></span><br><span class="line">  <span class="attr">url:</span>  <span class="comment"># 此处是头像的地址</span></span><br><span class="line">  <span class="attr">rounded:</span> <span class="literal">true</span>   <span class="comment"># 设置头像是否为圆形</span></span><br><span class="line">  <span class="attr">opacity:</span> <span class="number">1</span>    <span class="comment"># 设置不透明度，1为完全不透明，0为完全透明</span></span><br><span class="line">  <span class="attr">rotated:</span> <span class="literal">true</span>   <span class="comment"># 设置鼠标放到头像上是否旋转</span></span><br></pre></td></tr></table></figure>
+<h3 id="代码设置"><a href="#代码设置" class="headerlink" title="代码设置"></a>代码设置</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">codeblock:</span></span><br><span class="line">  <span class="attr">heightling_theme:</span> <span class="string">night</span></span><br><span class="line">  <span class="attr">copy_button:</span>  <span class="comment"># 设置是否开启代码块复制按钮</span></span><br><span class="line">    <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">show_result:</span> <span class="literal">true</span>  <span class="comment"># 是否显示复制成功信息</span></span><br><span class="line">    <span class="attr">style:</span> <span class="string">mac</span></span><br></pre></td></tr></table></figure>
+<p>这里指的是代码块，不是行内代码块，起始写法如下：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">​```<span class="selector-attr">[language]</span> <span class="selector-attr">[title]</span> <span class="selector-attr">[url]</span> <span class="selector-attr">[link-text]</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>[language] 是代码语言的名称，用来设置代码块颜色高亮，非必须；</li>
+<li>[title] 是顶部左边的说明，非必须；</li>
+<li>[url] 是顶部右边的超链接地址，非必须；</li>
+<li>[link text] 如它的字面意思，超链接的名称，非必须。</li>
+</ul>
+<p>亲测这 4 项应该是根据空格来分隔，而不是<code>[]</code>，故请不要加<code>[]</code>。除非如果你想写后面两个，但不想写前面两个，那么就必须加<code>[]</code>了，要这样写：<code>[] [] [url] [link text]</code>。</p>
+<figure class="highlight cpp"><figcaption><span>你看，这是C++代码</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">"hello world!"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以在站点配置文件_config.yml中设置自动高亮</p>
+<figure class="highlight diff"><figcaption><span>文件位置：hexo/_config.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">highlight:</span><br><span class="line">  enable: true</span><br><span class="line">  line_number: true</span><br><span class="line"># 代码自动高亮</span><br><span class="line"><span class="deletion">-  auto_detect: false</span></span><br><span class="line"><span class="addition">+  auto_detect: true</span></span><br></pre></td></tr></table></figure>
+<h3 id="文章元数据设置"><a href="#文章元数据设置" class="headerlink" title="文章元数据设置"></a>文章元数据设置</h3><p>元数据就是显示在 home 页的文章创建于、更新于、阅读次数之类的数据，搜索 post_meta，找到如下配置：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">post_meta:</span></span><br><span class="line">  <span class="attr">item_text:</span> <span class="literal">false</span>  <span class="comment"># 是否显示对应的文字</span></span><br><span class="line">  <span class="attr">created_at:</span> <span class="literal">true</span>  <span class="comment"># 是否显示 创建于</span></span><br><span class="line">  <span class="attr">updated_at:</span>       <span class="comment"># 是否显示 更新于</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="comment"># 更新日期显示规则，只有更新日期与创建日期不同时，才会显示</span></span><br><span class="line">    <span class="attr">another_day:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">categories:</span> <span class="literal">true</span> <span class="comment"># 是否显示分类信息</span></span><br></pre></td></tr></table></figure>
+<h3 id="文章字数统计设置"><a href="#文章字数统计设置" class="headerlink" title="文章字数统计设置"></a>文章字数统计设置</h3><p>由于上面的元数据中没有带文章字数统计功能，需要利用<code>hexo-symbols-count-time</code>插件来完成。在 hexo 站点根目录下使用<code>npm install hexo-symbols-count-time --save</code>命令安装模块后开启上述功能使用。</p>
+<p>配置站点配置文件激活插件</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">symbols_count_time:</span></span><br><span class="line">  <span class="attr">symbols:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">time:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">total_symbols:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">total_time:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+<p>配置主题配置文件</p>
+<figure class="highlight yaml"><figcaption><span>NexT Config</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Post wordcount display settings</span></span><br><span class="line"><span class="comment"># Dependencies: https://github.com/theme-next/hexo-symbols-count-time</span></span><br><span class="line"><span class="attr">symbols_count_time:</span></span><br><span class="line">  <span class="attr">separated_meta:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">item_text_post:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">item_text_total:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">awl:</span> <span class="number">4</span></span><br><span class="line">  <span class="attr">wpm:</span> <span class="number">275</span></span><br></pre></td></tr></table></figure>
+<h3 id="博客本地搜索"><a href="#博客本地搜索" class="headerlink" title="博客本地搜索"></a>博客本地搜索</h3><p>Hexo的NexT主题通过<code>hexo-generator-searchdb</code>这个插件实现搜索本地搜索。它预先生成了一个文本库<code>search.xml</code>，然后传到了网站里面，在本地搜索时候，NexT直接用JS调用这个文件，从而实现了静态网站的本地搜索。</p>
+<p>安装完插件后，站点配置文件新增</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">search:</span></span><br><span class="line">  <span class="attr">path:</span> <span class="string">search.xml</span></span><br><span class="line">  <span class="attr">field:</span> <span class="string">post</span></span><br><span class="line">  <span class="attr">format:</span> <span class="string">html</span></span><br><span class="line">  <span class="attr">limit:</span> <span class="number">100</span></span><br></pre></td></tr></table></figure>
+<p>主题配置文件</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">local_search:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">trigger:</span> <span class="string">auto</span></span><br><span class="line">  <span class="attr">top_n_per_article:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">unescape:</span> <span class="literal">false</span></span><br></pre></td></tr></table></figure>
+<h3 id="RSS订阅"><a href="#RSS订阅" class="headerlink" title="RSS订阅"></a>RSS订阅</h3><p>安装插件:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install hexo-generator-feed --save</span><br></pre></td></tr></table></figure>
+<p>刷新主页就可以看到 rss。</p>
+<h3 id="文章打赏"><a href="#文章打赏" class="headerlink" title="文章打赏"></a>文章打赏</h3><p>主题配置文件</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Reward (Donate)</span></span><br><span class="line"> <span class="attr">reward_settings:</span></span><br><span class="line">   <span class="comment"># If true, reward would be displayed in every article by default.</span></span><br><span class="line">   <span class="comment"># You can show or hide reward in a specific article throuth `reward: true | false` in Front-matter.</span></span><br><span class="line">   <span class="attr">enable:</span> <span class="literal">true</span> </span><br><span class="line">   <span class="attr">animation:</span> <span class="literal">false</span></span><br><span class="line">   <span class="comment">#comment: Donate comment here.</span></span><br><span class="line"> </span><br><span class="line"> <span class="attr">reward:</span></span><br><span class="line">   <span class="attr">wechatpay:</span> <span class="string">/images/wechatpay.jpg</span></span><br><span class="line">   <span class="comment">#alipay: /images/alipay.png</span></span><br><span class="line">   <span class="comment">#bitcoin: /images/bitcoin.png</span></span><br></pre></td></tr></table></figure>
+<h3 id="文章推荐"><a href="#文章推荐" class="headerlink" title="文章推荐"></a>文章推荐</h3><p>开启文章推荐功能后可以自动推荐相关内容的文章，在主题配置文件中</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">related_posts:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span>  <span class="comment"># 是否开启</span></span><br><span class="line">  <span class="attr">title:</span> <span class="string">相关文章推荐</span>    <span class="comment"># 标题</span></span><br><span class="line">  <span class="attr">display_in_home:</span> <span class="literal">false</span> <span class="comment"># 是否在首页显示，建议为false</span></span><br><span class="line">  <span class="attr">params:</span></span><br><span class="line">    <span class="attr">maxCount:</span> <span class="number">5</span>   <span class="comment"># 相关文章的最大数量</span></span><br><span class="line">    <span class="comment">#PPMixingRate: 0.0</span></span><br><span class="line">    <span class="comment">#isDate: false</span></span><br><span class="line">    <span class="comment">#isImage: false</span></span><br><span class="line">    <span class="attr">isExcerpt:</span> <span class="literal">false</span></span><br></pre></td></tr></table></figure>
+<p>开启相关文章推荐需要安装<code>hexo-related-popular-posts</code>模块，即在 hexo 站点根目录下使用<code>npm install hexo-related-popular-posts --save</code>安装模块，然后开启上面的相关文章功能就可以了。</p>
+<h3 id="文章版权声明"><a href="#文章版权声明" class="headerlink" title="文章版权声明"></a>文章版权声明</h3><p>在主题配置文件中</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">creative_commons:</span></span><br><span class="line">  <span class="attr">license:</span> <span class="string">by-nc-sa</span></span><br><span class="line">  <span class="attr">sidebar:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">post:</span> <span class="literal">true</span>  <span class="comment"># 将false改为true即可显示版权信息</span></span><br><span class="line">  <span class="attr">language:</span></span><br></pre></td></tr></table></figure>
+<h3 id="评论系统"><a href="#评论系统" class="headerlink" title="评论系统"></a>评论系统</h3><p>在当前免费开源的评论系统中，基于leancloud的valine不仅简洁，还可以支持匿名留言。leancloud是一个面向个人用户免费的存储系统，valine后台的评论保存就是基于leancloud的。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">valine:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">appid:</span>   <span class="comment"># your leancloud application appid</span></span><br><span class="line">  <span class="attr">appkey:</span>  <span class="comment"># your leancloud application appkey</span></span><br><span class="line">  <span class="attr">notify:</span> <span class="literal">false</span> <span class="comment"># mail notifier , https://github.com/xCss/Valine/wiki</span></span><br><span class="line">  <span class="attr">verify:</span> <span class="literal">false</span> <span class="comment"># Verification code</span></span><br><span class="line">  <span class="attr">placeholder:</span> <span class="string">Just</span> <span class="string">go</span> <span class="string">go</span> <span class="comment"># comment box placeholder</span></span><br><span class="line">  <span class="attr">avatar:</span> <span class="string">wavatar</span> <span class="comment"># gravatar style https://valine.js.org/avatar/</span></span><br><span class="line">  <span class="attr">guest_info:</span> <span class="string">nick,mail</span> <span class="comment"># custom comment header default: nick,mail,link</span></span><br><span class="line">  <span class="attr">pageSize:</span> <span class="number">10</span> <span class="comment"># pagination size</span></span><br><span class="line">  <span class="attr">visitors:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">comment_count:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">recordIP:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+<p>为了评论能够及时通过邮箱通知，可以使用 <a href="https://github.com/zhaojun1998/Valine-Admin" target="_blank" rel="external nofollow noopener noreferrer">Valine-Admin</a> 来配置。</p>
+<h3 id="不蒜子统计网站访问信息"><a href="#不蒜子统计网站访问信息" class="headerlink" title="不蒜子统计网站访问信息"></a>不蒜子统计网站访问信息</h3><p>可以通过不蒜子服务来统计网站的访问信息，包括整个网站的UV(Unique Visitor)和PV(Page View)，还有每一个post的访问数。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">busuanzi_count:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span> </span><br><span class="line">  <span class="attr">total_visitors:</span> <span class="literal">true</span> </span><br><span class="line">  <span class="attr">total_visitors_icon:</span> <span class="string">user</span> </span><br><span class="line">  <span class="attr">total_views:</span> <span class="literal">true</span> </span><br><span class="line">  <span class="attr">total_views_icon:</span> <span class="string">eye</span></span><br><span class="line">  <span class="attr">post_views:</span> <span class="literal">true</span> </span><br><span class="line">  <span class="attr">post_views_icon:</span> <span class="string">eye</span></span><br></pre></td></tr></table></figure>
+<p>注意这里的post_views和配置文件中leanCloud_visitors冲突，这里只开启了不蒜子的服务。</p>
+<h2 id="Next主题进阶优化配置"><a href="#Next主题进阶优化配置" class="headerlink" title="Next主题进阶优化配置"></a>Next主题进阶优化配置</h2><h3 id="插入音乐"><a href="#插入音乐" class="headerlink" title="插入音乐"></a>插入音乐</h3><p>插入音乐可以直接通过网易云音乐生成外链，也可以使用 <a href="https://github.com/MoePlayer/hexo-tag-aplayer" target="_blank" rel="external nofollow noopener noreferrer">hexo-tag-aplayer</a> 插件中 MetingJS的支持。</p>
+<p>安装了<code>hexo-tag-aplayer</code>插件之后，在Hexo配置文件中加入‘</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">aplayer:</span></span><br><span class="line">  <span class="attr">meting:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+<p>接着就可以在文章中使用MetingJS播放器了</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 歌曲模板</span><br><span class="line">&#123;% meting "3986040" "netease" "song" "theme:#555" "mutex:true" "listmaxheight:340px" "preload:auto" %&#125;</span><br><span class="line"></span><br><span class="line"># 歌单模板</span><br><span class="line">&#123;% meting "627070825" "netease" "playlist" "theme:#555" "mutex:true" "listmaxheight:340px" "preload:auto" %&#125;</span><br></pre></td></tr></table></figure>
+
+    <div id="aplayer-kOOQtPfu" class="aplayer aplayer-tag-marker meting-tag-marker" data-id="28152391" data-server="netease" data-type="song" data-mode="circulation" data-autoplay="false" data-mutex="true" data-listmaxheight="340px" data-preload="auto" data-theme="#555"></div>
+
+    <div id="aplayer-uCNCUAsS" class="aplayer aplayer-tag-marker meting-tag-marker" data-id="2353471182" data-server="netease" data-type="playlist" data-mode="circulation" data-autoplay="false" data-mutex="true" data-listmaxheight="340px" data-preload="auto" data-theme="#555"></div>
+<p>对于网易云音乐因为版权保护无法生成外链从而获取ID的问题，可以参考<a href="https://javahikers.github.io/2019/06/15/hexo%E5%9C%A8%E6%96%87%E7%AB%A0%E6%8F%92%E5%85%A5aplayer%E9%9F%B3%E4%B9%90%E6%92%AD%E6%94%BE%E5%99%A8/#%E5%85%B3%E4%BA%8E%E6%A8%A1%E6%9D%BF%E7%9A%84%E9%80%89%E9%A1%B9%E5%88%97%E8%A1%A8" target="_blank" rel="external nofollow noopener noreferrer">hexo在文章插入aplayer音乐播放器</a></p>
+<h3 id="插入视频"><a href="#插入视频" class="headerlink" title="插入视频"></a>插入视频</h3><p>插入视频可以直接通过B站生成外链，也可以通过插件 <a href="https://github.com/MoePlayer/hexo-tag-dplayer" target="_blank" rel="external nofollow noopener noreferrer">hexo-tag-dplayer</a></p>
+<ul>
+<li>直接用生成外链</li>
+</ul>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">iframe</span> <span class="attr">src</span>=<span class="string">"//player.bilibili.com/player.html?aid=74371709&amp;cid=127218978&amp;page=1"</span> <span class="attr">scrolling</span>=<span class="string">"no"</span> <span class="attr">border</span>=<span class="string">"0"</span> <span class="attr">frameborder</span>=<span class="string">"no"</span> <span class="attr">framespacing</span>=<span class="string">"0"</span> <span class="attr">allowfullscreen</span>=<span class="string">"true"</span>&gt;</span> <span class="tag">&lt;/<span class="name">iframe</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p><iframe src="//player.bilibili.com/player.html?aid=74371709&cid=127218978&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe></p>
+<ul>
+<li><p>hexo-tag-dplayer</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;% dplayer "url=https://什么什么什么.mp4" "https://封面图.jpg" "api=https://api.prprpr.me/dplayer/" "id=" "loop=false" %&#125;</span><br></pre></td></tr></table></figure>
+<p>要使用弹幕，必须有<code>api</code>和<code>id</code>两项，并且若使用的是官方的 api 地址（即上面的），id 的值不能与<a href="https://api.prprpr.me/dplayer/list" target="_blank" rel="external nofollow noopener noreferrer">这个列表</a>的值一样。id 的值自己随便取，唯一要求就是前面这点。如果唯一要求难倒了你，可以使用<a href="http://tool.oschina.net/encrypt?type=2" target="_blank" rel="external nofollow noopener noreferrer">这个工具</a>将一段与众不同的文字😂生成一段看起来毫无意义的哈希值，这样看起来是不是好多了。</p>
+</li>
+<li><p>插入<code>Youtube</code>或者<code>Viemo</code>视频</p>
+</li>
+</ul>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#123;% vimeo video_id %&#125;</span><br><span class="line">&#123;% youtube video_id %&#125;</span><br></pre></td></tr></table></figure>
+<div class="video-container"><iframe src="//www.youtube.com/embed/VoPnzAnclUs" frameborder="0" allowfullscreen></iframe></div>
+<p>这里的<code>video_id</code>就是视频分享时生成短链接后面的字符。</p>
+<h3 id="数学公式"><a href="#数学公式" class="headerlink" title="数学公式"></a>数学公式</h3><p>NexT主题里面已经集成了MathJax和KaTex，配置起来也很方便。这里我们使用MathJax来渲染数学公式。</p>
+<p>在主题配置文件中，</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">math:</span></span><br><span class="line">  <span class="attr">per_page:</span> <span class="literal">true</span> <span class="comment"># 默认为true，表示每篇文章需要额外地单独启用MathJax</span></span><br><span class="line">  <span class="attr">mathjax:</span></span><br><span class="line">    <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">mhchem:</span> <span class="literal">false</span></span><br><span class="line"> </span><br><span class="line"> <span class="attr">vendors:</span></span><br><span class="line">   <span class="attr">mathjax:</span> <span class="string">//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML</span></span><br></pre></td></tr></table></figure>
+<p>Hexo默认的渲染引擎<code>hexo-renderer-marked</code>对MathJax的支持很不好，会出现各种莫名其妙的问题。NexT主题的<a href="https://github.com/theme-next/hexo-theme-next/blob/master/docs/MATH.md" target="_blank" rel="external nofollow noopener noreferrer">官方文档</a>也推荐换用其他渲染引擎。推荐换用<code>hexo-renderer-kramed</code>。</p>
+<p>这里是一个典型的LaTeX公式示例，在markdown中的源代码和现实效果如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$$\frac&#123;<span class="number">1</span>&#125;&#123;m&#125;\lg C=\frac&#123;<span class="number">1</span>&#125;&#123;n&#125;\left(\sum<span class="number">_</span>&#123;i=<span class="number">1</span>&#125;^n&#123;Y_i+\frac&#123;<span class="number">1</span>&#125;&#123;m&#125;\sum<span class="number">_</span>&#123;i=<span class="number">1</span>&#125;^n&#123;X_i&#125;&#125;\right)$$</span><br></pre></td></tr></table></figure>
+<script type="math/tex; mode=display">\frac{1}{m}\lg C=\frac{1}{n}\left(\sum_{i=1}^n{Y_i+\frac{1}{m}\sum_{i=1}^n{X_i}}\right)</script><p>关于更多和LaTeX相关的内容，可以参考 <a href="../fedfc052/">LaTeX笔记</a></p>
+<h3 id="添加豆瓣读书-电影"><a href="#添加豆瓣读书-电影" class="headerlink" title="添加豆瓣读书/电影"></a>添加豆瓣读书/电影</h3><p><a href="https://github.com/mythsman/hexo-douban" target="_blank" rel="external nofollow noopener noreferrer">hexo-douban</a>是一个支持引入豆瓣读书和电影的hexo插件，它通过爬取豆瓣用户的对应信息，从而生成对应的html文本。</p>
+<p>你可以参考官方README或者 <a href="https://bestzuo.cn/posts/hexo-douban.html" target="_blank" rel="external nofollow noopener noreferrer">在Hexo博客中加入豆瓣读书页面</a>参考部署。</p>
+<p>当然作者所做的界面是没有样式的，我们可以在作者的基础上继续魔改增加自己喜欢的样式，在安装好所需插件后，我们打开目录为<code>hexo/node_modules/hexo-douban/lib/templates/index.css</code>文件，里面是整个阅读界面的 css 样式代码文件，我们可以在其中添加背景图片等样式，比如可以添加如下：</p>
+<figure class="highlight css"><figcaption><span>文件位置：hexo/node_modules/hexo-douban/lib/templates/index.css</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.main</span> &#123;</span><br><span class="line">    <span class="attribute">padding-bottom</span>: <span class="number">150px</span>;</span><br><span class="line">    <span class="attribute">margin-top</span>: <span class="number">0px</span>;</span><br><span class="line">    <span class="attribute">background-image</span>:<span class="built_in">url</span>(<span class="string">"xxx.jpg"</span>);</span><br><span class="line">    <span class="attribute">background-size</span>: cover;</span><br><span class="line">    <span class="attribute">background-attachment</span>: fixed;</span><br><span class="line">    <span class="attribute">background-repeat</span>:no-repeat;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>修改上面的 url 中地址图片链接就可以新增背景图片了~</p>
+<h3 id="文章摘要图片"><a href="#文章摘要图片" class="headerlink" title="文章摘要图片"></a>文章摘要图片</h3><p>文章摘要（excerpt）是指每篇文章（post）在页面（page）上显示的那部分内容，也就是 [Read More] 之前的文章内容。由于它会展示在页面，因此在每篇文章的文章摘要中加一张图片，页面看起来就很美观。但是有时候可能会出现一个问题：你想从文章中选一张图片作为文章摘要图片，而这张图片由于写作要求，必须添加在文章的末尾，这样点 [Read More] 查看文章时，这张图片就会重复出现了。咋办？</p>
+<p>前提是在<strong>主题</strong>配置文件中：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">excerpt_description:</span> <span class="literal">false</span></span><br><span class="line"></span><br><span class="line"><span class="attr">auto_excerpt:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">false</span></span><br></pre></td></tr></table></figure>
+<p>首先加代码:</p>
+<figure class="highlight diff"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">&#123;% if is_index %&#125;</span><br><span class="line">  &#123;% if post.description and theme.excerpt_description %&#125;</span><br><span class="line">    &#123;&#123; post.description &#125;&#125;</span><br><span class="line">    &lt;!--noindex--&gt;</span><br><span class="line">    &lt;div class="post-button text-center"&gt;</span><br><span class="line">      &lt;a class="btn" href="&#123;&#123; url_for(post.path) &#125;&#125;"&gt;</span><br><span class="line">        &#123;&#123; __('post.read_more') &#125;&#125; &amp;raquo;</span><br><span class="line">      &lt;/a&gt;</span><br><span class="line">    &lt;/div&gt;</span><br><span class="line">    &lt;!--/noindex--&gt;</span><br><span class="line">  &#123;% elif post.excerpt  %&#125;</span><br><span class="line">    &#123;&#123; post.excerpt &#125;&#125;</span><br><span class="line"><span class="addition">+   </span></span><br><span class="line"><span class="addition">+   &#123;% if post.image %&#125;</span></span><br><span class="line"><span class="addition">+   &lt;div class="out-img-topic"&gt;</span></span><br><span class="line"><span class="addition">+     &lt;img src=&#123;&#123; post.image &#125;&#125; class="img-topic" /&gt;</span></span><br><span class="line"><span class="addition">+   &lt;/div&gt;</span></span><br><span class="line"><span class="addition">+   &#123;% endif %&#125;</span></span><br><span class="line"><span class="addition">+</span></span><br></pre></td></tr></table></figure>
+<p>为了防止有的图片宽度不够导致风格不够统一，页面不美观，需要在<code>hexo/source/_data/styles.styl</code>中加入：</p>
+<p>注意，目前自定义的样式文件在hexo/source目录下，这里需要自己创建<code>_data/styles.styl</code>文件，同时在主题配置文件中修<code>custom_file_path</code></p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">img</span><span class="selector-class">.img-topic</span> &#123;</span><br><span class="line">    <span class="attribute">width</span>: <span class="number">100%</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>最后编辑有这需求的相关文章时，在<code>Front-matter</code>（文件最上方以<code>---</code>分隔的区域）加上一行：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">image:</span> <span class="string">url</span></span><br></pre></td></tr></table></figure>
+<p><code>url</code>即图片的链接地址～</p>
+<h3 id="永久性链接"><a href="#永久性链接" class="headerlink" title="永久性链接"></a>永久性链接</h3><p>Hexo 默认生成的文章地址路径是 <code>:year/:month/:day/:title/</code>。这种链接对搜索爬虫很不友好，因为它的 url 结构超过了三层，太深了；而且，如果修改了文章的文件名，就相应会修改其路径，无法保证链接的永久性，所以需要进行修改。</p>
+<p>这里使用插件 <code>hexo-abbrlink</code> 来生成博客文章的永久链接，可以查看该插件的 <a href="https://github.com/Rozbo/hexo-abbrlink" target="_blank" rel="external nofollow noopener noreferrer">GitHub 项目页面</a>。首先需要进行安装：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">$</span> <span class="string">sudo</span> <span class="string">npm</span> <span class="string">install</span> <span class="string">hexo-abbrlink</span> <span class="string">--save</span></span><br></pre></td></tr></table></figure>
+<p>然后在站点配置文件中修改 <code>permalink</code>：</p>
+<figure class="highlight diff"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="deletion">-permalink: :year/:month/:day/:title/</span></span><br><span class="line"><span class="addition">+permalink: posts/:abbrlink/</span></span><br><span class="line"><span class="addition">+abbrlink:</span></span><br><span class="line"><span class="addition">+  alg: crc32  #support crc16(default) and crc32</span></span><br><span class="line"><span class="addition">+  rep: hex    #support dec(default) and hex</span></span><br></pre></td></tr></table></figure>
+<h3 id="定制回到顶部"><a href="#定制回到顶部" class="headerlink" title="定制回到顶部"></a>定制回到顶部</h3><p>从 <a href="http://yearito.cn/" target="_blank" rel="external nofollow noopener noreferrer">Yearito’s Blog</a> 看到的，效果如下：</p>
+<p><a href="http://yearito-1256884783.image.myqcloud.com/hexo-theme-beautify/back-to-top.gif" target="_blank" rel="external nofollow noopener noreferrer"><img alt="回到顶部" data-src="http://yearito-1256884783.image.myqcloud.com/hexo-theme-beautify/back-to-top.gif"></a></p>
+<p><a href="http://yearito-1256884783.image.myqcloud.com/hexo-theme-beautify/back-to-top.gif" target="_blank" rel="external nofollow noopener noreferrer">回到顶部</a></p>
+<p>原理很简单，将 back-to-top 按钮添加图片背景，并添加 CSS3 动效即可。</p>
+<p>首先，找到自己喜欢的图片素材放到 <code>source/images</code> 目录下。</p>
+<p>你可以点击下方按钮下载本站所使用的小猫上吊素材（ 小猫咪这么可爱，当然要多放点孜然啦…）</p>
+<p>然后在自定义样式文件<code>hexo/source/styles.styl</code>中添加如下代码：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">//自定义回到顶部样式</span><br><span class="line"><span class="selector-class">.back-to-top</span> &#123;</span><br><span class="line">  <span class="attribute">right</span>: <span class="number">60px</span>;</span><br><span class="line">  width: 70px;  //图片素材宽度</span><br><span class="line">  height: 900px;  //图片素材高度</span><br><span class="line">  <span class="selector-tag">top</span>: <span class="selector-tag">-900px</span>;</span><br><span class="line">  <span class="selector-tag">bottom</span>: <span class="selector-tag">unset</span>;</span><br><span class="line">  <span class="selector-tag">transition</span>: <span class="selector-tag">all</span> <span class="selector-class">.5s</span> <span class="selector-tag">ease-in-out</span>;</span><br><span class="line">  background: url("/images/scroll.png");</span><br><span class="line"></span><br><span class="line">  //隐藏箭头图标</span><br><span class="line">  &gt; <span class="selector-tag">i</span> &#123;</span><br><span class="line">    <span class="attribute">display</span>: none;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  &amp;<span class="selector-class">.back-to-top-on</span> &#123;</span><br><span class="line">    <span class="attribute">bottom</span>: unset;</span><br><span class="line">    <span class="attribute">top</span>: <span class="number">100vh</span> &lt; (<span class="number">900px</span> + <span class="number">200px</span>) ? <span class="built_in">calc</span>( <span class="number">100vh</span> - <span class="number">900px</span> - <span class="number">200px</span> ) : <span class="number">0px</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>刷新浏览器即可预览效果。</p>
+<h3 id="定制-sidebar"><a href="#定制-sidebar" class="headerlink" title="定制 sidebar"></a>定制 sidebar</h3><p>在<code>hexo/source/_data/styles.styl</code>中添加</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">.sidebar</span> <span class="string">&#123;</span></span><br><span class="line">  <span class="attr">display:</span> <span class="string">block;</span></span><br><span class="line">  <span class="attr">width:</span> <span class="string">320px;</span></span><br><span class="line">  <span class="attr">background-image:</span> <span class="string">url(/images/bk.jpg);</span></span><br><span class="line">  <span class="attr">background-size:</span> <span class="string">320px,</span> <span class="string">659px;</span></span><br><span class="line">  <span class="attr">background-position:</span> <span class="string">center;</span></span><br><span class="line">  <span class="attr">background-repeat:</span> <span class="literal">no</span><span class="string">-repeat;</span></span><br><span class="line">  <span class="attr">background-color:</span> <span class="comment">#f5f5f5 !important;</span></span><br><span class="line"></span><br><span class="line">  <span class="string">p,</span> <span class="string">span,</span> <span class="string">a</span> <span class="string">&#123;</span></span><br><span class="line">    <span class="attr">color:</span> <span class="comment">#080808;</span></span><br><span class="line">  <span class="string">&#125;</span></span><br><span class="line"><span class="string">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>在images目录下添加背景图片作为sidebar的背景图片。</p>
+<h3 id="定制-header"><a href="#定制-header" class="headerlink" title="定制 header"></a>定制 header</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">.header</span> <span class="string">&#123;</span></span><br><span class="line">  <span class="attr">background:</span> <span class="string">url("/images/header-bk.jpg");</span></span><br><span class="line"><span class="string">&#125;</span></span><br></pre></td></tr></table></figure>
+<h3 id="定制-footer"><a href="#定制-footer" class="headerlink" title="定制 footer"></a>定制 footer</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">.header</span> <span class="string">&#123;</span></span><br><span class="line">  <span class="attr">background:</span> <span class="string">url("/images/header-bk.jpg");</span></span><br><span class="line"><span class="string">&#125;</span></span><br></pre></td></tr></table></figure>
+<h3 id="定制网站背景"><a href="#定制网站背景" class="headerlink" title="定制网站背景"></a>定制网站背景</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">body</span> <span class="string">&#123;</span></span><br><span class="line">  <span class="attr">background:</span> <span class="string">url("/images/field.jpg");</span></span><br><span class="line">  <span class="attr">background-size:</span> <span class="string">cover;</span></span><br><span class="line">  <span class="attr">background-repeat:</span> <span class="literal">no</span><span class="string">-repeat;</span></span><br><span class="line">  <span class="attr">background-attachment:</span> <span class="string">fixed;</span></span><br><span class="line">  <span class="attr">background-position:</span> <span class="string">center;</span></span><br><span class="line"><span class="string">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="string">.main-inner</span> <span class="string">&#123;</span></span><br><span class="line">  <span class="attr">width:</span> <span class="number">75</span><span class="string">%;</span></span><br><span class="line"><span class="string">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="string">.content</span> <span class="string">&#123;</span></span><br><span class="line">  <span class="attr">border-radius:</span> <span class="string">10px;</span></span><br><span class="line">  <span class="attr">margin-top:</span> <span class="string">60px;</span></span><br><span class="line">  <span class="attr">padding:</span> <span class="string">25px;</span></span><br><span class="line">  <span class="string">background:rgba(255,</span> <span class="number">255</span><span class="string">,</span> <span class="number">255</span><span class="string">,</span> <span class="number">0.8</span><span class="string">)</span> <span class="string">none</span> <span class="string">repeat</span> <span class="string">scroll</span> <span class="type">!important</span><span class="string">;</span></span><br><span class="line"><span class="string">&#125;</span></span><br></pre></td></tr></table></figure>
+<h3 id="定制字体"><a href="#定制字体" class="headerlink" title="定制字体"></a>定制字体</h3><h3 id="开启分享"><a href="#开启分享" class="headerlink" title="开启分享"></a>开启分享</h3><h3 id="已运行时间"><a href="#已运行时间" class="headerlink" title="已运行时间"></a>已运行时间</h3><h3 id="热门文章页面"><a href="#热门文章页面" class="headerlink" title="热门文章页面"></a>热门文章页面</h3><h2 id="Next主题扩展功能"><a href="#Next主题扩展功能" class="headerlink" title="Next主题扩展功能"></a>Next主题扩展功能</h2><h3 id="使用hexo-admin在线发布文章"><a href="#使用hexo-admin在线发布文章" class="headerlink" title="使用hexo-admin在线发布文章"></a>使用hexo-admin在线发布文章</h3><h4 id="在本地部署hexo-admin"><a href="#在本地部署hexo-admin" class="headerlink" title="在本地部署hexo-admin"></a>在本地部署hexo-admin</h4><p>一直想给自己的博客添加一个后台在线编辑的功能，搜了一下发现社区已经有 <a href="https://github.com/jaredly/hexo-admin" target="_blank" rel="external nofollow noopener noreferrer">hexo-admin</a> 这个插件。 <code>hexo-admin</code> 可以将常规的hexo命令(new, deploy等)可视化，并且提供了一个在线的markdown编辑器，使得编写hexo blog脱离了本地开发环境和IDE，从而更加灵活。</p>
+<p>要使用这个工具，首先需要安装插件:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo npm install --save hexo-admin</span><br></pre></td></tr></table></figure>
+<p>在客户端机器安装好插件之后，在博客根目录下面使用<code>hexo s -d</code>命令，然后打开<code>http://localhost:4000/admin/</code>进行登录就可以管理后台了。</p>
+<p><img alt="hexo admin后台" data-src="https://blogimage-1258928558.cos.ap-guangzhou.myqcloud.com/blog-establish/hexo-admin.png"></p>
+<p>安装好后，还需要设置登录的账号密码，不然谁都可以使用你的后台管理。第一次登录后，进入<code>setting</code>菜单，点击<code>Setup authentification here</code>进入用户名密码设置项，按照提示设置后，把生成的代码添加到<code>blog/_config.xml</code>中，如：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># hexo-admin authentification</span></span><br><span class="line"><span class="attr">admin:</span></span><br><span class="line">  <span class="attr">username:</span> <span class="string">username</span></span><br><span class="line">  <span class="attr">password_hash:</span> <span class="string">$2a$10$L.XAIqIWgTc5S1zpvV3MEu7/rH34p4Is/nq824smv8EZ3lIPCp1su</span></span><br><span class="line">  <span class="attr">secret:</span> <span class="string">my</span> <span class="string">super</span> <span class="string">secret</span> <span class="string">phrase</span></span><br><span class="line">  <span class="attr">deployCommand:</span> <span class="string">./admin_script/hexo_deploy.sh</span></span><br></pre></td></tr></table></figure>
+<p>在blog目录下创建对应的 <code>hexo_deploy.sh</code> 文件</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">cd</span> blog;</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> mkdir admin_script;</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> touch admin_script/hexo_deploy.sh</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> chmod +x admin_script/hexo_deploy.sh</span></span><br></pre></td></tr></table></figure>
+<p>文件内容如下</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/bin/bash</span></span><br><span class="line">hexo generate</span><br><span class="line">hexo deploy</span><br></pre></td></tr></table></figure>
+<p>注意，这里的 <code>password_hash</code> 是你自己的明文密码经过加密后的字符串，但是如果用类似下面的网址： <a href="https://bcrypt-generator.com/" target="_blank" rel="external nofollow noopener noreferrer">https://bcrypt-generator.com/</a> 会生成<code>:$2y$10$pJjIxxxxxfMn9U/xxxxxNuuA20kh1eoB7vZxxxxx/7WpeV7IOxxxx</code>类似的加密串，但是运行会报<code>invalid salt revision</code>错误，其原因是：</p>
+<figure class="highlight coffeescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$ cat node_modules/hexo-admin/www/bundle.js | head <span class="number">-4851</span> | tail <span class="number">-10</span></span><br><span class="line">    <span class="keyword">if</span> (salt.charAt(<span class="number">0</span>) != <span class="string">'$'</span> || salt.charAt(<span class="number">1</span>) != <span class="string">'2'</span>)</span><br><span class="line">        <span class="keyword">throw</span> <span class="string">"Invalid salt version"</span>;</span><br><span class="line">    <span class="keyword">if</span> (salt.charAt(<span class="number">2</span>) == <span class="string">'$'</span>)</span><br><span class="line">        <span class="literal">off</span> = <span class="number">3</span>;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        minor = salt.charAt(<span class="number">2</span>);</span><br><span class="line">        <span class="keyword">if</span> (minor != <span class="string">'a'</span> || salt.charAt(<span class="number">3</span>) != <span class="string">'$'</span>)</span><br><span class="line">            <span class="keyword">throw</span> <span class="string">"Invalid salt revision"</span>;</span><br><span class="line">        <span class="literal">off</span> = <span class="number">4</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>需要版本号是2a的加密方式，因此只能用python自己写了：<br><a href="https://pypi.org/project/bcrypt/3.1.0/" target="_blank" rel="external nofollow noopener noreferrer">https://pypi.org/project/bcrypt/3.1.0/</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;</span><span class="bash">&gt;&gt; hashed = bcrypt.hashpw(password, bcrypt.gensalt(prefix=b<span class="string">"2a"</span>))</span></span><br><span class="line"><span class="meta">&gt;</span><span class="bash">&gt;&gt; <span class="built_in">print</span>(hashed)</span></span><br><span class="line">b'$2a$12$PAoJr3USOBxxxxxxxxxxxxxxV/.h.QNbh/6q.xxxxxxxxxxxxxxxxcDcJ.'</span><br></pre></td></tr></table></figure>
+<p>经过这些设置之后，进入后台，就可以在线创作博客了。admin的后台有一个deploy的按钮，点击这个按钮就会执行<code>hexo_deploy.sh</code> 的脚本。该脚本会将markdown文件生成静态网页，如果用nginx配置去访问静态网页，速度就会快很多。</p>
+<h4 id="在服务器端部署hexo-admin"><a href="#在服务器端部署hexo-admin" class="headerlink" title="在服务器端部署hexo-admin"></a>在服务器端部署hexo-admin</h4><p>上面的部署有一个问题，就是我是想让我的在线博客具有后台编辑的功能，而不是必须在我本地启动hexo。那么要解决这个问题，必须要在服务器端运行<code>hexo server</code>的进程。</p>
+<p>在之前的部署中</p>
+<ul>
+<li>我们都是在服务器端只是部署了nginx，在客户端机器安装了hexo的环境，所有hexo的配置都是在客户端机器上的。</li>
+<li>每次在客户端更新了hexo源文件后，在客户端环境执行<code>hexo generate &amp;&amp; hexo deploy</code>将生成的public目录下的网站源文件通过git传到服务端的git服务器目录。</li>
+<li>服务器端的git服务器通过<code>git hooks</code>将对应的文件复制到nginx对应的root目录</li>
+</ul>
+<p>要在服务端运行<code>hexo server</code>的命令，我们需要在服务端有<code>hexo server</code>运行的环境。这个环境其实也就是安装了所有插件之后的blog根目录。好在我们已经将blog目录通过git做了版本控制，这里的版本控制不仅仅监控发布post的版本，还监控网站主题各种配置的版本。</p>
+<p>之前我每次更新后会将这个push到github自己的一个私人目录下。现在可以push到自己的git服务器，然后通过 <code>git hooks</code> 自动更新到某个固定的目录。通过 <code>hexo-admin</code> 后台编辑发布新文章会更新这个blog的目录，本地的blog可以通过<code>git fetch</code> 拉取远端的最新情况。</p>
+<p>说干就干，具体操作如下</p>
+<h5 id="服务器端创建新的blog的repo"><a href="#服务器端创建新的blog的repo" class="headerlink" title="服务器端创建新的blog的repo"></a>服务器端创建新的blog的repo</h5><p>在前面的操作中我们<a href="#配置Git服务">配置Git服务</a>，这个repo是存放的是generate出来的网站源文件，现在我们还是在git用户的repositories目录下新创建一个repo，不过这个repo里面存放的是blog的源文件，通过这个blog源文件，执行<code>hexo generate</code>的命令可以生成网站的源文件。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">cd</span> /home/git/repositories</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> git init --bare hexo.git</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> cat .ssh/id_rsa.pub &gt;&gt; .ssh/authorized_keys <span class="comment"># 添加ssh权限</span></span></span><br><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">cd</span> hexo</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> sudo npm install --production</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> hexo generate</span></span><br></pre></td></tr></table></figure>
+<p>修改Nginx的配置文件，是的其root地址指向hexo产生的目录</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">	listen 80 default_server;</span><br><span class="line">	listen [::]:80 default_server;</span><br><span class="line"></span><br><span class="line">	server_name houmin.cc;</span><br><span class="line"></span><br><span class="line">	root &#x2F;home&#x2F;git&#x2F;hexo&#x2F;public;</span><br><span class="line">	index index.html index.htm;</span><br><span class="line"></span><br><span class="line">	location &#x2F; &#123;</span><br><span class="line">		error_page 404 &#x2F;404&#x2F;;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	location &#x2F;admin &#123;</span><br><span class="line">		proxy_pass http:&#x2F;&#x2F;houmin.cc:50003&#x2F;admin;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>重启nginx服务，应该就能够看到网站能够再次运行了</p>
+<h5 id="使用pm2保持hexo-server一直在服务器后台运行"><a href="#使用pm2保持hexo-server一直在服务器后台运行" class="headerlink" title="使用pm2保持hexo server一直在服务器后台运行"></a>使用pm2保持hexo server一直在服务器后台运行</h5><p><a href="https://pm2.keymetrics.io/" target="_blank" rel="external nofollow noopener noreferrer">pm2</a>是一个专门为NodeJS开发的进程管理工具，支持管理node进程，查看node进程的状态，也支持性能监控和进程守护。因为使用 <code>hexo server -d &amp;</code> 在一段时间后会停止hexo，此时无法打开后台，所以我们采用pm2接管hexo进程。</p>
+<p>在服务器端，</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo npm install -g pm2</span><br></pre></td></tr></table></figure>
+<p>在服务器端博客的根目录下创建一个<code>hexo_run.js</code>的文件，内容如下</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> &#123; exec  &#125; = <span class="built_in">require</span>(<span class="string">'child_process'</span>)</span><br><span class="line">exec(<span class="string">'hexo server -p 50003 -d'</span>,(error, stdout, stderr) =&gt; &#123;</span><br><span class="line">    <span class="keyword">if</span>(error)&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">'exec error: $&#123;error&#125;'</span>)</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">'stdout: $&#123;stdout&#125;'</span>);</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">'stderr: $&#123;stderr&#125;'</span>);</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>运行开启命令</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pm2 start hexo_run.js</span><br></pre></td></tr></table></figure>
+<p>附上一个hexo重启脚本，<code>restart_hexo.sh</code>, 需要重启刷新的时候执行 <code>source restart_hexo.sh</code>即可</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/bin/bash</span></span><br><span class="line"></span><br><span class="line">PROCESS=`ps -ef|grep hexo|grep -v grep|grep -v PPID|awk '&#123; print $2 &#125;'`</span><br><span class="line">PROC_NAME="pm2"</span><br><span class="line">for i in $PROCESS</span><br><span class="line">do</span><br><span class="line">    echo "Kill the $1 process [ $i  ]"</span><br><span class="line">    kill -9 $i</span><br><span class="line">done</span><br><span class="line">hexo clean #清除数据</span><br><span class="line">hexo generate #生成静态文件public文件夹</span><br><span class="line">ProcNumber=`ps -ef |grep -w $PROC_NAME|grep -v grep|wc -l`</span><br><span class="line">if [ $ProcNumber -le 0  ];then</span><br><span class="line">    pm2 start hexo_run.js</span><br><span class="line">else</span><br><span class="line">    pm2 restart hexo_run.js</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">service nginx restart</span><br></pre></td></tr></table></figure>
+<p>注意，我们可以看到<code>hexo_run.js</code>里面通过让<code>hexo server</code>监听在50003的端口，然后用pm2管理这个进程。在nginx的配置里面，用户通过<code>http://houmin.cc/admin</code>的请求，会被nginx重定向到hexo server那里。所以，你需要在云服务厂商那里配置安全组策略，开放这里的50003端口，使得用户可以访问对应的后台。</p>
+<h5 id="在客户端编辑博客"><a href="#在客户端编辑博客" class="headerlink" title="在客户端编辑博客"></a>在客户端编辑博客</h5><p>可以看到我们现在可以在线编辑博客，那么如果我们想在客户端机器上本地编辑博客怎么办呢？</p>
+<p>这里需要修改一下站点的配置文件</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">deploy:</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">git</span></span><br><span class="line">  <span class="attr">repo:</span> <span class="string">git@13.250.11.186:/home/git/repositories/blog.git</span></span><br><span class="line">  <span class="attr">branch:</span> <span class="string">master</span></span><br></pre></td></tr></table></figure>
+<p>这里每次更新之后还是可以执行<code>hexo generate &amp;&amp; hexo deploy</code>去更新博客，只是在blog的<code>git hooks</code>需要修改为</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/bin/bash</span></span><br><span class="line">git --work-tree=/home/git/hexo/public --git-dir=/home/git/repositories/blog.git checkout -f</span><br></pre></td></tr></table></figure>
+<p>注意这里的work-tree改成了新的目录</p>
+<h3 id="相册管理"><a href="#相册管理" class="headerlink" title="相册管理"></a>相册管理</h3><p>对于相册，在自己博客上期待实现的效果与豆瓣相册类似，具体如下</p>
+<ul>
+<li>主界面<ul>
+<li>分类相册</li>
+<li>自定义相册名</li>
+<li>自定义封面</li>
+<li>自动裁剪封面为等尺寸</li>
+</ul>
+</li>
+<li>分类相册界面<ul>
+<li>三等分列</li>
+<li>按图片原长宽比平铺</li>
+<li>点击看大图</li>
+<li>本地图片源/图床外链均可</li>
+<li>与文章插图格式保持统一</li>
+</ul>
+</li>
+<li>其他<ul>
+<li>每张图片都可以有对应的文字描述</li>
+<li>游客可以为图片添加评论</li>
+<li>相册里面也可以插入视频</li>
+</ul>
+</li>
+</ul>
+<div class="note success">
+            <p>2019.12.05更新：终于填坑把相册这一块给补上了，参考 <a href="../d487dd02">Hexo NexT主题添加多级相册功能</a></p>
+          </div>
+<h3 id="项目管理"><a href="#项目管理" class="headerlink" title="项目管理"></a>项目管理</h3><h3 id="资源库"><a href="#资源库" class="headerlink" title="资源库"></a>资源库</h3><h3 id="开启HTTPS"><a href="#开启HTTPS" class="headerlink" title="开启HTTPS"></a>开启HTTPS</h3><p>现在个人博客开启HTTPS可以看到 <code>cloudflare</code> 和 <code>letsencrypt</code> 两种方案，这里的是 <code>letsencrypt</code> 的方案，参考博客 <a href="https://segmentfault.com/a/1190000015758393" target="_blank" rel="external nofollow noopener noreferrer">教你快速撸一个免费HTTPS证书</a></p>
+<h4 id="安装-certbot"><a href="#安装-certbot" class="headerlink" title="安装 certbot"></a>安装 certbot</h4><p><a href="https://certbot.eff.org/" target="_blank" rel="external nofollow noopener noreferrer">Certbot</a>可以用于管理(申请、更新、配置、撤销和删除等)Let’s Encrypt证书。这里安装的是带nginx插件的certbot：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get update</span><br><span class="line">sudo apt-get install software-properties-common</span><br><span class="line">sudo add-apt-repository -y ppa:certbot/certbot</span><br><span class="line">sudo apt-get update</span><br><span class="line">sudo apt-get install -y python-certbot-nginx</span><br></pre></td></tr></table></figure>
+<h4 id="申请证书"><a href="#申请证书" class="headerlink" title="申请证书"></a>申请证书</h4><p>使用certbot命令为<a href="https://houmin.cc/">houmin.cc</a>申请HTTPS证书。<strong>—nginx</strong>选项表示Web服务器为nginx，<strong>-d</strong>选项指定域名，<strong>-n</strong>选项表示非交互式运行命令。若去除<strong>-n</strong>选项，则终端会提醒你选择是否将http请求重定向为https请求。</p>
+<figure class="highlight ada"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">certbot <span class="comment">--nginx -d houmin.cc</span></span><br></pre></td></tr></table></figure>
+<p>证书申请成功之后，会看到以下信息。Let’s Encrypt证书的有效期只有3个月，但是<a href="https://community.letsencrypt.org/t/cerbot-cron-job/23895/5?u=fundebug" target="_blank" rel="external nofollow noopener noreferrer">Certbot会通过Cron和systemd timer自动更新证书</a>，证书的时效性不用担心。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">IMPORTANT NOTES:</span><br><span class="line"> - Congratulations! Your certificate and chain have been saved at:</span><br><span class="line">   /etc/letsencrypt/live/houmin.cc/fullchain.pem</span><br><span class="line">   Your key file has been saved at:</span><br><span class="line">   /etc/letsencrypt/live/houmin.cc/privkey.pem</span><br><span class="line">   Your cert will expire on 2020-03-15. To obtain a new or tweaked</span><br><span class="line">   version of this certificate in the future, simply run certbot again</span><br><span class="line">   with the "certonly" option. To non-interactively renew *all* of</span><br><span class="line">   your certificates, run "certbot renew"</span><br><span class="line"> - If you like Certbot, please consider supporting our work by:</span><br><span class="line"></span><br><span class="line">   Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate</span><br><span class="line">   Donating to EFF:                    https://eff.org/donate-le</span><br></pre></td></tr></table></figure>
+<p>当前的nginx配置文件如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line"></span><br><span class="line">    server_name houmin.cc;</span><br><span class="line"></span><br><span class="line">    root &#x2F;home&#x2F;git&#x2F;hexo&#x2F;public;</span><br><span class="line">    index index.html index.htm;</span><br><span class="line"></span><br><span class="line">    location &#x2F; &#123;</span><br><span class="line">        error_page 404 &#x2F;404&#x2F;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location &#x2F;admin &#123;</span><br><span class="line">        proxy_pass http:&#x2F;&#x2F;houmin.cc:50003&#x2F;admin;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    gzip on;</span><br><span class="line">    gzip_min_length 1k;</span><br><span class="line">    gzip_buffers 4 16k;</span><br><span class="line">    gzip_http_version 1.1;</span><br><span class="line">    gzip_comp_level 2;</span><br><span class="line">    gzip_types text&#x2F;plain text&#x2F;css text&#x2F;xml application&#x2F;javescript application&#x2F;json image&#x2F;jpeg image&#x2F;gif image&#x2F;png;</span><br><span class="line">    gzip_vary on;</span><br><span class="line"></span><br><span class="line">    listen [::]:443 ssl ipv6only&#x3D;on; # managed by Certbot</span><br><span class="line">    listen 443 ssl; # managed by Certbot</span><br><span class="line">    ssl_certificate &#x2F;etc&#x2F;letsencrypt&#x2F;live&#x2F;houmin.cc&#x2F;fullchain.pem; # managed by Certbot</span><br><span class="line">    ssl_certificate_key &#x2F;etc&#x2F;letsencrypt&#x2F;live&#x2F;houmin.cc&#x2F;privkey.pem; # managed by Certbot</span><br><span class="line">    include &#x2F;etc&#x2F;letsencrypt&#x2F;options-ssl-nginx.conf; # managed by Certbot</span><br><span class="line">    ssl_dhparam &#x2F;etc&#x2F;letsencrypt&#x2F;ssl-dhparams.pem; # managed by Certbot</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="博客写作进阶"><a href="#博客写作进阶" class="headerlink" title="博客写作进阶"></a>博客写作进阶</h2><h3 id="Note标签使用"><a href="#Note标签使用" class="headerlink" title="Note标签使用"></a>Note标签使用</h3><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;%<span class="built_in"> note default </span>%&#125;</span><br><span class="line">默认形式的类别</span><br><span class="line">&#123;% endnote %&#125;</span><br></pre></td></tr></table></figure>
+<div class="note default">
+            <p>默认形式的类别</p>
+          </div>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;%<span class="built_in"> note </span>primary %&#125;</span><br><span class="line">首要类型形式</span><br><span class="line">&#123;% endnote %&#125;`</span><br></pre></td></tr></table></figure>
+<div class="note primary">
+            <p>首要类型形式</p>
+          </div>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;%<span class="built_in"> note </span><span class="builtin-name">info</span> %&#125;</span><br><span class="line">info形式</span><br><span class="line">&#123;% endnote %&#125;</span><br></pre></td></tr></table></figure>
+<div class="note info">
+            <p>info形式</p>
+          </div>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;%<span class="built_in"> note </span>success %&#125;</span><br><span class="line">首要类型形式</span><br><span class="line">&#123;% endnote %&#125;</span><br></pre></td></tr></table></figure>
+<div class="note success">
+            <p>success形式</p>
+          </div>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;%<span class="built_in"> note </span><span class="builtin-name">warning</span> %&#125;</span><br><span class="line">warning形式</span><br><span class="line">&#123;% endnote %&#125;</span><br></pre></td></tr></table></figure>
+<div class="note warning">
+            <p>warning形式</p>
+          </div>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;%<span class="built_in"> note </span>danger %&#125;</span><br><span class="line">danger形式</span><br><span class="line">&#123;% endnote %&#125;</span><br></pre></td></tr></table></figure>
+<div class="note danger">
+            <p>danger形式</p>
+          </div>
+<h3 id="文本居中引用"><a href="#文本居中引用" class="headerlink" title="文本居中引用"></a>文本居中引用</h3><figure class="highlight django"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="template-tag">&#123;% <span class="name">cq</span> %&#125;</span></span><br><span class="line"><span class="xml">人生乃是一面镜子，</span></span><br><span class="line"><span class="xml">从镜子里认识自己，</span></span><br><span class="line"><span class="xml">我要称之为头等大事，</span></span><br><span class="line"><span class="xml">也只是我们追求的目的！</span></span><br><span class="line"><span class="template-tag">&#123;% <span class="name">endcq</span> %&#125;</span></span><br></pre></td></tr></table></figure>
+<blockquote class="blockquote-center"><p>人生乃是一面镜子，<br>从镜子里认识自己，<br>我要称之为头等大事，<br>也只是我们追求的目的！</p>
+</blockquote>
+<h3 id="Tabs标签"><a href="#Tabs标签" class="headerlink" title="Tabs标签"></a>Tabs标签</h3><figure class="highlight django"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="template-tag">&#123;% <span class="name">tabs</span> 选项卡, 2 %&#125;</span></span><br><span class="line"><span class="xml"><span class="comment">&lt;!-- tab --&gt;</span></span></span><br><span class="line"><span class="xml">**这是选项卡 1**</span></span><br><span class="line"><span class="xml"><span class="comment">&lt;!-- endtab --&gt;</span></span></span><br><span class="line"><span class="xml"><span class="comment">&lt;!-- tab --&gt;</span></span></span><br><span class="line"><span class="xml">**这是选项卡 2**</span></span><br><span class="line"><span class="xml"><span class="comment">&lt;!-- endtab --&gt;</span></span></span><br><span class="line"><span class="xml"><span class="comment">&lt;!-- tab --&gt;</span></span></span><br><span class="line"><span class="xml">**这是选项卡 3**</span></span><br><span class="line"><span class="xml"><span class="comment">&lt;!-- endtab --&gt;</span></span></span><br><span class="line"><span class="template-tag">&#123;% <span class="name">endtabs</span> %&#125;</span></span><br></pre></td></tr></table></figure>
+<div class="tabs" id="选项卡"><ul class="nav-tabs"><li class="tab"><a href="#选项卡-1">选项卡 1</a></li><li class="tab active"><a href="#选项卡-2">选项卡 2</a></li><li class="tab"><a href="#选项卡-3">选项卡 3</a></li></ul><div class="tab-content"><div class="tab-pane" id="选项卡-1"><p><strong>这是选项卡 1</strong></p></div><div class="tab-pane active" id="选项卡-2"><p><strong>这是选项卡 2</strong></p></div><div class="tab-pane" id="选项卡-3"><p><strong>这是选项卡 3</strong></p></div></div></div>
+<h3 id="插入-PDF"><a href="#插入-PDF" class="headerlink" title="插入 PDF"></a>插入 PDF</h3><figure class="highlight yaml"><figcaption><span>next/_config.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">pdf:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="comment"># Default height</span></span><br><span class="line">  <span class="attr">height:</span> <span class="string">500px</span></span><br></pre></td></tr></table></figure>
+<p>使用方法</p>
+<figure class="highlight prolog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="comment">% pdf url [height] %&#125;</span></span><br><span class="line"></span><br><span class="line">[url]    : <span class="symbol">Relative</span> path to <span class="symbol">PDF</span> file.</span><br><span class="line">[height] : <span class="symbol">Optional</span>. <span class="symbol">Height</span> of the <span class="symbol">PDF</span> display element, e.g. <span class="number">800</span>px.</span><br></pre></td></tr></table></figure>
+<div class="pdf" target="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/pdf/2018-03-16_distr.pdf" height="800px"></div>
+<h3 id="Label"><a href="#Label" class="headerlink" title="Label"></a>Label</h3><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&#123;% label [class]@Text %&#125;</span><br><span class="line"></span><br><span class="line">[class] :<span class="built_in"> default </span>| primary | success | <span class="builtin-name">info</span> | <span class="builtin-name">warning</span> | danger.</span><br><span class="line">          <span class="string">'@Text'</span> can be specified with <span class="keyword">or</span> without space</span><br><span class="line">          E.g. <span class="string">'success @text'</span> similar <span class="keyword">to</span> <span class="string">'success@text'</span>.</span><br><span class="line">          <span class="keyword">If</span> <span class="keyword">not</span> specified,<span class="built_in"> default </span>class will be selected.</span><br></pre></td></tr></table></figure>
+<figure class="highlight django"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="xml">Lorem </span><span class="template-tag">&#123;% <span class="name">label</span> @ipsum %&#125;</span><span class="xml"> </span><span class="template-tag">&#123;% <span class="name">label</span> primary@dolor sit %&#125;</span><span class="xml"> amet, consectetur </span><span class="template-tag">&#123;% <span class="name">label</span> success@adipiscing elit, %&#125;</span><span class="xml"> sed </span><span class="template-tag">&#123;% <span class="name">label</span> info@do eiusmod %&#125;</span><span class="xml"> tempor incididunt ut labore et dolore magna aliqua.</span></span><br><span class="line"></span><br><span class="line"><span class="xml">Ut enim *</span><span class="template-tag">&#123;% <span class="name">label</span> warning @ad %&#125;</span><span class="xml">* minim veniam, quis **</span><span class="template-tag">&#123;% <span class="name">label</span> danger@nostrud %&#125;</span><span class="xml">** exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</span></span><br><span class="line"></span><br><span class="line"><span class="xml">Duis aute irure dolor in reprehenderit in voluptate ~~</span><span class="template-tag">&#123;% <span class="name">label</span> default @velit %&#125;</span><span class="xml">~~ <span class="tag">&lt;<span class="name">mark</span>&gt;</span>esse<span class="tag">&lt;/<span class="name">mark</span>&gt;</span> cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</span></span><br></pre></td></tr></table></figure>
+<p>Lorem <span class="label default">ipsum</span> <span class="label primary">dolor sit</span> amet, consectetur <span class="label success">adipiscing elit,</span> sed <span class="label info">do eiusmod</span> tempor incididunt ut labore et dolore magna aliqua.</p>
+<p>Ut enim <em><span class="label warning">ad</span></em> minim veniam, quis <strong><span class="label danger">nostrud</span></strong> exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+<p>Duis aute irure dolor in reprehenderit in voluptate <del><span class="label default">velit</span></del> <mark>esse</mark> cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+<h2 id="博客推广及优化"><a href="#博客推广及优化" class="headerlink" title="博客推广及优化"></a>博客推广及优化</h2><h3 id="添加robots-txt"><a href="#添加robots-txt" class="headerlink" title="添加robots.txt"></a>添加robots.txt</h3><p>robots.txt是搜索引擎蜘蛛协议，告诉引擎哪些要收录，哪些禁止收录。<br>source文件夹下新建 robots.txt，内容如下:</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">User-<span class="string">agent:</span> *</span><br><span class="line"><span class="string">Allow:</span> /</span><br><span class="line"><span class="string">Allow:</span> <span class="regexp">/archives/</span></span><br><span class="line"><span class="string">Allow:</span> <span class="regexp">/categories/</span></span><br><span class="line"><span class="string">Allow:</span> <span class="regexp">/tags/</span></span><br><span class="line"><span class="string">Allow:</span> <span class="regexp">/about/</span></span><br><span class="line"><span class="string">Allow:</span> <span class="regexp">/posts/</span></span><br><span class="line"></span><br><span class="line"><span class="string">Disallow:</span> <span class="regexp">/assets/</span></span><br><span class="line"><span class="string">Disallow:</span> <span class="regexp">/js/</span></span><br><span class="line"><span class="string">Disallow:</span> <span class="regexp">/css/</span></span><br><span class="line"><span class="string">Disallow:</span> <span class="regexp">/lib/</span></span><br><span class="line"></span><br><span class="line"><span class="string">Sitemap:</span> <span class="string">http:</span><span class="comment">//www.houmin.cc/sitemap.xml</span></span><br><span class="line"><span class="string">Sitemap:</span> <span class="string">http:</span><span class="comment">//www.houmin.cc/baidusitemap.xml</span></span><br></pre></td></tr></table></figure>
+<h3 id="URL持久化"><a href="#URL持久化" class="headerlink" title="URL持久化"></a>URL持久化</h3><p>大家知道 hexo 默认的链接是 <code>http://xxx.yy.com/2018/07/14/hello-world</code> 这种类型的，这源于站点目录下的配置 <code>_config.yml</code> 里的配置 <code>:permalink: :year/:month/:day/:title/</code>，这种默认配置的缺点就是一般文件名是中文，导致 <code>url</code> 链接里有中文出现，同时多层目录也不利于SEO。</p>
+<p><code>hexo-abbrlink</code>这个插件，猜测是根据时间点算出的最终链接，这样就确保了博文链接的唯一化，只要不修改 md 文件的abbrlink的值， url 就永久不会改变。如此 md 文件名和文件内容也可以随便改了。后面的层级更短，这样也有利于 SEO 优化。</p>
+<p>安装：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm <span class="keyword">install</span> hexo-abbrlink <span class="comment">--save</span></span><br></pre></td></tr></table></figure><br>配置：<br>站点配置文件里:<br><figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">permalink:</span> post/:abbrlink/</span><br><span class="line"><span class="symbol">abbrlink:</span></span><br><span class="line"><span class="symbol"> alg:</span> crc32  <span class="meta"># 算法：crc16(default) and crc32</span></span><br><span class="line"><span class="symbol"> rep:</span> hex    <span class="meta"># 进制：dec(default) and hex</span></span><br></pre></td></tr></table></figure><br><div class="note info">
+            <p>百度蜘蛛抓取网页的规则: 对于蜘蛛说网页权重越高、信用度越高抓取越频繁，例如网站的首页和内页。蜘蛛先抓取网站的首页，因为首页权重更高，并且大部分的链接都是指向首页。然后通过首页抓取网站的内页，并不是所有内页蜘蛛都会去抓取。</p><p>搜索引擎认为对于一般的中小型站点，3层足够承受所有的内容了，所以蜘蛛经常抓取的内容是前三层，而超过三层的内容蜘蛛认为那些内容并不重要，所以不经常爬取。出于这个原因所以permalink后面跟着的最好不要超过2个斜杠。</p>
+          </div></p>
+<h3 id="添加nofollow标签"><a href="#添加nofollow标签" class="headerlink" title="添加nofollow标签"></a>添加nofollow标签</h3><p><code>nofollow</code> 标签是由谷歌领头创新的一个反垃圾链接的标签，并被百度、yahoo 等各大搜索引擎广泛支持，引用 <code>nofollow</code> 标签的目的是：用于指示搜索引擎不要追踪（即抓取）网页上的带有 nofollow 属性的任何出站链接，以减少垃圾链接的分散网站权重。<br>这里推荐 <code>hexo-autonofollow</code> 插件来解决。</p>
+<p>安装：<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install hexo-autonofollow  --save</span><br></pre></td></tr></table></figure><br>配置：<br>在站点配置文件中添加以下代码：<br><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">nofollow:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">exclude:</span> <span class="comment"># 例外的链接，可将友情链接放置此处</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">你自己的站点地址</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">友链地址</span></span><br></pre></td></tr></table></figure></p>
+<h3 id="搜索引擎收录"><a href="#搜索引擎收录" class="headerlink" title="搜索引擎收录"></a>搜索引擎收录</h3><p>参考博客 <a href="https://blog.csdn.net/qq_43414988/article/details/92374636" target="_blank" rel="external nofollow noopener noreferrer">百度录入</a></p>
+<h2 id="网站加速"><a href="#网站加速" class="headerlink" title="网站加速"></a>网站加速</h2><h3 id="Nginx-gzip压缩"><a href="#Nginx-gzip压缩" class="headerlink" title="Nginx gzip压缩"></a>Nginx gzip压缩</h3><p>参考 <a href="https://www.cnblogs.com/kevingrace/p/10018914.html" target="_blank" rel="external nofollow noopener noreferrer">Nginx gzip压缩</a></p>
+<h3 id="利用gulp压缩代码"><a href="#利用gulp压缩代码" class="headerlink" title="利用gulp压缩代码"></a>利用gulp压缩代码</h3><p>参考 <a href="https://zhuanlan.zhihu.com/p/28447279" target="_blank" rel="external nofollow noopener noreferrer">gulp压缩</a></p>
+<h3 id="修改默认Google字体库"><a href="#修改默认Google字体库" class="headerlink" title="修改默认Google字体库"></a>修改默认Google字体库</h3><h3 id="对象存储存放图片资源"><a href="#对象存储存放图片资源" class="headerlink" title="对象存储存放图片资源"></a>对象存储存放图片资源</h3><p>图床替换之后，可以通过<code>sed</code>命令全局替换图片链接</p>
+<h2 id="多主机同步源码"><a href="#多主机同步源码" class="headerlink" title="多主机同步源码"></a>多主机同步源码</h2><h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><ul>
+<li><a href="https://juejin.im/post/5c62bf5f51882562c5505fa4" target="_blank" rel="external nofollow noopener noreferrer">绕开阿里云域名备案: http服务升级到https</a></li>
+<li><a href="https://www.luofan.net/post/105.html" target="_blank" rel="external nofollow noopener noreferrer">薅羊毛，Amazon AWS免费使用一年，详细教程说明</a></li>
+<li><a href="https://theme-next.org/" target="_blank" rel="external nofollow noopener noreferrer">https://theme-next.org/</a></li>
+<li><a href="http://tding.top/archives/aad98408.html" target="_blank" rel="external nofollow noopener noreferrer">Hexo搭建个人博客文章汇总</a></li>
+<li><a href="http://tding.top/archives/aad98408.html" target="_blank" rel="external nofollow noopener noreferrer">Hexo博客+Next主题深度优化与定制</a></li>
+<li><a href="https://javahikers.github.io/2019/06/15/hexo%E5%9C%A8%E6%96%87%E7%AB%A0%E6%8F%92%E5%85%A5aplayer%E9%9F%B3%E4%B9%90%E6%92%AD%E6%94%BE%E5%99%A8/#%E5%85%B3%E4%BA%8E%E6%A8%A1%E6%9D%BF%E7%9A%84%E9%80%89%E9%A1%B9%E5%88%97%E8%A1%A8" target="_blank" rel="external nofollow noopener noreferrer">hexo在文章插入aplayer音乐播放器</a></li>
+<li><a href="http://goingmerry.cn/2019/10/22/Hexo-admin%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/" target="_blank" rel="external nofollow noopener noreferrer">Hexo-admin服务器部署</a></li>
+<li><a href="https://www.cnblogs.com/zjutlitao/p/10416094.html" target="_blank" rel="external nofollow noopener noreferrer">搭建hexo博客</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d487dd02/" rel="bookmark">Hexo NexT 添加多级相册功能</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/f5d73ad0/" rel="bookmark">Hexo 博客容器化</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/3fcce178/" rel="bookmark">Hexo 插入 Mermaid 图表</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d823886b/" rel="bookmark">Hexo 插入 ECharts 动态图表</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/a63a603e/" title="Hexo NexT 深度定制">http://houmin.cc/posts/a63a603e/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Hexo/" rel="tag"><i class="fa fa-tag"></i> Hexo</a>
+              <a href="/tags/blog/" rel="tag"><i class="fa fa-tag"></i> blog</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/fa1a82ad/" rel="next" title="25">
+                  <i class="fa fa-chevron-left"></i> 25
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/d72ef121/" rel="prev" title="ゆきのはな">
+                  ゆきのはな <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#阿里云服务器端"><span class="nav-number">1.</span> <span class="nav-text">阿里云服务器端</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#购买ECS服务"><span class="nav-number">1.1.</span> <span class="nav-text">购买ECS服务</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#购买域名"><span class="nav-number">1.2.</span> <span class="nav-text">购买域名</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#服务器环境搭建"><span class="nav-number">1.3.</span> <span class="nav-text">服务器环境搭建</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#配置安全组规则"><span class="nav-number">1.3.1.</span> <span class="nav-text">配置安全组规则</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#配置服务器环境"><span class="nav-number">1.3.2.</span> <span class="nav-text">配置服务器环境</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#配置Git服务"><span class="nav-number">1.3.3.</span> <span class="nav-text">配置Git服务</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#阿里云劫持未备案的请求"><span class="nav-number">1.3.4.</span> <span class="nav-text">阿里云劫持未备案的请求</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#客户端环境搭建"><span class="nav-number">2.</span> <span class="nav-text">客户端环境搭建</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#配置信息"><span class="nav-number">2.1.</span> <span class="nav-text">配置信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装NodeJS"><span class="nav-number">2.2.</span> <span class="nav-text">安装NodeJS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装Hexo"><span class="nav-number">2.3.</span> <span class="nav-text">安装Hexo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#建站"><span class="nav-number">2.4.</span> <span class="nav-text">建站</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#主题和配置"><span class="nav-number">2.5.</span> <span class="nav-text">主题和配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#将博客部署到阿里云"><span class="nav-number">2.6.</span> <span class="nav-text">将博客部署到阿里云</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Next主题基本功能配置"><span class="nav-number">3.</span> <span class="nav-text">Next主题基本功能配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Hexo依赖安装"><span class="nav-number">3.1.</span> <span class="nav-text">Hexo依赖安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#定制favicon"><span class="nav-number">3.2.</span> <span class="nav-text">定制favicon</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#社交信息"><span class="nav-number">3.3.</span> <span class="nav-text">社交信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#友情链接"><span class="nav-number">3.4.</span> <span class="nav-text">友情链接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#阅读更多"><span class="nav-number">3.5.</span> <span class="nav-text">阅读更多</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#侧边栏头像设置"><span class="nav-number">3.6.</span> <span class="nav-text">侧边栏头像设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#代码设置"><span class="nav-number">3.7.</span> <span class="nav-text">代码设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文章元数据设置"><span class="nav-number">3.8.</span> <span class="nav-text">文章元数据设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文章字数统计设置"><span class="nav-number">3.9.</span> <span class="nav-text">文章字数统计设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#博客本地搜索"><span class="nav-number">3.10.</span> <span class="nav-text">博客本地搜索</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RSS订阅"><span class="nav-number">3.11.</span> <span class="nav-text">RSS订阅</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文章打赏"><span class="nav-number">3.12.</span> <span class="nav-text">文章打赏</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文章推荐"><span class="nav-number">3.13.</span> <span class="nav-text">文章推荐</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文章版权声明"><span class="nav-number">3.14.</span> <span class="nav-text">文章版权声明</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#评论系统"><span class="nav-number">3.15.</span> <span class="nav-text">评论系统</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#不蒜子统计网站访问信息"><span class="nav-number">3.16.</span> <span class="nav-text">不蒜子统计网站访问信息</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Next主题进阶优化配置"><span class="nav-number">4.</span> <span class="nav-text">Next主题进阶优化配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#插入音乐"><span class="nav-number">4.1.</span> <span class="nav-text">插入音乐</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#插入视频"><span class="nav-number">4.2.</span> <span class="nav-text">插入视频</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数学公式"><span class="nav-number">4.3.</span> <span class="nav-text">数学公式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#添加豆瓣读书-电影"><span class="nav-number">4.4.</span> <span class="nav-text">添加豆瓣读书/电影</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文章摘要图片"><span class="nav-number">4.5.</span> <span class="nav-text">文章摘要图片</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#永久性链接"><span class="nav-number">4.6.</span> <span class="nav-text">永久性链接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#定制回到顶部"><span class="nav-number">4.7.</span> <span class="nav-text">定制回到顶部</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#定制-sidebar"><span class="nav-number">4.8.</span> <span class="nav-text">定制 sidebar</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#定制-header"><span class="nav-number">4.9.</span> <span class="nav-text">定制 header</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#定制-footer"><span class="nav-number">4.10.</span> <span class="nav-text">定制 footer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#定制网站背景"><span class="nav-number">4.11.</span> <span class="nav-text">定制网站背景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#定制字体"><span class="nav-number">4.12.</span> <span class="nav-text">定制字体</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#开启分享"><span class="nav-number">4.13.</span> <span class="nav-text">开启分享</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#已运行时间"><span class="nav-number">4.14.</span> <span class="nav-text">已运行时间</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#热门文章页面"><span class="nav-number">4.15.</span> <span class="nav-text">热门文章页面</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Next主题扩展功能"><span class="nav-number">5.</span> <span class="nav-text">Next主题扩展功能</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#使用hexo-admin在线发布文章"><span class="nav-number">5.1.</span> <span class="nav-text">使用hexo-admin在线发布文章</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#在本地部署hexo-admin"><span class="nav-number">5.1.1.</span> <span class="nav-text">在本地部署hexo-admin</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#在服务器端部署hexo-admin"><span class="nav-number">5.1.2.</span> <span class="nav-text">在服务器端部署hexo-admin</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#服务器端创建新的blog的repo"><span class="nav-number">5.1.2.1.</span> <span class="nav-text">服务器端创建新的blog的repo</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#使用pm2保持hexo-server一直在服务器后台运行"><span class="nav-number">5.1.2.2.</span> <span class="nav-text">使用pm2保持hexo server一直在服务器后台运行</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#在客户端编辑博客"><span class="nav-number">5.1.2.3.</span> <span class="nav-text">在客户端编辑博客</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#相册管理"><span class="nav-number">5.2.</span> <span class="nav-text">相册管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#项目管理"><span class="nav-number">5.3.</span> <span class="nav-text">项目管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#资源库"><span class="nav-number">5.4.</span> <span class="nav-text">资源库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#开启HTTPS"><span class="nav-number">5.5.</span> <span class="nav-text">开启HTTPS</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#安装-certbot"><span class="nav-number">5.5.1.</span> <span class="nav-text">安装 certbot</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#申请证书"><span class="nav-number">5.5.2.</span> <span class="nav-text">申请证书</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#博客写作进阶"><span class="nav-number">6.</span> <span class="nav-text">博客写作进阶</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Note标签使用"><span class="nav-number">6.1.</span> <span class="nav-text">Note标签使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文本居中引用"><span class="nav-number">6.2.</span> <span class="nav-text">文本居中引用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Tabs标签"><span class="nav-number">6.3.</span> <span class="nav-text">Tabs标签</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#插入-PDF"><span class="nav-number">6.4.</span> <span class="nav-text">插入 PDF</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Label"><span class="nav-number">6.5.</span> <span class="nav-text">Label</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#博客推广及优化"><span class="nav-number">7.</span> <span class="nav-text">博客推广及优化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#添加robots-txt"><span class="nav-number">7.1.</span> <span class="nav-text">添加robots.txt</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#URL持久化"><span class="nav-number">7.2.</span> <span class="nav-text">URL持久化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#添加nofollow标签"><span class="nav-number">7.3.</span> <span class="nav-text">添加nofollow标签</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#搜索引擎收录"><span class="nav-number">7.4.</span> <span class="nav-text">搜索引擎收录</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#网站加速"><span class="nav-number">8.</span> <span class="nav-text">网站加速</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Nginx-gzip压缩"><span class="nav-number">8.1.</span> <span class="nav-text">Nginx gzip压缩</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#利用gulp压缩代码"><span class="nav-number">8.2.</span> <span class="nav-text">利用gulp压缩代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#修改默认Google字体库"><span class="nav-number">8.3.</span> <span class="nav-text">修改默认Google字体库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#对象存储存放图片资源"><span class="nav-number">8.4.</span> <span class="nav-text">对象存储存放图片资源</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多主机同步源码"><span class="nav-number">9.</span> <span class="nav-text">多主机同步源码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">10.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

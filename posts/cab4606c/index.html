@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="今天是武汉封城的第二十四天，疫情还在焦灼，距离湖北外很多地方计划的 2 月 10 日复工也已经过去了一周。很多员工也在陆续返回上海、深圳等城市，开始复工的节奏。尽管如此，事实上仍旧有很多行业的很多公司处于停摆状态，一场突如其来的疫情注定会影响各行各业的发展。 距离 2 月 3 日春节假期结束已经过去了两周，在经济整体下行的背景下，「推动企业复工复产」成为和「疫情防控」同等重要的工作。一时间，「远程">
+<meta name="keywords" content="远程办公,会议,OKR">
+<meta property="og:type" content="article">
+<meta property="og:title" content="也谈「远程办公」">
+<meta property="og:url" content="http://houmin.cc/posts/cab4606c/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="今天是武汉封城的第二十四天，疫情还在焦灼，距离湖北外很多地方计划的 2 月 10 日复工也已经过去了一周。很多员工也在陆续返回上海、深圳等城市，开始复工的节奏。尽管如此，事实上仍旧有很多行业的很多公司处于停摆状态，一场突如其来的疫情注定会影响各行各业的发展。 距离 2 月 3 日春节假期结束已经过去了两周，在经济整体下行的背景下，「推动企业复工复产」成为和「疫情防控」同等重要的工作。一时间，「远程">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-15_linus-working-at-home.jpg">
+<meta property="og:updated_time" content="2020-07-14T08:24:44.101Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-15_linus-working-at-home.jpg">
+
+<link rel="canonical" href="http://houmin.cc/posts/cab4606c/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>也谈「远程办公」 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/cab4606c/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          也谈「远程办公」
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-15 16:35:09" itemprop="dateCreated datePublished" datetime="2020-02-15T16:35:09+08:00">2020-02-15</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%9D%E8%8A%B1%E5%A4%95%E6%8B%BE/" itemprop="url" rel="index">
+                    <span itemprop="name">朝花夕拾</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/cab4606c/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/cab4606c/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>6 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>今天是武汉封城的第二十四天，疫情还在焦灼，距离湖北外很多地方计划的 2 月 10 日复工也已经过去了一周。很多员工也在陆续返回上海、深圳等城市，开始复工的节奏。尽管如此，事实上仍旧有很多行业的很多公司处于停摆状态，一场突如其来的疫情注定会影响各行各业的发展。</p>
+<p>距离 2 月 3 日春节假期结束已经过去了两周，在经济整体下行的背景下，「推动企业复工复产」成为和「疫情防控」同等重要的工作。一时间，「远程办公」成为热点，这里是「朝花夕拾」第五期，这一期我们来聊一聊 <code>远程办公</code>, 它到底是不是一种先进的工作模式。</p>
+<a id="more"></a>
+<h2 id="为什么我们可以远程工作"><a href="#为什么我们可以远程工作" class="headerlink" title="为什么我们可以远程工作"></a>为什么我们可以远程工作</h2><p>毫无疑问，你必须承认「远程办公」可以拥有巨大的生产力。君不见，在远程办公和开源协作下，我们有了全世界最伟大的软件作品 <code>linux</code> （没有之一，不服来辩）。</p>
+<p><img alt="Linus在家办公" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-15_linus-working-at-home.jpg"></p>
+<p>这是一张让我印象深刻的图片，是 linux 的主要创造者 <code>Linus</code> 在家办公的场景。想象一下，全世界超过两万个软件开发者，通过<code>git</code> 和 <code>MailList</code>进行远程协作，像 <code>Linus</code>一样远程为 Linux 提交代码，这是一件多么酷的事情。</p>
+<p>关于 Linus 家中办公的具体环境，可以参见下面的视频（如果看不到，你应该意识到你被墙了 ：）</p>
+<div class="video-container"><iframe src="//www.youtube.com/embed/LE0JtUeyVJA" frameborder="0" allowfullscreen></iframe></div>
+<p>可是如果远程办公室如此的高效，为何这种方式还迟迟没有得到推广呢？为什么还有那么多人要忍受大城市每天 996 的生活，要忍受大城市拥挤的交通，长时间的通勤，要忍受高额的房租？作为信息时代的原住民，作为信息行业的从业者，我们为何不能远程工作呢？</p>
+<p>事实上，远程工作这个概念在欧美已经很流行了，也有很多公司原生支持远程工作。在近几年，随着各种协作的效率工具的发展，远程工作的条件已经成熟，国内也已经有一些远程工作的先行者：</p>
+<ul>
+<li>比如<a href="https://mp.weixin.qq.com/s/alygC64BnIKbuuxBBZAOxA" target="_blank" rel="external nofollow noopener noreferrer">做出了TiDB的PingCAP 公司</a></li>
+<li>比如<a href="http://wangcong.org/" target="_blank" rel="external nofollow noopener noreferrer">这位在大理远程工作同时还在大理找到另一半的老哥</a></li>
+<li>比如<a href="https://coolshell.cn/articles/20765.html" target="_blank" rel="external nofollow noopener noreferrer">陈皓的MegaEase公司</a></li>
+<li>还有<a href="https://github.com/greatghoul/remote-working" target="_blank" rel="external nofollow noopener noreferrer">种种</a>，不胜枚举</li>
+</ul>
+<h2 id="为什么他们不远程工作"><a href="#为什么他们不远程工作" class="headerlink" title="为什么他们不远程工作"></a>为什么他们不远程工作</h2><p>可是，尽管有这么多成功的先例，绝大多数的公司都没有选择这种远程工作的模式，为什么呢？</p>
+<blockquote>
+<p><strong>远程办公很多沟通不方便，反馈不及时，协作体验不好</strong></p>
+</blockquote>
+<p>这真的是最本质的原因吗？更多的时候，问题就来自于原有工作模式的低效性。作为一个已经在好几家公司实习过的小白鼠，就已经可以切身感受到当前国内互联网工作存在的问题，只不过这些问题在远程工作的情境下被放大了而已。</p>
+<h3 id="缺位的目标管理"><a href="#缺位的目标管理" class="headerlink" title="缺位的目标管理"></a>缺位的目标管理</h3><p>有那么多的老板认为，在公司呆的时间越久产出才能越多。这是造成当前互联网行业著名 996 现象的主要原因，那么多的员工在虽然是在公司，实际上是在摸鱼。</p>
+<p>我一直认同的工作理念，应该是把事情在 DDL 做完，而不管你在哪个地方，以何种方式完成，这一点来说，<code>OKR (Objectives and Key Results)</code>是一个很好的目标管理工具。</p>
+<blockquote>
+<ul>
+<li>相比 KPI 来说，OKR 首先更加强调由团队成员共同制定团队目标，这样带来的好处是易于让整个团队就目标和关键结果达成共识，始终保持团队的目标导向一致。</li>
+<li>OKR 能够让团队成员更加明白做手头上的事情对于团队以及对于公司的意义，这一点对于远程团队尤为重要，极大的有利于促进部门与部门、人与人的协作，让团队更加具有整体性。</li>
+<li>OKR 还有一个很重要的特点：透明，在我们的实践中，每个团队都可以看到别的团队的 OKRs，大家在制定完各自团队的 OKR 后，还需要在公司级别宣布，确保大家都能了解。</li>
+</ul>
+</blockquote>
+<p>公司的管理和个人的管理是相通的，要做一件事情，首先得有可以量化的 Objectives，对应的目标是会有一些 Key Results 的，自己可以一步一步的完成。关于 OKR 的更多内容，可以参考 <a href="https://www.zhihu.com/question/22471467" target="_blank" rel="external nofollow noopener noreferrer">这个知乎问答</a>。</p>
+<h3 id="失效的会议"><a href="#失效的会议" class="headerlink" title="失效的会议"></a>失效的会议</h3><p>很多时候的会议主题并不明晰，在进入会议之前很多人对会议内容并不熟悉，可能整个会议都不明所以。</p>
+<blockquote>
+<p>世界上最大的电话会议运营商研究了与会者开会时都在干些什么：65%的人在干别的事情，63%的人在发邮件，55%的人在吃东西或做饭，47%的人去洗手间，6%的人在参加另外一场电话会议。</p>
+</blockquote>
+<p>不是说会议是无用的，恰恰相反，好的会议是可以高效解决问题的。问题在于，绝大多数的会议是低效的。真正好的会议应该是这样的：</p>
+<ul>
+<li>会议目标明确，或者是决策型会议，或者是讨论型会议。</li>
+<li>会议人数精简，会议时间不能过长，即Amazon 的「两个 Pizza 原则」</li>
+<li>每个参会的人都应该明确会议议程，在会议前就能够有自己的一些想法，然后集合起来，解决问题。</li>
+<li>要合理拆分会议议题，谨慎对待新议题。</li>
+</ul>
+<p>可以说，这些问题都和是否远程工作无关。恰恰相反，在远程工作的条件下，我们通过对于工具的利用，能够更加有效的展开会议。</p>
+<h3 id="糟糕的管理"><a href="#糟糕的管理" class="headerlink" title="糟糕的管理"></a>糟糕的管理</h3><p>真正好的管理，不应该是传统的监管思维，而应该是自我驱动式的管理思维。要做到这一点，不仅仅要求在公司层面营造良好的工作氛围，另一方面对于合作的同事提出了更高的要求。</p>
+<blockquote>
+<p>远程团队需要的人的一般需要有这些特质：</p>
+<ul>
+<li><strong>能独挡一面的人</strong>。这样交给他的事能独立完成，没有路能自己找路，这样可以省很多管理成本。</li>
+<li><strong>沟通能力很强的人</strong>。一方面，他们把模糊的事能变清楚，另一方面，他能有效地说服他人。不然就会非常扯皮和消耗时间。</li>
+<li><strong>能自管理和自驱动</strong>。不能自管理和自驱的人，会增加大量的管理和教育成本。能自驱动的人，都是对负责的事情有认同的人。</li>
+</ul>
+<p>如果你仔细思考一下，<strong>你会发现，这样的人是任何一家公司所渴望的人，和远不远程无关</strong>。只不过，如果是远程团队的话，你会被逼着要招到这样的人。</p>
+</blockquote>
+<p>找到优秀的人才，是团队管理成功的第一步。正如Bezos 所说，「我宁愿面50个人一个人都招不到，我也不愿意降低我的面试标准」。</p>
+<h2 id="我们该如何远程工作"><a href="#我们该如何远程工作" class="headerlink" title="我们该如何远程工作"></a>我们该如何远程工作</h2><h3 id="工作范式"><a href="#工作范式" class="headerlink" title="工作范式"></a>工作范式</h3><h4 id="Documentation-Driven"><a href="#Documentation-Driven" class="headerlink" title="Documentation Driven"></a>Documentation Driven</h4><p>文档可以很好的将信息结构化，相对于会议、语音、slack等工具可以促使你更加深入的思考。于此同时，文档可以作为以后参考，是项目记录很好的资料。</p>
+<h4 id="Design-Review"><a href="#Design-Review" class="headerlink" title="Design Review"></a>Design Review</h4><p>对于一些重要的问题或是工作（每个人都能够判断什么是关键问题和工作）， <strong>需要先把自己的想法share出来，而不是先实现</strong> 。</p>
+<p>一个好的 Design 文档需要包括如下项：</p>
+<ul>
+<li><strong>Background</strong>。交待这个事的背景、需求和要解决问题。</li>
+<li><strong>Objectives</strong>。说明这个事的目标和意义。</li>
+<li><strong>Alternative Solutions</strong>。给出多个解决方案，并能够进行 Pros/Cons 对比。<ul>
+<li><strong>Reference</strong>。方案需要有权威引用支持。</li>
+<li><strong>Data</strong>。方案需要有相关数据数据支持。</li>
+</ul>
+</li>
+<li><strong>Conclusion</strong>。结论是什么。</li>
+</ul>
+<h4 id="Simplification-amp-Automation"><a href="#Simplification-amp-Automation" class="headerlink" title="Simplification &amp; Automation"></a>Simplification &amp; Automation</h4><p>对于远程工作来说，能交给机器做的，尽量不要人来做，自动化是至关重要的。尤其对于线上的协作来说，多一个人的参与就意味着多一份沟通成本。现在像 slack 和 github 等工具都有一些 bot 可以使用，能够极大的提高工作效率。 </p>
+<p>简化是对事物一种抽象和归纳能力，其能够提升软件的复用能力和扩展性，自动化是工程能力的重要体现，一方面，远程工作中自动化的能力可以让整个团队更高效地协作，另一方面，自动化是规模化的提条件。</p>
+<h4 id="Effective-Meeting"><a href="#Effective-Meeting" class="headerlink" title="Effective Meeting"></a>Effective Meeting</h4><p>会议组织者需要在事前收集会议议题，其中包括如下分类：</p>
+<ul>
+<li><strong>项目类</strong>：需要事先有项目进度计划表（任何分项最好控制在1-2人周内）</li>
+<li><strong>方案类</strong>：需要事先写好相关的方案和设计才能讨论（参看 Design Review 章节）</li>
+<li><strong>问题类</strong>：需要事先写好相关的问题和解决提案（参看 Design Review 章节）</li>
+<li><strong>决策类</strong>：需要事先写好整事的前因后果以及利弊分析</li>
+<li><strong>信息类</strong>：需要事先写好相关的事宜说明</li>
+</ul>
+<p>组织者需要在会议前发出会议议题收集，其中包括：</p>
+<ul>
+<li>自己知道的项目的进度跟进（需要相相关的项目负责人准备相关的项目计划）</li>
+<li>方案和问题类的需要各个项目负责人提出来，并有相关的设计文档可供Review</li>
+<li>信息类和决策类的事宜可以写在Google Doc上，也可以写在 Team 的 Issue 里</li>
+</ul>
+<p>其它负责人可以在会议上加入自己团队的东西，或是要求其他团队提供更多的信息。</p>
+<h3 id="远程工具"><a href="#远程工具" class="headerlink" title="远程工具"></a>远程工具</h3><p>下面列出一些远程工作中可以用到的工具，其中的一些也在我个人管理中得到了运用。</p>
+<h4 id="开发工具"><a href="#开发工具" class="headerlink" title="开发工具"></a>开发工具</h4><ul>
+<li>GitHub：代码托管，公开的 RFC，社区 Issue 反馈，产品发布，Code Review 等。</li>
+<li>Jenkins：持续集成，daily build。</li>
+</ul>
+<h4 id="项目管理"><a href="#项目管理" class="headerlink" title="项目管理"></a>项目管理</h4><ul>
+<li>在线文档：文档协作，幻灯片，表格。</li>
+<li>邮件，日历。</li>
+<li>Trello：看板，记录一些重要客户和事件的备忘。</li>
+</ul>
+<h4 id="沟通交流"><a href="#沟通交流" class="headerlink" title="沟通交流"></a>沟通交流</h4><ul>
+<li>Zoom：在线会议。</li>
+<li>Slack：即时通讯，机器人消息中枢。</li>
+</ul>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>这一次对于「远程办公」这个话题的讨论，主要是根据自己的几段实习工作经历和网络上的一些在线经验分享而来，这是一个极度缺乏实践的一次「远程办公」的思考。我认为，「远程办公」的小众性，绝大多数的来源于绝大多数公司管理的无能，也因为没有把那些聪明的、具备自我管理能力的人聚集在一起。</p>
+<p>我期待着「远程办公」，期望在以后的某一段时间里，可以自己切身来实践这上面的种种，这才是云时代应该有的工作范式。</p>
+
+    </div>
+
+    
+    
+    
+      
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/cab4606c/" title="也谈「远程办公」">http://houmin.cc/posts/cab4606c/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%9C%E7%A8%8B%E5%8A%9E%E5%85%AC/" rel="tag"><i class="fa fa-tag"></i> 远程办公</a>
+              <a href="/tags/%E4%BC%9A%E8%AE%AE/" rel="tag"><i class="fa fa-tag"></i> 会议</a>
+              <a href="/tags/OKR/" rel="tag"><i class="fa fa-tag"></i> OKR</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/4119174d/" rel="next" title="武汉日记">
+                  <i class="fa fa-chevron-left"></i> 武汉日记
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/91ee7b9b/" rel="prev" title="【交易笔记】MACD 分析">
+                  【交易笔记】MACD 分析 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么我们可以远程工作"><span class="nav-number">1.</span> <span class="nav-text">为什么我们可以远程工作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么他们不远程工作"><span class="nav-number">2.</span> <span class="nav-text">为什么他们不远程工作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#缺位的目标管理"><span class="nav-number">2.1.</span> <span class="nav-text">缺位的目标管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#失效的会议"><span class="nav-number">2.2.</span> <span class="nav-text">失效的会议</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#糟糕的管理"><span class="nav-number">2.3.</span> <span class="nav-text">糟糕的管理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#我们该如何远程工作"><span class="nav-number">3.</span> <span class="nav-text">我们该如何远程工作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#工作范式"><span class="nav-number">3.1.</span> <span class="nav-text">工作范式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Documentation-Driven"><span class="nav-number">3.1.1.</span> <span class="nav-text">Documentation Driven</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Design-Review"><span class="nav-number">3.1.2.</span> <span class="nav-text">Design Review</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Simplification-amp-Automation"><span class="nav-number">3.1.3.</span> <span class="nav-text">Simplification &amp; Automation</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Effective-Meeting"><span class="nav-number">3.1.4.</span> <span class="nav-text">Effective Meeting</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#远程工具"><span class="nav-number">3.2.</span> <span class="nav-text">远程工具</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#开发工具"><span class="nav-number">3.2.1.</span> <span class="nav-text">开发工具</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#项目管理"><span class="nav-number">3.2.2.</span> <span class="nav-text">项目管理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#沟通交流"><span class="nav-number">3.2.3.</span> <span class="nav-text">沟通交流</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#写在最后"><span class="nav-number">4.</span> <span class="nav-text">写在最后</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

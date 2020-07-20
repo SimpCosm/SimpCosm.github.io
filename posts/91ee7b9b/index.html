@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="MACD是股票交易中一种常见的技术分析工具，用于研判股票价格变化的强度、方向、能量，以及趋势周期，以便把握股票买进和卖出的时机，这里是对其的总结笔记。">
+<meta name="keywords" content="投资,股票,MACD">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【交易笔记】MACD 分析">
+<meta property="og:url" content="http://houmin.cc/posts/91ee7b9b/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="MACD是股票交易中一种常见的技术分析工具，用于研判股票价格变化的强度、方向、能量，以及趋势周期，以便把握股票买进和卖出的时机，这里是对其的总结笔记。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-18_macd-indicator.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-18_macd-bearish-divergence.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-18_macd-bullish-divergence.png">
+<meta property="og:updated_time" content="2020-07-14T08:24:44.101Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-18_macd-indicator.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/91ee7b9b/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【交易笔记】MACD 分析 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/91ee7b9b/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【交易笔记】MACD 分析
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-18 16:03:25" itemprop="dateCreated datePublished" datetime="2020-02-18T16:03:25+08:00">2020-02-18</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%B5%84%E6%9C%AC%E4%B8%8D%E7%9C%A0/" itemprop="url" rel="index">
+                    <span itemprop="name">资本不眠</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/91ee7b9b/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/91ee7b9b/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><code>MACD</code>是股票交易中一种常见的技术分析工具，用于研判股票价格变化的强度、方向、能量，以及趋势周期，以便把握股票买进和卖出的时机，这里是对其的总结笔记。</p>
+<a id="more"></a>
+<h2 id="总体认识"><a href="#总体认识" class="headerlink" title="总体认识"></a>总体认识</h2><p>MACD 全称是 <code>Moving Average Convergence / Divergence</code>，在 1970年代由Gerald Appel 提出，既是一个<code>趋势追踪</code>工具，也是一个<code>市场动能指标</code>（震荡指标）。MACD体现了一条快速的指数移动平均线和一条慢速的指数移动平均线之间的差距，故其中文叫做 <code>指数平滑移动平均线</code>。</p>
+<p><img alt="MACD" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-18_macd-indicator.png"></p>
+<p>这是一张典型的 MACD 指标图，我们可以看到它有以下4个部分组成：</p>
+<ul>
+<li><strong>MACD line</strong><ul>
+<li>由快的指数移动平均线（通常为<script type="math/tex">EMA_{12}</script>）减去慢的指数移动平均线（通常为 <script type="math/tex">EMA_{26}</script>）得到，称为快线，也称作 <code>DIF线</code></li>
+</ul>
+</li>
+<li><strong>Signal line</strong><ul>
+<li>信号线是MACD线的9日指数平滑移动算出，称为慢线，也称作<code>DEA线</code></li>
+</ul>
+</li>
+<li><strong>Zero line</strong><ul>
+<li>就是快线和慢线相同的时候</li>
+</ul>
+</li>
+<li><strong>Histogram</strong><ul>
+<li>代表的是 MACD 线和 信号线 之间的距离，MACD 线在信号线上方时即在零轴线上，反之在下</li>
+</ul>
+</li>
+</ul>
+<h2 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h2><h3 id="Bullish-Crossover-黄金交叉"><a href="#Bullish-Crossover-黄金交叉" class="headerlink" title="Bullish Crossover (黄金交叉)"></a>Bullish Crossover (黄金交叉)</h3><ul>
+<li>当DIF与DEA都在零轴以上，而DIF向上突破DEA时，表明股市处于一种强势之中，股价将再次上涨，可以加码买进股票或持股待涨，这就是MACD指标<strong>“黄金交叉”</strong>的一种形式。</li>
+<li>当DIF和DEA都在零轴以下，而DIF向上突破DEA时，表明股市即将转强，股价跌势已尽将止跌朝上，可以开始买进股票或持股，这是MACD指标<strong>“黄金交叉</strong>”的另一种形式。</li>
+</ul>
+<h3 id="Bearish-Crossover-死亡交叉"><a href="#Bearish-Crossover-死亡交叉" class="headerlink" title="Bearish Crossover (死亡交叉)"></a>Bearish Crossover (死亡交叉)</h3><ul>
+<li>当DIF与DEA都在零轴以上，而DIF却向下突破DEA时，表明股市即将由强势转为弱势，股价将大跌，这时应卖出大部分股票而不能买股票，这就是MACD指标的<strong>“死亡交叉”</strong>的一种形式。</li>
+<li>当DIF和DEA都在零轴以下，而DIF向下突破DEA时，表明股市将再次进入极度弱市中，股价还将下跌，可以再卖出股票或观望，这是MACD指标<strong>“死亡交叉”</strong>的另一种形式。</li>
+</ul>
+<h3 id="Bearish-Divergence-（顶背离）"><a href="#Bearish-Divergence-（顶背离）" class="headerlink" title="Bearish Divergence （顶背离）"></a>Bearish Divergence （顶背离）</h3><p>MACD指标的背离就是指 <code>MACD指标图形的走势</code>正好和<code>K线图的走势</code>方向正好相反。</p>
+<p>当股价K线图上的股票走势一峰比一峰高，股价一直在向上涨，而MACD指标图形上的由红柱构成的图形的走势是一峰比一峰低，即当股价的高点比前一次的高点高、而MACD指标的高点比指标的前一次高点低，这叫 <code>顶背离现象</code>。</p>
+<p><img alt="MACD顶背离" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-18_macd-bearish-divergence.png"></p>
+<p><strong>顶背离现象一般是股价在高位即将反转转势的信号，表明股价短期内即将下跌，是卖出股票的信号。</strong></p>
+<h3 id="Bullish-Divergence-底背离"><a href="#Bullish-Divergence-底背离" class="headerlink" title="Bullish Divergence (底背离)"></a>Bullish Divergence (底背离)</h3><p>底背离一般出现在股价的低位区。当股价K线图上的股票走势，股价还在下跌，而MACD指标图形上的由绿柱构成的图形的走势是一底比一底高，即当股价的低点比前一次低点底，而指标的低点却比前一次的低点高，这叫 <code>底背离现象</code>。</p>
+<p><img alt="MACD底背离" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-18_macd-bullish-divergence.png"></p>
+<p><strong>底背离现象一般是预示股价在低位可能反转向上的信号，表明股价短期内可能反弹向上，是短期买入股票的信号。</strong></p>
+<blockquote>
+<p>在实践中，MACD指标的背离一般出现在强势行情中比较可靠，股价在高价位时，通常只要出现一次背离的形态即可确认位股价即将反转，而股价在低位时，一般要反复出现几次背离后才能确认。因此，<strong>MACD指标的顶背离研判的准确性要高于底背离</strong>，这点投资者要加以留意。</p>
+</blockquote>
+<h2 id="计算方法"><a href="#计算方法" class="headerlink" title="计算方法"></a>计算方法</h2><p>首先看一下 EMA 的定义： </p>
+<p>​    <script type="math/tex">EMA_n = ClosingPrice_n \frac{2}{TimePeriod + 1} + EMA_{n-1}(1 - \frac{2}{TimePeriod + 1})</script></p>
+<p>MACD默认参数是12、26、9，计算过程分三步:</p>
+<ul>
+<li><p><strong>计算两个长短周期的指数移动平均线</strong></p>
+<script type="math/tex; mode=display">EMA_{12} = ClosingPrice_{today} \frac{2}{12 + 1} + EMA_{yesterday}(1- \frac{2}{12 + 1})</script><script type="math/tex; mode=display">EMA_{26} = ClosingPrice_{today} \frac{2}{26 + 1} + EMA_{yesterday}(1- \frac{2}{26 + 1})</script></li>
+<li><p><strong>计算 MACD</strong></p>
+<script type="math/tex; mode=display">MACD_{today} = EMA_{12} - EMA_{26}</script></li>
+<li><p><strong>计算 Signal，就是对MACD进行9日平滑移动平均得到的</strong></p>
+<script type="math/tex; mode=display">Signal_{today} = MACD_{today} \frac{2}{26 + 1} + Signal_{yesterday}(1 - \frac{2}{9 + 1})</script></li>
+<li><p><strong>计算 Histogram</strong></p>
+<script type="math/tex; mode=display">Histogram = 2 * (MACD_{today} - Signal_{today})</script></li>
+</ul>
+<p>看完公式问题就马上来了，如果说要算今日的值，必须得到昨日的对应值，可是刚上市的股票如何得到昨日的值呢?</p>
+<p>这里就规定第一个EAM值就是当天的收盘价，同时MACD，Signal，柱值为零。</p>
+<div class="note info">
+            <p>在现在的股票软件中，和 MACD 相关的参数一般命名为 <code>DIF</code>，<code>DEA</code> 和 <code>MACD</code>，其实本质一样，具体的对应关系为</p><script type="math/tex; mode=display">DIF = MACD_{today} = EMA_{12} - EMA_{26}</script><script type="math/tex; mode=display">DEA  = Signal_{today} = DIF \frac{2}{26 + 1} + Signal_{yesterday}(1 - \frac{2}{9 + 1})</script><script type="math/tex; mode=display">MACD = Histogram = 2 * (DIF - DEA)</script>
+          </div>
+<h2 id="使用特性"><a href="#使用特性" class="headerlink" title="使用特性"></a>使用特性</h2><ul>
+<li><p><strong>MACD指标与均线的关系</strong></p>
+<p>MACD指标源于股价的平滑移动平均线EMA，所以具有均线指标稳定，能追随趋势的特点，能够对市场动能做出客观的反映。与此同时，MACD指标在均线的基础上还有超越，主要是去掉了均线有时频繁发出假信号的缺陷，使得指标在对中长期趋势的把握上准确率较高。</p>
+</li>
+<li><p><strong>MACD是市场动能最直接的反映</strong></p>
+<p>MACD指标实际上围绕两个离差值进行分析，一个是DIF线，是快慢均线的差值，可以理解为股价上涨或下跌的速度;另一个是MACD柱线，是快慢DIFF线的差值，可以理解为股价上涨或下跌的加速度。MACD指标对市场动能有着极大的敏感性。</p>
+</li>
+<li><p><strong>MACD指标具有一定的滞后性</strong></p>
+<p>在区间振荡行情中，MACD的价值会大打折扣，甚至会出现紊乱。</p>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/8082c63c/" rel="bookmark">聊聊行业</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/43a993d5/" rel="bookmark">【交易笔记】看懂经济新闻</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/91ee7b9b/" title="【交易笔记】MACD 分析">http://houmin.cc/posts/91ee7b9b/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E6%8A%95%E8%B5%84/" rel="tag"><i class="fa fa-tag"></i> 投资</a>
+              <a href="/tags/%E8%82%A1%E7%A5%A8/" rel="tag"><i class="fa fa-tag"></i> 股票</a>
+              <a href="/tags/MACD/" rel="tag"><i class="fa fa-tag"></i> MACD</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/cab4606c/" rel="next" title="也谈「远程办公」">
+                  <i class="fa fa-chevron-left"></i> 也谈「远程办公」
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/787197ce/" rel="prev" title="The Big Short">
+                  The Big Short <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#总体认识"><span class="nav-number">1.</span> <span class="nav-text">总体认识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基本使用"><span class="nav-number">2.</span> <span class="nav-text">基本使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Bullish-Crossover-黄金交叉"><span class="nav-number">2.1.</span> <span class="nav-text">Bullish Crossover (黄金交叉)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Bearish-Crossover-死亡交叉"><span class="nav-number">2.2.</span> <span class="nav-text">Bearish Crossover (死亡交叉)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Bearish-Divergence-（顶背离）"><span class="nav-number">2.3.</span> <span class="nav-text">Bearish Divergence （顶背离）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Bullish-Divergence-底背离"><span class="nav-number">2.4.</span> <span class="nav-text">Bullish Divergence (底背离)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#计算方法"><span class="nav-number">3.</span> <span class="nav-text">计算方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用特性"><span class="nav-number">4.</span> <span class="nav-text">使用特性</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

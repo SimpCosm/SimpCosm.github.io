@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="本博文是我对计算机系统中的缓存做的备忘笔记，参考资料来自于互联网。">
+<meta name="keywords" content="计算机,cache">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【计算机体系结构】Cache Memory">
+<meta property="og:url" content="http://houmin.cc/posts/9bccd097/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="本博文是我对计算机系统中的缓存做的备忘笔记，参考资料来自于互联网。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-06_memory-hierarchy.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-07_cache-system-structure.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-06_intel-core-i7-cache-hierarchy.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-07_cache-organization.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-07_cache-line-address.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-07_cache-read.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-07_cache-fully-associative.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-07_cache-direct-mapped.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-07_cache-set-associative.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-07_intel-i7-l1-data-cache.png">
+<meta property="og:updated_time" content="2020-07-14T08:24:44.099Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-06_memory-hierarchy.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/9bccd097/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【计算机体系结构】Cache Memory | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/9bccd097/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【计算机体系结构】Cache Memory
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-01-06 17:05:27" itemprop="dateCreated datePublished" datetime="2020-01-06T17:05:27+08:00">2020-01-06</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/9bccd097/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/9bccd097/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>8 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本博文是我对计算机系统中的缓存做的备忘笔记，参考资料来自于互联网。</p>
+<a id="more"></a>
+<h2 id="Background"><a href="#Background" class="headerlink" title="Background"></a>Background</h2><h3 id="Memory-Hierarchy"><a href="#Memory-Hierarchy" class="headerlink" title="Memory Hierarchy"></a>Memory Hierarchy</h3><p>众所周知，对于不同的存储设备，更高的性能意味着更高的成本和更小的容量。随着 CPU 越做越快，CPU 和主存之间的速度差距正在不断扩大。好在，<strong>软件的局部性原理</strong> 拯救了这一切，在现代计算机体系中通过 <code>Memory Hierarchy</code> 的设计，使得系统在性能、成本和制造工艺之间作出取舍，从而达到了一个平衡。</p>
+<p>下图是现在可以看到的常见的存储器层次机构：</p>
+<p><img alt="Memory Hierarchy" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-06_memory-hierarchy.png"></p>
+<h3 id="Principle-of-Locality"><a href="#Principle-of-Locality" class="headerlink" title="Principle of Locality"></a>Principle of Locality</h3><p><code>程序访问的局部性原理</code>指的是，<strong>内存中某个地址被访问后，短时间内还有可能继续访问这块地址。内存中的某个地址被访问后，它相邻的内存单元被访问的概率也很大。</strong></p>
+<p>程序访问的局部性包含两种：</p>
+<ul>
+<li>时间局部性：某个内存单元在较短时间内很可能被再次访问</li>
+<li>空间局部性：某个内存单元被访问后相邻的内存单元较短时间内很可能被访问</li>
+</ul>
+<p>出现这种情况的原因很简单，因为程序是指令和数据组成的，指令在内存中按顺序存放且地址连续，如果运行一段循环程序或调用一个方法，又或者再程序中遍历一个数组，都有可能符合上面提到的局部性原理。</p>
+<p>那既然在执行程序时，内存的某些单元很可能会经常的访问或写入，那可否在CPU和内存之间，加一个缓存，CPU在访问数据时，先看一下缓存中是否存在，如果有直接就读取缓存中的数据即可。如果缓存中不存在，再从内存中读取数据。</p>
+<p>事实证明利用这种方式，程序的运行效率会提高90%以上，这个缓存也叫做<strong>高速缓存Cache</strong>。</p>
+<h2 id="Big-Picture"><a href="#Big-Picture" class="headerlink" title="Big Picture"></a>Big Picture</h2><p>在深入了解 Cache 的技术细节之前，我们可以先看看关于 Cache 在现代计算机系统中的 big picture。如下图所示，ALU 不是直接和主存相连，所有的 load 和 store 通过 Cache 完成，Cache 是 CPU 芯片组成的一部分。</p>
+<p><img alt="Cache System Structure" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-07_cache-system-structure.png"></p>
+<p>随着计算机系统的发展，Cache 不仅仅只有一层，可能被分为多层。于此同时，人们发现，将指令的 Cache 和 数据的 Cache 分开可以获得更大的系统增益。而且，CPU也从单核单处理器逐渐发展到多核多处理器，所以一个现代的计算机系统中，Cache 的组成方式可能如下图所示：</p>
+<p><img alt="Intel Core i7 Cache Hierarchy" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-06_intel-core-i7-cache-hierarchy.png"></p>
+<p>在这个图中，只显示了一个处理器(Processor)，处理器中有四个核(Core)，每个 Core 会有自己的L1数据缓存和L1指令缓存，也有自己统一的 L2 缓存。四个核之间会共享 L3 缓存，L3 缓存和主存直接沟通。</p>
+<h2 id="General-Cache-Organization"><a href="#General-Cache-Organization" class="headerlink" title="General Cache Organization"></a>General Cache Organization</h2><p>Cache 是以 <code>缓存行(Cache Line)</code> 为基本组织单位的，下图是一个通用的缓存组织结构。</p>
+<p><img alt="General Cache Organization (S, E, B, m)" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-07_cache-organization.png"></p>
+<p>假设内容容量是 M，内存物理地址为 <code>m</code> 个bit。CPU 在访问缓存时，物理地址会被解析成如下的格式</p>
+<p><img alt="Cache Line 地址解析" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-07_cache-line-address.png"></p>
+<p>这里，有如下的关系</p>
+<script type="math/tex; mode=display">
+\begin{gather}
+S = 2^s \\
+B = 2^b \\
+m = t + s + b \\
+\end{gather}</script><p>参数具体意义如下：一个 Cache 被分成 S 个 <code>set</code>，每个 set 有 E 路 Cache Line。在一个 Cache Line 中，有 B 个字节的存储单元。所以，在一个内存地址中，中间的 s 个 bit 决定了该寻址单元被映射到哪个 set，而最低的 b 个 bit 决定了该单元在一个缓存行中的偏移量。<code>tag</code> 是内存地址的高 t 个 bit，因为可能有多个内存地址映射到同一个 Cache Line 中，所以用 tag 来校验该 Cache Line 是否是 CPU 要访问的内存单元。</p>
+<p>上面是从内存地址的角度看访问 Cache 时候的地址参数解析，对应到实际的 Cache Line 的组成，可以看第一张图。可以看到，对于每一个 Cache Line，除了 tag 用来校验是否是 CPU 要访问的内存单元，还有一个 <code>valid bit</code> 来确认该缓存行是否有效，然后就是一个含有 $B = 2^b$ 个字节的 <code>Cache Block</code>。在目前的 x86 CPU 的 Cache Line 中，一般都是 64 字节的。</p>
+<p>当 tag 和 valid 校验成功时，我们称为 <code>Cache Hit</code>，这时就可以将cache中的单元取出，放入到 CPU 中的寄存器。</p>
+<p>当 tag 或 valid 校验失败时，说明要访问的内存单元并不在cache中，需要去内存中或者下一级的 Cache 中取出，这就是 <code>Cache Miss</code>。当不命中的情况发生时，系统就会从内存中或者下一级缓存中取得该单元，将其装入cache中，与此同时也放入CPU寄存器中，等待下一步处理。</p>
+<p>下图是一个典型的 Cache Read 的流程</p>
+<p><img alt="Cache Read" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-07_cache-read.png"></p>
+<h2 id="Cache-Implement-Details"><a href="#Cache-Implement-Details" class="headerlink" title="Cache Implement Details"></a>Cache Implement Details</h2><p>根据上面参数 E 的不同选择，可以把 Cache 到 Memory 的映射分为以下几种类型</p>
+<ul>
+<li>全相联(Fully Associative)<ul>
+<li>$s = 0$，每个内存块数据可以映射到任意缓存行中</li>
+</ul>
+</li>
+<li>直接映射(Direct Mapped)，也称单路组相连(Single Way Set Associative)<ul>
+<li>$E = 1$，每个内存块数据只能映射到固定的缓存行中</li>
+</ul>
+</li>
+<li>多路组相联(N Way Set Associative)<ul>
+<li>$E = N$, 每个内存块数据可以映射到固定 set 的任意缓存行中</li>
+</ul>
+</li>
+</ul>
+<h3 id="Fully-Associative-Cache"><a href="#Fully-Associative-Cache" class="headerlink" title="Fully Associative Cache"></a>Fully Associative Cache</h3><p>全相联把内存方位两个字段，<code>tag</code> 和 <code>offset</code>，没有了 set index 的字段。</p>
+<p>在访问数据时，直接根据内存地址中的 <code>tag</code>，去遍历对比每一个缓存行，直到找到 <code>tag</code>一致的缓存行，然后访问其中的数据。</p>
+<p>如果遍历完所有的缓存行之后，没有找到一致的<code>tag</code>, 那么就会从内存中获取数据，然后找到空闲的缓存行，直接写入<code>tag</code>和 数据即可。</p>
+<p>全相联意味着主存中的数据块可以出现在任意一个缓存行中。这种方式下替换算法(Replacement Policy)有最大的灵活度，也意味着可以有最低的 <code>Cache Miss Rate</code>。但是因为没有索引可以使用，检查一个缓存行是否命中需要在整个 Cache 范围内搜索，这带来了查找电路的大量延时。因此只有在缓存极小的情况下才有可能使用这种映射方式。</p>
+<p><img alt="Fully Associative" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-07_cache-fully-associative.png"></p>
+<h3 id="Direct-Mapped-Cache"><a href="#Direct-Mapped-Cache" class="headerlink" title="Direct Mapped Cache"></a>Direct Mapped Cache</h3><p>直接映射是一种<code>多对一</code>的映射关系。在这种映射下，主存中的每一个数据块只能有一个缓存行与之对应。可能有多个主存中的数据块被映射到统一个缓存行，但是每一个数据块只能被映射到确定的缓存行。</p>
+<p>在 1990 年代初期，直接映射是当时最流行的机制。但是随着 CPU 主频的提高，直接映射机制正在逐渐退出舞台。</p>
+<p>直接映射最大的问题在于，每个数据块在哪个缓存行是确定的，没有替换策略(Replacement Policy)。如果两个数据块被映射到同一个缓存行时，它们会不停的把对方替换出去。由于严重的冲突，频繁刷新 Cache 会造成大量的延时，而且未能有效利用程序运行期所具有的时间局部性。这样导致了缓存命中率(cache miss rate)明显提高。</p>
+<p>下图是一个Memory 为 16Kbytes， Cache Line 为 4bytes 的直接映射缓存例子。</p>
+<p><img alt="Direct Mapped" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-07_cache-direct-mapped.png"></p>
+<h3 id="Set-Associative-Cache"><a href="#Set-Associative-Cache" class="headerlink" title="Set Associative Cache"></a>Set Associative Cache</h3><p>组相联映射结合了以上两种映射方式的优点。具体的方法就是</p>
+<ul>
+<li>首先通过 set index 来确认数据块应该放在哪一个 set 中</li>
+<li>确认到 set 之后，通过 cache 替换策略(Replacement Policy)来确定到底放在组中的那个缓存行</li>
+</ul>
+<p><img alt="Set Associative" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-07_cache-set-associative.png"></p>
+<h2 id="Cache-Replacement-Policy"><a href="#Cache-Replacement-Policy" class="headerlink" title="Cache Replacement Policy"></a>Cache Replacement Policy</h2><p>Cache容量比内存小，所以内存数据映射到Cache时，必然会导致Cache满的情况，那之后的内存映射要替Cache中的哪些行呢？这就需要制定一种策略。</p>
+<p>常见的替换算法有如下几种：</p>
+<ul>
+<li>先进先出算法（FIFO)：总是把最早装入Cache的行替换掉，这种算法实现简单，但不能正确反映程序的访问局部性，命中率不高</li>
+<li>最近最少使用算法（LRU)：总是选择最近最少使用的Cache行替换，这种这种算法稍微复杂一些，但可以正确反映程序访问的局部性，命中率最高</li>
+<li>最不经常使用算法（LFU）：总是替换掉Cache中引用次数最少的行，与LRU类似，但没有LRU替换方式更精准</li>
+<li>随机替换算法（Random）：随机替换掉Cache中的行，与使用情况无关，命中率不高</li>
+</ul>
+<p>现实使用最多的是最近最少使用算法（LRU)进行Cache行的替换方案，这种方案使得缓存的命中率最高。</p>
+<h2 id="Cache-in-Real-World"><a href="#Cache-in-Real-World" class="headerlink" title="Cache in Real World"></a>Cache in Real World</h2><p>可以通过如下的方式查看。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">----- 如果启动时间比较短，可以通过如下方式查看</span><br><span class="line"><span class="meta">#</span><span class="bash"> dmesg | grep cache</span></span><br><span class="line"></span><br><span class="line">----- 比较详细的硬件信息，包括了Cache的详细信息</span><br><span class="line"><span class="meta">#</span><span class="bash"> dmidecode</span></span><br><span class="line"></span><br><span class="line">----- 查看硬件信息，例如CPU、内存等</span><br><span class="line"><span class="meta">#</span><span class="bash"> lshw</span></span><br><span class="line"></span><br><span class="line">----- 查看CPU相关信息，两者比较类似</span><br><span class="line"><span class="meta">#</span><span class="bash"> lscpu</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> cat /proc/cpuinfo</span></span><br></pre></td></tr></table></figure>
+<p>另外，由专门针对 x86 信息的程序，也就是 <code>x86info</code> ，可以直接安装对应的包。</p>
+<p>注意，现在多数的 CPU 采用的是超线程，也就是说对于一个物理核来说，对于内核看到的是两个，而实际的物理核是一个。</p>
+<p>另外，在 <code>/sys/devices/system/cpu/</code> 中包含了一些相关的指标，例如。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">----- 查看cpu0的一级缓存中的有多少组</span><br><span class="line"><span class="meta">#</span><span class="bash"> /sys/devices/system/cpu/cpu0/cache/index0/number_of_sets</span></span><br><span class="line">64</span><br><span class="line">----- 查看cpu0的一级缓存中一组中的行数</span><br><span class="line"><span class="meta">$</span><span class="bash"> cat /sys/devices/system/cpu/cpu0/cache/index0/ways_of_associativity</span></span><br><span class="line">8</span><br></pre></td></tr></table></figure>
+<p>通过类似 lscpu 查看到对应 CPU0 的一级缓存大小是 32K ，包含了 64 个组 (sets)，每组有 8 ways，则可以算出每一个 way (也就是 Cache Line) 的大小是 <code>32*1024/(64*8)=64</code> 。</p>
+<p>可以通过如下方式查看。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> cat /sys/devices/system/cpu/cpu0/cache/index0/coherency_line_size</span></span><br><span class="line">64</span><br></pre></td></tr></table></figure>
+<p>这里是 Intel Core i7 L1数据缓存的实际例子</p>
+<p><img alt="Intel Core i7 L1 Data Cache" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-07_intel-i7-l1-data-cache.png"></p>
+<h2 id="Cache-Write"><a href="#Cache-Write" class="headerlink" title="Cache Write"></a>Cache Write</h2><p>试想，如果CPU想要修改某个内存的数据，这块内存的数据刚好在Cache中存在，那么是不是要同时更新Cache中的数据？对于写入的数据，如何保证Cache和内存数据的一致性？</p>
+<h3 id="Cache-Write-Hit"><a href="#Cache-Write-Hit" class="headerlink" title="Cache Write Hit"></a>Cache Write Hit</h3><ul>
+<li><strong>Write through</strong><ul>
+<li>在写操作时，如果Cache命中，则同时写Cache和内存。</li>
+</ul>
+</li>
+<li><strong>Write back</strong><ul>
+<li>在写操作时，如果Cache命中，则只更新Cache而不更新内存。</li>
+<li>所以每一个 Cache Line需要有一个 dirty bit</li>
+</ul>
+</li>
+</ul>
+<h3 id="Cache-Write-Miss"><a href="#Cache-Write-Miss" class="headerlink" title="Cache Write Miss"></a>Cache Write Miss</h3><ul>
+<li>Write Allocate<ul>
+<li>先更新内存数据，然后再写入空闲的Cache行中，保证Cache有数据，提高了缓存命中率，但增加了写入Cache的开销</li>
+</ul>
+</li>
+<li>No Write Allocate<ul>
+<li>只更新内存数据，不写入Cache，只有等访问不命中时，再进行缓存写入 </li>
+</ul>
+</li>
+</ul>
+<p>关于缓存一致性的问题，可以参考我的另一篇博文 <a href="http://houmin.cc">Cache Coherency</a>，此处不再赘述。</p>
+<h2 id="Cache-Friendly-Code"><a href="#Cache-Friendly-Code" class="headerlink" title="Cache Friendly Code"></a>Cache Friendly Code</h2><p>针对缓存的这种特殊的结构，作为程序猿，如果一不小心，可能会带来重大的性能问题。</p>
+<p>一些典型的案例可以参考我的另一篇博文 <a href="http://houmin.cc">Cache Friendly Code</a>，此处不再赘述。</p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ul>
+<li><a href="https://lwn.net/Articles/252125/" target="_blank" rel="external nofollow noopener noreferrer">https://lwn.net/Articles/252125/</a></li>
+<li><a href="http://hedengcheng.com/?p=648" target="_blank" rel="external nofollow noopener noreferrer">http://hedengcheng.com/?p=648</a></li>
+<li>CMU 15213 Cache Memories Slide</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/b893097a/" rel="bookmark">【计算机体系结构】NUMA架构详解</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/987306d8/" rel="bookmark">Melodies Are Just Math</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/fb3d782a/" rel="bookmark">Key Numbers Every Programmer Should Know</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/9bccd097/" title="【计算机体系结构】Cache Memory">http://houmin.cc/posts/9bccd097/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA/" rel="tag"><i class="fa fa-tag"></i> 计算机</a>
+              <a href="/tags/cache/" rel="tag"><i class="fa fa-tag"></i> cache</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/3e030bdb/" rel="next" title="Carpe Diem">
+                  <i class="fa fa-chevron-left"></i> Carpe Diem
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/b893097a/" rel="prev" title="【计算机体系结构】NUMA架构详解">
+                  【计算机体系结构】NUMA架构详解 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Background"><span class="nav-number">1.</span> <span class="nav-text">Background</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Memory-Hierarchy"><span class="nav-number">1.1.</span> <span class="nav-text">Memory Hierarchy</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Principle-of-Locality"><span class="nav-number">1.2.</span> <span class="nav-text">Principle of Locality</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Big-Picture"><span class="nav-number">2.</span> <span class="nav-text">Big Picture</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#General-Cache-Organization"><span class="nav-number">3.</span> <span class="nav-text">General Cache Organization</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Cache-Implement-Details"><span class="nav-number">4.</span> <span class="nav-text">Cache Implement Details</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Fully-Associative-Cache"><span class="nav-number">4.1.</span> <span class="nav-text">Fully Associative Cache</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Direct-Mapped-Cache"><span class="nav-number">4.2.</span> <span class="nav-text">Direct Mapped Cache</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Set-Associative-Cache"><span class="nav-number">4.3.</span> <span class="nav-text">Set Associative Cache</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Cache-Replacement-Policy"><span class="nav-number">5.</span> <span class="nav-text">Cache Replacement Policy</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Cache-in-Real-World"><span class="nav-number">6.</span> <span class="nav-text">Cache in Real World</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Cache-Write"><span class="nav-number">7.</span> <span class="nav-text">Cache Write</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Cache-Write-Hit"><span class="nav-number">7.1.</span> <span class="nav-text">Cache Write Hit</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Cache-Write-Miss"><span class="nav-number">7.2.</span> <span class="nav-text">Cache Write Miss</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Cache-Friendly-Code"><span class="nav-number">8.</span> <span class="nav-text">Cache Friendly Code</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reference"><span class="nav-number">9.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

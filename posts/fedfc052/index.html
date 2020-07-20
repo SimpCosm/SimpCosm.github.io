@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="LaTeX是基于TeX的文档排版系统。TeX是当初Knuth教授为了写作TAOCP而开发的个人排版软件，而LaTeX是Lamport博士为了编写自己的书籍而设计的。LaTeX实际上就是用TeX语言编写的一套宏代码，拥有比原来TeX格式(plain TeX)更为规范的命令和一整套预定义的格式，隐藏了不少排版上的细节。">
+<meta name="keywords" content="LaTeX">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LaTeX笔记">
+<meta property="og:url" content="http://houmin.cc/posts/fedfc052/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="LaTeX是基于TeX的文档排版系统。TeX是当初Knuth教授为了写作TAOCP而开发的个人排版软件，而LaTeX是Lamport博士为了编写自己的书籍而设计的。LaTeX实际上就是用TeX语言编写的一套宏代码，拥有比原来TeX格式(plain TeX)更为规范的命令和一整套预定义的格式，隐藏了不少排版上的细节。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://houmin.cc/images/2017-03-05-latex-sample-slide.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-chinese.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-chinese-sample.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-greek-symbols.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-relation-symbols.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-binary-operators.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-variable-sized-symbols.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-arrow-symbols.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-delimiters.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-miscellaneous-symbols.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-non-text-symbols.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-functions.jpg">
+<meta property="og:updated_time" content="2020-07-14T08:24:44.096Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://houmin.cc/images/2017-03-05-latex-sample-slide.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/fedfc052/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>LaTeX笔记 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/fedfc052/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          LaTeX笔记
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-03-05 01:32:00" itemprop="dateCreated datePublished" datetime="2017-03-05T01:32:00+08:00">2017-03-05</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/fedfc052/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/fedfc052/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>6.5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>12 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>LaTeX是基于TeX的文档排版系统。TeX是当初Knuth教授为了写作TAOCP而开发的个人排版软件，而LaTeX是Lamport博士为了编写自己的书籍而设计的。LaTeX实际上就是用TeX语言编写的一套宏代码，拥有比原来TeX格式(plain TeX)更为规范的命令和一整套预定义的格式，隐藏了不少排版上的细节。</p>
+<a id="more"></a>
+<h2 id="搭建LaTeX环境"><a href="#搭建LaTeX环境" class="headerlink" title="搭建LaTeX环境"></a>搭建LaTeX环境</h2><p>TeX/LaTex并不是单独的程序，而是复杂的软件包，里面包含了排版的专业引擎、编译脚本、格式转换工具、管理界面、支持工具、字体及数以千计的宏包和文档。一个TeX发行版就是把所有这些部件集合起来打包发布的软件。现在最为流行的发行版为CTeX套装和TeX Live。前者是Windows下面的软件，后者适用于各种操作系统。这里以TeX Live为例。</p>
+<p>TeX Live是由TUG(TeX User Group)发布的一个发行版。</p>
+<p>参考资料</p>
+<ul>
+<li><a href="http://www.linuxidc.com/Linux/2016-08/133913.htm" target="_blank" rel="external nofollow noopener noreferrer">Linux系统下原版TeX Live 2016的安装与配置</a></li>
+<li><a href="http://www.ezlippi.com/blog/2015/03/install-texlive-in-ubuntu.html" target="_blank" rel="external nofollow noopener noreferrer">在Ubuntu下安装和编译LaTeX</a></li>
+</ul>
+<h3 id="安装前准备"><a href="#安装前准备" class="headerlink" title="安装前准备"></a>安装前准备</h3><h4 id="下载TeX-Live镜像"><a href="#下载TeX-Live镜像" class="headerlink" title="下载TeX Live镜像"></a>下载TeX Live镜像</h4><p>本机环境为64位Ubuntu 16.04，下载发型版为Tex Live 2016。</p>
+<h4 id="删除旧版"><a href="#删除旧版" class="headerlink" title="删除旧版"></a>删除旧版</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> sudo apt-get purge tex-common</span></span><br></pre></td></tr></table></figure>
+<h4 id="安装Perk-TK模块"><a href="#安装Perk-TK模块" class="headerlink" title="安装Perk-TK模块"></a>安装Perk-TK模块</h4><p>install-tl是一个perl脚本，要在专家GUI模式安装，需要加入XFT支持的Perl-TK模块<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> sudo apt-get install perl-tk</span></span><br></pre></td></tr></table></figure></p>
+<h3 id="安装主程序"><a href="#安装主程序" class="headerlink" title="安装主程序"></a>安装主程序</h3><h4 id="挂载ios镜像文件"><a href="#挂载ios镜像文件" class="headerlink" title="挂载ios镜像文件"></a>挂载ios镜像文件</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> sudo mount -o loop path_to.iso /mnt</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">cd</span> /mnt</span></span><br></pre></td></tr></table></figure>
+<h4 id="启动安装程序"><a href="#启动安装程序" class="headerlink" title="启动安装程序"></a>启动安装程序</h4><p>在加入了XFT支持的Perl-TK模块后，可以用以下方法启动GUI专家模式进行安装：<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> sudo ./install-tl -gui</span></span><br></pre></td></tr></table></figure></p>
+<ul>
+<li>选择安装方案。初级用户推荐直接选择 scheme-full 全部安装。如果磁盘空间有限也可以选择small或者median模式。高级用户可以选择scheme-custom进一步定制。这里我选择了scheme-custom，并且在“进一步定制”里去掉了自己不会用到的一些语言包和ConTeXt相关组件。</li>
+<li>由于这里是安装到系统里，因此portable setup选择了否，安装路径为默认。</li>
+<li>选项里面选择默认为A4纸张大小，其它一些选项基本都选了是。其中要注意的是创建符号链接会在 /usr/local/bin里面创建指向可执行程序的软链接，从而可以直接使用latex,pdflatex等命令，此外还可以使用man latex等命令查看帮助。</li>
+<li>建议在最后的get package updates一项选否，等安装好了之后手动安装更新。</li>
+</ul>
+<h3 id="配置环境变量"><a href="#配置环境变量" class="headerlink" title="配置环境变量"></a>配置环境变量</h3><p>配置<code>.bashrc</code>文件，在文件最后加上<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">export TEX_HOME=/usr/local/texlive/2016</span><br><span class="line">export PATH=$PATH:$TEX_HOME/bin/x86_64-linux</span><br><span class="line">export INFOPATH=$INFOPATH:$TEX_HOME/texmf-dist/doc/info</span><br><span class="line">export MANPATH=$MANPATH:$TEX_HOME/texmf-dist/doc/man</span><br></pre></td></tr></table></figure></p>
+<p>进入home目录下输入命令使得修改的环境变量生效<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">houmin@cosmos:~$ source .bashrc</span><br></pre></td></tr></table></figure></p>
+<h3 id="测试安装是否成功"><a href="#测试安装是否成功" class="headerlink" title="测试安装是否成功"></a>测试安装是否成功</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">houmin@cosmos:~$ tex --version</span><br><span class="line">TeX 3.14159265 (TeX Live 2016)</span><br><span class="line">kpathsea version 6.2.2</span><br><span class="line">Copyright 2016 D.E. Knuth.</span><br><span class="line">There is NO warranty.  Redistribution of this software is</span><br><span class="line">covered by the terms of both the TeX copyright and</span><br><span class="line">the Lesser GNU General Public License.</span><br><span class="line">For more information about these matters, see the file</span><br><span class="line">named COPYING and the TeX source.</span><br><span class="line">Primary author of TeX: D.E. Knuth.</span><br></pre></td></tr></table></figure>
+<p>安装完成<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">cd</span> /</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> sudo umount /mnt</span></span><br></pre></td></tr></table></figure></p>
+<h3 id="配置字体"><a href="#配置字体" class="headerlink" title="配置字体"></a>配置字体</h3><p>XeTeX 和 LuaTeX 可以直接使用系统字体。然而 texlive 自带的字体并不在系统的字体目录里面。为了让系统可以使用texlive所带的字体，需要进行如下配置。</p>
+<ul>
+<li>将texlive的字体配置文件复制到系统内<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo cp /usr/local/texlive/2016/texmf-var/fonts/conf/texlive-fontconfig.conf /etc/fonts/conf.d/09-texlive.conf</span><br></pre></td></tr></table></figure></li>
+<li>刷新系统字体缓存<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo fc-cache -fsv</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="更新源配置"><a href="#更新源配置" class="headerlink" title="更新源配置"></a>更新源配置</h3><p>配置合适的CTAN源可以加快宏包更新的网速，以中科大的源为例：<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo tlmgr option repository http://mirrors.ustc.edu.cn/CTAN/systems/texlive/tlnet</span><br></pre></td></tr></table></figure><br>之后可以利用tlmgr进行网络更新。CTAN 上的包更新很频繁，所以即便是最新版的texlive2016，其中也有大量的宏包需要更新（可能包括tlmgr程序本身）。<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo tlmgr update --self --all</span><br></pre></td></tr></table></figure></p>
+<h3 id="dummy-package-安装"><a href="#dummy-package-安装" class="headerlink" title="dummy package 安装"></a>dummy package 安装</h3><p>texlive2016安装之后需要“告诉”系统texlive相关软件包都安装好了。这样在系统安装依赖于tex的软件（比如R）时就不必重新下载软件仓库中的旧版 texlive 相关软件。也不会造成不同版本 tex 命令的冲突。dummy package 就是解决这样的软件依赖问题的“虚包”。</p>
+<h3 id="测试LaTeX"><a href="#测试LaTeX" class="headerlink" title="测试LaTeX"></a>测试LaTeX</h3><p>这个时候，在testTeX文件夹下编写hello.tex<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">% hello.tex</span><br><span class="line">\documentclass&#123;beamer&#125;%声明文档类型</span><br><span class="line">\usetheme&#123;default&#125;%使用默认主题</span><br><span class="line">\begin&#123;document&#125;</span><br><span class="line"></span><br><span class="line">\begin&#123;frame&#125;&#123;A sample slide&#125;</span><br><span class="line"></span><br><span class="line">A displayed formula:</span><br><span class="line"></span><br><span class="line">\[</span><br><span class="line">\int_&#123;-\infty&#125;^\infty e^&#123;-x^2&#125; \, dx &#x3D; \sqrt&#123;\pi&#125;</span><br><span class="line">\]</span><br><span class="line"></span><br><span class="line">An itemized list:</span><br><span class="line"></span><br><span class="line">\begin&#123;itemize&#125;</span><br><span class="line">\item itemized item 1</span><br><span class="line">\item itemized item 2</span><br><span class="line">\item itemized item 3</span><br><span class="line">\end&#123;itemize&#125;</span><br><span class="line"></span><br><span class="line">\begin&#123;theorem&#125;</span><br><span class="line">In a right triangle, the square of hypotenuse equals</span><br><span class="line">the sum of squares of two other sides.</span><br><span class="line">\end&#123;theorem&#125;</span><br><span class="line"></span><br><span class="line">\end&#123;frame&#125;</span><br><span class="line"></span><br><span class="line">\end&#123;document&#125;</span><br></pre></td></tr></table></figure></p>
+<p>编译即可生成beamer格式的slide<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">houmin@cosmos:~/testTeX$ xelatex hello.tex</span><br></pre></td></tr></table></figure></p>
+<p><img alt="LaTeX-Sample-Slide" data-src="/images/2017-03-05-latex-sample-slide.png"></p>
+<p>这个时候测试中文是否可行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">\documentclass[UTF8]&#123;ctexart&#125;</span><br><span class="line">\begin&#123;document&#125;</span><br><span class="line">我爱中国！</span><br><span class="line">\end&#123;document&#125;</span><br></pre></td></tr></table></figure></p>
+<p>编译可以看到输出</p>
+<p><img alt="LaTeX-Chinese" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-chinese.png"></p>
+<p>不过编译的时候会出现warning<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">*************************************************</span><br><span class="line">* fontspec warning: "script-not-exist"</span><br><span class="line">*</span><br><span class="line">* Font 'FandolSong-Regular' does not contain script 'CJK'.</span><br><span class="line">*************************************************</span><br><span class="line">)) (/usr/local/texlive/2016/texmf-dist/tex/latex/ctex/config/ctex.cfg)</span><br><span class="line">No file hello.aux.</span><br><span class="line">(/usr/local/texlive/2016/texmf-dist/tex/latex/tipa/t3cmr.fd)</span><br><span class="line">ABD: EverySelectfont initializing macros [1] (./hello.aux) )</span><br><span class="line">Output written on hello.pdf (1 page).</span><br><span class="line">Transcript written on hello.log.</span><br></pre></td></tr></table></figure></p>
+<p>其实貌似这个时候的中文字体已经好了？<br>编写test.tex<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">\documentclass&#123;article&#125;</span><br><span class="line">\usepackage&#123;CJKutf8&#125;</span><br><span class="line">\begin&#123;document&#125;</span><br><span class="line">\begin&#123;CJK&#125;&#123;UTF8&#125;&#123;gkai&#125;</span><br><span class="line">这是一个楷体中文测试，处理简体字。</span><br><span class="line">\end&#123;CJK&#125;</span><br><span class="line">\begin&#123;CJK&#125;&#123;UTF8&#125;&#123;gbsn&#125;</span><br><span class="line">这是一个宋体中文测试，处理简体字。</span><br><span class="line">\end&#123;CJK&#125;</span><br><span class="line">\begin&#123;CJK&#125;&#123;UTF8&#125;&#123;bkai&#125;</span><br><span class="line">這是一個big5編碼的楷體中文測試，處理繁體文字。</span><br><span class="line">\end&#123;CJK&#125;</span><br><span class="line">\begin&#123;CJK&#125;&#123;UTF8&#125;&#123;bsmi&#125;</span><br><span class="line">這是一個个big5編碼的明體中文測試，處理繁體文字。</span><br><span class="line">\end&#123;CJK&#125;</span><br><span class="line">\end&#123;document&#125;</span><br></pre></td></tr></table></figure><br>使用命令pdflatex，不知道为什么用xelatex不行<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> pdflatex test.tex</span></span><br></pre></td></tr></table></figure><br>生成pdf文件<br><img alt="LaTeX-Chinese-Sample" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-chinese-sample.png"></p>
+<h3 id="编辑器"><a href="#编辑器" class="headerlink" title="编辑器"></a>编辑器</h3><h4 id="Atom编辑器"><a href="#Atom编辑器" class="headerlink" title="Atom编辑器"></a>Atom编辑器</h4><p>参考</p>
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/24548752" target="_blank" rel="external nofollow noopener noreferrer">Atom编译器关于LaTex的简单编译配置</a></li>
+</ul>
+<h2 id="组织文本"><a href="#组织文本" class="headerlink" title="组织文本"></a>组织文本</h2><p>参考</p>
+<ul>
+<li><a href="http://www.liam0205.me/2014/09/08/latex-introduction/" target="_blank" rel="external nofollow noopener noreferrer">一份其实很短的LaTeX总结</a></li>
+<li><a href="http://www.hustlei.tk/2014/08/latex-math-equation.html" target="_blank" rel="external nofollow noopener noreferrer">LaTeX数学公式</a></li>
+<li>LaTeX入门，刘海洋</li>
+</ul>
+<h3 id="作者、标题、日期"><a href="#作者、标题、日期" class="headerlink" title="作者、标题、日期"></a>作者、标题、日期</h3><p>保存并用XeLaTeX编译以下文档<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">\documentclass[UTF8]&#123;ctexart&#125;</span><br><span class="line">\title&#123;你好，world!&#125;</span><br><span class="line">\author&#123;Houmin&#125;</span><br><span class="line">\date&#123;\today&#125;</span><br><span class="line"></span><br><span class="line">\begin&#123;document&#125;</span><br><span class="line">\maketitle</span><br><span class="line">你好，world!</span><br><span class="line">\end&#123;document&#125;</span><br></pre></td></tr></table></figure><br>在<code>导言区</code>添加了有关作者、标题、日期，而在<code>document</code>环境中，多了一个控制命令<code>maketitle</code>。这个命令能够将导言区中定义的标题、作者和日期按照预定的格式显示出来。</p>
+<h3 id="章节和段落"><a href="#章节和段落" class="headerlink" title="章节和段落"></a>章节和段落</h3><p>保存并用XeLaTeX编译以下文档</p>
+<h2 id="数学公式"><a href="#数学公式" class="headerlink" title="数学公式"></a>数学公式</h2><h3 id="字体"><a href="#字体" class="headerlink" title="字体"></a>字体</h3><ul>
+<li><code>\textrm{}</code>，可以在公式中插入正常文本（也可以直接在公式输入文本，但是会出现忽略空格分行等问题）</li>
+<li><code>\mathrm{}</code>，正常字体</li>
+<li><code>\mathit{}</code>，斜体</li>
+<li><code>\mathbf{}</code>，粗体符号boldfont</li>
+<li><code>\mathbb{}</code>，空心粗体blackboard</li>
+<li><code>\mathnormal{}</code>，正常字体</li>
+</ul>
+<h3 id="插入公式"><a href="#插入公式" class="headerlink" title="插入公式"></a>插入公式</h3><ul>
+<li>在段落内插入公式：置于<script type="math/tex">`和`</script>之间</li>
+<li>在独立数学公式：置于<code>\[</code>和<code>\]</code>之间</li>
+<li>需要对行间公式进行编号，则<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">\begin&#123;equation&#125;</span><br><span class="line">...</span><br><span class="line">\end&#123;equation&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="常用数学公式命令"><a href="#常用数学公式命令" class="headerlink" title="常用数学公式命令"></a>常用数学公式命令</h3><div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">项目</th>
+<th style="text-align:center">表示方法</th>
+<th style="text-align:center">示例</th>
+<th style="text-align:center">示例效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">上标</td>
+<td style="text-align:center">^</td>
+<td style="text-align:center">x^2</td>
+<td style="text-align:center">$x^2$</td>
+</tr>
+<tr>
+<td style="text-align:center">下标</td>
+<td style="text-align:center">_</td>
+<td style="text-align:center">x_2</td>
+<td style="text-align:center">$x_2$</td>
+</tr>
+<tr>
+<td style="text-align:center">上划线</td>
+<td style="text-align:center">\overline</td>
+<td style="text-align:center">\overline{m+n}</td>
+<td style="text-align:center">$\overline{m+n}$</td>
+</tr>
+<tr>
+<td style="text-align:center">下划线</td>
+<td style="text-align:center">\underline</td>
+<td style="text-align:center">\underline(m-n)</td>
+<td style="text-align:center">$\underline{m-n}$</td>
+</tr>
+<tr>
+<td style="text-align:center">向量</td>
+<td style="text-align:center">\vec</td>
+<td style="text-align:center">\vec{AB}</td>
+<td style="text-align:center">$\vec{AB}$</td>
+</tr>
+<tr>
+<td style="text-align:center">导数</td>
+<td style="text-align:center">‘</td>
+<td style="text-align:center">y’y’’</td>
+<td style="text-align:center">$y’y’’$</td>
+</tr>
+<tr>
+<td style="text-align:center">平方根</td>
+<td style="text-align:center">\sqrt</td>
+<td style="text-align:center">\sqrt{x}</td>
+<td style="text-align:center">$\sqrt{x}$</td>
+</tr>
+<tr>
+<td style="text-align:center">分数</td>
+<td style="text-align:center">\frac{}{}</td>
+<td style="text-align:center">\frac{4}{a+b}</td>
+<td style="text-align:center">$\frac{4}{a+b}$</td>
+</tr>
+<tr>
+<td style="text-align:center">求和</td>
+<td style="text-align:center">\sum</td>
+<td style="text-align:center">\sum_{i=1}{n}a_i</td>
+<td style="text-align:center">$\sum_{i=1}^{n}a_i$</td>
+</tr>
+<tr>
+<td style="text-align:center">乘积</td>
+<td style="text-align:center">\prod</td>
+<td style="text-align:center">\prod_{i=1}(n)a_i</td>
+<td style="text-align:center">$\prod_{i=1}^{n}a_i$</td>
+</tr>
+<tr>
+<td style="text-align:center">积分</td>
+<td style="text-align:center">\int \iint</td>
+<td style="text-align:center">\iint_a^b f(x)dx</td>
+<td style="text-align:center">$\iint_a^b f(x)dx$</td>
+</tr>
+<tr>
+<td style="text-align:center">极限</td>
+<td style="text-align:center">\lim</td>
+<td style="text-align:center">\lim_{n\to\infty}\frac{1}{n} = 0</td>
+<td style="text-align:center">$\lim_{n\to\infty}\frac{1}{n} = 0$</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="常用符号"><a href="#常用符号" class="headerlink" title="常用符号"></a>常用符号</h3><p><img alt="Greek-Symbols" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-greek-symbols.jpg"></p>
+<p><img alt="Relation-Symbols" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-relation-symbols.jpg"></p>
+<p><img alt="Binary-Symbols" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-binary-operators.jpg"></p>
+<p><img alt="Variable-Sized-Symbols" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-variable-sized-symbols.jpg"></p>
+<p><img alt="Arrow-Symbols" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-arrow-symbols.jpg"></p>
+<p><img alt="Delimiters" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-delimiters.jpg"></p>
+<p><img alt="Miscellaneous-Symbols" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-miscellaneous-symbols.jpg"></p>
+<p><img alt="Non-Text-Symbols" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-non-text-symbols.jpg"></p>
+<h3 id="常用函数"><a href="#常用函数" class="headerlink" title="常用函数"></a>常用函数</h3><p><img alt="Functions" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-functions.jpg"></p>
+<h3 id="矩阵"><a href="#矩阵" class="headerlink" title="矩阵"></a>矩阵</h3><h4 id="不同分隔符"><a href="#不同分隔符" class="headerlink" title="不同分隔符"></a>不同分隔符</h4><p><code>amsmath</code>的<code>pmatrix</code>,<code>bmatrix</code>,<code>Bmatrix</code>,<code>vmatrix</code>, <code>Vmatrix</code>可以在矩阵两边加上各种分隔符。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">\[ \begin&#123;pmatrix&#125; a&amp;b\\c&amp;d \end&#123;pmatrix&#125; \quad</span><br><span class="line">\begin&#123;bmatrix&#125; a&amp;b\\c&amp;d \end&#123;bmatrix&#125; \quad</span><br><span class="line">\begin&#123;Bmatrix&#125; a&amp;b\\c&amp;d \end&#123;Bmatrix&#125; \quad</span><br><span class="line">\begin&#123;vmatrix&#125; a&amp;b\\c&amp;d \end&#123;vmatrix&#125; \quad</span><br><span class="line">\begin&#123;Vmatrix&#125; a&amp;b\\c&amp;d \end&#123;Vmatrix&#125; \]</span><br></pre></td></tr></table></figure><br>显示效果如下：</p>
+<script type="math/tex; mode=display">\begin{pmatrix} a&b\\c&d \end{pmatrix} \quad
+\begin{bmatrix} a&b\\c&d \end{bmatrix} \quad
+\begin{Bmatrix} a&b\\c&d \end{Bmatrix} \quad
+\begin{vmatrix} a&b\\c&d \end{vmatrix} \quad
+\begin{Vmatrix} a&b\\c&d \end{Vmatrix}</script><h4 id="行内公式矩阵"><a href="#行内公式矩阵" class="headerlink" title="行内公式矩阵"></a>行内公式矩阵</h4><p>使用<code>smallmatrix</code>环境，可以生成行内公式的小矩阵<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Marry has a little matrix $ ( \begin&#123;smallmatrix&#125; a&amp;b\\c&amp;d \end&#123;smallmatrix&#125; ) $.</span><br></pre></td></tr></table></figure><br>效果</p>
+<blockquote>
+<p>Marry has a little matrix $ ( \begin{smallmatrix} a&amp;b\\c&amp;d \end{smallmatrix} ) $.</p>
+</blockquote>
+<h4 id="带点矩阵"><a href="#带点矩阵" class="headerlink" title="带点矩阵"></a>带点矩阵</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">\[  A &#x3D; \begin&#123;bmatrix&#125;</span><br><span class="line">  a_&#123;11&#125; &amp; \dots &amp; a_&#123;1n&#125; \\</span><br><span class="line">   &amp; \ddots &amp; \vdots \\</span><br><span class="line">  0 &amp; &amp; a_&#123;nn&#125;</span><br><span class="line">\end&#123;bmatrix&#125;_&#123;n\times n&#125;  \]</span><br></pre></td></tr></table></figure>
+<p>效果</p>
+<script type="math/tex; mode=display">A = \begin{bmatrix}
+  a_{11} & \dots & a_{1n} \\
+   & \ddots & \vdots \\
+  0 & & a_{nn}
+\end{bmatrix}_{n\times n}</script><h4 id="无括号矩阵"><a href="#无括号矩阵" class="headerlink" title="无括号矩阵"></a>无括号矩阵</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">\[</span><br><span class="line">\sum_&#123;\substack&#123;0&lt;i&lt;n \\ 0&lt;j&lt;i&#125;&#125; A_&#123;ij&#125;</span><br><span class="line">\]</span><br></pre></td></tr></table></figure>
+<p>效果</p>
+<script type="math/tex; mode=display">
+\sum_{\substack{0<i<n \\ 0<j<i}} A_{ij}</script><h3 id="配对括号"><a href="#配对括号" class="headerlink" title="配对括号"></a>配对括号</h3><p>在数学公式中，如果直接使用括号，得到的公式会比较简陋，例如<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">\[</span><br><span class="line">\lim_x(1+\frac&#123;1&#125;&#123;x&#125;)^x &#x3D; \mathrm&#123;e&#125;</span><br><span class="line">\]</span><br></pre></td></tr></table></figure><br>效果</p>
+<script type="math/tex; mode=display">\lim_x(1+\frac{1}{x})^x = \mathrm{e}</script><p>我们可以用<code>\left</code>和<code>\right</code>命令来自动调整大小的括号，例如<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">\[</span><br><span class="line">\lim_x \left (1+\frac&#123;1&#125;&#123;x&#125; \right)^x &#x3D; \mathrm&#123;e&#125;</span><br><span class="line">\]</span><br></pre></td></tr></table></figure><br>效果</p>
+<script type="math/tex; mode=display">\lim_x \left (1+\frac{1}{x} \right)^x = \mathrm{e}</script><h3 id="多行公式"><a href="#多行公式" class="headerlink" title="多行公式"></a>多行公式</h3><p>有的公式特别长，我们需要手动为他们换行；有几个公式是一组，我们需要将他们放在一起；还有些类似分段函数，我们需要给它加上一个左边的花括号。</p>
+<h4 id="长公式"><a href="#长公式" class="headerlink" title="长公式"></a>长公式</h4><h5 id="不对齐"><a href="#不对齐" class="headerlink" title="不对齐"></a>不对齐</h5><p>无须对齐的长公式可以使用 <code>multline</code> 环境</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">\begin&#123;multline&#125;</span><br><span class="line">x &#x3D; a+b+c+&#123;&#125; \\</span><br><span class="line">d+e+f+g</span><br><span class="line">\end&#123;multline&#125;</span><br></pre></td></tr></table></figure>
+<p>效果</p>
+<script type="math/tex; mode=display">
+\begin{multline}
+x = a+b+c+{} \\
+d+e+f+g
+\end{multline}</script><p>如果不需要编号，可以使用 <code>multline*</code> 环境代替</p>
+<h5 id="对齐"><a href="#对齐" class="headerlink" title="对齐"></a>对齐</h5><p>需要对齐的公式，可以使用 <code>aligned</code> 次环境来实现，它必须包含在数学环境之内。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">\[\begin&#123;aligned&#125;</span><br><span class="line">x &#x3D;&#123;&#125;&amp; a+b+c+&#123;&#125; \\</span><br><span class="line">&amp;d+e+f+g</span><br><span class="line">\end&#123;aligned&#125;\]</span><br></pre></td></tr></table></figure><br>效果</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+x ={}& a+b+c+{} \\
+&d+e+f+g
+\end{aligned}</script><h4 id="公式组"><a href="#公式组" class="headerlink" title="公式组"></a>公式组</h4><p>无需对齐的公式组可以使用 <code>gather</code> 环境，需要对齐的公式组可以使用 <code>align</code> 环境。他们都带有编号，如果不需要编号可以使用带星花的版本。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">\begin&#123;gather&#125;</span><br><span class="line">a &#x3D; b+c+d \\</span><br><span class="line">x &#x3D; y+z</span><br><span class="line">\end&#123;gather&#125;</span><br><span class="line"></span><br><span class="line">\begin&#123;align&#125;</span><br><span class="line">a &amp;&#x3D; b+c+d \\</span><br><span class="line">x &amp;&#x3D; y+z</span><br><span class="line">\end&#123;align&#125;</span><br></pre></td></tr></table></figure>
+<p>效果</p>
+<script type="math/tex; mode=display">
+\begin{gather}
+a = b+c+d \\
+x = y+z
+\end{gather}</script><script type="math/tex; mode=display">
+\begin{align}
+a &= b+c+d \\
+x &= y+z
+\end{align}</script><h4 id="分段函数"><a href="#分段函数" class="headerlink" title="分段函数"></a>分段函数</h4><p>分段函数可以用<code>cases</code>次环境来实现，它必须包含在数学环境之内。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">\[</span><br><span class="line">y&#x3D;\begin&#123;cases&#125;</span><br><span class="line">-x,\quad x\leq 0 \\</span><br><span class="line">x,\quad x&gt;0</span><br><span class="line">\end&#123;cases&#125;</span><br><span class="line">\]</span><br></pre></td></tr></table></figure><br>效果</p>
+<script type="math/tex; mode=display">
+y=\begin{cases}
+-x,\quad x\leq 0 \\
+x,\quad x>0
+\end{cases}</script><h2 id="自动化工具"><a href="#自动化工具" class="headerlink" title="自动化工具"></a>自动化工具</h2><h2 id="绘制图表"><a href="#绘制图表" class="headerlink" title="绘制图表"></a>绘制图表</h2><h2 id="演示文稿"><a href="#演示文稿" class="headerlink" title="演示文稿"></a>演示文稿</h2>
+    </div>
+
+    
+    
+    
+      
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/fedfc052/" title="LaTeX笔记">http://houmin.cc/posts/fedfc052/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/LaTeX/" rel="tag"><i class="fa fa-tag"></i> LaTeX</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/f2195e8a/" rel="next" title="GDB笔记">
+                  <i class="fa fa-chevron-left"></i> GDB笔记
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/56733fd3/" rel="prev" title="Base64编码及其实现">
+                  Base64编码及其实现 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#搭建LaTeX环境"><span class="nav-number">1.</span> <span class="nav-text">搭建LaTeX环境</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#安装前准备"><span class="nav-number">1.1.</span> <span class="nav-text">安装前准备</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#下载TeX-Live镜像"><span class="nav-number">1.1.1.</span> <span class="nav-text">下载TeX Live镜像</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#删除旧版"><span class="nav-number">1.1.2.</span> <span class="nav-text">删除旧版</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#安装Perk-TK模块"><span class="nav-number">1.1.3.</span> <span class="nav-text">安装Perk-TK模块</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装主程序"><span class="nav-number">1.2.</span> <span class="nav-text">安装主程序</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#挂载ios镜像文件"><span class="nav-number">1.2.1.</span> <span class="nav-text">挂载ios镜像文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#启动安装程序"><span class="nav-number">1.2.2.</span> <span class="nav-text">启动安装程序</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#配置环境变量"><span class="nav-number">1.3.</span> <span class="nav-text">配置环境变量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#测试安装是否成功"><span class="nav-number">1.4.</span> <span class="nav-text">测试安装是否成功</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#配置字体"><span class="nav-number">1.5.</span> <span class="nav-text">配置字体</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#更新源配置"><span class="nav-number">1.6.</span> <span class="nav-text">更新源配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dummy-package-安装"><span class="nav-number">1.7.</span> <span class="nav-text">dummy package 安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#测试LaTeX"><span class="nav-number">1.8.</span> <span class="nav-text">测试LaTeX</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#编辑器"><span class="nav-number">1.9.</span> <span class="nav-text">编辑器</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Atom编辑器"><span class="nav-number">1.9.1.</span> <span class="nav-text">Atom编辑器</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#组织文本"><span class="nav-number">2.</span> <span class="nav-text">组织文本</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#作者、标题、日期"><span class="nav-number">2.1.</span> <span class="nav-text">作者、标题、日期</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#章节和段落"><span class="nav-number">2.2.</span> <span class="nav-text">章节和段落</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数学公式"><span class="nav-number">3.</span> <span class="nav-text">数学公式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#字体"><span class="nav-number">3.1.</span> <span class="nav-text">字体</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#插入公式"><span class="nav-number">3.2.</span> <span class="nav-text">插入公式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#常用数学公式命令"><span class="nav-number">3.3.</span> <span class="nav-text">常用数学公式命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#常用符号"><span class="nav-number">3.4.</span> <span class="nav-text">常用符号</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#常用函数"><span class="nav-number">3.5.</span> <span class="nav-text">常用函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#矩阵"><span class="nav-number">3.6.</span> <span class="nav-text">矩阵</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#不同分隔符"><span class="nav-number">3.6.1.</span> <span class="nav-text">不同分隔符</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#行内公式矩阵"><span class="nav-number">3.6.2.</span> <span class="nav-text">行内公式矩阵</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#带点矩阵"><span class="nav-number">3.6.3.</span> <span class="nav-text">带点矩阵</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#无括号矩阵"><span class="nav-number">3.6.4.</span> <span class="nav-text">无括号矩阵</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#配对括号"><span class="nav-number">3.7.</span> <span class="nav-text">配对括号</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#多行公式"><span class="nav-number">3.8.</span> <span class="nav-text">多行公式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#长公式"><span class="nav-number">3.8.1.</span> <span class="nav-text">长公式</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#不对齐"><span class="nav-number">3.8.1.1.</span> <span class="nav-text">不对齐</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#对齐"><span class="nav-number">3.8.1.2.</span> <span class="nav-text">对齐</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#公式组"><span class="nav-number">3.8.2.</span> <span class="nav-text">公式组</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分段函数"><span class="nav-number">3.8.3.</span> <span class="nav-text">分段函数</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#自动化工具"><span class="nav-number">4.</span> <span class="nav-text">自动化工具</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#绘制图表"><span class="nav-number">5.</span> <span class="nav-text">绘制图表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#演示文稿"><span class="nav-number">6.</span> <span class="nav-text">演示文稿</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

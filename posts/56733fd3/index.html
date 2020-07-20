@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Base64是一种基于64个可打印字符来表示二进制数据的方法。  当我们用文本编辑器打开jpg、pdf、exe这些文件格式的时候，会看到一大堆的乱码，这是因为二进制文件包含很多无法显示和打印的字符。所以，如果想要让记事本这样的文本编辑器处理二进制数据，就需要一个从二进制到字符串的转换方法。Base64就是一种最常见的二进制编码方法。">
+<meta name="keywords" content="base64">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Base64编码及其实现">
+<meta property="og:url" content="http://houmin.cc/posts/56733fd3/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="Base64是一种基于64个可打印字符来表示二进制数据的方法。  当我们用文本编辑器打开jpg、pdf、exe这些文件格式的时候，会看到一大堆的乱码，这是因为二进制文件包含很多无法显示和打印的字符。所以，如果想要让记事本这样的文本编辑器处理二进制数据，就需要一个从二进制到字符串的转换方法。Base64就是一种最常见的二进制编码方法。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-12-12-base64.png">
+<meta property="og:updated_time" content="2020-07-14T08:24:44.096Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-12-12-base64.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/56733fd3/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Base64编码及其实现 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/56733fd3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Base64编码及其实现
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-12-12 19:41:57" itemprop="dateCreated datePublished" datetime="2017-12-12T19:41:57+08:00">2017-12-12</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/56733fd3/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/56733fd3/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>10 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>Base64是一种基于64个可打印字符来表示二进制数据的方法。</p>
+</blockquote>
+<p>当我们用文本编辑器打开<code>jpg</code>、<code>pdf</code>、<code>exe</code>这些文件格式的时候，会看到一大堆的乱码，这是因为二进制文件包含很多无法显示和打印的字符。所以，如果想要让记事本这样的文本编辑器处理二进制数据，就需要一个从二进制到字符串的转换方法。<strong>Base64就是一种最常见的二进制编码方法</strong>。 </p>
+<a id="more"></a>
+<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><h3 id="文本文件和二进制文件"><a href="#文本文件和二进制文件" class="headerlink" title="文本文件和二进制文件"></a>文本文件和二进制文件</h3><p>使用计算机时，我们会遇到各种各样的文件格式，有像<code>txt</code>、<code>cpp</code>、<code>java</code>、<code>md</code>这样的可以用文本编辑器直接打开的文件格式，我们称之为 <strong><em>文本文件</em></strong>，也有一些文件用编辑器打开时是一堆乱码，比如像上面提到的<code>jpg</code>、<code>wav</code>、<code>pdf</code>，这些文件格式称之为 <strong><em>二进制文件</em></strong>。</p>
+<p><strong>我们知道，所有文件在计算机的存储都是一堆0和1的序列，也就是说不论是文本文件还是二进制文件，在物理上，计算机的存储是都是二进制的。</strong>  所谓的文本文件和二进制文件的区别并不是物理上的，而是逻辑上的。广义上来说，文本文件也是二进制文件。二者的区别是因为你看待数据的方式不同而产生的差别，具体的说二者的区别就在于打开这个文件的程序对其内容的解释上。</p>
+<p>以文件的读写过程为例，这实际包含了如下的两个转换过程</p>
+<figure class="highlight brainfuck"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">磁盘</span> --<span class="literal">-</span><span class="literal">-</span>&gt; <span class="comment">文件缓冲区</span> --<span class="literal">-</span><span class="literal">-</span>&gt; <span class="comment">应用程序内存空间</span></span><br></pre></td></tr></table></figure>
+<p>第一个过程中，文件被应用程序从磁盘读取到文件缓冲区，二者都是一堆的0和1的序列，这个时候文本文件和二进制文件并没有什么区别。</p>
+<p>接下来，不同的应用程序，根据面对的不同文件格式，对一堆的0和1序列进行解释。对于文本文件，应用程序直接将其中的数据(也就是这一堆0和1序列按照ASCII或者Unicode编码的方式解释出来)，显示成文本的形式。对于其他类型的文件，一般包括了控制信息和内容信息，应用程序按照文件格式，从这些数据中解析出对应的数据内容，比如常见的wav文件解析过程，而这些就是所谓的二进制文件。</p>
+<h3 id="Base64的转换"><a href="#Base64的转换" class="headerlink" title="Base64的转换"></a>Base64的转换</h3><p>Base64编码选择的64个可打印字符为字母A-Z，a-z、数字0-9，这样共有62个字符，此外还有两个字符在不同的系统中而不同。比如对于MIME格式，其采用的为</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="keyword">static</span> <span class="keyword">char</span> table[] = <span class="string">"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"</span>;</span><br></pre></td></tr></table></figure>
+<p>然后，而二进制数据进行处理，每3个字节一组，一共是 $ 3 × 8 = 24 $ bit，划分为4组，每组正好6个bit。</p>
+<p><img alt="base64" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-12-12-base64.png"></p>
+<p>这样，我们得到4个数字作为索引，然后查表，获得相应的4个字符，就得到编码后的字符串。所以，Base64编码会把3字节的二进制数据编码为4字节的文本数据，长度增加33%，好处是编码后的文本数据可以在邮件正文、网页等直接显示。</p>
+<p>如果要编码的二进制数据不是3的倍数，Base64就会在后面补0，每补1个0就在编码出来的字符串后加上1个<code>=</code>，解码的时候会自动将<code>=</code>去掉。</p>
+<p>Python中内置的<code>base64</code>可以直接进行base64的编解码</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> base64</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>base64.b64encode(<span class="string">b'hello, world!'</span>)</span><br><span class="line"><span class="string">b'aGVsbG8sIHdvcmxkIQ=='</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>base64.b64decode(<span class="string">b'aGVsbG8sIHdvcmxkIQ=='</span>)</span><br><span class="line"><span class="string">b'hello, world!'</span></span><br></pre></td></tr></table></figure>
+<h2 id="C-实现"><a href="#C-实现" class="headerlink" title="C++实现"></a>C++实现</h2><p>此处源码可在  <a href="https://github.com/SimpCosm/code/tree/master/base64" target="_blank" rel="external nofollow noopener noreferrer">base64的C++实现</a></p>
+<h3 id="encode方法"><a href="#encode方法" class="headerlink" title="encode方法"></a>encode方法</h3><ul>
+<li>首先计算生成base64字符串的长度</li>
+<li>原来的二进制流中，每3个字节为整体，合为一个32位的bit串</li>
+<li>将这个32位bit串的低24bit的每6个比特作为索引，得到映射表中对应的字符</li>
+<li>如果原来的字节串不是3的倍数，则补零，并且每补一个0加一个<code>=</code> </li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span></span><br><span class="line">encode_base64(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">uint8_t</span>&gt; unencoded)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">string</span> encoded;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">auto</span> <span class="built_in">size</span> = unencoded.<span class="built_in">size</span>();</span><br><span class="line">    encoded.reserve(((<span class="built_in">size</span> / <span class="number">3</span>) + (<span class="built_in">size</span> % <span class="number">3</span> &gt; <span class="number">0</span>)) * <span class="number">4</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">uint32_t</span> value;</span><br><span class="line">    <span class="keyword">auto</span> <span class="built_in">cursor</span> = unencoded.<span class="built_in">begin</span>();</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> <span class="built_in">position</span> = <span class="number">0</span>; <span class="built_in">position</span> &lt; <span class="built_in">size</span> / <span class="number">3</span>; <span class="built_in">position</span>++)</span><br><span class="line">    &#123;</span><br><span class="line">        value = (*<span class="built_in">cursor</span>++) &lt;&lt; <span class="number">16</span>;</span><br><span class="line"></span><br><span class="line">        value += (*<span class="built_in">cursor</span>++) &lt;&lt; <span class="number">8</span>;</span><br><span class="line">        value += (*<span class="built_in">cursor</span>++);</span><br><span class="line">        encoded.append(<span class="number">1</span>, table[(value &amp; <span class="number">0x00FC0000</span>) &gt;&gt; <span class="number">18</span>]);</span><br><span class="line">        encoded.append(<span class="number">1</span>, table[(value &amp; <span class="number">0x0003F000</span>) &gt;&gt; <span class="number">12</span>]);</span><br><span class="line">        encoded.append(<span class="number">1</span>, table[(value &amp; <span class="number">0x00000FC0</span>) &gt;&gt; <span class="number">6</span>]);</span><br><span class="line">        encoded.append(<span class="number">1</span>, table[(value &amp; <span class="number">0x0000003F</span>) &gt;&gt; <span class="number">0</span>]);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">switch</span> (<span class="built_in">size</span> % <span class="number">3</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line">            value = (*<span class="built_in">cursor</span>++) &lt;&lt; <span class="number">16</span>;</span><br><span class="line"></span><br><span class="line">            encoded.append(<span class="number">1</span>, table[(value &amp; <span class="number">0x00FC0000</span>) &gt;&gt; <span class="number">18</span>]);</span><br><span class="line">            encoded.append(<span class="number">1</span>, table[(value &amp; <span class="number">0x0003F000</span>) &gt;&gt; <span class="number">12</span>]);</span><br><span class="line">            encoded.append(<span class="number">2</span>, pad);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">2</span>:</span><br><span class="line">            value = (*<span class="built_in">cursor</span>++) &lt;&lt; <span class="number">16</span>;</span><br><span class="line"></span><br><span class="line">            value += (*<span class="built_in">cursor</span>++) &lt;&lt; <span class="number">8</span>;</span><br><span class="line"></span><br><span class="line">            encoded.append(<span class="number">1</span>, table[(value &amp; <span class="number">0x00FC0000</span>) &gt;&gt; <span class="number">18</span>]);</span><br><span class="line">            encoded.append(<span class="number">1</span>, table[(value &amp; <span class="number">0x0003F000</span>) &gt;&gt; <span class="number">12</span>]);</span><br><span class="line">            encoded.append(<span class="number">1</span>, table[(value &amp; <span class="number">0x00000FC0</span>) &gt;&gt; <span class="number">6</span>]);</span><br><span class="line">            encoded.append(<span class="number">1</span>, pad);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> encoded;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="decode方法"><a href="#decode方法" class="headerlink" title="decode方法"></a>decode方法</h3><ul>
+<li>首先判断base64字符串的长度是不是4的倍数</li>
+<li>去除 <code>=</code> 这样的pad，<code>=</code>只可能是1个或2个</li>
+<li>遍历整个base64字符串，每4个为一个单位(对应也就是3个字节的二进制数，以value表示)，对于每个字符得到其在映射表中的索引，从而得到value的值，进而解析出每个字节的值</li>
+</ul>
+<p>对应代码如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">decode</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">uint8_t</span>&gt;&amp; out, <span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; in)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">static</span> <span class="keyword">uint32_t</span> mask = <span class="number">0x000000FF</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">auto</span> length = in.length();</span><br><span class="line">    <span class="keyword">if</span> ((length % <span class="number">4</span>) != <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">size_t</span> padding = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> (length &gt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (in[length - <span class="number">1</span>] == pad)</span><br><span class="line">            padding++;</span><br><span class="line">        <span class="keyword">if</span> (in[length - <span class="number">2</span>] == pad)</span><br><span class="line">            padding++;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">uint8_t</span>&gt; decoded;</span><br><span class="line">    decoded.reserve((length / <span class="number">4</span>) * <span class="number">3</span> - padding);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">uint32_t</span> value = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span> <span class="built_in">cursor</span> = in.<span class="built_in">begin</span>(); <span class="built_in">cursor</span> &lt; in.<span class="built_in">end</span>();)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">size_t</span> <span class="built_in">position</span> = <span class="number">0</span>; <span class="built_in">position</span> &lt; <span class="number">4</span>; <span class="built_in">position</span>++)</span><br><span class="line">        &#123;</span><br><span class="line">            value &lt;&lt;= <span class="number">6</span>;</span><br><span class="line">            <span class="keyword">if</span> (*<span class="built_in">cursor</span> &gt;= <span class="number">0x41</span> &amp;&amp; *<span class="built_in">cursor</span> &lt;= <span class="number">0x5A</span>)     <span class="comment">// A-Z</span></span><br><span class="line">                value |= *<span class="built_in">cursor</span> - <span class="number">0x41</span>;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (*<span class="built_in">cursor</span> &gt;= <span class="number">0x61</span> &amp;&amp; *<span class="built_in">cursor</span> &lt;= <span class="number">0x7A</span>)    <span class="comment">// a-z</span></span><br><span class="line">                value |= *<span class="built_in">cursor</span>- <span class="number">0x47</span>;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (*<span class="built_in">cursor</span> &gt;= <span class="number">0x30</span> &amp;&amp; *<span class="built_in">cursor</span> &lt;= <span class="number">0x39</span>)    <span class="comment">// 0-9</span></span><br><span class="line">                value |= *<span class="built_in">cursor</span> + <span class="number">0x04</span>;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (*<span class="built_in">cursor</span> == <span class="number">0x2B</span>)       <span class="comment">// +</span></span><br><span class="line">                value |= <span class="number">0x3E</span>;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (*<span class="built_in">cursor</span> == <span class="number">0x2F</span>)       <span class="comment">// /</span></span><br><span class="line">                value |= <span class="number">0x3F</span>;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (*<span class="built_in">cursor</span> == pad)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">// Handle 1 or 2 pad characters.</span></span><br><span class="line">                <span class="keyword">switch</span> (in.<span class="built_in">end</span>() - <span class="built_in">cursor</span>)</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line">                        decoded.push_back((value &gt;&gt; <span class="number">16</span>) &amp; mask);</span><br><span class="line">                        decoded.push_back((value &gt;&gt; <span class="number">8</span>) &amp; mask);</span><br><span class="line">                        out = decoded;</span><br><span class="line">                        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">                    <span class="keyword">case</span> <span class="number">2</span>:</span><br><span class="line">                        decoded.push_back((value &gt;&gt; <span class="number">10</span>) &amp; mask);    <span class="comment">// (&lt;&lt; 6)(&gt;&gt; 16)</span></span><br><span class="line">                        out = decoded;</span><br><span class="line">                        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">                <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">            <span class="built_in">cursor</span>++;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        decoded.push_back((value &gt;&gt; <span class="number">16</span>) &amp; mask);</span><br><span class="line">        decoded.push_back((value &gt;&gt; <span class="number">8</span>) &amp; mask);</span><br><span class="line">        decoded.push_back((value &gt;&gt; <span class="number">0</span>) &amp; mask);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    out = decoded;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="调用"><a href="#调用" class="headerlink" title="调用"></a>调用</h3><p>写一个简单的demo验证</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"base64.h"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="function"><span class="built_in">std</span>::<span class="built_in">string</span> <span class="title">encoded_str</span><span class="params">(<span class="string">"aGVsbG8sIHdvcmxkIQ=="</span>)</span></span>;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"Encoded base64 string: "</span> &lt;&lt; encoded_str &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">uint8_t</span>&gt; orignal_vector;</span><br><span class="line">    <span class="keyword">if</span> ((decode_base64(orignal_vector, encoded_str)) == <span class="literal">false</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"decode error"</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="built_in">std</span>::<span class="built_in">string</span> <span class="title">orignal_str</span><span class="params">(orignal_vector.<span class="built_in">begin</span>(), orignal_vector.<span class="built_in">end</span>())</span></span>;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"Original string is "</span> &lt;&lt; orignal_str &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">string</span> encoded = encode_base64(orignal_vector);</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"Encoded again: "</span> &lt;&lt; encoded &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译后得到</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> gcc -o demo demo.cpp base.cpp</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> ./demo </span></span><br><span class="line">Encoded base64 string: aGVsbG8sIHdvcmxkIQ==</span><br><span class="line">Original string is hello, world!</span><br><span class="line">Encoded again: aGVsbG8sIHdvcmxkIQ==</span><br></pre></td></tr></table></figure>
+<h2 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h2><p>上面说了base64的编码方法，那么为什么要使用base64编码呢，有哪些情景需求？</p>
+<p>我们知道在计算机中任何数据都是按ascii码存储的，而ascii码的128～255之间的值是不可见字符。而在网络上交换数据时，比如说从A地传到B地，往往要经过多个路由设备，由于不同的设备对字符的处理方式有一些不同，这样那些不可见字符就有可能被处理错误，这是不利于传输的。所以就先把数据先做一个Base64编码，统统变成可见字符，这样出错的可能性就大降低了。</p>
+<h3 id="HTML内嵌base64编码图片"><a href="#HTML内嵌base64编码图片" class="headerlink" title="HTML内嵌base64编码图片"></a>HTML内嵌base64编码图片</h3><h3 id="MIME"><a href="#MIME" class="headerlink" title="MIME"></a>MIME</h3><h3 id="X-509-公钥证书"><a href="#X-509-公钥证书" class="headerlink" title="X.509 公钥证书"></a>X.509 公钥证书</h3>
+    </div>
+
+    
+    
+    
+      
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/56733fd3/" title="Base64编码及其实现">http://houmin.cc/posts/56733fd3/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/base64/" rel="tag"><i class="fa fa-tag"></i> base64</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/fedfc052/" rel="next" title="LaTeX笔记">
+                  <i class="fa fa-chevron-left"></i> LaTeX笔记
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/5bd9b965/" rel="prev" title="图解 Git">
+                  图解 Git <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#原理"><span class="nav-number">1.</span> <span class="nav-text">原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#文本文件和二进制文件"><span class="nav-number">1.1.</span> <span class="nav-text">文本文件和二进制文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Base64的转换"><span class="nav-number">1.2.</span> <span class="nav-text">Base64的转换</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#C-实现"><span class="nav-number">2.</span> <span class="nav-text">C++实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#encode方法"><span class="nav-number">2.1.</span> <span class="nav-text">encode方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#decode方法"><span class="nav-number">2.2.</span> <span class="nav-text">decode方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#调用"><span class="nav-number">2.3.</span> <span class="nav-text">调用</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#应用"><span class="nav-number">3.</span> <span class="nav-text">应用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#HTML内嵌base64编码图片"><span class="nav-number">3.1.</span> <span class="nav-text">HTML内嵌base64编码图片</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MIME"><span class="nav-number">3.2.</span> <span class="nav-text">MIME</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#X-509-公钥证书"><span class="nav-number">3.3.</span> <span class="nav-text">X.509 公钥证书</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

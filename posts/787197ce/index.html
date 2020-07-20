@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="没错，这里是最近新开的另一个专栏「资本不眠」，这个专栏会总结股票市场的交易笔记，比如第一期聊到的 MACD；也会聊在资本世界里面各种有意思的事情，比如这一期就是通过 The Big Short这部电影对 2007 年 到 2008 年那次由 次贷危机引发的全球经济危机进行的梳理复盘。如果以后有机会的话，我会专门在这个专栏复盘自己在股市中的每日操作（当然，我是十分期待自己能够开这个坑的，如果我对自己">
+<meta name="keywords" content="经济危机,电影评论,金融">
+<meta property="og:type" content="article">
+<meta property="og:title" content="The Big Short">
+<meta property="og:url" content="http://houmin.cc/posts/787197ce/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="没错，这里是最近新开的另一个专栏「资本不眠」，这个专栏会总结股票市场的交易笔记，比如第一期聊到的 MACD；也会聊在资本世界里面各种有意思的事情，比如这一期就是通过 The Big Short这部电影对 2007 年 到 2008 年那次由 次贷危机引发的全球经济危机进行的梳理复盘。如果以后有机会的话，我会专门在这个专栏复盘自己在股市中的每日操作（当然，我是十分期待自己能够开这个坑的，如果我对自己">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-20_mortgage-old-system.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-20_mbs-system.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-20_subprime-rating.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-20_mbs-risk-return-for-investors.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-20_cds-bonus.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-20_cds-fail.png">
+<meta property="og:updated_time" content="2020-07-14T08:24:44.101Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-20_mortgage-old-system.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/787197ce/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>The Big Short | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/787197ce/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          The Big Short
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-20 17:28:22" itemprop="dateCreated datePublished" datetime="2020-02-20T17:28:22+08:00">2020-02-20</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%B5%84%E6%9C%AC%E4%B8%8D%E7%9C%A0/" itemprop="url" rel="index">
+                    <span itemprop="name">资本不眠</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/787197ce/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/787197ce/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>7.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>13 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>没错，这里是最近新开的另一个专栏「资本不眠」，这个专栏会总结股票市场的交易笔记，比如第一期聊到的 <code>MACD</code>；也会聊在资本世界里面各种有意思的事情，比如这一期就是通过 <code>The Big Short</code>这部电影对 2007 年 到 2008 年那次由 <code>次贷危机</code>引发的全球经济危机进行的梳理复盘。如果以后有机会的话，我会专门在这个专栏复盘自己在股市中的每日操作（当然，我是十分期待自己能够开这个坑的，如果我对自己每次操作都能够知其所以然的话）。</p>
+<p>哦对了，最近 A 股的半导体和新能源等科技股都炒疯了。呵，愚蠢的人类。</p>
+<a id="more"></a>
+<h2 id="大崩盘"><a href="#大崩盘" class="headerlink" title="大崩盘"></a>大崩盘</h2><p>让我们再回顾一下那一年的大崩盘</p>
+<div class="video-container"><iframe src="//www.youtube.com/embed/oyiCuAVcQDs" frameborder="0" allowfullscreen></iframe></div>
+<p>这是一场席卷全球的金融风暴，它承接过去一百年内发生的种种，在 2008 年达到了高潮，彻底改变了全世界成千上万人们的生命轨迹。尽管已经过去了十二年，我们还是能够感受这场风暴的余波：英国脱欧、特朗普当选莫不如是，甚至你都能从最近奥斯卡最佳电影 <code>寄生虫</code>感受到那场危机带来的影响。</p>
+<p>那么今天，我会从头梳理，在那场危机中到底发生了什么？是什么导致了这场危机？它对我们到底造成了那些影响？</p>
+<h3 id="主角"><a href="#主角" class="headerlink" title="主角"></a>主角</h3><p>在 2000 年代，经过多轮的兼并重组，美国的金融行业被几家巨型公司所主宰，下面是我梳理的这场金融风暴中的主要玩家：</p>
+<embed src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-20_america-financial-industry.svg" style="display:block;width:100%;height:100%" onclick>
+
+<p>总的来说，主要分为以下几个部分，他们是管理着数万亿美元资产的美国五大投资银行和四大商业银行，影响着上亿人养老金和保险的三大保险公司，为这场游戏制定规则的美联储、财政部以及美国证券交易委员会，作为第三方应该独立的评级机构。</p>
+<h3 id="剧本"><a href="#剧本" class="headerlink" title="剧本"></a>剧本</h3><p>在这场危机中，他们粉墨登场，表现各异，最后的结局也大相径庭：</p>
+<ul>
+<li>2007 年 4 月，开始有从事次级抵押贷款的公司申请破产</li>
+<li>2007 年 10 月 9 日，道琼斯指数达到最高收盘 <code>14164</code>点</li>
+<li>2008 年 3 月 17 日，美国第五大投资银行<code>Bear Stearns</code>现金流耗尽，美联储帮助其被 <code>JPMorgan Chase</code>收购</li>
+<li>2008 年 9 月 7 日，美国最大两家房地产公司 <code>房地美</code> 和 <code>房利美</code> 被美国联邦政府接管</li>
+<li>2008 年 9 月 15 日<ul>
+<li>在美联储拒绝担保其贷款后，美国第三大投资银行 <code>雷曼兄弟</code> 破产，导致道琼斯指数下跌 504 点，为七年来最大跌幅。</li>
+<li>美国第四大投资银行 <code>Merrill Lynch</code> 被美国银行收购。</li>
+</ul>
+</li>
+<li>2008 年 9 月 16 日，美国最大的保险公司 <code>AIG</code> 资不抵债，美联储宣布提供 <code>850亿美元</code>短期紧急贷款，接管 AIG。</li>
+<li>2008 年 9 月 19 日，美国财政部长 <code>Paulson</code> 和 美联储主席 <code>Ben Bernanke</code> 提出不良资产解决方案(Troubled Assets Relief Program, <code>TARP</code>)要求国会授权支出<code>7000 亿美元</code>以允许美国财政部从金融机构中购买不良资产。此救市方案获得投资者积极反应，但是其注资计划仍需众议院落实。</li>
+<li>2008 年 9 月 21 日，幸存的两家投资银行 <code>高盛</code> 和 <code>摩根士坦利</code>申请从 <code>投资银行</code> 转变为 <code>银行控股公司</code>以更多的获得来自美联储的救助。</li>
+<li><p>2008 年 9 月 29 日，美国国会否决了包含了 7000 亿美元 <code>TARP</code> 计划的<code>经济稳定紧急法案</code>，造成道琼斯指数指数当日下跌 700 点，创历史以来单日最大跌幅。</p>
+</li>
+<li><p>2008 年 10 月 3 日，国会通过经济稳定紧急法案，该方案同意美国财政部从九大银行购买优先股以为其纾困：</p>
+<ul>
+<li>花旗集团：450 亿美元</li>
+<li>美国银行：450 亿美元</li>
+<li>AIG：400 亿美元</li>
+<li>摩根大通：250 亿美元</li>
+<li>富国银行：250 亿美元</li>
+<li>高盛：100 亿美元</li>
+<li>摩根士坦利：100 亿美元</li>
+<li>纽约梅隆银行：30 亿美元</li>
+<li>道富银行：20 亿美元</li>
+</ul>
+</li>
+<li>2008 年 12 月 16 日，美联储降低基金利率至 0。</li>
+<li>2009 年 1 月，美国三大汽车制造商 <code>通用电气</code>、<code>克莱斯特</code>和 <code>福特汽车</code>申请 <code>TARP</code>计划的纾困。</li>
+<li>2009 年 3 月 6 日，道琼斯指数触及最低 <code>6443</code> 点。</li>
+</ul>
+<p>当我一个字一个字敲下这场危机时间线的时候，我的脑海里只有一个词：<code>一地鸡毛</code>。可以看到，危机早在2007年已经发出了信号，可是绝大部分人都选择忽略它，股市继续狂热火爆并一度达到巅峰。直到最后，灰犀牛如期而至，整个市场一地鸡毛。</p>
+<h2 id="专业术语"><a href="#专业术语" class="headerlink" title="专业术语"></a>专业术语</h2><p>众所周知，<code>次贷危机</code>源自于房地产泡沫。可是，什么是<code>次贷</code>? 为什么房地产的泡沫会导致全球的金融海啸呢？有人说这归咎于华尔街精英们发明的各种神奇的<code>金融衍生品</code>，扔出了一堆的专有名词。绝大部分人看到这里就开始晕了，WTF，什么是 <code>MBS</code>，什么是 <code>CDO</code>，什么是 <code>CDS</code>。别怕，所有的这些就是华尔街故意发明出来的看起来高大上的一些词。相信我，所有接受过基本数学教育的人都能够弄懂他们到底在玩些什么花样。接下来，让我们来学一些术语 ：）</p>
+<h3 id="MBS"><a href="#MBS" class="headerlink" title="MBS"></a>MBS</h3><p><strong>Mortgage Backed Securities</strong>，也即<strong>房贷抵押证券</strong></p>
+<p>首先忽略这个看起来不明所以的名词，我们知道它和房贷有关。房贷我们很清楚，你为了买房向银行申请贷款，银行对你进行信贷审核，符合条件的人可以获得贷款。</p>
+<p><img alt="住房贷款基本模型" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-20_mortgage-old-system.png"></p>
+<p>在这种模型下，住房贷款需要花费几十年的时间才能偿还，如果借贷者信用不够，银行面临着违约风险，所以银行在发放住房贷款的时候都十分谨慎。所以，当时的银行业完全是垃圾：</p>
+<blockquote>
+<p>In the late 70s, banking wasn’t a job you went into to make large sums of money. It was a fucking snooze. Filled with losers, like selling insurance or accounting. And if the banking was boring, then the bond department at the bank was straight-up comatose.</p>
+</blockquote>
+<p>然而当时的现状是，由于婴儿潮（1946-1964年）带来的人口膨胀，导致了住房短缺。房贷需求始终存在，有需求就有供给，<code>Leiws Ranieri</code>在 1977 年发明了MBS。</p>
+<p>MBS是什么？一句话说，就是银行或者房产中介把不同的<strong>房贷抵押</strong>卖给投资银行，投行将这些<strong>房贷抵押</strong>打包起来，发起 <code>房贷抵押债券</code> 来融资，把借款人偿还的分期本金和利息传递给投资者（债券持有人）。</p>
+<p><img alt="MBS基本模型" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-20_mbs-system.png"></p>
+<p>这种方式对银行来说当然是一笔好生意了，不仅仅把风险都转嫁给投资者，自己还回笼了资金赚了息差和服务费。</p>
+<p>问题是，投资者真的这么傻吗？前面说的银行面临的风险此时依然存在，而且这些证券是 <code>non-agency</code>的，没有国家担保，完全不值得信赖。</p>
+<p>问题就两个，一是谁担风险，二是谁来担保。</p>
+<p>第一个问题：<strong>谁来担风险？</strong></p>
+<p>投行把从商业银行、贷款公司、中介公司收集来的房贷抵押，形成一个资产池。然后找来评级机构，将这个资产池里面的每一份 MBS 做一个评级。</p>
+<p>在这个资产池里，按照信用评分高低，将MBS分为<code>Prime</code>, <code>Alt-A,</code> <code>Subprime</code>三档。这里的 <code>Subprime</code>，说的就是次一级别的贷款，也即次级贷，我们说的<strong>次贷危机(Subprime Crisis)</strong>就是来源于此。</p>
+<p><img alt="具有不同等级风险和回报的MBS" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-20_subprime-rating.jpg"></p>
+<p>由于 Prime 和 Alt-A 的评级高，很快就被抢光了，问题是怎么对 Subprime 这档好好设计，让它能够更好的卖出去。这里就是对 Sumprime 这一档进行<strong>分层(tranching)</strong>，然后在对这些层次进行评级：AAA, AA, A, BBB, BB,B…，形成优先级、夹层、劣后级不同风险和收益率的结构化份额。</p>
+<p>评级越高的风险越低，期望回报也越低。反之评级越低的风险越高，期望回报也就越高（因为风险越高，银行的贷款利率也就越高，相应的期望回报也就越高）</p>
+<p><img alt="Subprime不同评级对应的风险与回报" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-20_mbs-risk-return-for-investors.png"></p>
+<p>当这一步没有任何问题，只是将不同的房贷抵押进行风险评级，以满足不同风险偏好的投资者。</p>
+<p>第二个问题：<strong>谁来担保？</strong></p>
+<p>这就引入了 CDO。</p>
+<h3 id="CDO"><a href="#CDO" class="headerlink" title="CDO"></a>CDO</h3><p><strong>collateralized debt obligation，担保债务凭证</strong></p>
+<p>话说回来，评级好的 MBS ，比如 Prime 和 Alt-A 的 MBS 都很快被卖出去了，毕竟风险低和收益可观。那么 Subprime 的 MBS 怎么办呢？于是华尔街投行的精英们发明了 CDO。</p>
+<p>CDO 是什么？它是一种带有担保性质的抵押债券，这里的担保方可以是第三方，比如AIG, Ambac, MBIA这些大型保险公司。</p>
+<p>那么问题来了，这么高风险的tranche（贷款中的一部分，华尔街发明的晦涩难懂的词，具体就是 MBS 中的B级部分），保险公司为什么要给他们担保啊？</p>
+<blockquote>
+<p>投行说，数学证明了这样的资产配置风险极低，更何况现在房价蹭蹭往上涨，即便是有人违约断供了，我们还是可以收回房产来拍卖，全国的房子集体断供这是不可能。</p>
+<p>这时候评级机构又跳出来了，“咳咳，经过我们的评估，这些整合的MBS风险极低，我们给评个 double-A, 不给trible-A的原因是怕他们骄傲。” 事实上，大部分BB/BBB级的tranches被直接提升为AAA。</p>
+</blockquote>
+<p>对于保险公司来说，这个数学模型看起来好像很厉害，而且房价也一直在涨，即使收不回贷款拿房产抵押投行也可以盈利。再加上评级机构都这么捧场，自己还能拿保费，不干白不干。</p>
+<blockquote>
+<p>So mortgage bonds are dogshits, CDOs are dogshit wrapped in catshit.</p>
+</blockquote>
+<p>正如剧中人所说，CDO就像一个垃圾场，把各种垃圾倒进去，重新回收、打包、分类。经过这么一折腾，B 级评级直接被提升为 AAA 级。</p>
+<p>厉害的是，CDO A可以包含CDO B，CDO B也可以包含CDO A，他们又可以组合成CDO C（包含CDO的CDO，CDO的平方…… $CDO^2$）。在实际的金融市场中，不仅有$CDO^2$，甚至还有$CDO^3$（包含$CDO^2$的CDO）、$CDO^4$（包含$CDO^3$的CDO）。</p>
+<p>在那几年，华尔街精英们不断的用 CDO 打包再打包将其作为证券买到市场上，因为一堆风险高的资产组合收益率普遍大于一堆风险低的资产组合的收益率，房地产继续繁荣，CDO 得到了市场的广泛追捧。</p>
+<h3 id="CDS"><a href="#CDS" class="headerlink" title="CDS"></a>CDS</h3><p><strong>Credit Default Swap，信用违约互换</strong></p>
+<p>我们继续聊，刚才我们提到了投行让保险公司给他们担保，这实际上就是一种保险。</p>
+<p>保险是什么？投保人给保险公司保费，如果出现了意外事故，保险公司则需要给投保人赔偿。对应到上面的 CDO 产品，投资银行为上面的 MBS 投保，如果<strong>标的资产</strong>（这里的标的资产就是住房贷款抵押）没有违约，投保人（也就是投资银行，Protection Buyer）需要按季度给被投保人（也就是保险公司，Protection Seller）支付保费。这对保险公司来说听起来是一件很棒的事情，毕竟房地产行情持续火热，住房贷款在同一时间集体违约的概率也那么小，CDO 怎么会违约呢？这种保费不赚白不赚。</p>
+<p>到现在为止，我们还只是在谈保险，如果仅仅是这样，房地产的次贷危机还不至于引发整个金融海啸。</p>
+<p>对，CDS！</p>
+<p>对于持有 CDO 的投资者来说，CDS 相当于保险机制。购买了 CDS 的投资者，按季度向保险公司支付保费。如果 CDO发生违约，保险公司承诺会补偿投资者的损失。是的，这个和保险听起来没有什么区别。</p>
+<p><img alt="除了资产拥有者，CDS允许所有人都可以进行投保" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-20_cds-bonus.png"></p>
+<p>但是问题在于，CDS 不是简单的保险。在保险领域，你只能对拥有的东西投保， 比如我拥有一处房地产，我只能对它投保一次。 但是对于 CDS，它可以允许任何人对这个房子进行投保，换句话说，可能有上百个人对同一个标的资产投保。</p>
+<p><img alt="资产违约，AIG需要向购买CDS的所有买家支付赔偿" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-20_cds-fail.png"></p>
+<p>那么，如果这个房子烧毁了呢，那么保险公司（比如这里的 AIG）除了要向作为房地产拥有者的我赔偿损失，还要向成千上万购买了 CDS 的投机者赔偿。这样一来，在系统的损失就会成比例的扩大，Boom！</p>
+<p>再来回顾下 CDS 的特点：</p>
+<ul>
+<li>CDS 所投保的资产可以跟投资者没有任何关系，这是区别于保险的最大特点</li>
+<li>CDS 可以面向各类投资者，个人、银行、对冲基金、社保、养老金、保险公司等等</li>
+<li>CDS 和 CDO 一样，也可以在一级、二级市场交易，可以使投行转移风险。</li>
+</ul>
+<p>到这一步，CDS 已经变成了<strong>双方对违约事件的对赌</strong>，承保方相当于博彩行业里对某事件发生概率而自行计算并开出赔率的庄家。买家交付一定比例的保费，产品违约即由承保方赔付，不一定是保险公司，也可以是金融机构，例如高盛。华尔街的人，把 CDS 叫做 <code>Synthetic CDO</code>。利用CDS灵活性，可以制造出无数个赌场。我们可以赌MBS，可以赌cash CDO，也可以赌某一层tranche，还可以赌价格的跌幅。</p>
+<p>关于这里的 CDS 交易，还要在仔细说一说。对于一般的投资者，他们可以作为 CDS 的卖方 （Protection Seller），来获取固定收益，是卖出<strong>看跌期权</strong>（Sell CDS），认为后市看涨。而对于 <code>Michael Burry</code>来说，他是 CDS 的买方（Protection Buyer），定期支付保费，是买入<strong>看跌期权</strong> （Buy CDS），赌房地产市场下跌，博高杠杆的违约保金收益。原来这个买方角色一直是由发行bonds的投行担任，是为了卖产品。</p>
+<p>对应到 2008 年次贷危机，我们来看一看各个玩家到底都做了些什么事情：</p>
+<ul>
+<li>AIG销售了价值至少 5000 亿美元的 CDS。当房地产泡沫破裂时，账上资金耗尽，不得不被财政部接管，用纳税人的钱为他们买单。</li>
+<li>高盛从 AIG 购买了价值至少 200 亿美元的CDS，数额大到连高盛也担心 AIG 会破产。与此同时，高盛还在大量售卖了 CDO，所以他们的客户损失的越多，他们也就赚的越多。</li>
+<li>不光是高盛，摩根士坦利、摩根大通、美林、雷曼兄弟也买入了数十亿美元的 CDS。</li>
+<li>那么，为什么这些 CDO 能够被大众投资者买入呢？评级机构，他们的 AAA 评级。在整个房地产泡沫期间，评级机构们发放了大量的 AAA 评级，并从中获利众多。</li>
+<li>救市计划开始实行，拯救 AIG 花费了纳税人1500 亿美元，其中 610 亿美元被支付给高盛。与此同时，美国财政部长 <code>Paulson</code> 要求 AIG 放弃起诉高盛和其他银行的权利。</li>
+</ul>
+<h2 id="大而不倒"><a href="#大而不倒" class="headerlink" title="大而不倒"></a>大而不倒</h2><p>在回顾这场金融危机的时候，脑海中一直有个问题。</p>
+<blockquote>
+<p>为什么政府一定要出手呢？为什么要用纳税人的钱来给他们收拾烂摊子呢？就让他们倒闭不行吗？</p>
+</blockquote>
+<p>是的，政府担保了贝尔斯登使其被摩根大通收购，政府接管了房利美和房地美，但是政府不想传递出一种信息说自己会收拾所有华尔街的烂摊子，于是没有帮助雷曼兄弟，但是后面事态的发展让财政部和美联储无法再旁观下去。</p>
+<p>整个市场失去了信心，银行挤兑，市场失去了流动性，就连仅存的两家投行高盛和摩根士坦利都面临着巨大的撤资和空头压力。与此同时，AIG 深陷困境，作为全美最大的保险公司，影响着成千上万人的退休金。市场的恐慌让信贷停滞，就连像通用电气和克莱斯勒这种汽车制造业公司也出现了财务危机。危机持续扩散，世界上成千上万的公司出现衰退，消费者收紧钱包，成千上万的人失去了他们的工作、住房，整个金融系统停摆，濒临崩溃。</p>
+<p>如果 AIG 倒下，一切不堪设想，政府必须出手。之后呢？</p>
+<blockquote>
+<p>In the years of followed, hundreds of bankers and rating-agency’s executives went to jail. The SEC was completely overhauled and congress have no choice but to break up the big banks and regulate the mortgage and derivative industries.</p>
+<p>Just kidding!</p>
+<p>Banks took the money the American people gave them and used it to pay themselves huge bonuses and lobby the congress to kill the reform, and then they blame immigrants and poor people. And this time, even teachers.</p>
+</blockquote>
+<h2 id="历史循环"><a href="#历史循环" class="headerlink" title="历史循环"></a>历史循环</h2><p><strong>Break up the big banks</strong></p>
+<p>这件事情我们不是没有做过。你不觉得在看前面主角的时候，<code>Morgan Stanley</code> 和 <code>JPMorgan Chase</code>两家听起来好像有点关联吗？是的，在那次著名的<a href="https://en.wikipedia.org/wiki/Great_Depression" target="_blank" rel="external nofollow noopener noreferrer">大萧条</a>发生之前，他们俩是一家公司。（大萧条也是一个很值得研究的问题，这里先挖个坑）</p>
+<p>当时美国政府认为是超级银行（Universal bank）是造成大萧条的原因，于是出台法案禁止商业银行同时从事投资银行业务。在此背景下，摩根银行一分为三，JP摩根成为纯商业银行，摩根士丹利成为投资银行，还有一个摩根负责海外业务，于1990年被德国银行收购。当时的JP摩根，就是摩根大通的前身，2000年并入摩根大通，不再独立存在。</p>
+<p>然而，正如中国上千年农业社会的治乱历史循环一样：王朝建立土地重新分配 -&gt; 小农经济土地兼并 -&gt; 农民失地矛盾加重 -&gt; 天灾触发造成叛乱 -&gt; 新的王朝建立开始下一轮循环。看这次金融危机的历史，突然也有了这种感觉。拆分大银行，我们历史上并不是没有做过，但是资本的惯性就是倾向于兼并垄断，拆分之后小公司还是会不停的并购，再一次变成更大的公司，就像这一次发生的一样。</p>
+<p>我们这一次没有拆分大的公司，只是因为矛盾还没有那么尖锐而已，真正的矛盾还在酝酿。有人说，科学技术的快速发展使得我们可以脱离这种历史循环。真的是这样吗？我持悲观态度，下一次大萧条并不是没有可能。</p>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>这一篇 「资本不眠」是我在看了 <code>The Big Short</code>这部电影的时候一时兴起，尝试去理解那次金融海啸到底发生了什么。在这个过程中，我去搜索那些名词到底意味着什么，这场海啸中到底是谁在参与这次游戏，为什么它会造成那么大的后果，它对于我们又意味着什么。为此，我又看了 <code>Inside Job</code> 和 <code>Too Big To Fail</code>两部纪录片，分别从不同的角度去看这场危机。</p>
+<p>看的越多，我越来越意识到，这次 <code>房地产泡沫</code> 绝不是偶然。它和 2000 年的那场 <code>互联网泡沫</code>密切相关，它和 90 年代冷战后美国霸主地位的建立密切相关，它和 80 年代的<code>里根大循环</code>密切相关，它和 70 年代<code>布雷顿森林体系</code>的解散密切相关，它和那两次世界大战密切相关……</p>
+<p>到这里就结束了吗？哦不，上面这么多的坑都还没有填呢，还有 <code>Margin Call</code> 和 <code>Panic: The Untold Story of the 2008 Financial Crisis</code>还没有看呢。资本永不眠，这里只是一个程序猿尝试用自己的方式去理解这个世界，下次再见：）</p>
+<p>P.S. 本来想把所有的这些内容做成一个视频传到 B 站上的，但是发现视频剪辑真的是一个深坑，下次一定？</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://movie.douban.com/subject/26303622/" target="_blank" rel="external nofollow noopener noreferrer">The Big Short</a></li>
+<li><a href="https://movie.douban.com/subject/4843480/" target="_blank" rel="external nofollow noopener noreferrer">Inside Job</a></li>
+<li><a href="https://movie.douban.com/subject/6013501/" target="_blank" rel="external nofollow noopener noreferrer">Too Big To Fail</a></li>
+<li><a href="https://www.zhihu.com/question/39012069" target="_blank" rel="external nofollow noopener noreferrer">如何评价电影《大空头》的专业性</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/787197ce/" title="The Big Short">http://houmin.cc/posts/787197ce/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E7%BB%8F%E6%B5%8E%E5%8D%B1%E6%9C%BA/" rel="tag"><i class="fa fa-tag"></i> 经济危机</a>
+              <a href="/tags/%E7%94%B5%E5%BD%B1%E8%AF%84%E8%AE%BA/" rel="tag"><i class="fa fa-tag"></i> 电影评论</a>
+              <a href="/tags/%E9%87%91%E8%9E%8D/" rel="tag"><i class="fa fa-tag"></i> 金融</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/91ee7b9b/" rel="next" title="【交易笔记】MACD 分析">
+                  <i class="fa fa-chevron-left"></i> 【交易笔记】MACD 分析
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/2338e312/" rel="prev" title="愿望清单">
+                  愿望清单 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#大崩盘"><span class="nav-number">1.</span> <span class="nav-text">大崩盘</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#主角"><span class="nav-number">1.1.</span> <span class="nav-text">主角</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#剧本"><span class="nav-number">1.2.</span> <span class="nav-text">剧本</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#专业术语"><span class="nav-number">2.</span> <span class="nav-text">专业术语</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MBS"><span class="nav-number">2.1.</span> <span class="nav-text">MBS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CDO"><span class="nav-number">2.2.</span> <span class="nav-text">CDO</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CDS"><span class="nav-number">2.3.</span> <span class="nav-text">CDS</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#大而不倒"><span class="nav-number">3.</span> <span class="nav-text">大而不倒</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#历史循环"><span class="nav-number">4.</span> <span class="nav-text">历史循环</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#写在最后"><span class="nav-number">5.</span> <span class="nav-text">写在最后</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">6.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

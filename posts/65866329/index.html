@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="虚拟化的本质是抽象，虚拟化技术本质就是资源管理与优化技术。通过将计算机的各种物理资源，比如 CPU、内存以及磁盘空间、网络适配器等其他 I&#x2F;O 设备，进行抽象转换，呈现出一个可供分割并且可以任意组合的多个计算机的配置环境。通过虚拟化技术，计算、网络、存储等计算机硬件资源得到更好的利用，而这些资源的虚拟形式将不受现有架设方式、地域或物理配置所限制。">
+<meta name="keywords" content="虚拟化,hypervisor,VMM,云计算">
+<meta property="og:type" content="article">
+<meta property="og:title" content="虚拟化技术概览">
+<meta property="og:url" content="http://houmin.cc/posts/65866329/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="虚拟化的本质是抽象，虚拟化技术本质就是资源管理与优化技术。通过将计算机的各种物理资源，比如 CPU、内存以及磁盘空间、网络适配器等其他 I&#x2F;O 设备，进行抽象转换，呈现出一个可供分割并且可以任意组合的多个计算机的配置环境。通过虚拟化技术，计算、网络、存储等计算机硬件资源得到更好的利用，而这些资源的虚拟形式将不受现有架设方式、地域或物理配置所限制。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://upload.wikimedia.org/wikipedia/en/thumb/b/bb/Turing_machine_1.JPG/1024px-Turing_machine_1.JPG">
+<meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/4/4e/Eniac.jpg">
+<meta property="og:image" content="https://media.geeksforgeeks.org/wp-content/cdn-uploads/multiprogramming.jpg">
+<meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/e/e1/Hyperviseur.png">
+<meta property="og:image" content="https://microkerneldude.files.wordpress.com/2012/01/type1-vs-2.png">
+<meta property="og:image" content="https://i1.wp.com/www.linuxandubuntu.com/wp-content/uploads/2019/07/What-is-GNU-in-GNULinux.jpg">
+<meta property="og:image" content="https://ring0.me/images/2014/12/9c37a75e8e2164f50ffe76681c6d4522.png">
+<meta property="og:image" content="https://ring0.me/images/2014/12/98ce27bf0640053df5db977f6c41cc3e.png">
+<meta property="og:image" content="https://ring0.me/images/2014/12/05112238fed78cb9df19c07ec82544cf.png">
+<meta property="og:image" content="https://images2018.cnblogs.com/blog/431521/201712/431521-20171203175521851-450299329.png">
+<meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Kernel-based_Virtual_Machine.svg/967px-Kernel-based_Virtual_Machine.svg.png">
+<meta property="og:image" content="https://images2018.cnblogs.com/blog/431521/201712/431521-20171203175802101-1388918605.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190817201518961.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9pcy1jbG91ZC5ibG9nLmNzZG4ubmV0,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://ring0.me/images/2014/12/30cc029394b7687320fbca8c654b7671.png">
+<meta property="og:image" content="https://docs.openstack.org/install-guide/_images/openstack_kilo_conceptual_arch.png">
+<meta property="og:image" content="https://ring0.me/images/2014/12/f584cb21ff9e39a0164bfc6e7b54900a.png">
+<meta property="og:image" content="https://ring0.me/images/2014/12/bd0b38dbee5e3dd50e89367a440fc6bf.png">
+<meta property="og:image" content="https://platform9.com/wp-content/uploads/2019/05/kubernetes-constructs-concepts-architecture.jpg">
+<meta property="og:image" content="https://images2018.cnblogs.com/blog/431521/201712/431521-20171203180443851-1606756853.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-04-07_shadow-page-table.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-04-07_ept.png">
+<meta property="og:image" content="https://ring0.me/images/2014/12/a45258f97f500142bfcff56770ba2106.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-04-07_interaction-with-io-devices.png">
+<meta property="og:image" content="https://www.ibm.com/developerworks/library/l-pci-passthrough/figure1.gif">
+<meta property="og:image" content="https://developer.ibm.com/developer/tutorials/l-pci-passthrough/images/figure2.gif">
+<meta property="og:updated_time" content="2020-07-14T08:24:44.104Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://upload.wikimedia.org/wikipedia/en/thumb/b/bb/Turing_machine_1.JPG/1024px-Turing_machine_1.JPG">
+
+<link rel="canonical" href="http://houmin.cc/posts/65866329/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>虚拟化技术概览 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/65866329/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          虚拟化技术概览
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-04-07 09:04:08" itemprop="dateCreated datePublished" datetime="2020-04-07T09:04:08+08:00">2020-04-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/65866329/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/65866329/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>15k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>27 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>虚拟化的本质是<strong>抽象</strong>，虚拟化技术本质就是<strong>资源管理与优化</strong>技术。通过将计算机的各种物理资源，比如 <strong>CPU</strong>、<strong>内存</strong>以及磁盘空间、网络适配器等其他 <strong>I/O</strong> 设备，进行抽象转换，呈现出一个可供分割并且可以任意组合的多个计算机的配置环境。通过虚拟化技术，计算、网络、存储等计算机硬件资源得到更好的利用，而这些资源的虚拟形式将不受现有架设方式、地域或物理配置所限制。</p>
+<a id="more"></a>
+<h2 id="计算虚拟化"><a href="#计算虚拟化" class="headerlink" title="计算虚拟化"></a>计算虚拟化</h2><h3 id="理想数学模型-Turing-Machine"><a href="#理想数学模型-Turing-Machine" class="headerlink" title="理想数学模型 Turing Machine"></a>理想数学模型 Turing Machine</h3><p>在计算机领域，研究的一切问题都是 <strong>可计算问题（Computational Problem）</strong>。</p>
+<blockquote>
+<p><em>A computational problem</em> is collection of questions that computers might be able to solve.</p>
+</blockquote>
+<p>通过对问题可计算的判定，我们知道不管计算机的存储和计算能力有多强，有些问题总是不能够被解决的。对于那些可计算的问题，怎么解决呢？1936年，图灵在现代计算领域奠基性论文 「论可计算数及其在判定性问题上的应用」<a href="https://en.wikipedia.org/wiki/On_Computable_Numbers,_with_an_Application_to_the_Entscheidungsproblem" target="_blank" rel="external nofollow noopener noreferrer">On Computable Numbers, with an Application to the Entscheidungsproblem</a> 中提出 <a href="https://en.wikipedia.org/wiki/Turing_machine" target="_blank" rel="external nofollow noopener noreferrer">图灵机</a> 这一纸带和读写头表示的数学模型，并且证明了<strong>假设</strong>上述模型里所说的功能都能被以某种形式物理实现，<strong>那么</strong> <code>任意可计算问题都可以被解决</code>。</p>
+<p><img alt="Turing Machine" data-src="https://upload.wikimedia.org/wikipedia/en/thumb/b/bb/Turing_machine_1.JPG/1024px-Turing_machine_1.JPG"></p>
+<h3 id="二战产物-ENIAC"><a href="#二战产物-ENIAC" class="headerlink" title="二战产物 ENIAC"></a>二战产物 ENIAC</h3><p>二战极大促进了电子计算机的诞生，为了帮助美国陆军的弹道研究实验室（BRL）计算火炮的火力表， ENIAC 在 1946 年被设计了出来。ENIAC 并不是二战中第一个被设计出来的计算机，机械和电子计算机器从19世纪就开始出现了，但是20世纪40年代被看作是现代计算机时代的开端。</p>
+<ul>
+<li>德国<a href="https://zh.wikipedia.org/w/index.php?title=Z3_(计算机" target="_blank" rel="external nofollow noopener noreferrer">Z3</a>&amp;action=edit&amp;redlink=1)计算机于1941年5月公布，这是第一台通用的数字计算机<ul>
+<li>使用<a href="https://zh.wikipedia.org/wiki/继电器" target="_blank" rel="external nofollow noopener noreferrer">继电器</a>，机电计算机，不是电子计算机</li>
+<li>使用二进制进行逻辑计算</li>
+<li>可用打孔纸带编程，但是没有逻辑分支</li>
+</ul>
+</li>
+<li>美国<a href="https://en.wikipedia.org/wiki/Atanasoff–Berry_Computer" target="_blank" rel="external nofollow noopener noreferrer">ABC</a>，1941年夏天公布，是第一台电子计算设备<ul>
+<li>使用电子管，电子计算机</li>
+<li>使用二进制进行逻辑计算</li>
+<li>不是通用的，仅用于求解线性方程组</li>
+<li>没有利用电子计算的速度优势，旋转电容鼓存储器，输入输出系统要把中间结果写出到纸片</li>
+<li>手动控制的，不可编程</li>
+</ul>
+</li>
+<li>英国的<a href="https://zh.wikipedia.org/wiki/巨人计算机" target="_blank" rel="external nofollow noopener noreferrer">巨人计算机</a> Colossus computer，1943年用于密码分析<ul>
+<li>使用电子管，电子计算机</li>
+<li>可用插板和开关编程</li>
+<li>不是通用的，仅用于密码破译</li>
+</ul>
+</li>
+</ul>
+<p>对比这些几乎同时期独立的计算机，ENIAC有以下特点：</p>
+<ul>
+<li>使用电子管，电子计算机</li>
+<li>采用十进制计算</li>
+<li>计算速度高，具备逻辑分支能力</li>
+<li>符合<strong>图灵完全性</strong>，<strong>能够重新编程</strong>，<strong>解决各种计算问题</strong></li>
+<li>缺乏存储程序能力，<strong>冯诺依曼结构</strong>在下一代计算机<a href="https://zh.wikipedia.org/wiki/EDVAC" target="_blank" rel="external nofollow noopener noreferrer">EDVAC</a>上实现</li>
+</ul>
+<p><img alt="ENIAC, 美国弹道研究实验室" data-src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Eniac.jpg"></p>
+<h3 id="多道程序设计-Multiprogramming"><a href="#多道程序设计-Multiprogramming" class="headerlink" title="多道程序设计 Multiprogramming"></a>多道程序设计 Multiprogramming</h3><p>最初的计算机都是串行运行的，一次只能录入并执行一个程序，当程序进行缓慢的 IO 操作时，CPU 只好空转等待。这不仅造成了 CPU 的浪费，也造成了其他计算机硬件资源的浪费。那时的计算机科学家们都在思考着要如何能够提高 CPU 的利用率，直到有人提出了多道程序设计（Multiprogramming，多任务处理的前身）。</p>
+<p>在整个上世纪 50-60 年代，多道程序设计的讨论非常流行。它令 CPU 一次性读取多个程序到内存，先运行第一个程序直到它出现了 IO 操作，此时 CPU 切换到运行第二个程序。</p>
+<blockquote>
+<p>即，<strong>第 n+1 个程序得以执行的条件是第 n 个程序进行 IO 操作或已经运行完毕</strong>。</p>
+</blockquote>
+<p><img alt data-src="https://media.geeksforgeeks.org/wp-content/cdn-uploads/multiprogramming.jpg"></p>
+<p>多道程序设计的特征就是：<strong>多道程序、宏观上并行、微观上串行</strong>。有效的提高了 CPU 的利用率，也充分发挥着其他计算机系统部件的并行性。</p>
+<h3 id="分时-Time-Sharing"><a href="#分时-Time-Sharing" class="headerlink" title="分时 Time Sharing"></a>分时 Time Sharing</h3><p>但多道程序设计存在一个问题， 就是<strong>它并不会去考虑分配给各个程序的时间是否均等，很可能第一个程序运行了几个小时而不出现 IO 操作，故第二个程序没有运行</strong>。最初，这个问题是令人接受的，那时的必须多个程序之间的执行顺序更加关心程序的执行结果。直到有人提出了新的需求：多用户同时使用计算机。应需而生的正是时间共享，或者称之为 “分时” 的概念（Time Sharing）。</p>
+<p>所谓 “分时” 的含义是将 CPU 占用切分为多个极短（1/100sec）的时间片，每个时间片都执行着不同的任务。分时系统中允许几个、几十个甚至几百个用户通过终端机连接到同一台主机，将处理机时间与内存空间按一定的时间间隔，轮流地切换给各终端用户的程序使用。由于时间间隔很短，每个用户感觉就像他独占了计算机一样。<strong>分时系统达到了多个程序分时共享计算机硬件和软件资源的效果</strong>，本质就是一个多用户交互式操作系统。</p>
+<p>分时系统与多道程序设计虽然类似，却也有着底层实现细节的不同</p>
+<ul>
+<li>分时系统是为了给不同用户提供程序的使用，而多道程序则是为了不同程序间的穿插运行</li>
+</ul>
+<p>1959 年，牛津大学的计算机教授，Christopher Strachey 发表了一篇名为 <a href="https://archive.org/details/large-fast-computers" target="_blank" rel="external nofollow noopener noreferrer">Time sharing in large fast computers</a> 的学术报告，他在文中首次提出了 “虚拟化” 的基本概念，还论述了什么是虚拟化技术。</p>
+<blockquote>
+<p><strong>Time sharing</strong>, in the sense of causing the main computer to interrupt its program to perform the arithmetic and control operations required by external or peripheral equipment, has been used on a limited scale for a long time. this paper explores the possibility of applying time sharing to a large fast computer on a very extensive scale.</p>
+</blockquote>
+<p>本质上，Strachey 是在讨论如何将分时的概念融入到多道程序设计当中，从而实现一个可多用户操作（CPU 执行时间切片），又具有多程序设计效益（CPU 主动让出）的虚拟化系统。可见，<strong>虚拟化概念最初的提出就是为了满足多用户同时操作大型计算机，并充分利用大型计算机各部件资源的现实需求</strong>。而对这一需求的实现与演进，贯穿了整个大型机与小型机虚拟化技术的发展历程。</p>
+<p>1961年 MIT 在 IBM7094 型机器上实现了首个分时系统CTSS（Compatible Time-Sharing System，相容分时系统）</p>
+<h3 id="超级计算机-Altas"><a href="#超级计算机-Altas" class="headerlink" title="超级计算机 Altas"></a>超级计算机 Altas</h3><p>1962 年 12 月 7 日，第一台 Atlas 超级计算机在英国诞生，Atlas 是第二代晶体管计算机，被认为是当时世界上最强大的计算机。Atlas 开创了许多沿用至今的软件概念：</p>
+<ul>
+<li>第一次实现名为 Atlas Supervisor 的底层资源管理组件，<strong>Supervisor</strong> 通过特殊的指令或代码来管理主机的硬件资源</li>
+<li>第一次实现分页技术（<strong>Paging Techniques</strong>）</li>
+<li>第一次实现虚拟内存（<strong>Virtual Memory</strong>），当时被称为一级存储（One-Level Store）</li>
+</ul>
+<h3 id="第一个支持虚拟化-IBM-M44-44X"><a href="#第一个支持虚拟化-IBM-M44-44X" class="headerlink" title="第一个支持虚拟化 IBM M44/44X"></a>第一个支持虚拟化 IBM M44/44X</h3><p>1964 年的 IBM M44/44X 被认为是世界上第一个支持虚拟化的系统。它采用专门的硬件和软件，能够在一台物理机器上虚拟多个当时流行的 IBM 7044 大型机。它使用的虚拟化方法是非常原始的：像分时系统一样，在每个时间片，一个 IBM 7044 大型机独占所有硬件资源来运行。</p>
+<p>值得一提的是，这个研究用的原型系统不仅开启了虚拟化技术的时代，M44/44X 实现了多个具有突破性的虚拟化概念，包括部分<strong>硬件共享（Partial Hardware Sharing）</strong>、<strong>分时（Time Sharing）</strong>、<strong>内存分页（Memory Paging）</strong>以及<strong>虚拟内存（Virtual Memory）</strong>。M44/44X 项目首次使用了 “<strong>Virtual Machine</strong>” 这一术语，所以被认为是世界上第一个支持虚拟机的计算机系统。虽然 M44/44X 只实现了部分的虚拟化功能，但其最大的成功在于证明了虚拟机的运行效率并不一定比传统的方式更低</p>
+<p>在那个 “进程” 概念尚未被发明的年代，多任务操作系统和虚拟化技术事实上是难以分开的，因为 “虚拟机” 就是一个任务，而且当时还没有 Intel x86 这种霸主地位的体系结构，各家的大型机各自为政，也谈不上兼容别家的体系结构。这种 “任务级” 或者说 “进程级” 虚拟化，从概念上延续到今天，就是以 LXC 和 OpenVZ 为代表的操作系统级虚拟化。</p>
+<h3 id="IBM的豪赌-System-360"><a href="#IBM的豪赌-System-360" class="headerlink" title="IBM的豪赌 System/360"></a>IBM的豪赌 System/360</h3><p>1964 年，IBM推出了著名的 System/360 大型计算机系统，整个研发过程投资巨大，其出货时间也不断延迟。但最终，取得了巨大的商业成功。当时的项目经理 <code>Frederick P. Brooks</code>事后根据这项计划的开发经验写出了同样著名的《人月神话：软件项目管理之道》（“The Mythical Man-Month: Essays on Software Engineering”），记述了人类工程史上一项里程碑式的大型复杂软件系统的开发经验。</p>
+<ul>
+<li>System/360 实现了基于全硬件的虚拟化解决方案（<strong>Full Hardware Virtualization</strong>）</li>
+<li>System/360 实现了 TSS（Time Sharing System）分时系统，TSS 被认为是最原始的 <strong>CPU 虚拟化技术</strong>，它可以让低端电脑连接大型主机，上传和下载程序或资料，将电子数据处理的 “松散终端” 连接起来。</li>
+</ul>
+<blockquote>
+<p><strong>虚拟化技术的应用和发展源于大型机对分时系统的需求</strong>。这种通过硬件的方式来生成多个可以运行独立操作系统软件的虚拟机实例，解决了早期大型计算机只能单任务处理而不能分时多任务处理的问题。由于这种虚拟化技术是基于硬件设备来实现的，故被称为<strong>硬件虚拟化（Hardware virtualization）</strong>。但需要注意的是，这一定义在后来被进一步细分为了狭义的硬件虚拟化技术，<strong>现今更加被公认的硬件虚拟化定义是：一种对计算机或操作系统的虚拟化，能够对用户隐藏真实的计算机硬件，表现出另一个抽象的计算平台。</strong></p>
+</blockquote>
+<h3 id="伟大实验-MULTICS"><a href="#伟大实验-MULTICS" class="headerlink" title="伟大实验 MULTICS"></a>伟大实验 MULTICS</h3><p>MULTICS，全名 <code>MULTiplexed Information and Computing System</code>，是1964年由贝尔实验室、麻省理工学院及美国通用电气公司所共同参与研发的，是一套安装在大型主机上多人多任务的操作系统，是连接1000部终端机，支持300的用户同时上线。</p>
+<p>MULTICS 是一个伟大的实验，得意于第一代分时系统 CTSS 的成功，它在开发之初就提出了很高的要求：</p>
+<ul>
+<li>首次在大型软件中采用结构化的程序设计方法，使得开发周期大大缩短</li>
+<li>首次采用高级语言编写操作系统，使得系统程序在功能上独立于机器</li>
+<li>首次采用成熟软件作为工具，MULTICS中的很大一部分程序是用CTSS来编写</li>
+<li>首次引入动态链接和分层文件系统的概念</li>
+</ul>
+<p>然而，由于当时编写 MULTICS 的 PL/I 语言并没有很成熟，无力肩负编写操作系统这样的重担。而且整个开发过程中求大求全，多个单位参与，进展过慢，贝尔实验室退出此计划。</p>
+<h3 id="玩具而已-UNIX"><a href="#玩具而已-UNIX" class="headerlink" title="玩具而已 UNIX"></a>玩具而已 UNIX</h3><p>1969年，在 AT&amp;T 的Bell Labs，<code>Ken Thompson</code>为了一项名为<code>Space Travel</code>的游戏，需要一个操作系统。他找了一台闲置的PDP-7 小型机，独自经过 4 个星期的奋斗，以汇编语言写出了一组内核程序，同时包括一些内核工具程序，以及一个小的文件系统，这就是伟大的 UNIX 操作系统的原型。</p>
+<p>UNIX 系统本质上是对 MULTICS 系统的简化，当时开发者 <code>Brian Kernighann</code> 开玩笑地戏称这个不完善系统MULTICS其实是 <code>UNiplexed Information and Computing System</code>，缩写为<code>UNICS</code>。后来，大家取其谐音这个名字被改为<code>UNIX</code>。</p>
+<p>1973 年，贝尔实验室的<code>Dennis Ritchie</code> 以 B 语言为基础开发了一种称为 C 的编程语言。C 语言的设计原则就是好用，非常自由、弹性很大。<code>Ken Thompson</code>和<code>Dennis Ritchie</code>使用 C 语言完全重写了 UNIX，此后 UNIX 就真正成为了可移植的操作系统，那时已是 1977 年。</p>
+<p>1979 年，Unix 的第 7 个版本引入了 chroot 机制，意味着第一个<strong>操作系统虚拟化（OS-level virtualization）</strong>诞生了。chroot 是直到现在我们依然在使用的一个系统调用，这个系统调用会让一个进程把指定的目录作为根目录，它的所有文件系统操作都只能在这个指定目录中进行，本质是一种文件系统层的隔离。</p>
+<h3 id="虚拟化准则-VMM"><a href="#虚拟化准则-VMM" class="headerlink" title="虚拟化准则 VMM"></a>虚拟化准则 VMM</h3><p>1974 年，<code>Gerald J. Popek</code> 和 <code>Robert P. Goldberg</code>在合作论文《可虚拟第三代架构的规范化条件》（“Formal Requirements for Virtualizable Third Generation Architectures”）中提出了一组称为虚拟化准则的充分条件，又称波佩克与戈德堡虚拟化需求（<strong>Popek and Goldberg virtualization requirements</strong>），即：虚拟化系统结构的三个基本条件。满足这些条件的控制程序才可以被称为<strong>虚拟机监控器（Virtual Machine Monitor，简称 VMM）</strong>：</p>
+<ul>
+<li><strong>资源控制（Resource Control）</strong>，控制程序必须能够管理所有的系统资源。</li>
+<li><strong>等价性（Equivalence）</strong>，在控制程序管理下运行的程序（包括操作系统），除时序和资源可用性之外的行为应该与没有控制程序时的完全一致，且预先编写的特权指令可以自由地执行。</li>
+<li><strong>效率性（Efficiency）</strong>，绝大多数的客户机指令应该由主机硬件直接执行而无需控制程序的参与。</li>
+</ul>
+<p>该论文尽管基于简化的假设，但上述条件仍为评判一个计算机体系结构是否能够有效支持虚拟化提供了一个便利方法，也为设计可虚拟化的计算机架构给出了指导原则。同时，Gerald J. Popek 和 Robert P. Goldberg 还在论文中介绍了两种 Hypervisor 类型。</p>
+<p><img alt="Hypervisor" data-src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Hyperviseur.png"></p>
+<ul>
+<li>类型 I (<strong>Bare-metal Hypervisors</strong>)<ul>
+<li>这些虚拟机管理程序直接运行在宿主机（Host）的硬件上来控制硬件和管理虚拟机。</li>
+<li>需要硬件支持</li>
+<li>VMM 作为宿主机操作系统（Host OS）</li>
+<li>运行效率高</li>
+</ul>
+</li>
+</ul>
+<p><img alt="Hypervisor" data-src="https://microkerneldude.files.wordpress.com/2012/01/type1-vs-2.png"></p>
+<ul>
+<li>类型 II（<strong>Hosted Hypervisorsr</strong>）<ul>
+<li>VMM 运行在传统的宿主机操作系统（Host OS）上，就像其他应用程序那样运行。</li>
+<li>VMM 作为应用程序运行在宿主机操作系统之上</li>
+<li>运行效率一般较类型 I 低</li>
+</ul>
+</li>
+</ul>
+<p>由于技术的原因，早期的 VMM 产品大多实现的是寄居式，例如：VMware 5.5 以前的版本、Xen 3.0 以前的版本。随着技术的成熟，主要是硬件虚拟化技术的诞生，几乎所有的 VMM 产品都转向了裸金属 Hypervisor 实现。例如：VMware 5.5 及以后版本、Xen 3.0 及以后版本以及 KVM。</p>
+<h3 id="接棒开源-GNU-Linux"><a href="#接棒开源-GNU-Linux" class="headerlink" title="接棒开源 GNU/Linux"></a>接棒开源 GNU/Linux</h3><p><img alt="GNU/Linux" data-src="https://i1.wp.com/www.linuxandubuntu.com/wp-content/uploads/2019/07/What-is-GNU-in-GNULinux.jpg"></p>
+<h3 id="软件辅助虚拟化-QEMU"><a href="#软件辅助虚拟化-QEMU" class="headerlink" title="软件辅助虚拟化 QEMU"></a>软件辅助虚拟化 QEMU</h3><p>2001，Fabrice Bellard 发布了目前最流行的、采用了<strong>动态二进制翻译（Binary Translation）</strong>技术的开源虚拟化软件 QEMU（Quick EMUlator）。QEMU 可以模拟 x86、x86_64、ARM、MIPS、SPARC、PowerPC 等多种处理器架构，无修改地运行这些架构上的操作系统。</p>
+<p><strong>软件辅助虚拟化</strong> 是通过 <strong>优先级压缩（Ring Compression）</strong>和 <strong>二进制代码翻译（Binary Translation）</strong>这两个技术来完成的。RC 基于 CPU 特权级的原理。也就是 guest、VMM 和 host 分别处于不同的特权级上，guest 要访问 host 就属于越级访问，会抛异常，这时 VMM 会截获这个异常，并模拟出其可能的行为，从而进行相应处理。</p>
+<p>以我们最熟悉的 Intel x86 架构为例，分为四个特权级 0~3。一般情况下，操作系统内核（特权代码）运行在 ring 0（最高特权级），而用户进程（非特权代码）运行在 ring 3（最低特权级）。</p>
+<p><img alt data-src="https://ring0.me/images/2014/12/9c37a75e8e2164f50ffe76681c6d4522.png"></p>
+<p>使用了虚拟机之后，Guest OS 运行在 ring 1，VMM 运行在 ring 0。比如在 Windows 上装个 Linux 虚拟机，Windows 内核运行在 ring 0，而被虚拟的 Linux 内核运行在 ring 1，Linux 系统里的应用程序则运行在 ring 3。当虚拟机系统需要执行特权指令时，VMM 就会立即捕获它（谁让 ring 0 比 ring 1 的特权级高呢！）并模拟执行这条特权指令，再返回到虚拟机系统。</p>
+<p>为了提高系统调用、中断处理的性能，有时会利用动态二进制翻译的技术，在运行前把这些特权指令替换成调用虚拟机管理器 API 的指令。如果所有特权指令都模拟得天衣无缝，虚拟机系统就像运行在物理机器上一样，完全不能发现自己运行在虚拟机里。</p>
+<h3 id="半虚拟化-Xen"><a href="#半虚拟化-Xen" class="headerlink" title="半虚拟化 Xen"></a>半虚拟化 Xen</h3><p>2003 年，英国剑桥大学的一位讲师发布了开源虚拟化项目 Xen 1.0，通过<strong>半虚拟化技术</strong>为 x86-64 提供虚拟化支持。</p>
+<p>既然<strong>动态二进制翻译的难点和性能瓶颈在于模拟执行那些杂七杂八的特权指令</strong>，我们能不能修改虚拟机系统的内核，把那些特权指令改得好看些？毕竟在多数情况下，我们并不需要对虚拟机刻意 “隐瞒” 虚拟化层的存在，而是要在虚拟机之间提供必要的隔离，同时又不造成太多性能开销。</p>
+<p>Paravirtualization 这个单词的前缀是 para-，即 “with” “alongside” 之意。也就是虚拟机系统与虚拟化层（主机系统）不再是严格的上下级关系，而是互信合作的关系，<strong>虚拟化层要在一定程度上信任虚拟机系统。在 x86 架构中，虚拟化层（Virtualization Layer）和虚拟机系统的内核（Guest OS）都运行在 ring 0。</strong></p>
+<p><img alt data-src="https://ring0.me/images/2014/12/98ce27bf0640053df5db977f6c41cc3e.png"></p>
+<p><strong>虚拟机系统的内核需要经过特殊修改，把特权指令改成对虚拟化层 API 的调用</strong>。在现代操作系统中，由于这些体系结构相关的特权操作都被封装起来了（例如 Linux 内核源码中的 arch/ 目录），比起二进制翻译需要考虑各种边角情况，这种对虚拟机内核源码的修改就简单一些了。</p>
+<p><strong>相比使用二进制翻译的全虚拟化（full virtualization），半虚拟化是牺牲了通用性来换取性能，因为任何操作系统都可以无修改地运行在全虚拟化平台上，而每个半虚拟化的操作系统内核都要经过人肉修改。</strong></p>
+<h3 id="硬件辅助虚拟化-Intel-VT-x"><a href="#硬件辅助虚拟化-Intel-VT-x" class="headerlink" title="硬件辅助虚拟化 Intel VT-x"></a>硬件辅助虚拟化 Intel VT-x</h3><p>2006 年，Intel 和 AMD 等厂商相继将对虚拟化技术的支持加入到 x86 体系结构的CPU中（AMD-V，Intel VT-x/d），使原来纯软件实现的各项功能可以用借助硬件的力量实现提速，此即 <strong>硬件辅助的虚拟化</strong>。</p>
+<p>Xen这种<strong>将 Guest OS 中的特权指令改成对虚拟化层 API 的调用</strong>方式<strong>并不通用</strong>，要去改 Guest OS 的代码，只能看作是一种定制。为了能够通用，又能够提高性能，就只能从硬件上去做文章了。通过对硬件本身加入更多的虚拟化功能，就可以截获更多的敏感指令，填补上漏洞。所以后来，以 Intel 的 VT-x 和 AMD 的 AMD-V 为主的硬件辅助的 CPU 虚拟化就被提出来（Intel VT 包括 VT-x （支持 CPU 虚拟化）、EPT（支持内存虚拟化）和 VT-d（支持 I/O 虚拟化））。</p>
+<p><img alt data-src="https://ring0.me/images/2014/12/05112238fed78cb9df19c07ec82544cf.png"></p>
+<p>CPU 硬件辅助虚拟化在 Ring 模式的基础上引入了一种新的模式，叫 VMX 模式。它包括根操作模式（VMX Root Operation）和非根操作模式（VMX Non-Root Operation）。</p>
+<p>引入这种模式的好处就在于，Guest OS 运行在 Ring 0 上，就意味着它的核心指令可以直接下达到硬件层去执行，而特权指令等敏感指令的执行则是由硬件辅助，直接切换到 VMM 执行，这是自动执行的，应用程序是感知不到的，性能自然就提高了。</p>
+<p>这种切换 VT-x 定义了一套机制，称为 VM-entry 和 VM-exit。从非根模式切换到根模式，也就是从 Guest 切换到 Host VMM，称为 VM-exit，反之称为 VM-entry。</p>
+<ul>
+<li>VM-exit ： 如果 Guest OS 运行过程中遇到需要 VMM 处理的事件，比如中断或缺页异常，或者主动调用 <code>VMCAL</code>指 令调用 VMM 服务的时候（类似于系统调用），硬件自动挂起 Guest OS，切换到根模式，VMM 开始执行。</li>
+<li>VM-entry： VMM 通过显示调用 <code>VMLAUNCH</code> 或 <code>VMRESUME</code> 指令切换到非根模式，硬件自动加载 Guest OS 的上下文，Guest OS 开始执行。</li>
+</ul>
+<p><img alt data-src="https://images2018.cnblogs.com/blog/431521/201712/431521-20171203175521851-450299329.png"></p>
+<h3 id="基于内核的虚拟化-KVM"><a href="#基于内核的虚拟化-KVM" class="headerlink" title="基于内核的虚拟化 KVM"></a>基于内核的虚拟化 KVM</h3><p>2007 年 2 月，Linux Kernel 2.6.20 合入了 KVM 内核模块，使用 KVM 的前提是 CPU 必须要支持虚拟化技术。</p>
+<p>一般 KVM 只负责 CPU 和内存的虚拟化，I/O 的虚拟化则由另外一个技术来完成，即 QEMU。</p>
+<p><img alt="Kernel-based Virtual Machine" data-src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Kernel-based_Virtual_Machine.svg/967px-Kernel-based_Virtual_Machine.svg.png"></p>
+<p>KVM 是一种硬件辅助的虚拟化技术，支持 Intel VT-x 和 AMD-v 技术，怎么知道 CPU 是否支持 KVM 虚拟化呢？可以通过如下命令查看：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># grep -E '(vmx|svm)' /proc/cpuinfo</span></span><br></pre></td></tr></table></figure>
+<p>如果输出是 vmx 或 svm，则表明当前 CPU 支持 KVM，Intel 是 vmx，AMD 是svm。</p>
+<p>从本质上看，一个 KVM 虚拟机对应 Host 上的一个 qemu-kvm 进程，它和其他 Linux 进程一样被调度，而 qemu-kvm 进程中的一个线程就对应虚拟机的虚拟 CPU （vCPU），虚拟机中的任务线程就被 vCPU 所调度。</p>
+<p>比如下面这个例子，Host 机有两个物理 CPU，上面起了两个虚拟机 VM1 和 VM2，VM1 有两个 vCPU，VM2 有 3 个 vCPU，VM1 和 VM2 分别有 2 个 和 3 个线程在 2 个物理 CPU 上调度。VM1 和 VM2 中又分别有 3 个任务线程在被 vCPU 调度。</p>
+<p>所以，这里有两级的 CPU 调度，Guest OS 中的 vCPU 负责一级调度，Host VMM 负责另一级调度，即 vCPU 在物理 CPU 上的调度。</p>
+<p><img alt data-src="https://images2018.cnblogs.com/blog/431521/201712/431521-20171203175802101-1388918605.png"></p>
+<p>我们也可以看到，vCPU 的个数，可以超过物理 CPU 的个数，这个叫 CPU 「超配」，这正是 CPU 虚拟化的优势所在，这表明了虚拟机能够充分利用 Host 的 CPU 资源，进行相应的业务处理，运维人员也可以据此控制 CPU 资源使用，达到灵活调度。</p>
+<h3 id="大数据时代-GFS-MapReduce-BigTable"><a href="#大数据时代-GFS-MapReduce-BigTable" class="headerlink" title="大数据时代 GFS/MapReduce/BigTable"></a>大数据时代 GFS/MapReduce/BigTable</h3><ul>
+<li>2003 年，Google 发布 <code>The Google File System</code>，讲述了一种可扩展的分布式文件系统</li>
+<li>2004 年，Google 发布 <code>MapReduce: Simplified Data Processing on Large Clusters</code>，讲述了大数据的分布式计算方式，即将任务分解然后在多台处理能力较弱的计算节点中同时处理，然后将结果合并从而完成大数据处理。</li>
+<li>2006 年，Google 发布 <code>Bigtable: A Distributed Storage System for Structured Data</code>，讲述了用于存储和管理结构化数据的分布式存储系统，其建立在 GFS、MapReduce 等基础之上。该论文启发了后期的很多的 NoSQL 数据库，包括 Cassandra、HBase 等。</li>
+</ul>
+<p>在 Google 的三篇论文发布之后，大数据时代宣告到来，于此同时，Hadoop 生态开始建立。</p>
+<h3 id="云计算吃螃蟹的人-AWS"><a href="#云计算吃螃蟹的人-AWS" class="headerlink" title="云计算吃螃蟹的人 AWS"></a>云计算吃螃蟹的人 AWS</h3><p>2006 年，<strong>Amazon Web Services</strong> 开始以 Web 服务的形式向企业提供 IT 基础设施服务，包括弹性计算网云（EC2）、简单储存服务（S3）、简单数据库（SimpleDB）等，现在通常称为云计算。尽管云计算最早是由谷歌CEO <code>Eric Schmidt</code>，真正第一个吃螃蟹的人却是 Amazon。</p>
+<p><img alt data-src="https://img-blog.csdnimg.cn/20190817201518961.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9pcy1jbG91ZC5ibG9nLmNzZG4ubmV0,size_16,color_FFFFFF,t_70"></p>
+<h3 id="操作系统级虚拟化-LXC"><a href="#操作系统级虚拟化-LXC" class="headerlink" title="操作系统级虚拟化 LXC"></a>操作系统级虚拟化 LXC</h3><p><strong>2008 年 6 月</strong>，Linux Container（LXC） 发布 0.1.0 版本，其可以提供轻量级的虚拟化，用来隔离进程和资源，是 Docker 最初使用的容器技术支撑。</p>
+<p>很多时候，我们并不是想在虚拟机里运行任意的操作系统，而是希望在不同的任务间实现一定程度的隔离。前面提到的虚拟化技术，每个虚拟机都是一个独立的操作系统，有自己的任务调度、内存管理、文件系统、设备驱动程序等，还会运行一定数量的系统服务（如刷新磁盘缓冲区、日志记录器、定时任务、ssh 服务器、时间同步服务），这些东西都会消耗系统资源（主要是内存），而且虚拟机和虚拟机管理器的两层任务调度、设备驱动等也会增加时间开销。能不能让虚拟机共享操作系统内核，又保持一定的隔离性呢？</p>
+<p><img alt data-src="https://ring0.me/images/2014/12/30cc029394b7687320fbca8c654b7671.png"></p>
+<p>chroot 的文件系统隔离给我们带来部分的思路，但是要成为一个真正的虚拟化解决方案，只有文件系统隔离是不够的。另外两个重要的方面是：</p>
+<ul>
+<li>进程、网络、IPC（进程间通信）、用户等<strong>命名空间的隔离</strong>。使得虚拟机内部只能看到自己的进程，只能使用自己的虚拟网卡，进程间通信时不会干扰到虚拟机外面，虚拟机内的 UID/GID 与外面的独立。</li>
+<li>资源的限制和审计。不能因为虚拟机内的程序 “跑飞了”，就占掉物理机器的所有 CPU、内存、硬盘等资源。必须要能统计虚拟机占了多少资源，并能够对资源进行限制。</li>
+</ul>
+<p>上述两件事情就是 BSD 和 Linux 社区在进入 21 世纪以来逐步在做的。在 Linux 中，命名空间的隔离叫做用户命名空间，在创建进程时，通过指定 clone 系统调用的参数来创建新的命名空间；资源的限制和审计是 cgroups 做的，它的 API 位于 proc 虚拟文件系统中。</p>
+<p>这种虚拟机里运行一个或多个进程、虚拟机与主机共享一个内核的虚拟化方案，被称为 <strong>操作系统级虚拟化</strong> 或 <strong>任务级虚拟化</strong>。由于 Linux Containers（LXC）从 Linux 3.8 版本开始被纳入内核主线，操作系统级虚拟化又被称为 “容器”（container）。为了与虚拟机是一个完整的操作系统的虚拟化方案相区分，被隔离执行的进程（进程组）往往不称为 “虚拟机”，而称为 “容器”。由于没有多余的一层操作系统内核，容器比虚拟机更加轻量，启动更快，内存开销、调度开销也更小，更重要的是访问磁盘等 I/O 设备不需要经过虚拟化层，没有性能损失。</p>
+<h3 id="云计算操作系统-OpenStack"><a href="#云计算操作系统-OpenStack" class="headerlink" title="云计算操作系统 OpenStack"></a>云计算操作系统 OpenStack</h3><p>2010 年 7 月，NASA 和 Rackspace 联合发起了 OpenStack 云操作系统开源项目。</p>
+<p>OpenStack 要对云上的各种资源进行虚拟化：</p>
+<ul>
+<li><strong>计算</strong>：OpenStack 可以使用多种多样的虚拟化解决方案，如 Xen、KVM、QEMU、Docker。管理组件 Nova 根据各物理节点的负载决定把虚拟机调度到哪台物理机，再调用这些虚拟化解决方案的 API 来创建、删除、开机、关机等。</li>
+<li><strong>存储</strong>：虚拟机镜像如果只能存储在计算节点本地，那么不仅不利于数据的冗余，也不利于虚拟机的迁移。因此在云中，一般采用逻辑上集中、物理上分布式的存储系统，独立于计算节点，也就是计算节点对数据磁盘的访问一般是通过网络访问。</li>
+<li><strong>网络</strong>：每个客户要有自己的虚拟网络，如何让不同客户的虚拟网络在物理网络上互不干扰，就是网络虚拟化的事情。</li>
+</ul>
+<p>除了最核心的虚拟化管理器 Nova，OpenStack 还有虚拟机镜像管理器 Glance、对象存储 Swift、块存储 Cinder、虚拟网络 Neutron、身份认证服务 Keystone、控制面板 Horizon 等众多组件。</p>
+<p><img alt="OpenStack Architecture" data-src="https://docs.openstack.org/install-guide/_images/openstack_kilo_conceptual_arch.png"></p>
+<h3 id="容器的好管家-Docker"><a href="#容器的好管家-Docker" class="headerlink" title="容器的好管家 Docker"></a>容器的好管家 Docker</h3><p><strong>2014 年 6 月</strong>，Docker 基于 LXC 发布了第一个正式版本 v1.0。</p>
+<p>Docker 是为系统运维而生，它大大降低了软件安装、部署的成本。软件的安装之所以是个麻烦事，是因为</p>
+<ul>
+<li><p><strong>软件之间存在依赖关系</strong>。比如，Linux 上依赖标准 C 库 glibc，依赖密码学库 OpenSSL，依赖 Java 运行环境；Windows 上依赖 .NET Framework，依赖 Flash 播放器。如果每个软件都带上它所有的依赖，那就太臃肿了，如何找到并安装软件的依赖，是一门大学问，也是各个 Linux 发行版的特色所在。</p>
+</li>
+<li><p><strong>软件之间存在冲突</strong>。比如，程序 A 依赖 glibc 2.13，而程序 B 依赖 glibc 2.14；甲脚本需要 Python 3，乙脚本需要 Python 2；Apache 和 Nginx 两个 Web 服务器都想要监听 80 端口。互相冲突的软件安装在同一个系统里，总是容易带来一些混乱，比如 Windows 早期的 DLL Hell。解决软件冲突之道就是隔离，让多个版本在系统里共存，并提供方法来找到匹配的版本。</p>
+</li>
+</ul>
+<p>我们看看 Docker 如何解决这两个问题：</p>
+<ol>
+<li>把软件的所有依赖关系和运行环境打包在一个镜像里，而不是使用复杂的脚本来在未知的环境里 “安装” 软件；</li>
+<li><p>这个包含了所有依赖的包一定很大，因此 Docker 的镜像是层次化的，即应用程序的镜像一般是基于基本系统镜像，只需要传输和存储增量部分就行了，这依赖于Linux 的 AUFS（Another Union File System）。<br><img alt data-src="https://ring0.me/images/2014/12/f584cb21ff9e39a0164bfc6e7b54900a.png"></p>
+</li>
+<li><p>Docker 使用基于容器的虚拟化，把每个软件运行在独立的容器里，避免了不同软件的文件系统路径冲突和运行时的资源冲突。<br><img alt data-src="https://ring0.me/images/2014/12/bd0b38dbee5e3dd50e89367a440fc6bf.png"></p>
+</li>
+</ol>
+<p>Docker 最开始基于 LXC 实现，后来则是基于 libcontainer。libcontainer 和 LXC 事实上都是基于 Linux 内核提供的 cgroups 资源审计、chroot 文件系统隔离、命名空间隔离等机制。</p>
+<h3 id="云原生时代-Kubernetes"><a href="#云原生时代-Kubernetes" class="headerlink" title="云原生时代 Kubernetes"></a>云原生时代 Kubernetes</h3><p><strong>2015 年 7 月 21 日</strong>：Kubernetes v1.0 发布！进入云原生时代。</p>
+<p><img alt="Kubernetes Architecture" data-src="https://platform9.com/wp-content/uploads/2019/05/kubernetes-constructs-concepts-architecture.jpg"></p>
+<hr>
+<p>实际上，上述从二十世纪四十年代以来的发展历程，主要说的是计算虚拟化的事情，也就是 CPU 虚拟化。CPU 虚拟化固然是核心中的核心，但是计算机其他组件的虚拟化也不容忽视，比如内存的虚拟化，包括存储、网络等在内的 I/O 虚拟化。</p>
+<h2 id="内存虚拟化"><a href="#内存虚拟化" class="headerlink" title="内存虚拟化"></a>内存虚拟化</h2><h3 id="Virtual-Memory"><a href="#Virtual-Memory" class="headerlink" title="Virtual Memory"></a>Virtual Memory</h3><p>前面讲虚拟化的鼻祖 IBM M44/44X 的时候，提到它提出了 “分页” 的概念。也就是每个任务（虚拟机）似乎独占所有内存空间，分页机制负责把不同任务的内存地址映射到物理内存。如果物理内存不够了，操作系统就会把不常用的任务的内存交换到磁盘之类的外部存储，等那个不常用任务需要执行时再加载回来（当然，这种机制是后来才发明的）。这样，程序的开发者就不需要考虑物理内存空间有多大，也不需要考虑不同任务的内存地址是否会冲突。</p>
+<p>现在我们用的计算机都有分页机制，应用程序（用户态进程）看到的是一片广阔无涯的虚拟内存（Virtual Memory），似乎整台机器都被自己独占；操作系统负责设置用户态进程的虚拟内存到物理内存的映射关系；CPU 中的 MMU（Memory Management Unit）负责在用户态程序运行时，通过查询映射关系（所谓的页表），把指令中的虚拟地址翻译成物理地址。</p>
+<p><img alt data-src="https://images2018.cnblogs.com/blog/431521/201712/431521-20171203180443851-1606756853.png"></p>
+<p>这里要说的不是这种虚拟内存，而是<strong>基于虚拟机的内存虚拟化</strong>，它们本质上是一样的，通过对虚拟内存的理解，再去理解内存虚拟化就比较容易了。</p>
+<p>内存虚拟化也分为<strong>基于软件的内存虚拟化</strong>和<strong>硬件辅助的内存虚拟化</strong>，其中，常用的基于软件的内存虚拟化技术为<strong>「影子页表」</strong>技术，硬件辅助内存虚拟化技术为 Intel 的 <strong>EPT（Extended Page Table，扩展页表）</strong>技术。</p>
+<h3 id="Shadow-Page-Table"><a href="#Shadow-Page-Table" class="headerlink" title="Shadow Page Table"></a>Shadow Page Table</h3><p>内存软件虚拟化的目标就是要将虚拟机的虚拟地址（Guest Virtual Address, GVA）转化为 Host 的物理地址（Host Physical Address, HPA），中间要经过虚拟机的物理地址（Guest Physical Address, GPA）和 Host 虚拟地址（Host Virtual Address）的转化，即：</p>
+<figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GVA -&gt; GPA -&gt; HVA -&gt; HPA</span><br></pre></td></tr></table></figure>
+<p>其中前两步由虚拟机的系统页表完成，中间两步由 VMM 定义的映射表（由数据结构 kvm_memory_slot 记录）完成，它可以将连续的虚拟机物理地址映射成非连续的 Host 机虚拟地址，后面两步则由 Host 机的系统页表完成。如下图所示。</p>
+<p><img alt="Shadow Page Table" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-04-07_shadow-page-table.png"></p>
+<p>这样做得目的有两个：</p>
+<ol>
+<li>提供给虚拟机一个从零开始的连续的物理内存空间。</li>
+<li>在各虚拟机之间有效隔离、调度以及共享内存资源。</li>
+</ol>
+<p>我们可以看到，传统的内存虚拟化方式，虚拟机的每次内存访问都需要 VMM 介入，并由软件进行多次地址转换，其效率是非常低的。因此才有了影子页表技术和 EPT 技术。</p>
+<p><strong>影子页表简化了地址转换的过程，实现了 Guest 虚拟地址空间到 Host 物理地址空间的直接映射。</strong></p>
+<p>要实现这样的映射，必须为 Guest 的系统页表设计一套对应的影子页表，然后将影子页表装入 Host 的 MMU 中，这样当 Guest 访问 Host 内存时，就可以根据 MMU 中的影子页表映射关系，完成 GVA 到 HPA 的直接映射。而维护这套影子页表的工作则由 VMM 来完成。</p>
+<p>由于 Guest 中的每个进程都有自己的虚拟地址空间，这就意味着 VMM 要为 Guest 中的每个进程页表都维护一套对应的影子页表，当 Guest 进程访问内存时，才将该进程的影子页表装入 Host 的 MMU 中，完成地址转换。</p>
+<p>我们也看到，这种方式虽然减少了地址转换的次数，但本质上还是纯软件实现的，效率还是不高，而且 VMM 承担了太多影子页表的维护工作，设计不好。</p>
+<p>为了改善这个问题，就提出了基于硬件的内存虚拟化方式，将这些繁琐的工作都交给硬件来完成，从而大大提高了效率。</p>
+<h3 id="Extended-Page-Table"><a href="#Extended-Page-Table" class="headerlink" title="Extended Page Table"></a>Extended Page Table</h3><p>下图是 EPT 的基本原理图示，EPT 在原有 CR3 页表地址映射的基础上，引入了 EPT 页表来实现另一层映射，这样，GVA-&gt;GPA-&gt;HPA 的两次地址转换都由硬件来完成。</p>
+<p><img alt="Extended Page Table" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-04-07_ept.png"></p>
+<p>这里举一个小例子来说明整个地址转换的过程。假设现在 Guest 中某个进程需要访问内存，CPU 首先会访问 Guest 中的 CR3 页表来完成 GVA 到 GPA 的转换，如果 GPA 不为空，则 CPU 接着通过 EPT 页表来实现 GPA 到 HPA 的转换（实际上，CPU 会首先查看硬件 EPT TLB 或者缓存，如果没有对应的转换，才会进一步查看 EPT 页表），如果 HPA 为空呢，则 CPU 会抛出 EPT Violation 异常由 VMM 来处理。</p>
+<p>如果 GPA 地址为空，即缺页，则 CPU 产生缺页异常，注意，这里，如果是软件实现的方式，则会产生 VM-exit，但是硬件实现方式，并不会发生 VM-exit，而是按照一般的缺页中断处理，这种情况下，也就是交给 Guest 内核的中断处理程序处理。</p>
+<p>在中断处理程序中会产生 EXIT_REASON_EPT_VIOLATION，Guest 退出，VMM 截获到该异常后，分配物理地址并建立 GVA 到 HPA 的映射，并保存到 EPT 中，这样在下次访问的时候就可以完成从 GVA 到 HPA 的转换了。</p>
+<p>有人也许会担心增加的一级映射关系会减慢内存访问速度，事实上不论是否启用二级内存翻译（SLAT），页表高速缓存（Translation Lookaside Buffer，TLB）都会存储虚拟地址（VA）到机器地址（MA）的映射。如果 TLB 的命中率较高，则增加的一级内存翻译不会显著影响内存访问性能。</p>
+<p><img alt data-src="https://ring0.me/images/2014/12/a45258f97f500142bfcff56770ba2106.png"></p>
+<h2 id="I-O-虚拟化"><a href="#I-O-虚拟化" class="headerlink" title="I/O 虚拟化"></a>I/O 虚拟化</h2><p>首先我们来回顾一下 I/O 模型：</p>
+<p><img alt="Interactions With I/O Devices" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-04-07_interaction-with-io-devices.png"> </p>
+<h3 id="Emulation"><a href="#Emulation" class="headerlink" title="Emulation"></a>Emulation</h3><p>模拟模型是使用最为广泛的I/O设备虚拟化模型，该模型采用软件的方式模拟设备行为，为虚拟机模拟出与底层硬件完全一致的虚拟化环境，保证虚拟机操作系统的行为与非虚拟化环境下完全一致。</p>
+<p>在模拟模型中，虚拟设备必须以某种方式让虚拟机可以发现，导致虚拟机被“欺骗”。当 VM 访问虚拟设备时，访问请求被 VMM 截获，然后VMM 将I/O请求交由domain0 来模拟完成，最后将结果返回给虚拟机。</p>
+<p>模拟模型分为以下两类：</p>
+<h4 id="Hypervisor-based-device-emulation"><a href="#Hypervisor-based-device-emulation" class="headerlink" title="Hypervisor-based device emulation"></a>Hypervisor-based device emulation</h4><p><img alt="Hypervisor-based device emulation" data-src="https://www.ibm.com/developerworks/library/l-pci-passthrough/figure1.gif"></p>
+<h4 id="User-space-device-emulation"><a href="#User-space-device-emulation" class="headerlink" title="User-space device emulation"></a>User-space device emulation</h4><p><img alt="User-space device emulation" data-src="https://developer.ibm.com/developer/tutorials/l-pci-passthrough/images/figure2.gif"></p>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>本文是对虚拟化概览，也是作为 <a href="../../tags/虚拟化">虚拟化技术系列</a> 的第一篇。开篇概览对整体有了基本的认识，毋庸置疑，里面涉及到的技术细节凡凡总总。掌握了大的方向，后续本系列可以继续扩展，拓展到网络虚拟化、存储虚拟化、GPU 虚拟化等等。不管细节如何，我们做的都是抽象。</p>
+<p>纵观虚拟化技术的发展历史，可以看到它始终如一的目标就是实现对 IT 资源的充分利用。虚拟化本质是对 IT 资源的抽象，沿着虚拟化的道路继续发展，我们看到了云计算的开花结果，实现了更上层的对企业业务能力的抽象。抽象之外，我们也可以在这个过程中不断的看到软硬件结合与替代的思路，做一件事软件与硬件只是不同的路径，到底路该怎么走，就得看我们想到哪了。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="http://www.kernelthread.com/publications/virtualization" target="_blank" rel="external nofollow noopener noreferrer">http://www.kernelthread.com/publications/virtualization</a></li>
+<li><a href="https://blog.csdn.net/Jmilk/article/details/99675664" target="_blank" rel="external nofollow noopener noreferrer">https://blog.csdn.net/Jmilk/article/details/99675664</a></li>
+<li><a href="https://ring0.me/2014/12/virtualization-overview" target="_blank" rel="external nofollow noopener noreferrer">https://ring0.me/2014/12/virtualization-overview</a></li>
+<li><a href="https://developer.ibm.com/tutorials/l-pci-passthrough" target="_blank" rel="external nofollow noopener noreferrer">https://developer.ibm.com/tutorials/l-pci-passthrough</a></li>
+<li><a href="https://developer.ibm.com/technologies/linux/articles/l-virtio" target="_blank" rel="external nofollow noopener noreferrer">https://developer.ibm.com/technologies/linux/articles/l-virtio</a></li>
+<li><a href="https://developer.ibm.com/tutorials/l-hypervisor" target="_blank" rel="external nofollow noopener noreferrer">https://developer.ibm.com/tutorials/l-hypervisor</a></li>
+<li><a href="https://compas.cs.stonybrook.edu/~nhonarmand/courses/sp17/cse506/slides/io_virtualization.pdf" target="_blank" rel="external nofollow noopener noreferrer">https://compas.cs.stonybrook.edu/~nhonarmand/courses/sp17/cse506/slides/io_virtualization.pdf</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/ccdd2b68/" rel="bookmark">macOS 使用 Vagrant 管理虚拟机</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/65866329/" title="虚拟化技术概览">http://houmin.cc/posts/65866329/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E8%99%9A%E6%8B%9F%E5%8C%96/" rel="tag"><i class="fa fa-tag"></i> 虚拟化</a>
+              <a href="/tags/hypervisor/" rel="tag"><i class="fa fa-tag"></i> hypervisor</a>
+              <a href="/tags/VMM/" rel="tag"><i class="fa fa-tag"></i> VMM</a>
+              <a href="/tags/%E4%BA%91%E8%AE%A1%E7%AE%97/" rel="tag"><i class="fa fa-tag"></i> 云计算</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/95185ec7/" rel="next" title="清明">
+                  <i class="fa fa-chevron-left"></i> 清明
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/d1848f4f/" rel="prev" title="自动抓取经济学人">
+                  自动抓取经济学人 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#计算虚拟化"><span class="nav-number">1.</span> <span class="nav-text">计算虚拟化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#理想数学模型-Turing-Machine"><span class="nav-number">1.1.</span> <span class="nav-text">理想数学模型 Turing Machine</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#二战产物-ENIAC"><span class="nav-number">1.2.</span> <span class="nav-text">二战产物 ENIAC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#多道程序设计-Multiprogramming"><span class="nav-number">1.3.</span> <span class="nav-text">多道程序设计 Multiprogramming</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分时-Time-Sharing"><span class="nav-number">1.4.</span> <span class="nav-text">分时 Time Sharing</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#超级计算机-Altas"><span class="nav-number">1.5.</span> <span class="nav-text">超级计算机 Altas</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#第一个支持虚拟化-IBM-M44-44X"><span class="nav-number">1.6.</span> <span class="nav-text">第一个支持虚拟化 IBM M44/44X</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IBM的豪赌-System-360"><span class="nav-number">1.7.</span> <span class="nav-text">IBM的豪赌 System/360</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#伟大实验-MULTICS"><span class="nav-number">1.8.</span> <span class="nav-text">伟大实验 MULTICS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#玩具而已-UNIX"><span class="nav-number">1.9.</span> <span class="nav-text">玩具而已 UNIX</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟化准则-VMM"><span class="nav-number">1.10.</span> <span class="nav-text">虚拟化准则 VMM</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#接棒开源-GNU-Linux"><span class="nav-number">1.11.</span> <span class="nav-text">接棒开源 GNU/Linux</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#软件辅助虚拟化-QEMU"><span class="nav-number">1.12.</span> <span class="nav-text">软件辅助虚拟化 QEMU</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#半虚拟化-Xen"><span class="nav-number">1.13.</span> <span class="nav-text">半虚拟化 Xen</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#硬件辅助虚拟化-Intel-VT-x"><span class="nav-number">1.14.</span> <span class="nav-text">硬件辅助虚拟化 Intel VT-x</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基于内核的虚拟化-KVM"><span class="nav-number">1.15.</span> <span class="nav-text">基于内核的虚拟化 KVM</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#大数据时代-GFS-MapReduce-BigTable"><span class="nav-number">1.16.</span> <span class="nav-text">大数据时代 GFS/MapReduce/BigTable</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#云计算吃螃蟹的人-AWS"><span class="nav-number">1.17.</span> <span class="nav-text">云计算吃螃蟹的人 AWS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#操作系统级虚拟化-LXC"><span class="nav-number">1.18.</span> <span class="nav-text">操作系统级虚拟化 LXC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#云计算操作系统-OpenStack"><span class="nav-number">1.19.</span> <span class="nav-text">云计算操作系统 OpenStack</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#容器的好管家-Docker"><span class="nav-number">1.20.</span> <span class="nav-text">容器的好管家 Docker</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#云原生时代-Kubernetes"><span class="nav-number">1.21.</span> <span class="nav-text">云原生时代 Kubernetes</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内存虚拟化"><span class="nav-number">2.</span> <span class="nav-text">内存虚拟化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Virtual-Memory"><span class="nav-number">2.1.</span> <span class="nav-text">Virtual Memory</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Shadow-Page-Table"><span class="nav-number">2.2.</span> <span class="nav-text">Shadow Page Table</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Extended-Page-Table"><span class="nav-number">2.3.</span> <span class="nav-text">Extended Page Table</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#I-O-虚拟化"><span class="nav-number">3.</span> <span class="nav-text">I/O 虚拟化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Emulation"><span class="nav-number">3.1.</span> <span class="nav-text">Emulation</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Hypervisor-based-device-emulation"><span class="nav-number">3.1.1.</span> <span class="nav-text">Hypervisor-based device emulation</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#User-space-device-emulation"><span class="nav-number">3.1.2.</span> <span class="nav-text">User-space device emulation</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#写在最后"><span class="nav-number">4.</span> <span class="nav-text">写在最后</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">5.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="在 上一篇关于Hexo的文章 之后，其中关于相册的功能一直没太能完全实现，暂时采用的是 HEXO博客搭建相册 的解决方案，但是没有子相册的功能。时隔将近一个月之后，自己在 Hexo NexT 主题下自己实现了自己想要的功能，大体能够满足我的需求，也许以后还会再改。这篇文章仅仅当做自己的记录，期待能够给其他人带来一些参考。">
+<meta name="keywords" content="Hexo,NexT,相册">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo NexT 添加多级相册功能">
+<meta property="og:url" content="http://houmin.cc/posts/d487dd02/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="在 上一篇关于Hexo的文章 之后，其中关于相册的功能一直没太能完全实现，暂时采用的是 HEXO博客搭建相册 的解决方案，但是没有子相册的功能。时隔将近一个月之后，自己在 Hexo NexT 主题下自己实现了自己想要的功能，大体能够满足我的需求，也许以后还会再改。这篇文章仅仅当做自己的记录，期待能够给其他人带来一些参考。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-07-14T08:24:44.098Z">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://houmin.cc/posts/d487dd02/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Hexo NexT 添加多级相册功能 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/d487dd02/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Hexo NexT 添加多级相册功能
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-10 08:40:37" itemprop="dateCreated datePublished" datetime="2019-12-10T08:40:37+08:00">2019-12-10</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/d487dd02/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/d487dd02/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>22k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>40 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>在 <a href="../a63a603e/">上一篇关于Hexo的文章</a> 之后，其中关于相册的功能一直没太能完全实现，暂时采用的是 <a href="https://cherryzzangg.site/2019/02/10/%20HEXO%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA%E7%9B%B8%E5%86%8C/" target="_blank" rel="external nofollow noopener noreferrer">HEXO博客搭建相册</a> 的解决方案，但是没有子相册的功能。时隔将近一个月之后，自己在 <strong>Hexo NexT</strong> 主题下自己实现了自己想要的功能，大体能够满足我的需求，也许以后还会再改。这篇文章仅仅当做自己的记录，期待能够给其他人带来一些参考。</p>
+<a id="more"></a>
+<h2 id="相册期待实现效果"><a href="#相册期待实现效果" class="headerlink" title="相册期待实现效果"></a>相册期待实现效果</h2><p>对于相册，在自己 <strong>基于Hexo NexT搭建</strong> 的博客上期待实现与豆瓣相册类似的效果，具体如下</p>
+<ul>
+<li>主界面<ul>
+<li>分类相册</li>
+<li>自定义相册名</li>
+<li>自定义封面</li>
+</ul>
+</li>
+<li>分类相册界面<ul>
+<li>三等分列</li>
+<li>点击看大图</li>
+<li>本地图片源/图床外链均可</li>
+<li>与文章插图格式保持统一</li>
+</ul>
+</li>
+<li>其他<ul>
+<li>每张图片都可以有对应的文字描述</li>
+<li>游客可以为图片添加评论</li>
+<li>相册里面也可以插入视频</li>
+</ul>
+</li>
+</ul>
+<h2 id="目前可查到的方案"><a href="#目前可查到的方案" class="headerlink" title="目前可查到的方案"></a>目前可查到的方案</h2><ul>
+<li><a href="https://asdfv1929.github.io/2018/05/26/next-add-photos" target="_blank" rel="external nofollow noopener noreferrer">Hexo NexT主题内添加相册功能</a> 没有子相册功能，流程不够自动化</li>
+<li><a href="https://co5.me/2018/181112-gallerry2.html" target="_blank" rel="external nofollow noopener noreferrer">css+markdown 实现 hexo 相册</a> 纯css的实现，没有photoswipe的效果，不够动态</li>
+<li><a href="https://cherryzzangg.site/2019/02/10/%20HEXO%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA%E7%9B%B8%E5%86%8C/" target="_blank" rel="external nofollow noopener noreferrer">HEXO博客搭建相册</a> 没有子相册功能</li>
+<li><a href="https://liyangzone.com/2019/07/22/hexo%E5%8D%9A%E5%AE%A2%E6%B7%BB%E5%8A%A0%E4%B8%80%E7%BA%A7%E5%88%86%E7%B1%BB%E7%9B%B8%E5%86%8C/" target="_blank" rel="external nofollow noopener noreferrer">hexo博客添加一级分类相册功能</a> 使用的不是Next主题</li>
+</ul>
+<p>自己也到Hexo NexT的github社区问过<a href="https://github.com/theme-next/hexo-theme-next/issues/1253" target="_blank" rel="external nofollow noopener noreferrer">大家的意见</a>。确实作为相册这个功能，每个人都有自己独特的需求，如果能够开发成专门的插件似乎是一个更好的选择。（也许以后可以再填一填坑？现在确实还没太有时间来搞这个）</p>
+<h2 id="我的实现方案"><a href="#我的实现方案" class="headerlink" title="我的实现方案"></a>我的实现方案</h2><p>我的方案基本上是 <a href="https://liyangzone.com/2019/07/22/hexo%E5%8D%9A%E5%AE%A2%E6%B7%BB%E5%8A%A0%E4%B8%80%E7%BA%A7%E5%88%86%E7%B1%BB%E7%9B%B8%E5%86%8C/" target="_blank" rel="external nofollow noopener noreferrer">hexo博客添加一级分类相册功能</a> 和 <a href="https://cherryzzangg.site/2019/02/10/%20HEXO%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA%E7%9B%B8%E5%86%8C/" target="_blank" rel="external nofollow noopener noreferrer">HEXO博客搭建相册</a> 两篇文章方法的综合体。具体如下</p>
+<h3 id="一级分类相册-Album"><a href="#一级分类相册-Album" class="headerlink" title="一级分类相册 Album"></a>一级分类相册 Album</h3><p>一级分类相册需要有自己专门的页面，我们可以自己定制Album的页面，然后Hexo就会基于模板渲染出对应的html页面。这里只是根据配置，在Album页面加入了各个gallery的封面，相册名和相册描述。根据需要，你也可以添加更新时间，相册的图片数量等信息。</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">&#123;% extends '_layout.swig' %&#125;</span><br><span class="line">&#123;% import '_macro/sidebar.swig' as sidebar_template with context %&#125;</span><br><span class="line"></span><br><span class="line">&#123;% block content %&#125;</span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"posts-expand"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"post-block"</span> <span class="attr">lang</span>=<span class="string">"&#123;&#123; page.lang or page.language or config.language &#125;&#125;"</span>&gt;</span></span><br><span class="line">            &#123;% include '_partials/page/page-header.swig' %&#125;</span><br><span class="line">            <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"post-body&#123;%- if page.direction and page.direction.toLowerCase() === 'rtl' %&#125; rtl&#123;%- endif %&#125;"</span>&gt;</span></span><br><span class="line">                &#123;% if config.album %&#125;</span><br><span class="line">                <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"album-wrapper row"</span>&gt;</span></span><br><span class="line">                    &#123;% for gallery in config.album %&#125;</span><br><span class="line">                    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"gallery-box"</span>&gt;</span></span><br><span class="line">                        <span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"./&#123;&#123; gallery.name &#125;&#125;"</span> <span class="attr">class</span>=<span class="string">"gallery-item"</span>&gt;</span></span><br><span class="line">                            <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"gallery-cover-box"</span> <span class="attr">style</span>=<span class="string">"background-image: url(&#123;&#123; gallery.imageBed &#125;&#125;/&#123;&#123; gallery.name &#125;&#125;/artwork/&#123;&#123; gallery.cover &#125;&#125;);"</span>&gt;</span></span><br><span class="line">                            <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">                            <span class="tag">&lt;<span class="name">p</span> <span class="attr">class</span>=<span class="string">"gallery-name"</span>&gt;</span></span><br><span class="line">                                &#123;&#123; gallery.name &#125;&#125;</span><br><span class="line">                            <span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">                        <span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line">                        <span class="tag">&lt;<span class="name">p</span> <span class="attr">class</span>=<span class="string">"gallery-description"</span>&gt;</span></span><br><span class="line">                            &#123;&#123; gallery.description &#125;&#125;</span><br><span class="line">                        <span class="tag">&lt;<span class="name">p</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">                    &#123;% endfor %&#125;</span><br><span class="line">                <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">                &#123;% endif %&#125;</span><br><span class="line">            <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">            &#123;% include '_partials/page/breadcrumb.swig' %&#125;</span><br><span class="line">        <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">&#123;% endblock %&#125;</span><br><span class="line"></span><br><span class="line">&#123;% block sidebar %&#125;</span><br><span class="line">  &#123;&#123; sidebar_template.render(true) &#125;&#125;</span><br><span class="line">&#123;% endblock %&#125;</span><br></pre></td></tr></table></figure>
+<p>在渲染的时候，我们需要用到站点配置文件中的一些参数。比如到底有多少相册，每个相册的名字是什么，封面的图片是什么，相册的描述怎样。这里需要在站点配置文件中添加如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">album:</span></span><br><span class="line">  <span class="attr">imageBed:</span> <span class="string">https://xxx.s3-ap-southeast-1.amazonaws.com/album</span></span><br><span class="line">  <span class="attr">gallery:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">'Period'</span></span><br><span class="line">      <span class="attr">cover:</span> <span class="string">'2019-09-12-flash.jpg'</span></span><br><span class="line">      <span class="attr">description:</span> <span class="string">'时间'</span></span><br><span class="line">      <span class="attr">created:</span> <span class="string">'2018-07-23'</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">'Cosmos'</span></span><br><span class="line">      <span class="attr">cover:</span> <span class="string">'2019-11-29-yuki.jpg'</span></span><br><span class="line">      <span class="attr">description:</span> <span class="string">'秩序'</span></span><br><span class="line">      <span class="attr">created:</span> <span class="string">'2018-07-23'</span></span><br></pre></td></tr></table></figure>
+<p>对于Album页面，这里只是生成了html页面，你可以根据css来定制对应的样式。这里我的css数据放在了<code>blog/souce/_data/styles.styl</code>中，这里放置了我所有的自定义的样式。</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.gallery-wrapper</span>&#123;</span><br><span class="line">  <span class="attribute">padding-top</span>: <span class="number">30px</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="selector-class">.gallery-wrapper</span> <span class="selector-class">.gallery-box</span>&#123;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">5px</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.gallery-wrapper</span> <span class="selector-class">.gallery-item</span> &#123;</span><br><span class="line">  <span class="attribute">display</span>: block;</span><br><span class="line">  <span class="attribute">overflow</span>: hidden;</span><br><span class="line">  <span class="attribute">background-color</span>: <span class="number">#fff</span>;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">5px</span>;</span><br><span class="line">  <span class="attribute">padding-bottom</span>: <span class="number">0</span>;</span><br><span class="line">  <span class="attribute">position</span>: relative;</span><br><span class="line">  <span class="attribute">-moz-box-shadow</span>: <span class="number">0</span> <span class="number">1px</span> <span class="number">3px</span> <span class="number">0</span> <span class="built_in">rgba</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0.22</span>);</span><br><span class="line">  <span class="attribute">-webkit-box-shadow</span>: <span class="number">0</span> <span class="number">1px</span> <span class="number">3px</span> <span class="number">0</span> <span class="built_in">rgba</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0.22</span>);</span><br><span class="line">  <span class="attribute">box-shadow</span>: <span class="number">0</span> <span class="number">1px</span> <span class="number">3px</span> <span class="number">0</span> <span class="built_in">rgba</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0.22</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.gallery-cover-box</span>&#123;</span><br><span class="line">  <span class="attribute">width</span>: <span class="number">100%</span>;</span><br><span class="line">  <span class="attribute">padding-top</span>: <span class="number">60%</span>;</span><br><span class="line">  <span class="attribute">text-align</span>: center;</span><br><span class="line">  <span class="attribute">overflow</span>: hidden;</span><br><span class="line">  <span class="attribute">position</span>: relative;</span><br><span class="line">  <span class="attribute">background</span>: center center no-repeat;</span><br><span class="line">  <span class="attribute">-webkit-background-size</span>: cover;</span><br><span class="line">  <span class="attribute">background-size</span>: cover;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.gallery-cover-box</span> <span class="selector-class">.gallery-cover-img</span> &#123;</span><br><span class="line">  <span class="attribute">display</span>: inline-block;</span><br><span class="line">  <span class="attribute">width</span>: <span class="number">100%</span>;</span><br><span class="line">  <span class="attribute">position</span>: absolute;</span><br><span class="line">  <span class="attribute">left</span>: <span class="number">50%</span>;</span><br><span class="line">  <span class="attribute">top</span>: <span class="number">50%</span>;</span><br><span class="line">  <span class="attribute">transform</span>: <span class="built_in">translate</span>(-<span class="number">50%</span>,-<span class="number">50%</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="selector-class">.gallery-item</span> <span class="selector-class">.gallery-name</span>&#123;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">14px</span>;</span><br><span class="line">  <span class="attribute">line-height</span>: <span class="number">24px</span>;</span><br><span class="line">  <span class="attribute">text-align</span>: center;</span><br><span class="line">  <span class="attribute">color</span>: <span class="number">#666</span>;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>有了这些模板之后，只需要在<code>blog/souce</code>目录下创建album目录，在目录下创建对应的index.md即可</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">---</span><br><span class="line">title: 相册</span><br><span class="line">layout: "album"</span><br><span class="line">comments: false</span><br><span class="line">---</span><br></pre></td></tr></table></figure>
+<h3 id="二级相册-Gallery"><a href="#二级相册-Gallery" class="headerlink" title="二级相册 Gallery"></a>二级相册 Gallery</h3><p>可以看到，在Album页面，每一个二级相册Gallery都可以通过点击封面作为一个链接访问。访问请求是<code>/album/&lt;gallery-name&gt;</code>。</p>
+<h4 id="Gallery页面描述文件"><a href="#Gallery页面描述文件" class="headerlink" title="Gallery页面描述文件"></a>Gallery页面描述文件</h4><p>因此，我们在Album目录下，为每一个Gallery创建子目录，比如这里的<code>Period</code> 和 <code>Cosmos</code> 。类似的我们为gallery创建了一个渲染模板，在Period目录下，我们只需要有对应的 <code>index.md</code> 和 描述gallery的JSON文件即可。</p>
+<figure class="highlight markdown"><figcaption><span>index.md</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">---</span><br><span class="line">layout: gallery</span><br><span class="line">title: Period</span><br><span class="line">galleryName: Period</span><br><span class="line">comments: false</span><br><span class="line">---</span><br></pre></td></tr></table></figure>
+<p>下面是描述相册的JSON文件，你可以通过Python脚本自动生成和更新。</p>
+<figure class="highlight json"><figcaption><span>data</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"name"</span>: <span class="string">"Period"</span>,</span><br><span class="line">    <span class="attr">"cover"</span>: <span class="string">"2019-09-12_flash.jpg"</span>,</span><br><span class="line">    <span class="attr">"description"</span>: <span class="string">"时光"</span>,</span><br><span class="line">    <span class="attr">"created"</span>: <span class="string">"2019-07-23"</span>,</span><br><span class="line">    <span class="attr">"imageBed"</span>: <span class="string">"https://xxx.s3-ap-southeast-1.amazonaws.com/album"</span>,</span><br><span class="line">    <span class="attr">"items"</span>: [</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="attr">"date"</span>: <span class="string">"2019-11"</span>,</span><br><span class="line">            <span class="attr">"year"</span>: <span class="number">2019</span>,</span><br><span class="line">            <span class="attr">"month"</span>: <span class="number">11</span>,</span><br><span class="line">            <span class="attr">"images"</span>: [</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="attr">"name"</span>: <span class="string">"2019-11-10_博雅塔.jpg"</span>,</span><br><span class="line">                    <span class="attr">"caption"</span>: <span class="string">"晚秋的博雅塔"</span>,</span><br><span class="line">                    <span class="attr">"type"</span>: <span class="string">"image"</span>,</span><br><span class="line">                    <span class="attr">"date"</span>: <span class="string">"2019-11-10"</span>,</span><br><span class="line">                    <span class="attr">"width"</span>: <span class="number">6400</span>,</span><br><span class="line">                    <span class="attr">"height"</span>: <span class="number">4000</span></span><br><span class="line">                &#125;,</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="attr">"name"</span>: <span class="string">"2019-11-10_狗狗.jpg"</span>,</span><br><span class="line">                    <span class="attr">"caption"</span>: <span class="string">"二体旁边晒太阳的狗狗"</span>,</span><br><span class="line">                    <span class="attr">"type"</span>: <span class="string">"image"</span>,</span><br><span class="line">                    <span class="attr">"date"</span>: <span class="string">"2019-11-10"</span>,</span><br><span class="line">                    <span class="attr">"width"</span>: <span class="number">6400</span>,</span><br><span class="line">                    <span class="attr">"height"</span>: <span class="number">4000</span></span><br><span class="line">                &#125;</span><br><span class="line">            ]</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="attr">"date"</span>: <span class="string">"2019-09"</span>,</span><br><span class="line">            <span class="attr">"year"</span>: <span class="number">2019</span>,</span><br><span class="line">            <span class="attr">"month"</span>: <span class="number">9</span>,</span><br><span class="line">            <span class="attr">"images"</span>: [</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="attr">"name"</span>: <span class="string">"2019-09-12_车流.jpg"</span>,</span><br><span class="line">                    <span class="attr">"caption"</span>: <span class="string">"第一次拍车流"</span>,</span><br><span class="line">                    <span class="attr">"type"</span>: <span class="string">"image"</span>,</span><br><span class="line">                    <span class="attr">"date"</span>: <span class="string">"2019-09-12"</span>,</span><br><span class="line">                    <span class="attr">"width"</span>: <span class="number">6400</span>,</span><br><span class="line">                    <span class="attr">"height"</span>: <span class="number">4000</span></span><br><span class="line">                &#125;</span><br><span class="line">            ]</span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="Gallery页面样式"><a href="#Gallery页面样式" class="headerlink" title="Gallery页面样式"></a>Gallery页面样式</h4><p>接下来是layout下面的<code>gallery.swig</code>文件</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">&#123;% extends '_layout.swig' %&#125;</span><br><span class="line">&#123;% import '_macro/sidebar.swig' as sidebar_template with context %&#125;</span><br><span class="line"></span><br><span class="line">&#123;% block title %&#125;&#123;&#123; page.title &#125;&#125; | &#123;&#123; title &#125;&#125;&#123;% endblock %&#125;</span><br><span class="line"></span><br><span class="line">&#123;% block content %&#125;</span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"posts-expand"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"post-block"</span> <span class="attr">lang</span>=<span class="string">"&#123;&#123; page.lang or page.language or config.language &#125;&#125;"</span>&gt;</span></span><br><span class="line">            &#123;% include '_partials/page/page-header.swig' %&#125;</span><br><span class="line">            <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"post-body&#123;%- if page.direction and page.direction.toLowerCase() === 'rtl' %&#125; rtl&#123;%- endif %&#125;"</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">"stylesheet"</span> <span class="attr">href</span>=<span class="string">"/lib/album/gallery.css"</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">"stylesheet"</span> <span class="attr">href</span>=<span class="string">"/lib/album/photoswipe.css"</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">"stylesheet"</span> <span class="attr">href</span>=<span class="string">"/lib/album/default-skin/default-skin.css"</span>&gt;</span></span><br><span class="line"></span><br><span class="line">                <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"gallery-description"</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">p</span> <span class="attr">id</span>=<span class="string">"gallery-description"</span>&gt;</span>这里是相册描述<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">                <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"instagram itemscope"</span>&gt;</span></span><br><span class="line">                  <span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"http://houmin.cc"</span> <span class="attr">target</span>=<span class="string">"_blank"</span> <span class="attr">class</span>=<span class="string">"open-ins"</span>&gt;</span>图片正在加载中…<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">                <span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="actionscript">                  (<span class="function"><span class="keyword">function</span><span class="params">()</span> </span>&#123;</span></span><br><span class="line"><span class="actionscript">                    <span class="keyword">var</span> loadScript = <span class="function"><span class="keyword">function</span><span class="params">(path)</span> </span>&#123;</span></span><br><span class="line"><span class="javascript">                      <span class="keyword">var</span> $script = <span class="built_in">document</span>.createElement(<span class="string">'script'</span>)</span></span><br><span class="line"><span class="javascript">                      <span class="built_in">document</span>.getElementsByTagName(<span class="string">'body'</span>)[<span class="number">0</span>].appendChild($script)</span></span><br><span class="line"><span class="actionscript">                      $script.setAttribute(<span class="string">'src'</span>, path)</span></span><br><span class="line">                    &#125;</span><br><span class="line"><span class="actionscript">                    setTimeout(<span class="function"><span class="keyword">function</span><span class="params">()</span> </span>&#123;</span></span><br><span class="line"><span class="actionscript">                        loadScript(<span class="string">'/lib/album/gallery.js'</span>)</span></span><br><span class="line">                    &#125;, 0)</span><br><span class="line">                  &#125;)()</span><br><span class="line">                <span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">            &#123;% include '_partials/page/breadcrumb.swig' %&#125;</span><br><span class="line">        <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">&#123;% endblock %&#125;</span><br><span class="line"></span><br><span class="line">&#123;% block sidebar %&#125;</span><br><span class="line">  &#123;&#123; sidebar_template.render(true) &#125;&#125;</span><br><span class="line">&#123;% endblock %&#125;</span><br></pre></td></tr></table></figure>
+<p>其实到这一步已经和 <a href="https://cherryzzangg.site/2019/02/10/%20HEXO%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA%E7%9B%B8%E5%86%8C/" target="_blank" rel="external nofollow noopener noreferrer">HEXO博客搭建相册</a> 里面说的很像了。只是我把这些给模板化了，同时修改了JSON文件的数据格式。</p>
+<h4 id="Gallery页面JS脚本"><a href="#Gallery页面JS脚本" class="headerlink" title="Gallery页面JS脚本"></a>Gallery页面JS脚本</h4><p>然后接下来就是修改<code>gallery.js</code>了，不知道写前端的人代码风格怎么样，原来的<code>gallery.js</code>（也就是之前教程里面的<code>ins.js</code>）代码让我看起来感觉不是很清晰。原来相关代码比较长，也不是原生手写的代码，而是通过<code>webpack</code>自动打包生成的代码。因此学习了一下前端技术中的<code>webpack</code>，下面具体梳理一下相关脚本的逻辑思路。</p>
+<h5 id="webpack打包环境"><a href="#webpack打包环境" class="headerlink" title="webpack打包环境"></a>webpack打包环境</h5><p>关于webpack，可以参考教程</p>
+<ul>
+<li><a href="http://echizen.github.io/tech/2019/03-17-webpack-bundle-code" target="_blank" rel="external nofollow noopener noreferrer">webpack-打包后代码分析</a></li>
+<li><a href="https://segmentfault.com/a/1190000006178770" target="_blank" rel="external nofollow noopener noreferrer">入门 Webpack，看这篇就够了</a></li>
+<li><a href="https://segmentfault.com/a/1190000013052777" target="_blank" rel="external nofollow noopener noreferrer">一步一步教你webpack打包</a></li>
+</ul>
+<p>主机系统上安装的webpack版本是4.41.2，关于文件组织结构如下</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">╭─ houmin@cosmos   ~/blog/album_script     master</span><br><span class="line">╰─ tree</span><br><span class="line">.</span><br><span class="line">├── dist</span><br><span class="line">│   └── gallery.js</span><br><span class="line">├── src</span><br><span class="line">│   ├── gallery.js</span><br><span class="line">│   └── photoswipe.js</span><br><span class="line">└── webpack.config.js</span><br><span class="line"></span><br><span class="line">2 directories, 4 files</span><br></pre></td></tr></table></figure>
+<p>其中，<code>webpack.config.js</code>代码如下：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">'path'</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">    <span class="comment">// mode: "development",</span></span><br><span class="line">    mode: <span class="string">"production"</span>,</span><br><span class="line">    entry: <span class="string">"./src/gallery.js"</span>,</span><br><span class="line">    output: &#123;</span><br><span class="line">        path: path.resolve(__dirname, <span class="string">'dist'</span>),</span><br><span class="line">        filename: <span class="string">"gallery.js"</span></span><br><span class="line">    &#125;,</span><br><span class="line">    optimization: &#123;</span><br><span class="line">        minimize: <span class="literal">false</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>可以看到，webpack的大包入口文件是<code>gallery.js</code></p>
+<h5 id="gallery文件"><a href="#gallery文件" class="headerlink" title="gallery文件"></a>gallery文件</h5><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">"use strict"</span>;</span><br><span class="line"></span><br><span class="line"><span class="built_in">require</span>(<span class="string">'lazyloadjs'</span>);</span><br><span class="line"><span class="keyword">var</span> photoswipe = <span class="built_in">require</span>(<span class="string">"./photoswipe.js"</span>);</span><br><span class="line"><span class="keyword">var</span> view = _interopRequireDefault(photoswipe.viewer);</span><br><span class="line"><span class="keyword">var</span> galleryPath = <span class="built_in">window</span>.location.pathname;</span><br><span class="line"><span class="keyword">var</span> galleryName = galleryPath.split(<span class="string">"/"</span>)[<span class="number">2</span>];</span><br><span class="line"><span class="keyword">var</span> dataUrl = <span class="string">'/album/'</span> + galleryName + <span class="string">'/data'</span>;</span><br><span class="line"><span class="keyword">var</span> dataJSON;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">_interopRequireDefault</span>(<span class="params">obj</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> obj &amp;&amp; obj.__esModule ? obj : &#123;</span><br><span class="line">        <span class="keyword">default</span>: obj</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> render = <span class="function"><span class="keyword">function</span> <span class="title">render</span>(<span class="params">response</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> meta = response[<span class="string">"meta"</span>];</span><br><span class="line">    <span class="keyword">var</span> data = response[<span class="string">"data"</span>];</span><br><span class="line">    <span class="keyword">var</span> imageBed = meta[<span class="string">"imageBed"</span>];</span><br><span class="line">    <span class="keyword">var</span> description = meta[<span class="string">"description"</span>];</span><br><span class="line">    <span class="keyword">var</span> ulTmpl = <span class="string">""</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> i <span class="keyword">in</span> data) &#123;</span><br><span class="line">        <span class="keyword">var</span> liTmpl = <span class="string">""</span>;</span><br><span class="line">        <span class="keyword">var</span> item = data[i];</span><br><span class="line">        <span class="keyword">var</span> date = item[<span class="string">"date"</span>];</span><br><span class="line">        <span class="keyword">var</span> year = date.substring(<span class="number">0</span>, <span class="number">4</span>);</span><br><span class="line">        <span class="keyword">var</span> month = date.substring(<span class="number">5</span>, <span class="number">7</span>);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">var</span> j <span class="keyword">in</span> item[<span class="string">"images"</span>]) &#123;</span><br><span class="line">            <span class="keyword">var</span> image = item[<span class="string">"images"</span>][j];</span><br><span class="line">            <span class="keyword">var</span> thumbnail = imageBed + <span class="string">'/'</span> + galleryName + <span class="string">"/thumbnail/"</span> + image.name;</span><br><span class="line">            <span class="keyword">var</span> artwork = imageBed + <span class="string">'/'</span> + galleryName + <span class="string">"/artwork/"</span> + image.name;</span><br><span class="line">            <span class="keyword">var</span> caption = image.caption;</span><br><span class="line">            <span class="keyword">var</span> width = image.width;</span><br><span class="line">            <span class="keyword">var</span> height = image.height;</span><br><span class="line"></span><br><span class="line">            liTmpl += <span class="string">`&lt;figure class="thumb" itemprop="associatedMedia" itemscope="" itemtype="http://schema.org/ImageObject"&gt;</span></span><br><span class="line"><span class="string">                        &lt;a href="<span class="subst">$&#123;artwork&#125;</span>" itemprop="contentUrl" data-size="<span class="subst">$&#123;width&#125;</span>x<span class="subst">$&#123;height&#125;</span>"&gt;</span></span><br><span class="line"><span class="string">                            &lt;img class="reward-img" data-src="<span class="subst">$&#123;thumbnail&#125;</span>" src="/lib/album/assets/empty.png" itemprop="thumbnail" onload="lzld(this)"&gt;</span></span><br><span class="line"><span class="string">                        &lt;/a&gt;</span></span><br><span class="line"><span class="string">                        &lt;figcaption style="display:none" itemprop="caption description"&gt;<span class="subst">$&#123;caption&#125;</span>&lt;/figcaption&gt;</span></span><br><span class="line"><span class="string">                      &lt;/figure&gt;`</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        ulTmpl += <span class="string">`&lt;section class="archives album"&gt;&lt;h1 class="timeline"&gt;<span class="subst">$&#123;year&#125;</span>年<span class="subst">$&#123;month&#125;</span>月&lt;/h1&gt;</span></span><br><span class="line"><span class="string">                    &lt;ul class="img-box-ul"&gt;<span class="subst">$&#123;liTmpl&#125;</span>&lt;/ul&gt;</span></span><br><span class="line"><span class="string">                  &lt;/section&gt;`</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">document</span>.querySelector(<span class="string">'.instagram'</span>).innerHTML = <span class="string">`&lt;div class=<span class="subst">$&#123;photoswipe.galleryClass&#125;</span> itemscope="" itemtype="http://schema.org/ImageGallery"&gt;<span class="subst">$&#123;ulTmpl&#125;</span>&lt;/div&gt;`</span>;</span><br><span class="line">    <span class="built_in">document</span>.querySelector(<span class="string">'#gallery-description'</span>).innerHTML = description;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// createVideoIcon();</span></span><br><span class="line">    view.default.init();</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">loadData</span>(<span class="params">render</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!dataJSON) &#123;</span><br><span class="line">        <span class="keyword">var</span> xhr = <span class="keyword">new</span> XMLHttpRequest();</span><br><span class="line">        xhr.open(<span class="string">'GET'</span>, dataUrl + <span class="string">'?t='</span> + <span class="keyword">new</span> <span class="built_in">Date</span>(), <span class="literal">true</span>);</span><br><span class="line">        xhr.onload = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (<span class="keyword">this</span>.status &gt;= <span class="number">200</span> &amp;&amp; <span class="keyword">this</span>.status &lt; <span class="number">300</span>) &#123;</span><br><span class="line">                dataJSON = <span class="built_in">JSON</span>.parse(<span class="keyword">this</span>.response);</span><br><span class="line">                render(dataJSON);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="built_in">console</span>.error(<span class="keyword">this</span>.statusText);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">        xhr.onerror = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">            <span class="built_in">console</span>.error(<span class="keyword">this</span>.statusText);</span><br><span class="line">        &#125;;</span><br><span class="line">        xhr.send();</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      render(dataJSON);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> Gallery = &#123;</span><br><span class="line">    init: <span class="function"><span class="keyword">function</span> <span class="title">init</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        loadData(<span class="function"><span class="keyword">function</span>(<span class="params">data</span>) </span>&#123;</span><br><span class="line">            render(data);</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">Gallery.init();</span><br></pre></td></tr></table></figure>
+<p>可以看到，这里的<code>gallery.js</code>依赖了 <code>lazyloadjs</code> 和 <code>photoswipe.js</code>, 整个文件的思路非常直接</p>
+<ul>
+<li>初始化<code>Gallery</code>对象，它会在初始化的时候通过XHR请求打开对应Gallery的JSON描述文件</li>
+<li>获取JSON文件的响应后，通过render函数来解析JSON数据，从而拼接处对应的HTML文本</li>
+<li>这里具体的相册名是通过解析访问的链接名得到的 <code>window.location.pathname</code></li>
+<li>为了能够使用 <code>photoswipe</code> 插件，我们需要在render函数中讲 <code>view</code> 对象初始化</li>
+</ul>
+<p>关于 <code>lazyloadjs</code> 插件的使用，可以参考 <a href="https://github.com/vvo/lazyload" target="_blank" rel="external nofollow noopener noreferrer">其GitHub说明文档</a></p>
+<h5 id="photoswipe文件"><a href="#photoswipe文件" class="headerlink" title="photoswipe文件"></a>photoswipe文件</h5><p>这里的 <code>photoswipe.js</code> 主要参考了photoswipe官方文档的 <a href="https://photoswipe.com/documentation/getting-started.html" target="_blank" rel="external nofollow noopener noreferrer">How to build an array of slides from a list of links</a> 部分。</p>
+<p>主要的思想就是，根据上面 <code>gallery.js</code> 中生成的链接的list，利用photoswipe生成对应的photoswipe对象。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">"use strict"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> initPhotoSwipeFromDOM = <span class="function"><span class="keyword">function</span>(<span class="params">gallerySelector</span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// parse slide data (url, title, size ...) from DOM elements</span></span><br><span class="line">    <span class="comment">// (children of gallerySelector)</span></span><br><span class="line">    <span class="comment">// Return</span></span><br><span class="line">    <span class="comment">// [</span></span><br><span class="line">    <span class="comment">//  &#123;</span></span><br><span class="line">    <span class="comment">//      src: "http://imageBed/artwork/src.jpg",</span></span><br><span class="line">    <span class="comment">//      msrc: "http://imageBed/thumbnail/src.jpg",</span></span><br><span class="line">    <span class="comment">//      w: 600,</span></span><br><span class="line">    <span class="comment">//      h: 400,</span></span><br><span class="line">    <span class="comment">//      title: "这是caption",</span></span><br><span class="line">    <span class="comment">//  &#125;,</span></span><br><span class="line">    <span class="comment">// ]</span></span><br><span class="line">    <span class="keyword">var</span> parseThumbnailElements = <span class="function"><span class="keyword">function</span> <span class="title">parseThumbnailElements</span>(<span class="params">el</span>) </span>&#123;</span><br><span class="line">        el = el.parentNode.parentNode;</span><br><span class="line">        <span class="keyword">var</span> thumbElements = el.getElementsByClassName(<span class="string">'thumb'</span>),</span><br><span class="line">            numNodes = thumbElements.length,</span><br><span class="line">            items = [],</span><br><span class="line">            figureEl,</span><br><span class="line">            linkEl,</span><br><span class="line">            size,</span><br><span class="line">            item;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; numNodes; i++) &#123;</span><br><span class="line">            figureEl = thumbElements[i]; <span class="comment">// &lt;figure&gt; element</span></span><br><span class="line">            <span class="comment">// include only element nodes</span></span><br><span class="line">            <span class="keyword">if</span> (figureEl.nodeType !== <span class="number">1</span>) &#123;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            linkEl = figureEl.children[<span class="number">0</span>]; <span class="comment">// &lt;a&gt; element</span></span><br><span class="line">            size = linkEl.getAttribute(<span class="string">'data-size'</span>).split(<span class="string">'x'</span>);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// create slide object</span></span><br><span class="line">            item = &#123;</span><br><span class="line">                src: linkEl.getAttribute(<span class="string">'href'</span>),</span><br><span class="line">                w: <span class="built_in">parseInt</span>(size[<span class="number">0</span>], <span class="number">10</span>),</span><br><span class="line">                h: <span class="built_in">parseInt</span>(size[<span class="number">1</span>], <span class="number">10</span>)</span><br><span class="line">            &#125;;</span><br><span class="line">            <span class="keyword">if</span> (figureEl.children.length &gt; <span class="number">1</span>) &#123; <span class="comment">// &lt;figcaption&gt; content</span></span><br><span class="line">                item.title = figureEl.children[<span class="number">1</span>].innerHTML;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (linkEl.children.length &gt; <span class="number">0</span>) &#123; <span class="comment">// &lt;img&gt; thumbnail element, retrieving thumbnail url</span></span><br><span class="line">                item.msrc = linkEl.children[<span class="number">0</span>].getAttribute(<span class="string">'src'</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            item.el = figureEl; <span class="comment">// save link to element for getThumbBoundsFn</span></span><br><span class="line">            items.push(item);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> items;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// find nearest parent element</span></span><br><span class="line">    <span class="keyword">var</span> closest = <span class="function"><span class="keyword">function</span> <span class="title">closest</span>(<span class="params">el, fn</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> el &amp;&amp; (fn(el) ? el : closest(el.parentNode, fn));</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// triggers when user clicks on thumbnail</span></span><br><span class="line">    <span class="keyword">var</span> onThumbnailsClick = <span class="function"><span class="keyword">function</span> <span class="title">onThumbnailsClick</span>(<span class="params">e</span>) </span>&#123;</span><br><span class="line">        e = e || <span class="built_in">window</span>.event;</span><br><span class="line">        e.preventDefault ? e.preventDefault() : e.returnValue = <span class="literal">false</span>;</span><br><span class="line">        <span class="keyword">var</span> eTarget = e.target || e.srcElement;</span><br><span class="line">        <span class="comment">// find root element of slide</span></span><br><span class="line">        <span class="keyword">var</span> clickedListItem = closest(eTarget, <span class="function"><span class="keyword">function</span>(<span class="params">el</span>) </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> el.tagName &amp;&amp; el.tagName.toUpperCase() === <span class="string">'FIGURE'</span>;</span><br><span class="line">        &#125;);</span><br><span class="line">        <span class="keyword">if</span> (!clickedListItem) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// find index of clicked item by looping through all child nodes</span></span><br><span class="line">        <span class="comment">// alternatively, you may define index via data- attribute</span></span><br><span class="line">        <span class="keyword">var</span> clickedGallery = clickedListItem.parentNode,</span><br><span class="line">            childNodes = <span class="built_in">document</span>.getElementsByClassName(<span class="string">'thumb'</span>),</span><br><span class="line">            numChildNodes = childNodes.length,</span><br><span class="line">            nodeIndex = <span class="number">0</span>,</span><br><span class="line">            index;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; numChildNodes; i++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (childNodes[i].nodeType !== <span class="number">1</span>) &#123;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (childNodes[i] === clickedListItem) &#123;</span><br><span class="line">                index = nodeIndex;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            nodeIndex++;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (index &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="comment">// open PhotoSwipe if valid index found</span></span><br><span class="line">            openPhotoSwipe(index, clickedGallery);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// parse picture index and gallery index from URL (#&amp;pid=1&amp;gid=2)</span></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">photoswipeParseHash</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="keyword">var</span> hash = <span class="built_in">window</span>.location.hash.substring(<span class="number">1</span>),</span><br><span class="line">        params = &#123;&#125;;</span><br><span class="line">        <span class="keyword">if</span> (hash.length &lt; <span class="number">5</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> params;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">var</span> vars = hash.split(<span class="string">'&amp;'</span>);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; vars.length; i++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (!vars[i]) &#123;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">var</span> pair = vars[i].split(<span class="string">'='</span>);</span><br><span class="line">            <span class="keyword">if</span> (pair.length &lt; <span class="number">2</span>) &#123;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            params[pair[<span class="number">0</span>]] = pair[<span class="number">1</span>];</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (params.gid) &#123;</span><br><span class="line">            params.gid = <span class="built_in">parseInt</span>(params.gid, <span class="number">10</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> params;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">openPhotoSwipe</span>(<span class="params">index, galleryElement, disableAnimation, fromURL</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">var</span> pswpElement = <span class="built_in">document</span>.querySelectorAll(<span class="string">'.pswp'</span>)[<span class="number">0</span>],</span><br><span class="line">            gallery,</span><br><span class="line">            options,</span><br><span class="line">            items;</span><br><span class="line"></span><br><span class="line">        items = parseThumbnailElements(galleryElement);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// define options (if needed)</span></span><br><span class="line">        options = &#123;</span><br><span class="line">            <span class="comment">// define gallery index (for URL)</span></span><br><span class="line">            galleryUID: galleryElement.getAttribute(<span class="string">'data-pswp-uid'</span>),</span><br><span class="line">            getThumbBoundsFn: <span class="function"><span class="keyword">function</span> <span class="title">getThumbBoundsFn</span>(<span class="params">index</span>) </span>&#123;</span><br><span class="line">                <span class="comment">// See Options -&gt; getThumbBoundsFn section of documentation for more info</span></span><br><span class="line">                <span class="keyword">var</span> thumbnail = items[index].el.getElementsByTagName(<span class="string">'img'</span>)[<span class="number">0</span>],</span><br><span class="line">                <span class="comment">// find thumbnail</span></span><br><span class="line">                pageYScroll = <span class="built_in">window</span>.pageYOffset || <span class="built_in">document</span>.documentElement.scrollTop,</span><br><span class="line">                rect = thumbnail.getBoundingClientRect();</span><br><span class="line">                <span class="keyword">return</span> &#123;</span><br><span class="line">                    x: rect.left,</span><br><span class="line">                    y: rect.top + pageYScroll,</span><br><span class="line">                    w: rect.width</span><br><span class="line">                &#125;;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// PhotoSwipe opened from URL</span></span><br><span class="line">        <span class="keyword">if</span> (fromURL) &#123;</span><br><span class="line">            <span class="keyword">if</span> (options.galleryPIDs) &#123;</span><br><span class="line">                <span class="comment">// parse real index when custom PIDs are used</span></span><br><span class="line">                <span class="comment">// http://photoswipe.com/documentation/faq.html#custom-pid-in-url</span></span><br><span class="line">                <span class="keyword">for</span> (<span class="keyword">var</span> j = <span class="number">0</span>; j &lt; items.length; j++) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (items[j].pid == index) &#123;</span><br><span class="line">                        options.index = j;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">// in URL indexes start from 1</span></span><br><span class="line">                options.index = <span class="built_in">parseInt</span>(index, <span class="number">10</span>) - <span class="number">1</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            options.index = <span class="built_in">parseInt</span>(index, <span class="number">10</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// exit if index not found</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">isNaN</span>(options.index)) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (disableAnimation) &#123;</span><br><span class="line">            options.showAnimationDuration = <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// Pass data to PhotoSwipe and initialize it</span></span><br><span class="line">        <span class="keyword">var</span> gallery = <span class="keyword">new</span> PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, options);</span><br><span class="line">        gallery.init();</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// loop through all gallery elements and bind events</span></span><br><span class="line">    <span class="keyword">var</span> galleryElements = <span class="built_in">document</span>.querySelectorAll(gallerySelector);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>, l = galleryElements.length; i &lt; l; i++) &#123;</span><br><span class="line">        galleryElements[i].setAttribute(<span class="string">'data-pswp-uid'</span>, i + <span class="number">1</span>);</span><br><span class="line">        galleryElements[i].onclick = onThumbnailsClick;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Parse URL and open gallery if it contains #&amp;pid=3&amp;gid=1</span></span><br><span class="line">    <span class="keyword">var</span> hashData = photoswipeParseHash();</span><br><span class="line">    <span class="keyword">if</span> (hashData.pid &amp;&amp; hashData.gid) &#123;</span><br><span class="line">        openPhotoSwipe(hashData.pid, galleryElements[hashData.gid - <span class="number">1</span>], <span class="literal">true</span>, <span class="literal">true</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> galleryClass = <span class="string">"photos"</span>;</span><br><span class="line"><span class="keyword">var</span> selector = <span class="string">'.'</span> + galleryClass;</span><br><span class="line"><span class="keyword">var</span> viewer = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">init</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        initPhotoSwipeFromDOM(selector);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> &#123;</span><br><span class="line">        init: init</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;();</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">    galleryClass,</span><br><span class="line">    viewer</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h3 id="自动化更新JSON脚本"><a href="#自动化更新JSON脚本" class="headerlink" title="自动化更新JSON脚本"></a>自动化更新JSON脚本</h3><p>这里补上了自动化上传图片的脚本。脚本的功能如下</p>
+<ul>
+<li>创建相册</li>
+<li>插入图片<ul>
+<li>裁剪图片</li>
+<li>压缩图片</li>
+<li>更新JSON脚本</li>
+<li>上传图片到AWS的S3服务</li>
+</ul>
+</li>
+</ul>
+<p>实现的原理很简单，由<code>AlbumTool.py</code>和<code>S3.py</code>组成。这两个文件放在<code>hexo/album_tool</code>目录下，在同级路径还有一个<code>album</code>的文件夹，针对不同的相册，都有<code>artwork</code>、<code>square</code>和<code>thumbnail</code>三个文件夹。用户需要上传图片时，只需要将对应的图片放到<code>artwork</code>路径下，然后运行<code>python AlbumTool.py -a insert</code>就可以了，之后可以按照命令行的提示执行即可。</p>
+<figure class="highlight python"><figcaption><span>AlbumTool.py</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#coding: utf-8</span></span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> argparse</span><br><span class="line"><span class="keyword">import</span> readline</span><br><span class="line"><span class="keyword">from</span> datetime <span class="keyword">import</span> datetime</span><br><span class="line"><span class="keyword">from</span> PIL <span class="keyword">import</span> Image</span><br><span class="line"><span class="keyword">from</span> S3 <span class="keyword">import</span> S3Tool</span><br><span class="line"></span><br><span class="line">bucket = <span class="string">"xxx"</span></span><br><span class="line">imageBed = <span class="string">"https://xxx.s3-ap-southeast-1.amazonaws.com/album"</span></span><br><span class="line">indexTmpl = <span class="string">"""</span></span><br><span class="line"><span class="string">---</span></span><br><span class="line"><span class="string">layout: gallery</span></span><br><span class="line"><span class="string">title: &#123;0&#125;</span></span><br><span class="line"><span class="string">galleryName: &#123;0&#125;</span></span><br><span class="line"><span class="string">comments: false</span></span><br><span class="line"><span class="string">---</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AlbumTool</span><span class="params">(object)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, bucket, gallery)</span>:</span></span><br><span class="line">        self.s3 = S3Tool(bucket)</span><br><span class="line">        self.scale = <span class="number">4</span></span><br><span class="line">        self.gallery = gallery</span><br><span class="line">        self.galleryPath = <span class="string">"album/"</span> + gallery</span><br><span class="line">        self.artwork = self.galleryPath + <span class="string">"/artwork/"</span></span><br><span class="line">        self.square = self.galleryPath + <span class="string">"/square/"</span></span><br><span class="line">        self.thumbnail = self.galleryPath + <span class="string">"/thumbnail/"</span></span><br><span class="line">        self.data_json = self.galleryPath + <span class="string">"/data.json"</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">cut_by_ratio</span><span class="params">(self, infile, outfile)</span>:</span></span><br><span class="line">            <span class="string">"""按照图片长宽进行分割</span></span><br><span class="line"><span class="string">            取中间的部分，裁剪成正方形</span></span><br><span class="line"><span class="string">            """</span></span><br><span class="line">            im = Image.open(infile)</span><br><span class="line">            (w, h) = im.size</span><br><span class="line">            region = (<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">if</span> w &lt; h:</span><br><span class="line">                w, h = h, w</span><br><span class="line">            region = (int(w-h)/<span class="number">2</span>, <span class="number">0</span>, int(w+h)/<span class="number">2</span>, h)</span><br><span class="line">            crop_img = im.crop(region)</span><br><span class="line">            crop_img.save(outfile)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">cut</span><span class="params">(self, image)</span>:</span></span><br><span class="line">        <span class="string">"""裁剪图片，将图片裁成正方形"""</span></span><br><span class="line">        print(<span class="string">"Cutting the artwork image to square..."</span>)</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> os.path.exists(self.square):</span><br><span class="line">            os.makedirs(self.square)</span><br><span class="line">        self.cut_by_ratio(self.artwork+image, self.square+image)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">compress</span><span class="params">(self, image)</span>:</span></span><br><span class="line">        <span class="string">"""调用压缩图片的函数"""</span></span><br><span class="line">        print(<span class="string">"Compressing the square image to thumbnail..."</span>)</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> os.path.exists(self.thumbnail):</span><br><span class="line">            os.makedirs(self.thumbnail)</span><br><span class="line">        img = Image.open(self.square + image)</span><br><span class="line">        w, h = img.size</span><br><span class="line">        w, h = int(w/self.scale), int(h/self.scale)</span><br><span class="line">        img.thumbnail((w, h))</span><br><span class="line">        img.save(self.thumbnail + image)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">describe</span><span class="params">(self, image, caption)</span>:</span></span><br><span class="line">        <span class="string">"""</span></span><br><span class="line"><span class="string">        根据当前传入的相册名，图片，描述更新相册的描述JSON文件</span></span><br><span class="line"><span class="string">        """</span></span><br><span class="line">        <span class="comment"># 根据image和caption信息，生成关于image的新dict</span></span><br><span class="line">        print(<span class="string">"Updating the data json file..."</span>)</span><br><span class="line">        img_info = Image.open(self.artwork + image)</span><br><span class="line">        width, height = img_info.size</span><br><span class="line">        image_dict = &#123;</span><br><span class="line">            <span class="string">"name"</span>: image,</span><br><span class="line">            <span class="string">"caption"</span>: caption,</span><br><span class="line">            <span class="string">"type"</span>: <span class="string">"image"</span>,</span><br><span class="line">            <span class="string">"date"</span>: image[:<span class="number">10</span>],</span><br><span class="line">            <span class="string">"width"</span>: width,</span><br><span class="line">            <span class="string">"height"</span>: height</span><br><span class="line">        &#125;</span><br><span class="line">        item_dict = &#123;</span><br><span class="line">            <span class="string">"date"</span>: image[:<span class="number">7</span>],</span><br><span class="line">            <span class="string">"images"</span>: [</span><br><span class="line">                image_dict</span><br><span class="line">            ]</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment"># 根据相册名确定原来JSON文件的路径，读取原来的JSON文件并解析</span></span><br><span class="line">        items = []</span><br><span class="line">        images = []</span><br><span class="line">        index = <span class="number">0</span></span><br><span class="line"></span><br><span class="line">        current = time.strftime(<span class="string">'%Y-%m-%d %H:%M-%S'</span>, time.localtime(time.time()))</span><br><span class="line">        <span class="keyword">with</span> open(self.data_json) <span class="keyword">as</span> json_file:</span><br><span class="line">            data = json.load(json_file)</span><br><span class="line">            items =  data[<span class="string">"items"</span>]</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 根据当前的文件名，命名为yyyy-mm-dd_name.jpg[png][gif]</span></span><br><span class="line">        <span class="comment"># 解析出应该插入的月份，并且更新相应的list，同时加入caption</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> items:</span><br><span class="line">            <span class="keyword">for</span> item <span class="keyword">in</span> items:</span><br><span class="line">                <span class="keyword">if</span> item[<span class="string">"date"</span>] != image[:<span class="number">7</span>]:</span><br><span class="line">                    <span class="keyword">continue</span></span><br><span class="line">                images = item[<span class="string">"images"</span>]</span><br><span class="line">                index = items.index(item)</span><br><span class="line">            <span class="keyword">if</span> images:</span><br><span class="line">                <span class="keyword">for</span> img <span class="keyword">in</span> images:</span><br><span class="line">                    <span class="keyword">if</span> img[<span class="string">"name"</span>] == image:</span><br><span class="line">                        print(<span class="string">"The file "</span> + image + <span class="string">" already exists"</span>)</span><br><span class="line">                        <span class="keyword">return</span></span><br><span class="line">                images.insert(<span class="number">0</span>, image_dict)</span><br><span class="line">                images.sort(key=<span class="keyword">lambda</span> image:image[<span class="string">"date"</span>], reverse=<span class="literal">True</span>)</span><br><span class="line">                items[index][<span class="string">"images"</span>] = images</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                items.insert(<span class="number">0</span>, item_dict)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            items.insert(<span class="number">0</span>, item_dict)</span><br><span class="line"></span><br><span class="line">        items.sort(key=<span class="keyword">lambda</span> item:item[<span class="string">"date"</span>], reverse=<span class="literal">True</span>)</span><br><span class="line">        data[<span class="string">"items"</span>] = items</span><br><span class="line">        data[<span class="string">"updated"</span>] = current</span><br><span class="line">        data[<span class="string">"number"</span>] = data[<span class="string">"number"</span>] + <span class="number">1</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 序列化数据结构到JSON文本</span></span><br><span class="line">        <span class="keyword">with</span> open(self.data_json, <span class="string">'w'</span>, encoding=<span class="string">'utf-8'</span>) <span class="keyword">as</span> json_file:</span><br><span class="line">            json.dump(data, json_file, ensure_ascii=<span class="literal">False</span>, sort_keys=<span class="literal">False</span>, indent=<span class="number">4</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">upload</span><span class="params">(self, image)</span>:</span></span><br><span class="line">        print(<span class="string">"Uploading the image to AWS S3 service..."</span>)</span><br><span class="line">        self.s3.upload_file(self.artwork + image)</span><br><span class="line">        self.s3.upload_file(self.thumbnail + image)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">sync</span><span class="params">(self)</span>:</span></span><br><span class="line">        os.system(<span class="string">"cp "</span> + self.data_json + <span class="string">" ../source/album/"</span> + self.gallery + <span class="string">"/data"</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">create</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> os.path.exists(self.galleryPath):</span><br><span class="line">            print(<span class="string">"Error: gallery "</span> + self.gallery + <span class="string">" already exists"</span>)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            os.makedirs(self.galleryPath)</span><br><span class="line">            os.makedirs(self.artwork)</span><br><span class="line">            os.makedirs(self.square)</span><br><span class="line">            os.makedirs(self.thumbnail)</span><br><span class="line"></span><br><span class="line">            cover = input(<span class="string">"Please input the cover image for gallery "</span> + self.gallery + <span class="string">": "</span>)</span><br><span class="line">            description = input(<span class="string">"Please input the description for the gallery "</span> + self.gallery + <span class="string">": "</span>)</span><br><span class="line">            current = time.strftime(<span class="string">'%Y-%m-%d %H:%M-%S'</span>, time.localtime(time.time()))</span><br><span class="line">            data_dict = &#123;</span><br><span class="line">                <span class="string">"name"</span>: self.gallery,</span><br><span class="line">                <span class="string">"cover"</span>: cover,</span><br><span class="line">                <span class="string">"description"</span>: description,</span><br><span class="line">                <span class="string">"created"</span>: current,</span><br><span class="line">                <span class="string">"updated"</span>: current,</span><br><span class="line">                <span class="string">"imageBed"</span>: imageBed,</span><br><span class="line">                <span class="string">"number"</span>: <span class="number">0</span>,</span><br><span class="line">                <span class="string">"items"</span>: []</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">with</span> open(self.data_json, <span class="string">'w'</span>, encoding=<span class="string">'utf-8'</span>) <span class="keyword">as</span> json_file:</span><br><span class="line">                json.dump(data_dict, json_file, ensure_ascii=<span class="literal">False</span>, sort_keys=<span class="literal">False</span>, indent=<span class="number">4</span>)</span><br><span class="line"></span><br><span class="line">            os.makedirs(<span class="string">"../source/album/"</span> + self.gallery)</span><br><span class="line">            <span class="keyword">with</span> open(<span class="string">"../source/album/"</span> + self.gallery + <span class="string">"/index.md"</span>, <span class="string">'w'</span>, encoding=<span class="string">'utf-8'</span>) <span class="keyword">as</span> f:</span><br><span class="line">                f.write(indexTmpl.format(self.gallery, self.gallery))</span><br><span class="line">                self.sync()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">insert</span><span class="params">(self)</span>:</span></span><br><span class="line">        image = input(<span class="string">"Please input the image file name: "</span>)</span><br><span class="line">        caption = input(<span class="string">"Please input the caption for the image: "</span>)</span><br><span class="line">        self.cut(image)</span><br><span class="line">        self.compress(image)</span><br><span class="line">        self.describe(image, caption)</span><br><span class="line">        self.upload(image)</span><br><span class="line">        self.sync()</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    parser = argparse.ArgumentParser(description=<span class="string">"Album Tool For Hexo NexT"</span>)</span><br><span class="line">    parser.add_argument(<span class="string">'-a'</span>, <span class="string">'--action'</span>, type=str, help=<span class="string">'action to be executed'</span>)</span><br><span class="line">    args = parser.parse_args()</span><br><span class="line"></span><br><span class="line">    gallery = input(<span class="string">"Please input the gallery name: "</span>)</span><br><span class="line"></span><br><span class="line">    album = AlbumTool(bucket, gallery)</span><br><span class="line">    <span class="keyword">if</span> args.action == <span class="string">"create"</span>:</span><br><span class="line">        album.create()</span><br><span class="line">    <span class="keyword">elif</span> args.action == <span class="string">"insert"</span>:</span><br><span class="line">        album.insert()</span><br></pre></td></tr></table></figure>
+<p><code>S3.py</code>主要是对<code>boto3</code>进行了封装，配置好AWS的密钥信息之后，可以直接执行这个脚本。如果以后改用阿里云或者其他云服务商的对象存储服务，随之更新即可。</p>
+<figure class="highlight python"><figcaption><span>S3.py</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> logging</span><br><span class="line"><span class="keyword">import</span> boto3</span><br><span class="line"><span class="keyword">from</span> botocore.exceptions <span class="keyword">import</span> ClientError</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">S3Tool</span><span class="params">(object)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, bucket)</span>:</span></span><br><span class="line">        self.s3_client = boto3.client(<span class="string">'s3'</span>)</span><br><span class="line">        self.bucket = bucket</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">upload_file</span><span class="params">(self, file_name, object_name=None)</span>:</span></span><br><span class="line">        <span class="string">"""Upload a file to an S3 bucket</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        :param file_name: File to upload</span></span><br><span class="line"><span class="string">        :param object_name: S3 object name. If not specified then file_name is used</span></span><br><span class="line"><span class="string">        :return: True if file was uploaded, else False</span></span><br><span class="line"><span class="string">        """</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># If S3 object_name was not specified, use file_name</span></span><br><span class="line">        <span class="keyword">if</span> object_name <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">            object_name = file_name</span><br><span class="line"></span><br><span class="line">        <span class="comment"># Upload the file</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            response = self.s3_client.upload_file(file_name, self.bucket, object_name)</span><br><span class="line">        <span class="keyword">except</span> ClientError <span class="keyword">as</span> e:</span><br><span class="line">            logging.error(e)</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">True</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">download_file</span><span class="params">(self, file_name, object_name=None)</span>:</span></span><br><span class="line">        <span class="string">"""Download a file from an S3 bucket</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        :param file_name: File to be downloaded as</span></span><br><span class="line"><span class="string">        :param object_name: S3 object name. If not specified then file_name is used</span></span><br><span class="line"><span class="string">        :return: True if file was uploaded, else False</span></span><br><span class="line"><span class="string">        """</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># If S3 object_name was not specified, use file_name</span></span><br><span class="line">        <span class="keyword">if</span> object_name <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">            object_name = file_name</span><br><span class="line"></span><br><span class="line">        <span class="comment"># Upload the file</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            response = self.s3_client.download_file(self.bucket, object_name, file_name)</span><br><span class="line">        <span class="keyword">except</span> ClientError <span class="keyword">as</span> e:</span><br><span class="line">            logging.error(e)</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">True</span></span><br></pre></td></tr></table></figure>
+<h2 id="实际实现效果"><a href="#实际实现效果" class="headerlink" title="实际实现效果"></a>实际实现效果</h2><p>大家可以到 <a href="../../album/">我的相册 </a>页面看看的实际的效果。基本上实现了上述的要求，欢迎评论。</p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ul>
+<li><a href="https://cherryzzangg.site/2019/02/10/%20HEXO%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA%E7%9B%B8%E5%86%8C/" target="_blank" rel="external nofollow noopener noreferrer">HEXO博客搭建相册</a></li>
+<li><a href="https://liyangzone.com/2019/07/22/hexo%E5%8D%9A%E5%AE%A2%E6%B7%BB%E5%8A%A0%E4%B8%80%E7%BA%A7%E5%88%86%E7%B1%BB%E7%9B%B8%E5%86%8C/" target="_blank" rel="external nofollow noopener noreferrer">hexo博客添加一级分类相册功能</a></li>
+<li><a href="https://co5.me/2018/181112-gallerry2.html" target="_blank" rel="external nofollow noopener noreferrer">css+markdown 实现 hexo 相册</a></li>
+<li><a href="https://asdfv1929.github.io/2018/05/26/next-add-photos/" target="_blank" rel="external nofollow noopener noreferrer">Hexo NexT主题内添加相册功能</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/a63a603e/" rel="bookmark">Hexo NexT 深度定制</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/f5d73ad0/" rel="bookmark">Hexo 博客容器化</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/3fcce178/" rel="bookmark">Hexo 插入 Mermaid 图表</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d823886b/" rel="bookmark">Hexo 插入 ECharts 动态图表</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/d487dd02/" title="Hexo NexT 添加多级相册功能">http://houmin.cc/posts/d487dd02/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Hexo/" rel="tag"><i class="fa fa-tag"></i> Hexo</a>
+              <a href="/tags/NexT/" rel="tag"><i class="fa fa-tag"></i> NexT</a>
+              <a href="/tags/%E7%9B%B8%E5%86%8C/" rel="tag"><i class="fa fa-tag"></i> 相册</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/b4bc5563/" rel="next" title="阴天快乐">
+                  <i class="fa fa-chevron-left"></i> 阴天快乐
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/cf1a9e29/" rel="prev" title="春游南国">
+                  春游南国 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#相册期待实现效果"><span class="nav-number">1.</span> <span class="nav-text">相册期待实现效果</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#目前可查到的方案"><span class="nav-number">2.</span> <span class="nav-text">目前可查到的方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#我的实现方案"><span class="nav-number">3.</span> <span class="nav-text">我的实现方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#一级分类相册-Album"><span class="nav-number">3.1.</span> <span class="nav-text">一级分类相册 Album</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#二级相册-Gallery"><span class="nav-number">3.2.</span> <span class="nav-text">二级相册 Gallery</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Gallery页面描述文件"><span class="nav-number">3.2.1.</span> <span class="nav-text">Gallery页面描述文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Gallery页面样式"><span class="nav-number">3.2.2.</span> <span class="nav-text">Gallery页面样式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Gallery页面JS脚本"><span class="nav-number">3.2.3.</span> <span class="nav-text">Gallery页面JS脚本</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#webpack打包环境"><span class="nav-number">3.2.3.1.</span> <span class="nav-text">webpack打包环境</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#gallery文件"><span class="nav-number">3.2.3.2.</span> <span class="nav-text">gallery文件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#photoswipe文件"><span class="nav-number">3.2.3.3.</span> <span class="nav-text">photoswipe文件</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#自动化更新JSON脚本"><span class="nav-number">3.3.</span> <span class="nav-text">自动化更新JSON脚本</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实际实现效果"><span class="nav-number">4.</span> <span class="nav-text">实际实现效果</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reference"><span class="nav-number">5.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="每个行业确实都存在知识壁垒，也从不缺利用行业壁垒忽悠甚至行骗的投机者……我相信行业的知识壁垒都有其最大载重量，每一个从业者 UP 主的出现，都是在加速壁垒的灭亡。  这是来自 B站 UP 主 「巫师财经」在 2019 年终总结说的一段话，也是本期「朝花夕拾」话题来源。最近开始对行业研究产生兴趣，越发感受到每一个行业都有自己的一套运行规则，每一个行业都有自己的行业周期。有时候和不同专业的同学聊天，">
+<meta name="keywords" content="行业研究,新能源汽车,产业链,投资">
+<meta property="og:type" content="article">
+<meta property="og:title" content="聊聊行业">
+<meta property="og:url" content="http://houmin.cc/posts/8082c63c/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="每个行业确实都存在知识壁垒，也从不缺利用行业壁垒忽悠甚至行骗的投机者……我相信行业的知识壁垒都有其最大载重量，每一个从业者 UP 主的出现，都是在加速壁垒的灭亡。  这是来自 B站 UP 主 「巫师财经」在 2019 年终总结说的一段话，也是本期「朝花夕拾」话题来源。最近开始对行业研究产生兴趣，越发感受到每一个行业都有自己的一套运行规则，每一个行业都有自己的行业周期。有时候和不同专业的同学聊天，">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_petrol-car-cost.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_electric-car-cost.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_china-electric-vehicle.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_china-electric-vehicle-period.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_long-term-electric-vehicle-sales.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_shares-ice-ev.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_double-score-policy.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_elctric-vehicle-subsidy-policy.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_battery-energy-density.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_recharge-mileage.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_public-charging-pile-by-time.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_public-charging-pile-by-region.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_5g-application.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_roadmap-to-automation.png">
+<meta property="og:updated_time" content="2020-07-14T08:24:44.100Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_petrol-car-cost.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/8082c63c/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>聊聊行业 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/8082c63c/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          聊聊行业
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-01-18 14:11:44" itemprop="dateCreated datePublished" datetime="2020-01-18T14:11:44+08:00">2020-01-18</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%9D%E8%8A%B1%E5%A4%95%E6%8B%BE/" itemprop="url" rel="index">
+                    <span itemprop="name">朝花夕拾</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/8082c63c/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/8082c63c/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>每个行业确实都存在知识壁垒，也从不缺利用行业壁垒忽悠甚至行骗的投机者……我相信行业的知识壁垒都有其最大载重量，每一个从业者 UP 主的出现，都是在加速壁垒的灭亡。</p>
+</blockquote>
+<p>这是来自 B站 UP 主 「巫师财经」在 2019 年终总结说的一段话，也是本期「朝花夕拾」话题来源。最近开始对行业研究产生兴趣，越发感受到每一个行业都有自己的一套运行规则，每一个行业都有自己的行业周期。有时候和不同专业的同学聊天，听他们讲自己行业的种种，会觉得是一件很有意思的事情。</p>
+<p>这里是「朝花夕拾」第三期，我们来聊一聊行业，并以 <code>新能源汽车产业链</code> 作为一个基本范例，看一看<code>行业研究</code>是如何对一个行业建模分析的。本篇算是「行业研究」的开篇，这里先挖个坑，以后还会慢慢去挖其他各个行业有意思的事情。作为信息行业的从业者，这里的文章内容大部分来自网络搜索的资料，不能确保内容的完全正确性，但是也算是初窥门径，之后深入了解的时候总可以按图索骥。</p>
+<a id="more"></a>
+<h2 id="行业研究"><a href="#行业研究" class="headerlink" title="行业研究"></a>行业研究</h2><h3 id="行业分类"><a href="#行业分类" class="headerlink" title="行业分类"></a>行业分类</h3><p>要进行行业研究的话，首先要对我们身边的行业分类有一个基本的认识。我查了一下国家统计局归纳的<a href="http://www.stats.gov.cn/tjsj/tjbz/201709/P020171009408912690353.pdf" target="_blank" rel="external nofollow noopener noreferrer">国民经济行业分类</a>，整理了一下得到了下面的行业分类思维导图。</p>
+<embed src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-24_industry.svg
+" style="display:block;width:100%;height:100%" onclick>
+
+<p>总的来说，行业分类是一个持续动态变化的过程。就像细胞一样，行业有成长、有消亡，也总会有新的行业产生。</p>
+<h3 id="行业研究框架"><a href="#行业研究框架" class="headerlink" title="行业研究框架"></a>行业研究框架</h3><p>行业研究是我们能够快速建立一个行业认知的基本途径。最简单的做法，就是通过网络等各种信息渠道去看各种行业研报。然而研报纷纷杂杂，看研报之前，最好有自己的一套思考框架。我们要意识到，各种行业都在做着自己的生意，生意的本质就是将产品（What）以什么方式（How）卖给谁（Who）。简单的说，你需要弄清楚下面的这些问题</p>
+<ul>
+<li>这个行业的盈利模式是什么？ </li>
+<li>这个行业的老大是谁？ </li>
+<li>这个行业的上游供应链，下游消费者是谁？ </li>
+<li>这个行业的产能如何？其在整体经济结构中的地位。</li>
+<li>这个行业的法律监管如何？</li>
+</ul>
+<p>弄清楚这些问题之后，可以再进一步分析这个行业的业务和财务情况，未来发展趋势等。下面是行业研究的一个基本框架，可以作为参考。</p>
+<embed src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_industry-research.svg" style="display:block;width:100%;height:100%" onclick>
+
+<p>行业研究是一个有意思的事情，有了基本的研究框架之后，下面以新能源汽车作为范例，来好好研究这个近来的当红行业。</p>
+<h2 id="新能源汽车概述"><a href="#新能源汽车概述" class="headerlink" title="新能源汽车概述"></a>新能源汽车概述</h2><p>2019年特斯拉上海超级工厂的建成投产，是新能源汽车行业的一个重要转折点，也是我真正对于新能源汽车产生兴趣的时候。众所周知，随着科学技术的发展，行业与行业之间的界限越来越模糊。自从 2007 年苹果公司推出 iPhone，围绕着这一全新产品，电子、通信、半导体、计算机等行业融合在一起，相对于传统的诺基亚等智能手机，iPhone 将软硬件解耦，硬件标准化、软件可重复开发利用，释放出巨大的能量，创造了十年蓬勃发展的移动互联网浪潮，极大的改变了整个社会。</p>
+<p>传统的汽车，已经是融合了材料、电子、机械、能源等行业的极度复杂的产品，也是很多国家的支柱产业。但是未来的汽车，将会像十年前的智能手机一样产生进一步的融合，结合通信、计算机、交通、人工智能等行业，爆发出相比智能手机更大的能量。正如一篇研报所说，</p>
+<blockquote>
+<p>从 1885 年卡尔本茨发明第一台现代汽车以来，汽车产业从未像今天一样成为如此多技术变革的交汇点，设计能源、交通、通信、计算机等诸多行业。<strong>汽车现代化——电动化、智能化、网联化、共享化浪潮开启，百年汽车产业正站在大变局大洗牌的黎明前夜</strong>。</p>
+</blockquote>
+<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><h4 id="竞争格局重塑，价值链重构"><a href="#竞争格局重塑，价值链重构" class="headerlink" title="竞争格局重塑，价值链重构"></a>竞争格局重塑，价值链重构</h4><p><strong>特斯拉等造车新势力崛起，互联网、半导体等科技巨头跨界进入，汽车产业竞争格局重塑、核心价值链重构，部分 OEM 未来或将沦为代工厂。</strong></p>
+<p>以特斯拉为代表的造车新势力利用自身的先发优势和互联网基因，正不断抢占传统车企市场份额。</p>
+<p>另一方面，通用、福特等传统车企陆续裁员，FCA（菲亚特克莱斯勒）和 PSA（标致雪铁龙）合并成为全球第四大车企，传统车企报团取暖与新势力的高歌猛进行程鲜明对比。</p>
+<p><strong>未来汽车产业的核心价值将不再是发动机、车身、底盘，而是电池、芯片、车载系统、数据。</strong></p>
+<p>2019 年初，大众 CEO 在达沃斯论坛上宣布，大众将成为一家软件驱动的公司，并设立了 「Digital Car &amp; Service」部门，大力推动数字化转型。丰田公司宣布，丰田将从汽车公司转型为移动出行公司，他们的竞争对手已经不是曾经的奔驰、宝马和大众，而是苹果、谷歌等。谷歌、高通、英伟达、华为、阿里、百度等巨头已通过合作、授权或供应商等身份等嵌入智能驾驶细分环节，未来可能占据行业重要的价值点。部分无法掌握核心技术的车企只能逐渐变边缘化，甚至沦为代工厂。</p>
+<div class="group-picture"><div class="group-picture-container"><div class="group-picture-row"><div class="group-picture-column" style="width: 50%;"><img alt="售价20万的燃油车制造成本分布（单位：万元）" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_petrol-car-cost.png"></div><div class="group-picture-column" style="width: 50%;"><img alt="售价20万的新能源汽车制造成本分布（单位：万元）" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_electric-car-cost.png"></div></div></div></div>
+<p><strong>新能源汽车以“三电”为核心，汽车电子技术的飞速发展有助于其技术进步和推广普及。</strong></p>
+<p>汽车电子由半导体器件组成，用以感知、计算、执行汽车的各个状态和功能。由于新能源汽车以“三电”为核心，电池、 电机、电控都离不开“电”，随着电子技术的不断发展，电子元器件将在新能源汽车中得到更多的应用(目前汽车电子在新能源汽车中价值量占比约 65%，远高于传统燃油车)。 而电子领域的“摩尔定律”则有望助力新能源汽车发展，使其进化迭代速度远远快于传统燃油汽车。</p>
+<h4 id="中国的先发优势和规模优势"><a href="#中国的先发优势和规模优势" class="headerlink" title="中国的先发优势和规模优势"></a>中国的先发优势和规模优势</h4><p>中国新能源汽车产业经过十年的规划和培育，已具备一定先发优势和规模优势。三电系统、充电基础设施等产业链配套初步形成。</p>
+<p>根据《汽车产业中长期发展规划》和《节能与 新能源汽车技术路线图》提出的目标，未来 10-15 年新能源汽车逐渐成为主流产品， 汽车产业初步实现电动化转型。</p>
+<ul>
+<li>到 2020 年，汽车产销规模将达到 3000 万辆，其中 新能源汽车年产量将达到 200 万辆</li>
+<li>到 2025 年，汽车产销规模将达到 3500 万辆， 其中新能源汽车年占比 20%以上</li>
+<li>到 2030 年，汽车产销规模将达到 3800 万辆，其中新能源汽车占比 40%以上。</li>
+<li>相对于我国传统汽车每年接近 3000 万辆的销售市场， 新能源汽车销量渗透率不到 3%，行业处于高速增长的初期阶段。</li>
+</ul>
+<p><img alt="中国新能源汽车销量预测" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_china-electric-vehicle.png"></p>
+<p>我国的新能源汽车行业，将会呈现出四大发展阶段，每个阶段的侧重点都会有所不同，每一个阶段都会有数量级的提升。</p>
+<p><img alt="中国新能源汽车未来发展的四个阶段" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_china-electric-vehicle-period.png"></p>
+<h4 id="软件定义的智能移动终端"><a href="#软件定义的智能移动终端" class="headerlink" title="软件定义的智能移动终端"></a>软件定义的智能移动终端</h4><p><strong>硬件变革</strong></p>
+<ul>
+<li>电池、电机、电控将取代发动机，汽车动力总成面临百年来最大变革</li>
+<li>智能网联将提升对于整车感知、交互与决策的需求，传感器、中控屏、芯片将成为汽车的核心零部件</li>
+</ul>
+<p><strong>软件变革</strong></p>
+<ul>
+<li>汽车电子电气架构将有分布式向类似于智能手机的集中式架构（底层操作系统、芯片 SOC）进化</li>
+<li>软硬件结构，既实现硬件标准化，又实现软件可重复开发利用，大量减少内部冗余</li>
+</ul>
+<p><strong>服务与生态变革</strong></p>
+<ul>
+<li>智能网联汽车可以在生命周期内通过 OTA 空中升级持续更新应用，界面交互将赋予汽车更多应用场景</li>
+<li>自动驾驶技术的发展将为司机提供更多的自由时间</li>
+<li>车联网技术的网站将使汽车随时与办公室、家、公共设施相联，实现远程控制</li>
+<li>汽车将成为各种服务和应用的入口</li>
+</ul>
+<h3 id="市场规模"><a href="#市场规模" class="headerlink" title="市场规模"></a>市场规模</h3><p>新能源汽车发展空间巨大，随着新能源汽车性能提升以及痛点的改善，新能源汽车带来的冲击越来越大，渗透率随之提升。根据 BNEF 预测，</p>
+<ul>
+<li>到 2025 年全球新 能源汽车的销量将达到 1100 万辆，渗透率达到 11%，同年燃油汽车销量将达到拐点，步入下行趋势;</li>
+<li>到 2030 年全球销量将继续攀升至 3000 万辆，渗透率达到 28%; </li>
+<li>到 2040 年全球销量有望达到 6000 万辆，渗透率提升至 55%。</li>
+<li><strong>长期看，全球新能源汽车市场空间有望成长到 10 万亿元量级。</strong></li>
+</ul>
+<div class="group-picture"><div class="group-picture-container"><div class="group-picture-row"><div class="group-picture-column" style="width: 50%;"><img alt="2015-2040年新能源汽车销量及渗透率发展趋势" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_long-term-electric-vehicle-sales.png"></div><div class="group-picture-column" style="width: 50%;"><img alt="2015-2040年新能源汽车与内燃机占比发展趋势" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_shares-ice-ev.png"></div></div></div></div>
+<h2 id="新能源汽车行业环境"><a href="#新能源汽车行业环境" class="headerlink" title="新能源汽车行业环境"></a>新能源汽车行业环境</h2><h3 id="政策分析"><a href="#政策分析" class="headerlink" title="政策分析"></a>政策分析</h3><h4 id="双积分政策"><a href="#双积分政策" class="headerlink" title="双积分政策"></a>双积分政策</h4><p><strong>「双积分政策」从生产端激励新能源车型的规模化生产</strong></p>
+<p>2017 年 9 月 27 日，工信部等五部委正式发布 「乘用车企业平均燃料消耗量与新能源积分并行管理办法」，也就是<code>双积分政策</code>。双积分政策于 2018 年 4 月 1 日期执行但不考核，预留一年缓冲期；执行范围包含境内乘用车生产企业和进口乘用车供应企业。</p>
+<p><img alt="双积分政策" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_double-score-policy.png"></p>
+<p>什么是双积分？简单来说就是生产燃油车减分，生产新能源车加分，积分可以交易。</p>
+<p>由于纯电动车型的生产积分获取与车型续航呈高度正相关，高续航纯电动车获得了更为有力的政策支持。</p>
+<h4 id="购置补贴与税费减免"><a href="#购置补贴与税费减免" class="headerlink" title="购置补贴与税费减免"></a>购置补贴与税费减免</h4><p><strong>补贴政策鼓励高续航里程、高能量密度、低能耗的车型。续航里程和能量密度双高的车型补贴不降反升，补贴政策开始向扶强扶优转变，有利于淘汰行业内落后 产能，促进行业龙头企业业务发展。</strong></p>
+<p><img alt="中国新能源汽车补贴政策历程" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_elctric-vehicle-subsidy-policy.png"></p>
+<h3 id="技术发展"><a href="#技术发展" class="headerlink" title="技术发展"></a>技术发展</h3><h4 id="动力电池技术发展与应用情况"><a href="#动力电池技术发展与应用情况" class="headerlink" title="动力电池技术发展与应用情况"></a>动力电池技术发展与应用情况</h4><p><strong>锂电池技术加速商业化，能量密度不断提升，成本逐步降低</strong></p>
+<p>在新能源汽车的三电系统中，相较电动机与电控系统而言，动力电池是新能源汽车主要技术突破方向。动力电池领域也存在类似于「摩尔定律」一样的技术进步时间线，电池能量密度每经过一段时间会出现大幅度提升。</p>
+<p><img alt="电池能量密度发展" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_battery-energy-density.png"></p>
+<p>随着电池能量密度的不断提升，电动车平均续航里程也在不断增长。第 17 批新能源汽车免征购置税目录中电动车的平均续航里程已达到 313 公里，较第 10 批平均值提升约 41%。</p>
+<p><img alt="电动车平均续航里程发展" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_recharge-mileage.png"></p>
+<p>随着电池技术的发展，电动车与燃油车之间续航里程的差距将不断缩小甚至反超。</p>
+<ul>
+<li>宝马计划在 2025 年前推出 12 款纯电动车型，续航里程均超过 700 公里</li>
+<li>奔驰计划在 2025 年推出 1000 公里续航的电动车</li>
+</ul>
+<h4 id="充电设施建设与分布情况"><a href="#充电设施建设与分布情况" class="headerlink" title="充电设施建设与分布情况"></a>充电设施建设与分布情况</h4><p>电动车在充电、续航的劣势也在不断改进优化。截止 2018 年 12 月，我国公共充电桩达到 33.1 万台，私人充电桩达到 47.7 万台。政府加强对充电基础设施的产业扶持力度，2019 年补贴政策指出，新能源地方补贴资金转向充电设施补贴。</p>
+<div class="group-picture"><div class="group-picture-container"><div class="group-picture-row"><div class="group-picture-column" style="width: 50%;"><img alt="全国新增公共充电桩数量" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_public-charging-pile-by-time.png"></div><div class="group-picture-column" style="width: 50%;"><img alt="各地区公共桩保有量" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_public-charging-pile-by-region.png"></div></div></div></div>
+<h4 id="车联网技术发展与应用情况"><a href="#车联网技术发展与应用情况" class="headerlink" title="车联网技术发展与应用情况"></a>车联网技术发展与应用情况</h4><p><strong>车联网高速增长，借助新能源汽车实现电动化与网联化融合</strong></p>
+<p>我国 5G 从 2020 年将正式进入商用阶段。5G 技术的发展使车辆可以与外界(V2X)进行大容量、高速度、 低延迟的大数据传输，让自动驾驶成为可能。相比传统燃油车的发动机，新能源汽车通过电机控制电压电流的输入输出，与智能汽车中大量的线传电控技术融合性更好。</p>
+<p><img alt="中国移动筛选的5G网络应用" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_5g-application.png"></p>
+<h4 id="自动驾驶技术发展与应用情况"><a href="#自动驾驶技术发展与应用情况" class="headerlink" title="自动驾驶技术发展与应用情况"></a>自动驾驶技术发展与应用情况</h4><p><strong>自动驾驶技术正向 L4 阶段迈进，与纯电动汽车的兼容性绝佳</strong></p>
+<p>自动驾驶将是未来出行不可或缺的智能配置，也是汽车智能化的标志之一。</p>
+<p><img alt="自动驾驶发展图" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_roadmap-to-automation.png"></p>
+<p>纯电动汽车较内燃机而言具备绝佳的自动驾驶技术兼容性，其电力驱动与电子控制系统可与自动驾驶技术必须的传感器和计算机硬件设备高效对接。自动驾驶技术与车联网技术也是互为表里，二者在新能源汽车上的规模化应用是必然趋势。</p>
+<h2 id="新能源汽车产业链结构"><a href="#新能源汽车产业链结构" class="headerlink" title="新能源汽车产业链结构"></a>新能源汽车产业链结构</h2><p>这里用思维导图理出了新能源汽车产业链上下游的组成部分，关于各个部分的深入研究等以后继续填坑。</p>
+<embed src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-18_electric-vehicle-industry-chain.svg" style="display:block;width:100%;height:100%" onclick>
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/91ee7b9b/" rel="bookmark">【交易笔记】MACD 分析</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/8082c63c/" title="聊聊行业">http://houmin.cc/posts/8082c63c/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E8%A1%8C%E4%B8%9A%E7%A0%94%E7%A9%B6/" rel="tag"><i class="fa fa-tag"></i> 行业研究</a>
+              <a href="/tags/%E6%96%B0%E8%83%BD%E6%BA%90%E6%B1%BD%E8%BD%A6/" rel="tag"><i class="fa fa-tag"></i> 新能源汽车</a>
+              <a href="/tags/%E4%BA%A7%E4%B8%9A%E9%93%BE/" rel="tag"><i class="fa fa-tag"></i> 产业链</a>
+              <a href="/tags/%E6%8A%95%E8%B5%84/" rel="tag"><i class="fa fa-tag"></i> 投资</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/f5d73ad0/" rel="next" title="Hexo 博客容器化">
+                  <i class="fa fa-chevron-left"></i> Hexo 博客容器化
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/4119174d/" rel="prev" title="武汉日记">
+                  武汉日记 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#行业研究"><span class="nav-number">1.</span> <span class="nav-text">行业研究</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#行业分类"><span class="nav-number">1.1.</span> <span class="nav-text">行业分类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#行业研究框架"><span class="nav-number">1.2.</span> <span class="nav-text">行业研究框架</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#新能源汽车概述"><span class="nav-number">2.</span> <span class="nav-text">新能源汽车概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#前言"><span class="nav-number">2.1.</span> <span class="nav-text">前言</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#竞争格局重塑，价值链重构"><span class="nav-number">2.1.1.</span> <span class="nav-text">竞争格局重塑，价值链重构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#中国的先发优势和规模优势"><span class="nav-number">2.1.2.</span> <span class="nav-text">中国的先发优势和规模优势</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#软件定义的智能移动终端"><span class="nav-number">2.1.3.</span> <span class="nav-text">软件定义的智能移动终端</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#市场规模"><span class="nav-number">2.2.</span> <span class="nav-text">市场规模</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#新能源汽车行业环境"><span class="nav-number">3.</span> <span class="nav-text">新能源汽车行业环境</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#政策分析"><span class="nav-number">3.1.</span> <span class="nav-text">政策分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#双积分政策"><span class="nav-number">3.1.1.</span> <span class="nav-text">双积分政策</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#购置补贴与税费减免"><span class="nav-number">3.1.2.</span> <span class="nav-text">购置补贴与税费减免</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#技术发展"><span class="nav-number">3.2.</span> <span class="nav-text">技术发展</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#动力电池技术发展与应用情况"><span class="nav-number">3.2.1.</span> <span class="nav-text">动力电池技术发展与应用情况</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#充电设施建设与分布情况"><span class="nav-number">3.2.2.</span> <span class="nav-text">充电设施建设与分布情况</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#车联网技术发展与应用情况"><span class="nav-number">3.2.3.</span> <span class="nav-text">车联网技术发展与应用情况</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#自动驾驶技术发展与应用情况"><span class="nav-number">3.2.4.</span> <span class="nav-text">自动驾驶技术发展与应用情况</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#新能源汽车产业链结构"><span class="nav-number">4.</span> <span class="nav-text">新能源汽车产业链结构</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

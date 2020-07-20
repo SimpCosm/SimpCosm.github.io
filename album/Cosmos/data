@@ -1,0 +1,50 @@
+{
+    "meta": {
+        "name": "Cosmos",
+        "cover": "2019-11-24_blue.jpg",
+        "description": "宇宙、秩序、和谐",
+        "created": "2019-12-10 19:24:05",
+        "updated": "2019-12-31 19:30:52",
+        "imageBed": "https://images-cosmos.s3-ap-southeast-1.amazonaws.com/album",
+        "number": 4
+    },
+    "data": [
+        {
+            "date": "2019-11",
+            "images": [
+                {
+                    "name": "2019-11-24_moutain.jpg",
+                    "caption": "云杉坪",
+                    "type": "image",
+                    "date": "2019-11-24",
+                    "width": 4000,
+                    "height": 2250
+                },
+                {
+                    "name": "2019-11-24_blue.jpg",
+                    "caption": "蓝色的天空和蓝色的湖泊",
+                    "type": "image",
+                    "date": "2019-11-24",
+                    "width": 4000,
+                    "height": 2250
+                },
+                {
+                    "name": "2019-11-21_moutain-and-cloud.jpg",
+                    "caption": "黄昏夕阳，苍山白云，回家的路上",
+                    "type": "image",
+                    "date": "2019-11-21",
+                    "width": 1000,
+                    "height": 630
+                },
+                {
+                    "name": "2019-11-21_white-boat.jpg",
+                    "caption": "苍山洱海 飞鸟白船 ",
+                    "type": "image",
+                    "date": "2019-11-21",
+                    "width": 1000,
+                    "height": 549
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="两周前我在 YouTube 上看到一个好玩的视频，讲的是一个斜杠中年 Damien Riehl 用计算机程序 6 天暴力跑完 C 调所有音乐旋律的事情。Damien Riehl 是一个特别有意思的老哥，他从 2002 年以来一直是一名律师，从 1985 年开始从事编码工作；与此同时，他还是一个音乐家。天…这不是我一直想要成为的样子吗，So Cool ！ 在这个视频中，包括他做的一个 TED 演讲，">
+<meta name="keywords" content="计算机,音乐,法律,斜杠青年">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Melodies Are Just Math">
+<meta property="og:url" content="http://houmin.cc/posts/987306d8/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="两周前我在 YouTube 上看到一个好玩的视频，讲的是一个斜杠中年 Damien Riehl 用计算机程序 6 天暴力跑完 C 调所有音乐旋律的事情。Damien Riehl 是一个特别有意思的老哥，他从 2002 年以来一直是一名律师，从 1985 年开始从事编码工作；与此同时，他还是一个音乐家。天…这不是我一直想要成为的样子吗，So Cool ！ 在这个视频中，包括他做的一个 TED 演讲，">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-07_midi-file-format.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-07_midi-channel-voice-messages.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-07_midi-program-change.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-07_composer-tech-tree.jpg">
+<meta property="og:updated_time" content="2020-07-14T08:24:44.102Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-07_midi-file-format.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/987306d8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Melodies Are Just Math | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/987306d8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Melodies Are Just Math
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-03-07 10:30:06" itemprop="dateCreated datePublished" datetime="2020-03-07T10:30:06+08:00">2020-03-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%9D%E8%8A%B1%E5%A4%95%E6%8B%BE/" itemprop="url" rel="index">
+                    <span itemprop="name">朝花夕拾</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/987306d8/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/987306d8/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>13k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>24 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>两周前我在 YouTube 上看到一个好玩的视频，讲的是一个斜杠中年 <a href="https://www.linkedin.com/in/damienriehl" target="_blank" rel="external nofollow noopener noreferrer">Damien Riehl</a> 用计算机程序 6 天暴力跑完 C 调所有音乐旋律的事情。<code>Damien Riehl</code> 是一个特别有意思的老哥，他从 2002 年以来一直是一名律师，从 1985 年开始从事编码工作；与此同时，他还是一个音乐家。天…这不是我一直想要成为的样子吗，So Cool ！</p>
+<p>在这个视频中，包括他做的一个 TED 演讲，<code>Damien Riehl</code>探讨了人工智能时代音乐与版权等值得思考与讨论的问题。这里是「朝花夕拾」第八期，作为一个音乐小白兼程序猿，我尝试来理解他们到底做了什么。另外，作为一个法盲，也尝试聊一聊音乐版权中的法律问题。</p>
+<div class="video-container"><iframe src="//www.youtube.com/embed/sfXn_ecH5Rw" frameborder="0" allowfullscreen></iframe></div>
+<a id="more"></a>
+<h2 id="Get-Hands-Dirty"><a href="#Get-Hands-Dirty" class="headerlink" title="Get Hands Dirty !"></a>Get Hands Dirty !</h2><p>令人开心的是，<code>Damien Riehl</code>已经把他们工作的代码传到了 <a href="https://github.com/allthemusicllc/atm-cli" target="_blank" rel="external nofollow noopener noreferrer">GitHub</a>。看了看，代码使用 <code>Rust</code> 写的，除了一个简单的命令行工具外，还写了一个专门的库 <a href="https://github.com/allthemusicllc/libatm" target="_blank" rel="external nofollow noopener noreferrer">libatm</a>。对于程序猿来说，不怕新语言，就怕没代码。不就是 Rust 吗，看看<a href="https://kaisery.github.io/trpl-zh-cn" target="_blank" rel="external nofollow noopener noreferrer">教程</a>, 就可以开始干活了（正好一直想学一学 Rust ：）</p>
+<p>拿到代码，可以看到 client 的代码简单，只是对于 library 的简单封装。（谁说不是呢，一个命令行要多复杂）</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">houmin@cosmos:~/atm-cli/src$ ls</span><br><span class="line">cli.rs  directives.rs  lib.rs  main.rs  utils.rs</span><br></pre></td></tr></table></figure>
+<p>看看 library，实际上也只有一个简单的 <code>lib.rs</code>，参考他的<a href="https://allthemusicllc.github.io/libatm/libatm/" target="_blank" rel="external nofollow noopener noreferrer">文档</a>可以看到这就是一个专门针对 MIDI 文件的库。它在这里定义了 MIDI 的文件格式，定义了音符，定义了音符序列，定义了音轨…</p>
+<p>什么是 MIDI，Why MIDI？</p>
+<h2 id="About-MIDI"><a href="#About-MIDI" class="headerlink" title="About MIDI"></a>About MIDI</h2><p>MIDI，<code>Musical Instrument Digital Interface</code>，乐器数字接口 ，是20 世纪80 年代初为解决电声乐器之间的通信问题而提出的。MIDI是编曲界最广泛的音乐标准格式，可称为「计算机能理解的乐谱」。它用音符的数字控制信号来记录音乐。</p>
+<p>一首完整的MIDI音乐只有几十KB大，而能包含数十条<strong>音乐轨道</strong>。几乎所有的现代音乐都是用<strong>MIDI</strong>加上<strong>音色库</strong>来制作合成的。MIDI 传输的不是声音信号， 而是音符、控制参数等指令, 它指示 MIDI 设备要做什么，怎么做，如演奏哪个音符、多大音量等，它们被统一表示成 <strong>MIDI消息</strong> (<code>MIDI Message</code>) 。</p>
+<h3 id="MIDI-File-Format"><a href="#MIDI-File-Format" class="headerlink" title="MIDI File Format"></a>MIDI File Format</h3><p>MIDI 文件是由一系列的 <code>chunk</code>组成的，每个 <code>chunk</code> 的组成格式如下：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">type</th>
+<th style="text-align:center">length</th>
+<th style="text-align:center">data</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">4 bytes</td>
+<td style="text-align:center">4 bytes</td>
+<td style="text-align:center">length bytes</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>这里的  <code>Chunk Type</code>有两种类型：</p>
+<ul>
+<li><strong>Header Trunks</strong>，也就是 <code>MThd</code>类型</li>
+<li><strong>Track Chunks</strong>，也就是 <code>MTrk</code>类型</li>
+</ul>
+<p>那么一个 MIDI 文件组成如下，开始是一个 <code>Header Trunk</code>，之后跟随着一个或多个<code>Track Chunks</code></p>
+<figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Format|<span class="string">  type  </span>|<span class="string">  length  </span>|<span class="string">                        Data                        </span>|</span><br><span class="line">-------------------------------------------------------------------------------</span><br><span class="line">REAL  |<span class="string">  MThd  </span>|<span class="string">    6     </span>|<span class="string">    &lt;format&gt;    </span>|<span class="string">    &lt;tracks&gt;    </span>|<span class="string">    &lt;division&gt;    </span>|</span><br><span class="line">MIDI  |<span class="string">  MTrk  </span>|<span class="string"> &lt;length&gt; </span>|<span class="string">            &lt;delta_time&gt; &lt;event&gt; ...                </span>|</span><br><span class="line">FILE  |<span class="string">                                :                                       </span>|</span><br><span class="line">DATA  |<span class="string">  MTrk  </span>|<span class="string"> &lt;length&gt; </span>|<span class="string">            &lt;delta_time&gt; &lt;event&gt; ...                </span>|</span><br><span class="line">-------------------------------------------------------------------------------</span><br></pre></td></tr></table></figure>
+<h4 id="Header-Chunk"><a href="#Header-Chunk" class="headerlink" title="Header Chunk"></a>Header Chunk</h4><p>这里是 <code>MIDI Header</code>的组成</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// MIDI file header</span></span><br><span class="line"><span class="comment">///</span></span><br><span class="line"><span class="comment">/// Unlike the [MIDITrackHeader](struct.MIDITrackHeader.html), this structure is</span></span><br><span class="line"><span class="comment">/// specified in the official MIDI spec (as "Header Chunk"), though the last three 16-bit</span></span><br><span class="line"><span class="comment">/// fields are simply referred to as "Data".  For a more detailed discussion of the</span></span><br><span class="line"><span class="comment">/// Header Chunk, see section 2.1 of the document here:</span></span><br><span class="line"><span class="comment">/// &lt;https://www.cs.cmu.edu/~music/cmsip/readings/Standard-MIDI-file-format-updated.pdf&gt;.</span></span><br><span class="line"><span class="meta">#[derive(Clone, Debug, PartialEq)]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">MIDIHeader</span></span> &#123;</span><br><span class="line">    <span class="keyword">pub</span> chunk_type: <span class="built_in">Vec</span>&lt;<span class="built_in">u8</span>&gt;,</span><br><span class="line">    <span class="keyword">pub</span> length: <span class="built_in">u32</span>,</span><br><span class="line">    <span class="keyword">pub</span> format: <span class="built_in">u16</span>,</span><br><span class="line">    <span class="keyword">pub</span> tracks: <span class="built_in">u16</span>,</span><br><span class="line">    <span class="keyword">pub</span> division: <span class="built_in">u16</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对着几个参数依次分析</p>
+<ul>
+<li><strong>format</strong></li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// MIDI file format</span></span><br><span class="line"><span class="comment">///</span></span><br><span class="line"><span class="comment">/// MIDI files have three different formats: 0, 1, and 2.  Format 0 means the MIDI file</span></span><br><span class="line"><span class="comment">/// has a single track chunk, whereas formats 1 and 2 indicate one _or more_ track chunks.</span></span><br><span class="line"><span class="comment">/// A longer discussion of these formats can be found in section 2.2 of the document here:</span></span><br><span class="line"><span class="comment">/// &lt;https://www.cs.cmu.edu/~music/cmsip/readings/Standard-MIDI-file-format-updated.pdf&gt;.</span></span><br><span class="line"><span class="meta">#[derive(Clone, Copy, Debug)]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">enum</span> <span class="title">MIDIFormat</span></span> &#123;</span><br><span class="line">    <span class="comment">/// Single track.</span></span><br><span class="line">    Format0,</span><br><span class="line">    <span class="comment">/// One or more simultaneous tracks.</span></span><br><span class="line">    Format1,</span><br><span class="line">    <span class="comment">/// One or more independent tracks.</span></span><br><span class="line">    Format2,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p><strong>tracks</strong></p>
+<p>指在这个 MIDI 文件中有多少个 <code>Track chunks</code></p>
+</li>
+<li><p><strong>division</strong></p>
+<p>指定基本时间格式，根据最高位的不同，这两个字节有不同的含义。</p>
+<blockquote>
+ <figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">|<span class="string">     bit 15    </span>|<span class="string">    bits 14 thru 8         </span>|<span class="string">        bits 7 thru 0      </span>|</span><br><span class="line">|<span class="string">       0       </span>|<span class="string">              ticks per quarter-note                   </span>|</span><br><span class="line">|<span class="string">       1       </span>|<span class="string">  negative SMPTE format    </span>|<span class="string">        ticks per frame    </span>|</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>bit 15 = 0:</p>
+<ul>
+<li>bits 0-14<br>number of delta-time units in each a quarter-note.</li>
+</ul>
+</li>
+<li><p>bit 15 = 1:</p>
+<ul>
+<li><p>bits 0-7<br>number of delta-time units per SMTPE frame</p>
+</li>
+<li><p>bits 8-14<br>form a negative number, representing the number of SMTPE frames per second. Valid values correspond to those in the MTC Quarter Frame message.</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">-24</span> = <span class="number">24</span> frames per second</span><br><span class="line"><span class="number">-25</span> = <span class="number">25</span> frames per second</span><br><span class="line"><span class="number">-29</span> = <span class="number">30</span> frames per second, drop frame</span><br><span class="line"><span class="number">-30</span> = <span class="number">30</span> frames per second, non-drop frame</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+</li>
+</ul>
+<h4 id="Track-Chunk"><a href="#Track-Chunk" class="headerlink" title="Track Chunk"></a>Track Chunk</h4><p>对于每一个 <code>Track Chunk</code>也是一样，具有和上面相同的 <code>Track Header</code></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// MIDI track chunk header</span></span><br><span class="line"><span class="comment">///</span></span><br><span class="line"><span class="comment">///  Encapsulates the chunk type ('MTrk') and the length</span></span><br><span class="line"><span class="comment">///  of a MIDI track chunk.  The official MIDI spec does</span></span><br><span class="line"><span class="comment">///  not refer to these data as the truck chunk header, this</span></span><br><span class="line"><span class="comment">///  library simply makes the distinction for ease of use.</span></span><br><span class="line"><span class="meta">#[derive(Clone, Debug, PartialEq)]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">MIDITrackHeader</span></span> &#123;</span><br><span class="line">    <span class="keyword">pub</span> chunk_type: <span class="built_in">Vec</span>&lt;<span class="built_in">u8</span>&gt;,</span><br><span class="line">    <span class="keyword">pub</span> length: <span class="built_in">u32</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>紧接着 <code>Track Header</code>就是音轨实际的数据，是由一系列的 <code>MTrk event</code>组成，写成公式表达如下（+ means one or more）</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">Track</span> <span class="attr">Chunk</span>&gt;</span> = <span class="tag">&lt;<span class="name">chunk</span> <span class="attr">type</span>&gt;</span><span class="tag">&lt;<span class="name">length</span>&gt;</span><span class="tag">&lt;<span class="name">MTrk</span> <span class="attr">event</span>&gt;</span>+</span><br></pre></td></tr></table></figure>
+<p>而<code>MTrk event</code>的组成很简单，由<code>delta time</code> 和 <code>event</code>组成。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">MTrk</span> <span class="attr">event</span>&gt;</span> = <span class="tag">&lt;<span class="name">delta-time</span>&gt;</span><span class="tag">&lt;<span class="name">event</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p><code>&lt;delta-time&gt;</code> is stored as a variable-length quantity. It represents the amount of time before the following event. If the first event in a track occurs at the very beginning of a track, or if two events occur simultaneously, a delta-time of zero is used. Delta-times are always present. (Not storing delta-times of 0 requires at least two bytes for any other value, and most delta-times aren’t zero.) Delta-time is in some fraction of a beat (or a second, for recording a track with SMPTE times), as specified in the header chunk.</p>
+</blockquote>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">event</span>&gt;</span> = <span class="tag">&lt;<span class="name">MIDI</span> <span class="attr">event</span>&gt;</span> | <span class="tag">&lt;<span class="name">sysex</span> <span class="attr">event</span>&gt;</span> | <span class="tag">&lt;<span class="name">meta-event</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>这里的 <code>event</code>分为三种类型：</p>
+<ul>
+<li>MIDI event：指 MIDI 通道信息，也是描述 MIDI 音乐的主要部分，参见<a href="###MIDI Message">下小节</a></li>
+<li>Sysex event：指系统控制信息，参见<a href="http://www.personal.kent.edu/~sbirch/Music_Production/MP-II/MIDI/midi_file_format.htm#sysex_event" target="_blank" rel="external nofollow noopener noreferrer">这里</a></li>
+<li>Meta event：主要记录一些元信息，包括版权信息、歌词、乐器名等，参见<a href="http://www.personal.kent.edu/~sbirch/Music_Production/MP-II/MIDI/midi_file_format.htm#meta_event" target="_blank" rel="external nofollow noopener noreferrer">这里</a></li>
+</ul>
+<h4 id="Put-Things-Together"><a href="#Put-Things-Together" class="headerlink" title="Put Things Together"></a>Put Things Together</h4><p><img alt="MIDI文件格式" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-07_midi-file-format.png"></p>
+<h3 id="MIDI-Messages"><a href="#MIDI-Messages" class="headerlink" title="MIDI Messages"></a>MIDI Messages</h3><p><code>MIDI Messages</code>可以分为两大类，专门用于某个特定 MIDI 通道的消息称为<strong>Channel Messages</strong>，而有些消息会影响到整个MIDI 系统（或者至少整个 MIDI 设备），称作 <strong>System Messages</strong>，系统消息不会和某个特定通道有关系。更加详细的可以分为以下几类：</p>
+<ul>
+<li><strong><a href="http://www.personal.kent.edu/~sbirch/Music_Production/MP-II/MIDI/midi_channel_voice_messages.htm" target="_blank" rel="external nofollow noopener noreferrer">Channel Voice Messages</a></strong>：开始、改变或者停止声音的消息</li>
+<li><strong><a href="http://www.personal.kent.edu/~sbirch/Music_Production/MP-II/MIDI/midi_channel_mode_messages.htm" target="_blank" rel="external nofollow noopener noreferrer">Channel Mode Messages</a></strong>：影响整个通道的控制消息</li>
+<li><a href="http://www.personal.kent.edu/~sbirch/Music_Production/MP-II/MIDI/midi_system_real.htm" target="_blank" rel="external nofollow noopener noreferrer">System Real-Time Messages</a>：用来同步时序，只有状态字节，没有数据字节</li>
+<li><a href="http://www.personal.kent.edu/~sbirch/Music_Production/MP-II/MIDI/midi_system_common_messages.htm" target="_blank" rel="external nofollow noopener noreferrer">System Common Messages</a>**：系统通用信息，比如 <code>song select</code>等</li>
+<li><strong><a href="http://www.personal.kent.edu/~sbirch/Music_Production/MP-II/MIDI/midi_system_exclusive_messages.htm" target="_blank" rel="external nofollow noopener noreferrer">System Exclusive Messages</a></strong>：设备专用的扩展信息，每个设备厂家可以自己定义</li>
+</ul>
+<p>不管分类如何，所有的 MIDI 消息组成的结构都一样：</p>
+<ul>
+<li>A <strong>Status Byte</strong>，一个状态字节<br><code>range: 0x80..FF</code></li>
+<li>Zero or more <strong>Data Bytes</strong>，0 或多个数据字节<br><code>range: 0x00..7F</code></li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// MIDI channel voice message</span></span><br><span class="line"><span class="comment">///</span></span><br><span class="line"><span class="comment">/// MIDI supports two main types of messages: Channel and System.</span></span><br><span class="line"><span class="comment">/// Channel messages are tied to a specific MIDI channel, whereas</span></span><br><span class="line"><span class="comment">/// System messages are not (and thus don't contain a channel number).</span></span><br><span class="line"><span class="comment">/// This library only supports channel messages, and more specifically</span></span><br><span class="line"><span class="comment">/// the `NoteOn` and `NoteOff` channel _voice_ messages,</span></span><br><span class="line"><span class="comment">/// which actually produce sounds.  For a detailed explanation of</span></span><br><span class="line"><span class="comment">/// MIDI messages, see appendix 1.1 of the document here:</span></span><br><span class="line"><span class="comment">/// &lt;https://www.cs.cmu.edu/~music/cmsip/readings/Standard-MIDI-file-format-updated.pdf&gt;.</span></span><br><span class="line"><span class="meta">#[derive(Clone, Copy, Debug, PartialEq)]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">MIDIChannelVoiceMessage</span></span> &#123;</span><br><span class="line">    <span class="keyword">pub</span> delta_time: <span class="built_in">u8</span>,</span><br><span class="line">    <span class="keyword">pub</span> status: <span class="built_in">u8</span>,</span><br><span class="line">    <span class="keyword">pub</span> note: <span class="built_in">u8</span>,</span><br><span class="line">    <span class="keyword">pub</span> velocity: <span class="built_in">u8</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>下图是典型的 <code>Channel Voice Message</code>的例子，更多内容可以参考<a href="http://www.personal.kent.edu/~sbirch/Music_Production/MP-II/MIDI/midi_channel_voice_messages.htm#note1" target="_blank" rel="external nofollow noopener noreferrer">这里</a>。</p>
+<p><img alt="MIDI Channel Voice Messages" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-07_midi-channel-voice-messages.png"></p>
+<p>根据代码，我们可以一一对应起来，比如这里的 <code>NoteOn</code>就是 <code>0b1001</code>(0b 是二进制表示)</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// MIDI message status</span></span><br><span class="line"><span class="comment">///</span></span><br><span class="line"><span class="comment">/// Each MIDI event (message) has a status, which sets the message type and thus the meaning</span></span><br><span class="line"><span class="comment">/// of the associated message data.  Technically the status bits also include the channel number,</span></span><br><span class="line"><span class="comment">/// but this library currently only supports single track, single channel MIDI files (and thus</span></span><br><span class="line"><span class="comment">/// defaults to channel 0).  For a detailed description of each status type, see Appendix 1.1 of the document here:</span></span><br><span class="line"><span class="comment">/// &lt;https://www.cs.cmu.edu/~music/cmsip/readings/Standard-MIDI-file-format-updated.pdf&gt;.</span></span><br><span class="line"><span class="meta">#[derive(Clone, Copy, Debug)]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">enum</span> <span class="title">MIDIStatus</span></span> &#123;</span><br><span class="line">    <span class="comment">/// Assume status bytes of previous MIDI channel message</span></span><br><span class="line">    RunningStatus = <span class="number">0b0000</span>,</span><br><span class="line">    <span class="comment">/// Note released</span></span><br><span class="line">    NoteOff = <span class="number">0b1000</span>,</span><br><span class="line">    <span class="comment">/// Note pressed</span></span><br><span class="line">    NoteOn = <span class="number">0b1001</span>,</span><br><span class="line">    <span class="comment">/// Pressure on key after pressed down</span></span><br><span class="line">    PolyphonicAftertouch = <span class="number">0b1010</span>,</span><br><span class="line">    <span class="comment">/// Controller value change</span></span><br><span class="line">    ControlChange = <span class="number">0b1011</span>,</span><br><span class="line">    <span class="comment">/// Change program (patch) number</span></span><br><span class="line">    ProgramChange = <span class="number">0b1100</span>,</span><br><span class="line">    <span class="comment">/// Greatest pressure on key after pressed down</span></span><br><span class="line">    Aftertouch = <span class="number">0b1101</span>,</span><br><span class="line">    <span class="comment">/// Chainge pitch wheel</span></span><br><span class="line">    PitchWheelChange = <span class="number">0b1110</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>MIDI Note</strong></li>
+</ul>
+<p>在上图中我们可以看到，MIDI 消息的数据中有一个 <code>kk</code>字段，说的是按下的 Key，也就是我们通常说的<code>音符 Note</code>。这里是按照每个<code>八度 Octave</code>一组进行排列，其中 <code>Middle C</code>，也就是 C4 的序号是 60（十进制）</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th><strong>Octave #</strong></th>
+<th>C</th>
+<th>C#</th>
+<th>D</th>
+<th>D#</th>
+<th>E</th>
+<th>F</th>
+<th>F#</th>
+<th>G</th>
+<th>G#</th>
+<th>A</th>
+<th>A#</th>
+<th>B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-1</td>
+<td>0</td>
+<td>1</td>
+<td>2</td>
+<td>3</td>
+<td>4</td>
+<td>5</td>
+<td>6</td>
+<td>7</td>
+<td>8</td>
+<td>9</td>
+<td>10</td>
+<td>11</td>
+</tr>
+<tr>
+<td>0</td>
+<td>12</td>
+<td>13</td>
+<td>14</td>
+<td>15</td>
+<td>16</td>
+<td>17</td>
+<td>18</td>
+<td>19</td>
+<td>20</td>
+<td>21</td>
+<td>22</td>
+<td>23</td>
+</tr>
+<tr>
+<td>1</td>
+<td>24</td>
+<td>25</td>
+<td>26</td>
+<td>27</td>
+<td>28</td>
+<td>29</td>
+<td>30</td>
+<td>31</td>
+<td>32</td>
+<td>33</td>
+<td>34</td>
+<td>35</td>
+</tr>
+<tr>
+<td>2</td>
+<td>36</td>
+<td>37</td>
+<td>38</td>
+<td>39</td>
+<td>40</td>
+<td>41</td>
+<td>42</td>
+<td>43</td>
+<td>44</td>
+<td>45</td>
+<td>46</td>
+<td>47</td>
+</tr>
+<tr>
+<td>3</td>
+<td>48</td>
+<td>49</td>
+<td>50</td>
+<td>51</td>
+<td>52</td>
+<td>53</td>
+<td>54</td>
+<td>55</td>
+<td>56</td>
+<td>57</td>
+<td>58</td>
+<td>59</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>60</strong></td>
+<td>61</td>
+<td>62</td>
+<td>63</td>
+<td>64</td>
+<td>65</td>
+<td>66</td>
+<td>67</td>
+<td>68</td>
+<td>69</td>
+<td>70</td>
+<td>71</td>
+</tr>
+<tr>
+<td>5</td>
+<td>72</td>
+<td>73</td>
+<td>74</td>
+<td>75</td>
+<td>76</td>
+<td>77</td>
+<td>78</td>
+<td>79</td>
+<td>80</td>
+<td>81</td>
+<td>82</td>
+<td>83</td>
+</tr>
+<tr>
+<td>6</td>
+<td>84</td>
+<td>85</td>
+<td>86</td>
+<td>87</td>
+<td>88</td>
+<td>89</td>
+<td>90</td>
+<td>91</td>
+<td>92</td>
+<td>93</td>
+<td>94</td>
+<td>95</td>
+</tr>
+<tr>
+<td>7</td>
+<td>96</td>
+<td>97</td>
+<td>98</td>
+<td>99</td>
+<td>100</td>
+<td>101</td>
+<td>102</td>
+<td>103</td>
+<td>104</td>
+<td>105</td>
+<td>106</td>
+<td>107</td>
+</tr>
+<tr>
+<td>8</td>
+<td>108</td>
+<td>109</td>
+<td>110</td>
+<td>111</td>
+<td>112</td>
+<td>113</td>
+<td>114</td>
+<td>115</td>
+<td>116</td>
+<td>117</td>
+<td>118</td>
+<td>119</td>
+</tr>
+<tr>
+<td>9</td>
+<td>120</td>
+<td>121</td>
+<td>122</td>
+<td>123</td>
+<td>124</td>
+<td>125</td>
+<td>126</td>
+<td>127</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>对应在代码中：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// MIDI note</span></span><br><span class="line"><span class="comment">///</span></span><br><span class="line"><span class="comment">/// Represents key on a piano, combining a [note type](enum.MIDINoteType.html)</span></span><br><span class="line"><span class="comment">/// with an octave.  For example, middle C would be represented as</span></span><br><span class="line"><span class="comment">/// `MIDINote &#123; note_type: MIDINoteType::C, octave: 4 &#125;`.  For a detailed table</span></span><br><span class="line"><span class="comment">/// of MIDI notes and octave numbers, see document here:</span></span><br><span class="line"><span class="comment">/// &lt;https://www.cs.cmu.edu/~music/cmsip/readings/Standard-MIDI-file-format-updated.pdf&gt;.</span></span><br><span class="line"><span class="meta">#[derive(Clone, Copy, Debug, PartialEq)]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">MIDINote</span></span> &#123;</span><br><span class="line">    <span class="keyword">pub</span> note_type: MIDINoteType,</span><br><span class="line">    <span class="keyword">pub</span> octave: <span class="built_in">u32</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>Program Change</strong></li>
+</ul>
+<p>在上面的 status 中有一个 <code>Program Change</code>，说的是改变乐器。</p>
+<p><img alt="Program Change" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-07_midi-program-change.png"></p>
+<p>在 MIDI 中，对于不同的乐器也有相应的数字定义，这里简单列出了几个 Family 的序列范围。</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">PC#</th>
+<th style="text-align:center">Family</th>
+<th style="text-align:center">PC#</th>
+<th style="text-align:center">Family</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1-8</td>
+<td style="text-align:center">Piano</td>
+<td style="text-align:center">65-72</td>
+<td style="text-align:center">Reed</td>
+</tr>
+<tr>
+<td style="text-align:center">9-16</td>
+<td style="text-align:center">Chromatic Percussion</td>
+<td style="text-align:center">73-80</td>
+<td style="text-align:center">Pipe</td>
+</tr>
+<tr>
+<td style="text-align:center">17-24</td>
+<td style="text-align:center">Organ</td>
+<td style="text-align:center">81-88</td>
+<td style="text-align:center">Synth Lead</td>
+</tr>
+<tr>
+<td style="text-align:center">25-32</td>
+<td style="text-align:center">Guitar</td>
+<td style="text-align:center">89-96</td>
+<td style="text-align:center">Synth Pad</td>
+</tr>
+<tr>
+<td style="text-align:center">33-40</td>
+<td style="text-align:center">Bass</td>
+<td style="text-align:center">97-104</td>
+<td style="text-align:center">Synth Effects</td>
+</tr>
+<tr>
+<td style="text-align:center">41-48</td>
+<td style="text-align:center">Strings</td>
+<td style="text-align:center">105-112</td>
+<td style="text-align:center">Ethnic</td>
+</tr>
+<tr>
+<td style="text-align:center">49-56</td>
+<td style="text-align:center">Ensemble</td>
+<td style="text-align:center">113-120</td>
+<td style="text-align:center">Percussive</td>
+</tr>
+<tr>
+<td style="text-align:center">57-64</td>
+<td style="text-align:center">Brass</td>
+<td style="text-align:center">121-128</td>
+<td style="text-align:center">Sound Effects</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="MIDI-File"><a href="#MIDI-File" class="headerlink" title="MIDI File"></a>MIDI File</h3><p>这里我们定义了 <code>MIDIFile</code>类：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// MIDI file representation</span></span><br><span class="line"><span class="comment">///</span></span><br><span class="line"><span class="comment">/// MIDI files can be complex, allowing for any number of tracks with</span></span><br><span class="line"><span class="comment">/// different notes and instruments playing simultaneously.  This library</span></span><br><span class="line"><span class="comment">/// was created for the express purpose of brute-forcing melodies, and thus</span></span><br><span class="line"><span class="comment">/// only supports a subset of the official MIDI standard.  More specifically,</span></span><br><span class="line"><span class="comment">/// this class is optimized for creating the smallest possible single track MIDI</span></span><br><span class="line"><span class="comment">/// files.</span></span><br><span class="line"><span class="meta">#[derive(Clone, Debug)]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">MIDIFile</span></span> &#123;</span><br><span class="line">    <span class="comment">/// Sequence of notes ([MIDINoteSequence](struct.MIDINoteSequence.html)) from which the track chunk is generated</span></span><br><span class="line">    <span class="keyword">pub</span> sequence: MIDINoteSequence,</span><br><span class="line">    <span class="comment">/// Format specification (should always be [MIDIFormat::0](enum.MIDIFormat.html#variant.Format0))</span></span><br><span class="line">    <span class="keyword">pub</span> format: MIDIFormat,</span><br><span class="line">    <span class="comment">/// Number of tracks in MIDI file (should always be `1`)</span></span><br><span class="line">    <span class="keyword">pub</span> tracks: <span class="built_in">u16</span>,</span><br><span class="line">    <span class="comment">/// Number of ticks to represent a quarter-note (recommended to use `1`)</span></span><br><span class="line">    <span class="keyword">pub</span> division: <span class="built_in">u16</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过输入音符序列，我们即可生成对应的 MIDI 文件。比如这里输入序列为<code>C:4,D:5,CSharp:8,DSharp:3</code></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> mfile = libatm::MIDIFile::new(</span><br><span class="line">    libatm::MIDINoteSequence::new(<span class="built_in">vec!</span>[</span><br><span class="line">        libatm::MIDINote::new(libatm::MIDINoteType::C, <span class="number">4</span>),</span><br><span class="line">        libatm::MIDINote::new(libatm::MIDINoteType::D, <span class="number">5</span>),</span><br><span class="line">        libatm::MIDINote::new(libatm::MIDINoteType::CSharp, <span class="number">8</span>),</span><br><span class="line">        libatm::MIDINote::new(libatm::MIDINoteType::DSharp, <span class="number">3</span>),</span><br><span class="line">    ]),</span><br><span class="line">    libatm::MIDIFormat::Format0,</span><br><span class="line">    <span class="number">1</span>,</span><br><span class="line">    <span class="number">1</span>,</span><br><span class="line">);</span><br><span class="line"><span class="built_in">assert_eq!</span>(<span class="string">"607410951"</span>, mfile.gen_hash());</span><br></pre></td></tr></table></figure>
+<h2 id="Brute-Force"><a href="#Brute-Force" class="headerlink" title="Brute Force"></a>Brute Force</h2><p>到现在为止，我们对 MIDI 文件已经有了很深的理解，可能关于时序方面还不是很了解，但是我们知道这些参数足以完整的描述一个旋律，接下来我们看如何遍历所有的旋律。</p>
+<p>暴力枚举，那么我们需要知道总共有多少种可能，怎么判断呢？下面的公式</p>
+<script type="math/tex; mode=display">Total\ Possiblity = {number\ of\ pitch\ classes }^{number\ of\ note\ in\ time}</script><p>对于一个钢琴而言，总共有 88 种音高，对于一个有 12 个音符的旋律来说，总共有 $88^{12}$ 种可能。这意味着什么？即使是每个旋律只占 1 个字节的话，这将会占据 186 ZB，是不可能将所有旋律都存储在一个硬盘上的。</p>
+<p>那么，我们来看看<code>Damien Riehl</code>是如何做到的：</p>
+<div class="video-container"><iframe src="//www.youtube.com/embed/sJtm0MoOgiU" frameborder="0" allowfullscreen></iframe></div>
+<blockquote>
+<p>Now you might say <strong>what consititutes a melody</strong> ?</p>
+<p> We were initially going to take the entire piano keyboard and to do the all at the entire piano keyboard. But let’s focus on the <strong>vocal range</strong> which is actually 2 octaves and we thought actually we’re thinking about <strong>pop music</strong>, which is the only thing that makes money that people sue over,  doesn’t go to octaves. It goes a <strong>single octave</strong> so that’s what we landed on <strong>eight notes</strong>. </p>
+<p>Now you might say <strong>how may notes consititutes a melody</strong> ?</p>
+<p>So we looked at musicologists…and we landed at <strong>twelve notes</strong>.</p>
+</blockquote>
+<p><code>Damien Riehl</code>做了一个很巧妙的范围缩小，通过将研究目标锁定到人可歌唱的流行音乐，我们得出结论</p>
+<ul>
+<li>一个旋律的每个音符通常只有 8 种选择，比如 C 大调，<code>do re mi fa so la ti do</code></li>
+<li>只需要 12 个音符即可组成几乎所有的旋律。</li>
+<li>那么在这种情况下，有 $8^{12} = 68.7 million$ 种可能。</li>
+</ul>
+<p>基于这个认知，我们就可以暴力枚举了。</p>
+<p>下面这段代码很简单，就是遍历所有的 <code>Sequence</code>，对于每一个 <code>Sequence</code>生成 MIDI 文件，同时写到压缩包中。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">atm_batch</span></span>(args: BatchDirectiveArgs) &#123;</span><br><span class="line">    <span class="comment">// Initialize progress bar and set refresh rate</span></span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> pb = pbr::ProgressBar::new(args.max_count <span class="keyword">as</span> <span class="built_in">u64</span>);</span><br><span class="line">    pb.set_max_refresh_rate(<span class="literal">Some</span>(std::time::Duration::from_millis(args.update)));</span><br><span class="line">    <span class="comment">// Initialize output archive</span></span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> archive = crate::utils::BatchedMIDIArchive::new(</span><br><span class="line">        &amp;args.target,</span><br><span class="line">        args.partition_depth,</span><br><span class="line">        args.max_files,</span><br><span class="line">        args.partition_size,</span><br><span class="line">        args.batch_size,</span><br><span class="line">    );</span><br><span class="line">    <span class="comment">// For each generated sequence</span></span><br><span class="line">    <span class="keyword">for</span> (idx, notes) <span class="keyword">in</span> crate::utils::gen_sequences(&amp;args.sequence.notes, args.length).enumerate() &#123;</span><br><span class="line">        <span class="comment">// if reached max count, finish</span></span><br><span class="line">        <span class="keyword">if</span> idx == args.max_count &#123;</span><br><span class="line">            archive.finish().unwrap();</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// Clone libatm::MIDINoteSequence from Vec&lt;&amp;libatm::MIDINote&gt;</span></span><br><span class="line">        <span class="keyword">let</span> seq = libatm::MIDINoteSequence::new(</span><br><span class="line">            notes</span><br><span class="line">                .iter()</span><br><span class="line">                .map(|note| *note.clone())</span><br><span class="line">                .collect::&lt;<span class="built_in">Vec</span>&lt;libatm::MIDINote&gt;&gt;(),</span><br><span class="line">        );</span><br><span class="line">        <span class="comment">// Create MIDIFile from libatm::MIDINoteSequence</span></span><br><span class="line">        <span class="keyword">let</span> mfile = libatm::MIDIFile::new(seq, libatm::MIDIFormat::Format0, <span class="number">1</span>, <span class="number">1</span>);</span><br><span class="line">        <span class="comment">// Add MIDIFile to archive</span></span><br><span class="line">        archive.push(mfile).unwrap();</span><br><span class="line">        <span class="comment">// Increment progress bar</span></span><br><span class="line">        pb.inc();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Stop progress bar</span></span><br><span class="line">    pb.finish_println(<span class="string">""</span>);</span><br><span class="line">    <span class="comment">// Finish archive if not already finished</span></span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">let</span> crate::utils::BatchedMIDIArchiveState::Open = archive.state &#123;</span><br><span class="line">        archive.finish().unwrap();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因此，这里的 <code>gen_sequence</code>是关键。下面这段代码说明了它的原理：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// Generate all permutations (with replacement) of given length</span></span><br><span class="line"><span class="comment">/// from the given sequence of MIDI notes.</span></span><br><span class="line"><span class="comment">///</span></span><br><span class="line"><span class="comment">/// # Arguments:</span></span><br><span class="line"><span class="comment">///</span></span><br><span class="line"><span class="comment">/// * `notes`: sequence of MIDI notes (see: [libatm::MIDINote](../../libatm/struct.MIDINote.html))</span></span><br><span class="line"><span class="comment">/// * `length`: length of sequences to generate</span></span><br><span class="line"><span class="comment">///</span></span><br><span class="line"><span class="comment">/// # Examples</span></span><br><span class="line"><span class="comment">///</span></span><br><span class="line"><span class="comment">///</span></span><br><span class="line"><span class="comment">/// // Create MIDI note sequence</span></span><br><span class="line"><span class="comment">/// let sequence = "C:4,C:4,D:4,E:4,F:4,G:5".parse::&lt;libatm::MIDINoteSequence&gt;().unwrap();</span></span><br><span class="line"><span class="comment">/// // Create iterable over all permutations, which in this example would be</span></span><br><span class="line"><span class="comment">/// // 6^8 = 1,679,616 instances of `Vec&lt;&amp;libatm::MIDINote&gt;`.</span></span><br><span class="line"><span class="comment">/// let permutations = atm::utils::gen_sequences(&amp;sequence.notes, 8);</span></span><br><span class="line"><span class="comment">/// </span></span><br><span class="line"><span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">gen_sequences</span></span>(</span><br><span class="line">    notes: &amp;[libatm::MIDINote],</span><br><span class="line">    length: <span class="built_in">u32</span>,</span><br><span class="line">) -&gt; itertools::MultiProduct&lt;std::slice::Iter&lt;libatm::MIDINote&gt;&gt; &#123;</span><br><span class="line">    (<span class="number">0</span>..(length))</span><br><span class="line">        .map(|_| notes.iter())</span><br><span class="line">        .multi_cartesian_product()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>输入是一段 <code>C:4,C:4,D:4,E:4,F:4,G:5</code>序列，这里一共有 6 个 Note，说的是我们遍历的时候所有可以的选择</li>
+<li>然后我们会传递一个 <code>length</code> 参数，比如这里传递的参数是 8</li>
+<li>输出是一个有 8 个音符的旋律，每个音符可以有 6 种选择，这 6 种来自 <code>C:4,C:4,D:4,E:4,F:4,G:5</code>序列</li>
+<li>那么，我们可以产生 $6^8$ 种遍历可能</li>
+</ul>
+<p>至此，我们已经搞懂了<code>Damien Riehl</code>到底做了什么。其实做法很简单，就是用 Rust 写了一个 MIDI 库，然后遍历了所有流行歌曲可能产生的旋律。但是这么简单的过程却给我们揭示了一个道理，旋律创作在这里只是一个<strong>数学问题</strong>。</p>
+<blockquote>
+<p>Maybe melodies are just math which is just facts, which maybe are not copyrightable. If somebody is suing over a melody alone, not lyrics, not recordings, but just melody alone, maybe those cases go away.</p>
+</blockquote>
+<p>到现在，我们还只是粗暴的遍历进行旋律创作，没有涉及到编曲等其他进一步的创作。这几年随着深度学习的进一步发展，已经有很多人开始把眼光投到了音乐生成这个领域。比如这篇论文 <a href="https://mp.weixin.qq.com/s/VkDlfbuKWd6WiLZVzxJTEg" target="_blank" rel="external nofollow noopener noreferrer">KDD 2018 Research Track 最佳学生论文详解：流行音乐的旋律与编曲生成</a> 就把深度学习技术运用到了音乐生成这个领域。这个话题先停留在这里，或许以后会再回来填这个坑吧 ：）</p>
+<h2 id="Post-Script"><a href="#Post-Script" class="headerlink" title="Post Script"></a>Post Script</h2><p>两周前看到 <code>Damien Riehl</code>那个视频的时候，就对这个话题非常感兴趣。且先不说版权这个话题(这是另外一个要填的坑)，就只是用计算机编曲这个事情就足以让我兴奋了。如果再加上人工智能编曲，那又是另外一个深坑了。大一的时候在学校听过一个讲座，一个帅气美国小哥讲了他用人工智能创作音乐的故事（好久远啊，好像是那次信科学院本科生科研成果展示会？可是当时自己对这些完全没有概念）。</p>
+<p>过去的两个星期我尝试去学习编曲，对着B站上一个台湾小哥的 <a href="https://www.bilibili.com/video/av23248675" target="_blank" rel="external nofollow noopener noreferrer">GarageBand 教程</a> 玩起了 GarageBand。在这个过程中，我越来越发现这是一个超级深的坑 ：）</p>
+<p><img alt="编曲技能树" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-07_composer-tech-tree.jpg"></p>
+<p>这是我在知乎上看到的一张图，还能怎么办呢 ：）</p>
+<p>慢慢来吧，作曲编曲，也许有一天，我能够自己创作出自己的歌曲呢 👀</p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ul>
+<li><a href="http://www.personal.kent.edu/~sbirch/Music_Production/MP-II/MIDI/midi_file_format.htm" target="_blank" rel="external nofollow noopener noreferrer">The MIDI File Format</a></li>
+<li><a href="https://www.jianshu.com/p/31d02765e1ec" target="_blank" rel="external nofollow noopener noreferrer">如何看懂一份 MIDI 文件</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/b893097a/" rel="bookmark">【计算机体系结构】NUMA架构详解</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/9bccd097/" rel="bookmark">【计算机体系结构】Cache Memory</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/fb3d782a/" rel="bookmark">Key Numbers Every Programmer Should Know</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/c835f157/" rel="bookmark">程序员王小波</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/987306d8/" title="Melodies Are Just Math">http://houmin.cc/posts/987306d8/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA/" rel="tag"><i class="fa fa-tag"></i> 计算机</a>
+              <a href="/tags/%E9%9F%B3%E4%B9%90/" rel="tag"><i class="fa fa-tag"></i> 音乐</a>
+              <a href="/tags/%E6%B3%95%E5%BE%8B/" rel="tag"><i class="fa fa-tag"></i> 法律</a>
+              <a href="/tags/%E6%96%9C%E6%9D%A0%E9%9D%92%E5%B9%B4/" rel="tag"><i class="fa fa-tag"></i> 斜杠青年</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/43a993d5/" rel="next" title="【交易笔记】看懂经济新闻">
+                  <i class="fa fa-chevron-left"></i> 【交易笔记】看懂经济新闻
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/3fcce178/" rel="prev" title="Hexo 插入 Mermaid 图表">
+                  Hexo 插入 Mermaid 图表 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Get-Hands-Dirty"><span class="nav-number">1.</span> <span class="nav-text">Get Hands Dirty !</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#About-MIDI"><span class="nav-number">2.</span> <span class="nav-text">About MIDI</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MIDI-File-Format"><span class="nav-number">2.1.</span> <span class="nav-text">MIDI File Format</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Header-Chunk"><span class="nav-number">2.1.1.</span> <span class="nav-text">Header Chunk</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Track-Chunk"><span class="nav-number">2.1.2.</span> <span class="nav-text">Track Chunk</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Put-Things-Together"><span class="nav-number">2.1.3.</span> <span class="nav-text">Put Things Together</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MIDI-Messages"><span class="nav-number">2.2.</span> <span class="nav-text">MIDI Messages</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MIDI-File"><span class="nav-number">2.3.</span> <span class="nav-text">MIDI File</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Brute-Force"><span class="nav-number">3.</span> <span class="nav-text">Brute Force</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Post-Script"><span class="nav-number">4.</span> <span class="nav-text">Post Script</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reference"><span class="nav-number">5.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

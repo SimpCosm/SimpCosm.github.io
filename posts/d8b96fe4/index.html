@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Kubernetes是一个开源的工业级自动化容器编排平台，广泛用于应用的部署、弹性扩充和管理。本文是「Kubernetes解读」系列开篇，主要介绍 Kubernetes 的整体概念。在以后的日子里，我会对 Kubernetes 涉及到的方方面面进行学习与解读。">
+<meta name="keywords" content="k8s,go,CNCF,源码阅读,系统设计">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Kubernetes解读】开篇">
+<meta property="og:url" content="http://houmin.cc/posts/d8b96fe4/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="Kubernetes是一个开源的工业级自动化容器编排平台，广泛用于应用的部署、弹性扩充和管理。本文是「Kubernetes解读」系列开篇，主要介绍 Kubernetes 的整体概念。在以后的日子里，我会对 Kubernetes 涉及到的方方面面进行学习与解读。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://static001.infoq.cn/resource/image/1f/a7/1f5c9e99df79ea86ca5062fef22e21a7.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-07_container-evolution.svg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-07_components-of-kubernetes.png">
+<meta property="og:image" content="https://platform9.com/wp-content/uploads/2019/05/kubernetes-constructs-concepts-architecture.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-07_kube-apiserver.png">
+<meta property="og:image" content="http://res.cloudinary.com/dqxtn0ick/image/upload/v1510579017/article/kubernetes/core/controller-manager.png">
+<meta property="og:image" content="https://res.cloudinary.com/dqxtn0ick/image/upload/v1510579017/article/kubernetes/core/scheduler.png">
+<meta property="og:image" content="https://static001.infoq.cn/resource/image/5c/f8/5c9fe50067821e9e86a74cae4cbdd9f8.png">
+<meta property="og:image" content="https://static001.infoq.cn/resource/image/04/9b/047e4723316d6424b26341de5007329b.png">
+<meta property="og:image" content="https://static001.infoq.cn/resource/image/23/2e/23921b341e482ad31ce28fc15269ad2e.png">
+<meta property="og:image" content="https://static001.infoq.cn/resource/image/b2/9f/b246d174b3169a242ac5799bc962f69f.png">
+<meta property="og:image" content="https://static001.infoq.cn/resource/image/54/5b/542cf5c317c5e567ba63a720802ae85b.png">
+<meta property="og:image" content="https://static001.infoq.cn/resource/image/4e/e2/4ea8feaad09e871bbca804e7f61738e2.png">
+<meta property="og:image" content="https://static001.infoq.cn/resource/image/bb/4a/bbcd5a617d228099f69ddc987ca18f4a.png">
+<meta property="og:image" content="https://static001.infoq.cn/resource/image/a0/4d/a00719f494ae94a40be0be6012e5134d.png">
+<meta property="og:updated_time" content="2020-07-15T06:39:42.828Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://static001.infoq.cn/resource/image/1f/a7/1f5c9e99df79ea86ca5062fef22e21a7.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/d8b96fe4/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Kubernetes解读】开篇 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/d8b96fe4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Kubernetes解读】开篇
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-07 20:47:00" itemprop="dateCreated datePublished" datetime="2020-07-07T20:47:00+08:00">2020-07-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/d8b96fe4/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/d8b96fe4/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>13k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>24 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Kubernetes是一个开源的工业级自动化容器编排平台，广泛用于应用的部署、弹性扩充和管理。本文是「Kubernetes解读」系列开篇，主要介绍 Kubernetes 的整体概念。在以后的日子里，我会对 Kubernetes 涉及到的方方面面进行学习与解读。</p>
+<a id="more"></a>
+<h2 id="Overview"><a href="#Overview" class="headerlink" title="Overview"></a>Overview</h2><h3 id="发展历史"><a href="#发展历史" class="headerlink" title="发展历史"></a>发展历史</h3><p>Kubernetes来源于希腊词汇<a href="https://en.wiktionary.org/wiki/κυβερνήτης" target="_blank" rel="external nofollow noopener noreferrer">κυβερνήτης</a>，意思是<a href="https://en.wikipedia.org/wiki/Helmsman" target="_blank" rel="external nofollow noopener noreferrer">helmsman</a>，也即是舵手的意思，也可引申为<code>pilot</code>或者<code>governor</code>的含义。与此同时，kubernetes也是<a href="https://en.wikipedia.org/wiki/Cybernetics" target="_blank" rel="external nofollow noopener noreferrer">cybernetics</a>的控制系统的意味。随着容器技术的广泛应用，特别是docker的流行，对于容器编排系统的需求导致了kubernetes的出现。docker具有集装箱的意思，而kubernetes就是管理运送集装箱的舵手。</p>
+<p>2014年中，kubernetes首次被宣布，前期的主要开发人员来自于Google的 <a href="https://en.wikipedia.org/wiki/Borg_(cluster_manager" target="_blank" rel="external nofollow noopener noreferrer">Borg</a>)系统，它的发展与设计也深受Borg影响。与Borg采用C++设计不同，kubernetes一开始就采用Go语言实现。</p>
+<p>Kubernetes v1.0 was released on July 21, 2015.<a href="https://en.wikipedia.org/wiki/Kubernetes#cite_note-13" target="_blank" rel="external nofollow noopener noreferrer">[13]</a> Along with the Kubernetes v1.0 release, Google partnered with the <a href="https://en.wikipedia.org/wiki/Linux_Foundation" target="_blank" rel="external nofollow noopener noreferrer">Linux Foundation</a> to form the <a href="https://en.wikipedia.org/wiki/Cloud_Native_Computing_Foundation" target="_blank" rel="external nofollow noopener noreferrer">Cloud Native Computing Foundation</a> (CNCF)<a href="https://en.wikipedia.org/wiki/Kubernetes#cite_note-14" target="_blank" rel="external nofollow noopener noreferrer">[14]</a> and offered Kubernetes as a seed technology. On March 6, 2018, Kubernetes Project reached ninth place in commits at GitHub, and second place in authors and issues to the <a href="https://en.wikipedia.org/wiki/Linux_kernel" target="_blank" rel="external nofollow noopener noreferrer">Linux kernel</a>.<a href="https://en.wikipedia.org/wiki/Kubernetes#cite_note-15" target="_blank" rel="external nofollow noopener noreferrer">[15]</a></p>
+<p>Kubernetes 是一个可移植的、可扩展的开源平台，用于管理容器化的工作负载和服务，可促进声明式配置和自动化。Kubernetes 拥有一个庞大且快速增长的生态系统。Kubernetes 的服务、支持和工具广泛可用。</p>
+<p>这是一艘载着一堆集装箱的轮船，轮船在大海上运着集装箱奔波，把集装箱送到它们该去的地方。我们之前其实介绍过一个概念叫做 container，container 这个英文单词也有另外的一个意思就是“集装箱”。Kubernetes 也就借着这个寓意，希望成为运送集装箱的一个轮船，来帮助我们管理这些集装箱，也就是管理这些容器。</p>
+<p><img alt="从零开始入门 K8s：详解 K8s 核心概念" data-src="https://static001.infoq.cn/resource/image/1f/a7/1f5c9e99df79ea86ca5062fef22e21a7.png"></p>
+<h3 id="应用部署演进"><a href="#应用部署演进" class="headerlink" title="应用部署演进"></a>应用部署演进</h3><ul>
+<li>传统部署时代：直接在物理服务器上部署应用程序。无法为物理服务器中的应用程序定义资源边界，这会导致资源分配问题。<ul>
+<li>如果在物理服务器上运行多个应用程序，则可能会出现一个应用程序占用大部分资源的情况，结果可能导致其他应用程序的性能下降。</li>
+<li>一种解决方案是在不同的物理服务器上运行每个应用程序，但是由于资源利用不足而无法扩展，并且组织维护许多物理服务器的成本很高。</li>
+</ul>
+</li>
+<li>虚拟化部署时代：引入虚拟化功能，允许在单个物理服务器的 CPU 上运行多个虚拟机（VM）。<ul>
+<li>虚拟化功能允许应用程序在 VM 之间隔离，并提供安全级别，因为一个应用程序的信息不能被另一应用程序自由地访问。</li>
+<li>因为虚拟化可以轻松地添加或更新应用程序、降低硬件成本等等，所以虚拟化可以更好地利用物理服务器中的资源，并可以实现更好的可伸缩性。</li>
+<li>每个 VM 是一台完整的计算机，在虚拟化硬件之上运行所有组件，包括其自己的操作系统。</li>
+</ul>
+</li>
+<li>容器化部署时代：容器是轻量级的虚拟化，相对于虚拟机，其具有更多的优势<ul>
+<li>敏捷应用程序的创建和部署：与使用 VM 镜像相比，提高了容器镜像创建的简便性和效率。</li>
+<li>持续开发、集成和部署：通过快速简单的回滚(由于镜像不可变性)，提供可靠且频繁的容器镜像构建和部署。</li>
+<li>关注开发与运维的分离：在构建/发布时而不是在部署时创建应用程序容器镜像，从而将应用程序与基础架构分离。</li>
+<li>可观察性：不仅可以显示操作系统级别的信息和指标，还可以显示应用程序的运行状况和其他指标信号。</li>
+<li>跨开发、测试和生产的环境一致性：在便携式计算机上与在云中相同地运行。</li>
+<li>云和操作系统分发的可移植性：可在 Ubuntu、RHEL、CoreOS、本地、Google Kubernetes Engine 和其他任何地方运行。</li>
+<li>以应用程序为中心的管理：提高抽象级别，从在虚拟硬件上运行 OS 到使用逻辑资源在 OS 上运行应用程序。</li>
+<li>松散耦合、分布式、弹性、解放的微服务：应用程序被分解成较小的独立部分，并且可以动态部署和管理 - 而不是在一台大型单机上整体运行。</li>
+<li>资源隔离：可预测的应用程序性能。</li>
+<li>资源利用：高效率和高密度。</li>
+</ul>
+</li>
+</ul>
+<p><img alt="Container Evolution" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-07_container-evolution.svg"></p>
+<p>沿着虚拟化的路径，容器流行后需要有容器编排管理的服务，于是诞生了kubernetes。</p>
+<h3 id="核心功能"><a href="#核心功能" class="headerlink" title="核心功能"></a>核心功能</h3><ul>
+<li><p><strong>服务发现与负载均衡</strong></p>
+<p>Kubernetes 可以使用 DNS 名称或自己的 IP 地址公开容器，如果到容器的流量很大，Kubernetes 可以负载均衡并分配网络流量，从而使部署稳定。</p>
+</li>
+<li><p><strong>存储编排</strong></p>
+<p>Kubernetes 允许自动挂载选择的存储系统，例如本地存储、公共云提供商等。</p>
+</li>
+<li><p><strong>自动二进制打包</strong><br>Kubernetes 允许您指定每个容器所需 CPU 和内存（RAM）。当容器指定了资源请求时，Kubernetes 可以做出更好的决策来管理容器的资源。</p>
+</li>
+<li><p><strong>自我修复</strong><br>Kubernetes 重新启动失败的容器、替换容器、杀死不响应用户定义的运行状况检查的容器，并且在准备好服务之前不将其通告给客户端。</p>
+</li>
+<li><p><strong>密钥与配置管理</strong><br>Kubernetes 允许您存储和管理敏感信息，例如密码、OAuth 令牌和 ssh 密钥。您可以在不重建容器镜像的情况下部署和更新密钥和应用程序配置，也无需在堆栈配置中暴露密钥。 </p>
+</li>
+</ul>
+<h2 id="Kubernetes-Components"><a href="#Kubernetes-Components" class="headerlink" title="Kubernetes Components"></a>Kubernetes Components</h2><p>Kubernetes集群是由众多的Node组成，遵循主从架构，整个Kubernetes集群可以被划分为控制面和控制面管理的众多Node。</p>
+<p><img alt="Kubernetes Components" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-07_components-of-kubernetes.png"></p>
+<h3 id="Control-Plane-Components"><a href="#Control-Plane-Components" class="headerlink" title="Control Plane Components"></a>Control Plane Components</h3><p>Kubernetes 的控制面负责对集群作出全局决策（比如调度），以及检测和响应集群事件（例如，当不满足部署的 <code>replicas</code> 字段时，启动新的Pod）。控制面的组建可以在集群中的任意节点中运行，但是通常会在同一个节点上启动所有控制面的组建，并且这个节点不再运行用户容器，此即称作Master节点。控制面的每一个组件都既可以运行在单master节点，也可以运行在多master节点以实现高可用。</p>
+<p>Master节点包含四个主要的组件：API Server、Controller Manager、Scheduler 以及 Etcd，如下图所示。</p>
+<p><img alt="Control Plane" data-src="https://platform9.com/wp-content/uploads/2019/05/kubernetes-constructs-concepts-architecture.jpg"></p>
+<h4 id="API-Server"><a href="#API-Server" class="headerlink" title="API Server"></a>API Server</h4><p>kube-apiserver 是 Kubernetes 最重要的核心组件之一，暴露了Kubernetes API，是控制面的前端组件，它主要提供以下的功能：</p>
+<ul>
+<li>提供集群管理的 REST API 接口，实现了认证、授权、准入控制等安全校验功能，同时也负责集群状态的存储操作（通过 etcd）。</li>
+<li>提供其他模块之间的数据交互和通信的枢纽（其他模块通过 API Server 查询或修改数据，只有 API Server 才直接操作 etcd）</li>
+</ul>
+<p><img alt="Kube Api Server" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-07_kube-apiserver.png"></p>
+<p>在实际使用中，通常通过 <a href="https://kubernetes.io/docs/user-guide/kubectl-overview/" target="_blank" rel="external nofollow noopener noreferrer">kubectl</a> 来访问 apiserver，也可以通过 Kubernetes 各个语言的 client 库来访问 apiserver。在使用 kubectl 时，打开调试日志也可以看到每个 API 调用的格式，比如</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl --v=8 get pods</span><br></pre></td></tr></table></figure>
+<p>可通过 <code>kubectl api-versions</code> 和 <code>kubectl api-resources</code> 查询 Kubernetes API 支持的 API 版本以及资源对象。</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl api-versions</span><br><span class="line">admissionregistration.k8s.io/v1beta1</span><br><span class="line">apiextensions.k8s.io/v1beta1</span><br><span class="line">apiregistration.k8s.io/v1</span><br><span class="line">apiregistration.k8s.io/v1beta1</span><br><span class="line">apps/v1</span><br><span class="line">apps/v1beta1</span><br><span class="line">apps/v1beta2</span><br><span class="line">authentication.k8s.io/v1</span><br><span class="line">authentication.k8s.io/v1beta1</span><br><span class="line">authorization.k8s.io/v1</span><br><span class="line">authorization.k8s.io/v1beta1</span><br><span class="line">autoscaling/v1</span><br><span class="line">autoscaling/v2beta1</span><br><span class="line">batch/v1</span><br><span class="line">batch/v1beta1</span><br><span class="line">certificates.k8s.io/v1beta1</span><br><span class="line">events.k8s.io/v1beta1</span><br><span class="line">extensions/v1beta1</span><br><span class="line">metrics.k8s.io/v1beta1</span><br><span class="line">networking.k8s.io/v1</span><br><span class="line">policy/v1beta1</span><br><span class="line">rbac.authorization.k8s.io/v1</span><br><span class="line">rbac.authorization.k8s.io/v1beta1</span><br><span class="line">scheduling.k8s.io/v1beta1</span><br><span class="line">storage.k8s.io/v1</span><br><span class="line">storage.k8s.io/v1beta1</span><br><span class="line">v1</span><br><span class="line"></span><br><span class="line">$ kubectl api-resources --api-group=storage.k8s.io</span><br><span class="line">NAME                SHORTNAMES   APIGROUP         NAMESPACED   KIND</span><br><span class="line">storageclasses      sc           storage.k8s.io   <span class="literal">false</span>        StorageClass</span><br><span class="line">volumeattachments                storage.k8s.io   <span class="literal">false</span>        VolumeAttachment</span><br></pre></td></tr></table></figure>
+<h4 id="Etcd"><a href="#Etcd" class="headerlink" title="Etcd"></a>Etcd</h4><p>Etcd是一个分布式的键值数据库，兼具一致性和高可用性，API Server 中所需要的这些原信息都被放置在 etcd 中。Etcd 本身是一个高可用系统，通过 etcd 保证整个 Kubernetes 的 Master 组件的高可用性。</p>
+<h4 id="Controller-Manager"><a href="#Controller-Manager" class="headerlink" title="Controller Manager"></a>Controller Manager</h4><p>Controller Manager作为集群内部的管理控制中心，负责集群内的Node、Pod副本、服务端点（Endpoint）、命名空间（Namespace）、服务账号（ServiceAccount）、资源定额（ResourceQuota）的管理，当某个Node意外宕机时，Controller Manager会及时发现并执行自动化修复流程，确保集群始终处于预期的工作状态。</p>
+<p><img alt="controller manager" data-src="http://res.cloudinary.com/dqxtn0ick/image/upload/v1510579017/article/kubernetes/core/controller-manager.png"></p>
+<p>每个Controller通过API Server提供的接口实时监控整个集群的每个资源对象的当前状态，当发生各种故障导致系统状态发生变化时，会尝试将系统状态修复到“期望状态”。从逻辑上讲，每个<a href="https://kubernetes.io/docs/admin/kube-controller-manager/" target="_blank" rel="external nofollow noopener noreferrer">控制器</a>都是一个单独的进程，但是为了降低复杂性，它们都被编译到同一个可执行文件，并在一个进程中运行。</p>
+<p>这些控制器包括:</p>
+<ul>
+<li>节点控制器（Node Controller）: 负责在节点出现故障时进行通知和响应。</li>
+<li>副本控制器（Replication Controller）: 负责为系统中的每个副本控制器对象维护正确数量的 Pod。</li>
+<li>端点控制器（Endpoints Controller）: 填充端点(Endpoints)对象(即加入 Service 与 Pod)。</li>
+<li>服务帐户和令牌控制器（Service Account &amp; Token Controllers）: 为新的命名空间创建默认帐户和 API 访问令牌.</li>
+</ul>
+<p>我们刚刚提到的 API Server，它本身在部署结构上是一个可以水平扩展的一个部署组件；Controller 是一个可以进行热备的一个部署组件，它只有一个 active，它的调度器也是相应的，虽然只有一个 active，但是可以进行热备。</p>
+<h4 id="Scheduler"><a href="#Scheduler" class="headerlink" title="Scheduler"></a>Scheduler</h4><p>Scheduler是Master节点上的调度器组件，该组件监视那些新创建的未指定运行节点的 Pod，并选择节点让 Pod 在上面运行。调度决策考虑的因素包括单个 Pod 和 Pod 集合的资源需求、硬件/软件/策略约束、亲和性和反亲和性规范、数据位置、工作负载间的干扰和最后时限。</p>
+<p>Scheduler在整个系统中起”承上启下”作用：</p>
+<ul>
+<li>承上：负责接收Controller Manager创建的新的Pod，为其选择一个合适的Node</li>
+<li>启下：Node上的kubelet接管Pod的生命周期。</li>
+</ul>
+<p>Scheduler的主要工作：</p>
+<ul>
+<li><p>通过调度算法为待调度Pod列表的每个Pod从Node列表中选择一个最适合的Node，并将信息写入etcd中</p>
+</li>
+<li><p>kubelet通过API Server监听到kubernetes Scheduler产生的Pod绑定信息，然后获取对应的Pod清单，下载Image，并启动容器。</p>
+<p><img alt="Scheduler" data-src="https://res.cloudinary.com/dqxtn0ick/image/upload/v1510579017/article/kubernetes/core/scheduler.png"></p>
+</li>
+</ul>
+<p>Scheduler的调度流程：</p>
+<ul>
+<li>预选调度过程，即遍历所有目标Node，筛选出符合要求的候选节点，kubernetes内置了多种预选策略（xxx Predicates）供用户选择</li>
+<li>确定最优节点，在第一步的基础上采用优选策略（xxx Priority）计算出每个候选节点的积分，取最高积分。</li>
+</ul>
+<p>调度流程通过插件式加载的“调度算法提供者”（AlgorithmProvider）具体实现，一个调度算法提供者就是包括一组预选策略与一组优选策略的结构体。</p>
+<h3 id="Node-Components"><a href="#Node-Components" class="headerlink" title="Node Components"></a><strong>Node Components</strong></h3><p>Kubernetes 的 Node 是真正运行业务负载的，每个业务负载会以 Pod 的形式运行。一个 Pod 中运行的一个或者多个容器，真正去运行这些 Pod 的组件的是叫做 <strong>kubelet</strong>，也就是 Node 上最为关键的组件，它通过 API Server 接收到所需要 Pod 运行的状态，然后提交到 Container Runtime 组件中。</p>
+<p>在 OS 上去创建容器所需要运行的环境，最终把容器或者 Pod 运行起来，也需要对存储跟网络进行管理。Kubernetes 并不会直接进行网络存储的操作，他们会靠 Storage Plugin 或者是网络的 Plugin 来进行操作。用户自己或者云厂商都会去写相应的 <strong>Storage Plugin</strong> 或者 <strong>Network Plugin</strong>，去完成存储操作或网络操作。</p>
+<p><img alt="从零开始入门 K8s：详解 K8s 核心概念" data-src="https://static001.infoq.cn/resource/image/5c/f8/5c9fe50067821e9e86a74cae4cbdd9f8.png"></p>
+<h4 id="Kubelet"><a href="#Kubelet" class="headerlink" title="Kubelet"></a>Kubelet</h4><p>Kubelet是Node上的pod管家。在kubernetes集群中，每个Node节点都会启动kubelet进程，用来处理Master节点下发到本节点的任务，管理Pod和其中的容器。kubelet会在API Server上注册节点信息，定期向Master汇报节点资源使用情况，并通过cAdvisor监控容器和节点资源。</p>
+<h4 id="Kube-Proxy"><a href="#Kube-Proxy" class="headerlink" title="Kube-Proxy"></a>Kube-Proxy</h4><p><a href="https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/" target="_blank" rel="external nofollow noopener noreferrer">kube-proxy</a> 是集群中每个节点上运行的网络代理,实现 Kubernetes <a href="https://kubernetes.io/docs/concepts/services-networking/service/" target="_blank" rel="external nofollow noopener noreferrer">Service</a> 概念的一部分。</p>
+<p>kube-proxy 维护节点上的网络规则。这些网络规则允许从集群内部或外部的网络会话与 Pod 进行网络通信。</p>
+<p>如果操作系统提供了数据包过滤层并可用的话，kube-proxy会通过它来实现网络规则。否则，kube-proxy 仅转发流量本身。</p>
+<h4 id="Container-Runtime"><a href="#Container-Runtime" class="headerlink" title="Container Runtime"></a>Container Runtime</h4><p>Container Runtime（容器运行时）是负责容器运行的软件。</p>
+<p>Kubernetes支持几种容器运行时环境：Docker、Containerd、CRI-O等。</p>
+<h3 id="Addons"><a href="#Addons" class="headerlink" title="Addons"></a><strong>Addons</strong></h3><h4 id="DNS"><a href="#DNS" class="headerlink" title="DNS"></a>DNS</h4><p>尽管并非严格要求其他附加组件，但所有示例都依赖<a href="https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/" target="_blank" rel="external nofollow noopener noreferrer">集群 DNS</a>，因此所有 Kubernetes 集群都应具有 DNS。</p>
+<p>除了您环境中的其他 DNS 服务器之外，集群 DNS 还是一个 DNS 服务器，它为 Kubernetes 服务提供 DNS 记录。</p>
+<p>Cluster DNS 是一个 DNS 服务器，和您部署环境中的其他 DNS 服务器一起工作，为 Kubernetes 服务提供DNS记录。</p>
+<p>Kubernetes 启动的容器自动将 DNS 服务器包含在 DNS 搜索中。</p>
+<h4 id="Dashboard"><a href="#Dashboard" class="headerlink" title="Dashboard"></a>Dashboard</h4><p><a href="https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/" target="_blank" rel="external nofollow noopener noreferrer">Dashboard</a> 是 Kubernetes 集群的通用基于 Web 的 UI。它使用户可以管理集群中运行的应用程序以及集群本身并进行故障排除。</p>
+<h4 id="Container-Resource-Monitoring"><a href="#Container-Resource-Monitoring" class="headerlink" title="Container Resource Monitoring"></a>Container Resource Monitoring</h4><p><a href="https://kubernetes.io/docs/tasks/debug-application-cluster/resource-usage-monitoring/" target="_blank" rel="external nofollow noopener noreferrer">容器资源监控</a>将关于容器的一些常见的时间序列度量值保存到一个集中的数据库中，并提供用于浏览这些数据的界面。</p>
+<h4 id="Cluster-level-Logging"><a href="#Cluster-level-Logging" class="headerlink" title="Cluster-level Logging"></a>Cluster-level Logging</h4><p><a href="https://kubernetes.io/docs/concepts/cluster-administration/logging/" target="_blank" rel="external nofollow noopener noreferrer">集群层面日志</a> 机制负责将容器的日志数据保存到一个集中的日志存储中，该存储能够提供搜索和浏览接口。</p>
+<h3 id="Example"><a href="#Example" class="headerlink" title="Example"></a>Example</h3><p>下面我们以一个例子再去看一下 Kubernetes 架构中的这些组件，是如何互相进行 interaction 的。</p>
+<p><img alt="从零开始入门 K8s：详解 K8s 核心概念" data-src="https://static001.infoq.cn/resource/image/04/9b/047e4723316d6424b26341de5007329b.png"></p>
+<p>用户可以通过 UI 或者 CLI 提交一个 Pod 给 Kubernetes 进行部署，这个 Pod 请求首先会通过 CLI 或者 UI 提交给 Kubernetes API Server，下一步 API Server 会把这个信息写入到它的存储系统 etcd，之后 Scheduler 会通过 API Server 的 watch 或者叫做 notification 机制得到这个信息：有一个 Pod 需要被调度。</p>
+<p>这个时候 Scheduler 会根据它的内存状态进行一次调度决策，在完成这次调度之后，它会向 API Server report 说：“OK！这个 Pod 需要被调度到某一个节点上。”</p>
+<p>这个时候 API Server 接收到这次操作之后，会把这次的结果再次写到 etcd 中，然后 API Server 会通知相应的节点进行这次 Pod 真正的执行启动。相应节点的 kubelet 会得到这个通知，kubelet 就会去调 Container runtime 来真正去启动配置这个容器和这个容器的运行环境，去调度 Storage Plugin 来去配置存储，network Plugin 去配置网络。</p>
+<p>这个例子我们可以看到：这些组件之间是如何相互沟通相互通信，协调来完成一次 Pod 的调度执行操作的。</p>
+<h2 id="The-Kubernetes-API"><a href="#The-Kubernetes-API" class="headerlink" title="The Kubernetes API"></a>The Kubernetes API</h2><p>Kubernetes API 允许你查询和操作 Kubernetes 集群中对象的状态。Kubernetes集群控制面的核心是 Api Server 以及他暴露的 HTTP API。用户，集群中的其他部分，还有外部组件都是通过API Server进行通信。</p>
+<h3 id="API-版本"><a href="#API-版本" class="headerlink" title="API 版本"></a>API 版本</h3><p>为了使删除字段或者重构资源表示更加容易，Kubernetes 支持 多个API版本。每一个版本都在不同API路径下，例如 <code>/api/v1</code> 或者 <code>/apis/extensions/v1beta1</code>。</p>
+<p>我们选择在API级别进行版本化，而不是在资源或字段级别进行版本化，以确保API提供清晰，一致的系统资源和行为视图，并控制对已废止的API和/或实验性API的访问。 JSON和Protobuf序列化模式遵循架构更改的相同准则 - 下面的所有描述都同时适用于这两种格式。</p>
+<p>请注意，API版本控制和软件版本控制只有间接相关性。 <a href="https://git.k8s.io/community/contributors/design-proposals/release/versioning.md" target="_blank" rel="external nofollow noopener noreferrer">API和发行版本建议</a> 描述了API版本与软件版本之间的关系。</p>
+<p>不同的API版本名称意味着不同级别的软件稳定性和支持程度。 每个级别的标准在<a href="https://git.k8s.io/community/contributors/devel/sig-architecture/api_changes.md#alpha-beta-and-stable-versions" target="_blank" rel="external nofollow noopener noreferrer">API变更文档</a>中有更详细的描述。 内容主要概括如下：</p>
+<ul>
+<li>Alpha 测试版本：<ul>
+<li>版本名称包含了 <strong><code>alpha</code></strong> (例如：<strong><code>v1alpha1</code></strong>)。</li>
+<li>可能是有缺陷的。启用该功能可能会带来隐含的问题，默认情况是关闭的。</li>
+<li>支持的功能可能在没有通知的情况下随时删除。</li>
+<li>API的更改可能会带来兼容性问题，但是在后续的软件发布中不会有任何通知。</li>
+<li>由于bugs风险的增加和缺乏长期的支持，推荐在短暂的集群测试中使用。</li>
+</ul>
+</li>
+<li>Beta 测试版本：<ul>
+<li>版本名称包含了 <strong><code>beta</code></strong> (例如: <strong><code>v2beta3</code></strong>)。</li>
+<li>代码已经测试过。启用该功能被认为是安全的，功能默认已启用。</li>
+<li>所有已支持的功能不会被删除，细节可能会发生变化。</li>
+<li>对象的模式和/或语义可能会在后续的beta测试版或稳定版中以不兼容的方式进行更改。 发生这种情况时，我们将提供迁移到下一个版本的说明。 这可能需要删除、编辑和重新创建API对象。执行编辑操作时需要谨慎行事，这可能需要停用依赖该功能的应用程序。</li>
+<li>建议仅用于非业务关键型用途，因为后续版本中可能存在不兼容的更改。 如果您有多个可以独立升级的集群，则可以放宽此限制。</li>
+<li><strong>请尝试我们的 beta 版本功能并且给出反馈！一旦他们退出 beta 测试版，我们可能不会做出更多的改变。</strong></li>
+</ul>
+</li>
+<li>稳定版本：<ul>
+<li>版本名称是 <strong><code>vX</code></strong>，其中 <strong><code>X</code></strong> 是整数。</li>
+</ul>
+</li>
+</ul>
+<h3 id="API-描述"><a href="#API-描述" class="headerlink" title="API 描述"></a>API 描述</h3><p>下面我们介绍一下 Kubernetes 的 API 的基础知识。从 high-level 上看，Kubernetes API 是由 <strong>HTTP+JSON </strong> 组成的：用户访问的方式是 HTTP，访问的 API 中 content 的内容是 JSON 格式的。</p>
+<p>Kubernetes 的 kubectl 也就是 command tool，Kubernetes UI，或者有时候用 curl，直接与 Kubernetes 进行沟通，都是使用 HTTP + JSON 这种形式。</p>
+<p>下面有个例子：比如说，对于这个 Pod 类型的资源，它的 HTTP 访问的路径，就是 API，然后是 apiVesion: V1, 之后是相应的 Namespaces，以及 Pods 资源，最终是 Podname，也就是 Pod 的名字。</p>
+<p><img alt="从零开始入门 K8s：详解 K8s 核心概念" data-src="https://static001.infoq.cn/resource/image/23/2e/23921b341e482ad31ce28fc15269ad2e.png"></p>
+<p>如果我们去提交一个 Pod，或者 get 一个 Pod 的时候，它的 content 内容都是用 JSON 或者是 YAML 表达的。上图中有个 yaml 的例子，在这个 yaml file 中，对 Pod 资源的描述也分为几个部分。</p>
+<p>第一个部分，一般来讲会是 API 的 <strong>version</strong>。比如在这个例子中是 V1，它也会描述我在操作哪个资源；比如说我的 <strong>kind</strong> 如果是 pod，在 Metadata 中，就写上这个 Pod 的名字；比如说 nginx，我们也会给它打一些 <strong>label</strong>，我们等下会讲到 label 的概念。在 Metadata 中，有时候也会去写 <strong>annotation</strong>，也就是对资源的额外的一些用户层次的描述。</p>
+<h2 id="Kubernetes-Objects"><a href="#Kubernetes-Objects" class="headerlink" title="Kubernetes Objects"></a>Kubernetes Objects</h2><p>Kubernetes对象是Kubernetes集群中持久化的实体，通过这些实体可以代表集群的状态。具体的，它们可以描述以下内容：</p>
+<ul>
+<li>哪些容器化应用在运行（以及在哪个 Node 上）</li>
+<li>可以被应用使用的资源</li>
+<li>关于应用运行时表现的策略，比如重启策略、升级策略，以及容错策略</li>
+</ul>
+<p>Kubernetes 对象是 “目标性记录” —— 一旦创建对象，Kubernetes 系统将持续工作以确保对象存在。通过创建对象，本质上是在告知 Kubernetes 系统，所需要的集群工作负载看起来是什么样子的，这就是 Kubernetes 集群的 <strong>期望状态（Desired State）</strong>。</p>
+<p>操作 Kubernetes 对象 —— 无论是创建、修改，或者删除 —— 需要使用 <a href="https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md" target="_blank" rel="external nofollow noopener noreferrer">Kubernetes API</a>。比如，当使用 <code>kubectl</code> 命令行接口时，CLI 会执行必要的 Kubernetes API 调用，也可以在程序中使用 <a href="https://kubernetes.io/docs/reference/using-api/client-libraries/" target="_blank" rel="external nofollow noopener noreferrer">客户端库</a> 直接调用 Kubernetes API。</p>
+<h3 id="Object-Spec-and-Status"><a href="#Object-Spec-and-Status" class="headerlink" title="Object Spec and Status"></a>Object Spec and Status</h3><p>每个 Kubernetes 对象包含两个嵌套的对象字段，它们负责管理对象的配置：对象 <em>spec</em> 和 对象 <em>status</em> 。 <em>spec</em> 是必需的，它描述了对象的 <em>期望状态（Desired State）</em> —— 希望对象所具有的特征。 <em>status</em> 描述了对象的 <em>实际状态（Actual State）</em> ，它是由 Kubernetes 系统提供和更新的。在任何时刻，Kubernetes 控制面一直努力地管理着对象的实际状态以与期望状态相匹配。</p>
+<p>例如，Kubernetes Deployment 对象能够表示运行在集群中的应用。 当创建 Deployment 时，可能需要设置 Deployment 的规约，以指定该应用需要有 3 个副本在运行。 Kubernetes 系统读取 Deployment 规约，并启动我们所期望的该应用的 3 个实例 —— 更新状态以与规约相匹配。 如果那些实例中有失败的（一种状态变更），Kubernetes 系统通过修正来响应规约和状态之间的不一致 —— 这种情况，会启动一个新的实例来替换。</p>
+<p>关于对象 spec、status 和 metadata 的更多信息，查看 <a href="https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md" target="_blank" rel="external nofollow noopener noreferrer">Kubernetes API 约定</a>。</p>
+<h3 id="Describing-a-Kubernetes-object"><a href="#Describing-a-Kubernetes-object" class="headerlink" title="Describing a Kubernetes object"></a>Describing a Kubernetes object</h3><p>当创建 Kubernetes 对象时，必须提供对象的Spec，用来描述该对象的期望状态，以及关于对象的一些基本信息（例如名称）。 当使用 Kubernetes API 创建对象时（或者直接创建，或者基于<code>kubectl</code>），API 请求必须在请求体中包含 JSON 格式的信息。 <strong>大多数情况下，需要在 .yaml 文件中为 <code>kubectl</code> 提供这些信息</strong>。 <code>kubectl</code> 在发起 API 请求时，将这些信息转换成 JSON 格式。</p>
+<p>这里有一个 <code>.yaml</code> 示例文件，展示了 Kubernetes Deployment 的必需字段和对象规约：</p>
+<figure class="highlight yaml"><figcaption><span>application/deployment.yaml </span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span> <span class="comment"># for versions before 1.9.0 use apps/v1beta2</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx-deployment</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">2</span> <span class="comment"># tells deployment to run 2 pods matching the template</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">nginx:1.14.2</span></span><br><span class="line">        <span class="attr">ports:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">80</span></span><br></pre></td></tr></table></figure>
+<h3 id="Required-Fields"><a href="#Required-Fields" class="headerlink" title="Required Fields"></a>Required Fields</h3><p>在想要创建的 Kubernetes 对象对应的 <code>.yaml</code> 文件中，需要配置如下的字段：</p>
+<ul>
+<li><code>apiVersion</code> - 创建该对象所使用的 Kubernetes API 的版本</li>
+<li><code>kind</code> - 想要创建的对象的类型</li>
+<li><code>metadata</code> - 帮助识别对象唯一性的数据，包括一个 <code>name</code> 字符串、UID 和可选的 <code>namespace</code></li>
+<li><code>spec</code> - 你对该对象期望的状态</li>
+</ul>
+<p>对象 <code>spec</code> 的精确格式对每个 Kubernetes 对象来说是不同的，包含了特定于该对象的嵌套字段。<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/" target="_blank" rel="external nofollow noopener noreferrer">Kubernetes API 参考</a>能够帮助我们找到任何我们想创建的对象的 spec 格式。 例如，可以从 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#podspec-v1-core" target="_blank" rel="external nofollow noopener noreferrer">这里</a> 查看 <code>Pod</code> 的 <code>spec</code> 格式， 并且可以从 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#deploymentspec-v1-apps" target="_blank" rel="external nofollow noopener noreferrer">这里</a> 查看 <code>Deployment</code> 的 <code>spec</code> 格式。</p>
+<h2 id="关键概念"><a href="#关键概念" class="headerlink" title="关键概念"></a>关键概念</h2><h3 id="Pod"><a href="#Pod" class="headerlink" title="Pod"></a>Pod</h3><p>Pod 是 Kubernetes 应用程序的基本执行单元，是Kubernetes对象模型中创建的最小单元，Pod表示集群是运行的进程。</p>
+<p>用户可以通过 Kubernetes 的 Pod API 生产一个 Pod，让 Kubernetes 对这个 Pod 进行调度，也就是把它放在某一个 Kubernetes 管理的节点上运行起来。一个 Pod 简单来说是对一组容器的抽象，它里面会包含一个或多个容器。</p>
+<p>比如像下面的这幅图里面，它包含了两个容器，每个容器可以指定它所需要资源大小。比如说，一个核一个 G，或者说 0.5 个核，0.5 个 G。</p>
+<p>当然在这个 Pod 中也可以包含一些其他所需要的资源：比如说我们所看到的 Volume 卷这个存储资源；比如说我们需要 100 个 GB 的存储或者 20GB 的另外一个存储。</p>
+<p><img alt="从零开始入门 K8s：详解 K8s 核心概念" data-src="https://static001.infoq.cn/resource/image/b2/9f/b246d174b3169a242ac5799bc962f69f.png"></p>
+<p>在 Pod 里面，我们也可以去定义容器所需要运行的方式。比如说运行容器的 Command，以及运行容器的环境变量等等。Pod 这个抽象也给这些容器提供了一个共享的运行环境，它们会共享同一个网络环境，这些容器可以用 localhost 来进行直接的连接。而 Pod 与 Pod 之间，是互相有 isolation 隔离的。</p>
+<h3 id="Volume"><a href="#Volume" class="headerlink" title="Volume"></a>Volume</h3><p>Volume 就是卷的概念，它是用来管理 Kubernetes 存储的，是用来声明在 Pod 中的容器可以访问文件目录的，一个卷可以被挂载在 Pod 中一个或者多个容器的指定路径下面。</p>
+<p>而 Volume 本身是一个抽象的概念，一个 Volume 可以去支持多种的后端的存储。比如说 Kubernetes 的 Volume 就支持了很多存储插件，它可以支持本地的存储，可以支持分布式的存储，比如说像 ceph，GlusterFS ；它也可以支持云存储，比如说阿里云上的云盘、AWS 上的云盘、Google 上的云盘等等。</p>
+<p><img alt="从零开始入门 K8s：详解 K8s 核心概念" data-src="https://static001.infoq.cn/resource/image/54/5b/542cf5c317c5e567ba63a720802ae85b.png"></p>
+<h3 id="Deployment"><a href="#Deployment" class="headerlink" title="Deployment"></a>Deployment</h3><p>Deployment 是在 Pod 这个抽象上更为上层的一个抽象，它可以定义一组 Pod 的副本数目、以及这个 Pod 的版本。一般大家用 Deployment 这个抽象来做应用的真正的管理，而 Pod 是组成 Deployment 最小的单元。</p>
+<p>Kubernetes 是通过 Controller，也就是我们刚才提到的控制器去维护 Deployment 中 Pod 的数目，它也会去帮助 Deployment 自动恢复失败的 Pod。</p>
+<p>比如说我可以定义一个 Deployment，这个 Deployment 里面需要两个 Pod，当一个 Pod 失败的时候，控制器就会监测到，它重新把 Deployment 中的 Pod 数目从一个恢复到两个，通过再去新生成一个 Pod。通过控制器，我们也会帮助完成发布的策略。比如说进行滚动升级，进行重新生成的升级，或者进行版本的回滚。</p>
+<p><img alt="从零开始入门 K8s：详解 K8s 核心概念" data-src="https://static001.infoq.cn/resource/image/4e/e2/4ea8feaad09e871bbca804e7f61738e2.png"></p>
+<h3 id="Service"><a href="#Service" class="headerlink" title="Service"></a>Service</h3><p>Service 提供了一个或者多个 Pod 实例的稳定访问地址。</p>
+<p>比如在上面的例子中，我们看到：一个 Deployment 可能有两个甚至更多个完全相同的 Pod。对于一个外部的用户来讲，访问哪个 Pod 其实都是一样的，所以它希望做一次负载均衡，在做负载均衡的同时，我只想访问某一个固定的 VIP，也就是 Virtual IP 地址，而不希望得知每一个具体的 Pod 的 IP 地址。</p>
+<p>我们刚才提到，这个 pod 本身可能 terminal go（终止），如果一个 Pod 失败了，可能会换成另外一个新的。</p>
+<p>对一个外部用户来讲，提供了多个具体的 Pod 地址，这个用户要不停地去更新 Pod 地址，当这个 Pod 再失败重启之后，我们希望有一个抽象，把所有 Pod 的访问能力抽象成一个第三方的一个 IP 地址，实现这个的 Kubernetes 的抽象就叫 Service。</p>
+<p>实现 Service 有多种方式，Kubernetes 支持 Cluster IP，上面我们讲过的 kuber-proxy 的组网，它也支持 nodePort、 LoadBalancer 等其他的一些访问的能力。</p>
+<p><img alt="从零开始入门 K8s：详解 K8s 核心概念" data-src="https://static001.infoq.cn/resource/image/bb/4a/bbcd5a617d228099f69ddc987ca18f4a.png"></p>
+<h3 id="Namespace"><a href="#Namespace" class="headerlink" title="Namespace"></a>Namespace</h3><p>Namespace 是用来做一个集群内部的逻辑隔离的，它包括鉴权、资源管理等。Kubernetes 的每个资源，比如刚才讲的 Pod、Deployment、Service 都属于一个 Namespace，同一个 Namespace 中的资源需要命名的唯一性，不同的 Namespace 中的资源可以重名。</p>
+<p>Namespace 一个用例，比如像在阿里巴巴，我们内部会有很多个 business units，在每一个 business units 之间，希望有一个视图上的隔离，并且在鉴权上也不一样，在 cuda 上面也不一样，我们就会用 Namespace 来去给每一个 BU 提供一个他所看到的这么一个看到的隔离的机制。</p>
+<p><img alt="从零开始入门 K8s：详解 K8s 核心概念" data-src="https://static001.infoq.cn/resource/image/a0/4d/a00719f494ae94a40be0be6012e5134d.png"></p>
+<h3 id="命令备忘"><a href="#命令备忘" class="headerlink" title="命令备忘"></a>命令备忘</h3><p>参考 <a href="https://juejin.im/post/5de3a7e06fb9a0719139ad93#heading-8" target="_blank" rel="external nofollow noopener noreferrer">https://juejin.im/post/5de3a7e06fb9a0719139ad93#heading-8</a></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># kubectl</span></span><br><span class="line"><span class="comment">## 声明式资源管理</span></span><br><span class="line"><span class="comment"># kubectl apply</span></span><br><span class="line"></span><br><span class="line"><span class="comment">## 命令式资源管理</span></span><br><span class="line"><span class="comment"># kubectl create</span></span><br><span class="line"><span class="comment"># kubectl expose</span></span><br><span class="line"><span class="comment"># kubectl scale</span></span><br><span class="line"><span class="comment"># kubectl annotate</span></span><br><span class="line"><span class="comment"># kubectl label</span></span><br><span class="line"><span class="comment"># kubectl delete</span></span><br><span class="line"></span><br><span class="line"><span class="comment">## 资源查看</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### kubectl get</span></span><br><span class="line"><span class="comment"># Usage:</span></span><br><span class="line">kubectl get [(-o|--output=)](TYPE[.VERSION][.GROUP] [NAME | -l label] | TYPE[.VERSION][.GROUP]/NAME ...) [flags] [options]</span><br><span class="line"><span class="comment"># Examples: </span></span><br><span class="line">kubectl get services                          <span class="comment"># 列出当前NS中所有service资源</span></span><br><span class="line">kubectl get pods --all-namespaces             <span class="comment"># 列出集群所有NS中所有的Pod</span></span><br><span class="line">kubectl get pods -o wide                      <span class="comment"># -o wide也比较常用，可以显示更多资源信息，比如pod的IP等</span></span><br><span class="line">kubectl get deployment my-dep                 <span class="comment"># 可以直接指定资源名查看</span></span><br><span class="line">kubectl get deployment my-dep --watch         <span class="comment"># --watch 参数可以监控资源的状态，在状态变换时输出。在跟踪服务部署情况时很有用</span></span><br><span class="line">kubectl get pod my-pod -o yaml                <span class="comment"># 查看yaml格式的资源配置，这里包括资实际的status，可以用--export排除</span></span><br><span class="line">kubectl get pod my-pod -l app=nginx           <span class="comment"># 查看所有带有标签app: nginx的pod</span></span><br><span class="line"><span class="comment"># kubectl describe</span></span><br><span class="line"></span><br><span class="line"><span class="comment">## 容器管理</span></span><br><span class="line"><span class="comment"># kubectl log</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### kubectl exec</span></span><br><span class="line"><span class="comment"># Usage:</span></span><br><span class="line">kubectl <span class="built_in">exec</span> POD [-c CONTAINER] -- COMMAND [args...] [options]</span><br><span class="line"><span class="comment"># Examples:</span></span><br><span class="line">kubectl <span class="built_in">exec</span> my-pod ls                         <span class="comment"># 对my-pod执行ls命令</span></span><br><span class="line">kubectl <span class="built_in">exec</span> -t -i nginx-78f5d695bd-czm8z bash <span class="comment"># 进入pod的shell，并打开伪终端和标准输入</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># kubectl cp</span></span><br><span class="line"></span><br><span class="line"><span class="comment">## 集群管理</span></span><br><span class="line"><span class="comment"># kubectl cluster-info</span></span><br><span class="line"><span class="comment"># kubectl version</span></span><br><span class="line"><span class="comment"># kubectl cordon/uncordon</span></span><br><span class="line"><span class="comment"># kubectl drain</span></span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/1f0eb2ff/" rel="bookmark">【Kubernetes解读】List/Watch机制和Informer模块详解</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/d8b96fe4/" title="【Kubernetes解读】开篇">http://houmin.cc/posts/d8b96fe4/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
+              <a href="/tags/go/" rel="tag"><i class="fa fa-tag"></i> go</a>
+              <a href="/tags/CNCF/" rel="tag"><i class="fa fa-tag"></i> CNCF</a>
+              <a href="/tags/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码阅读</a>
+              <a href="/tags/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/" rel="tag"><i class="fa fa-tag"></i> 系统设计</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/959c2cfa/" rel="next" title="毕业快乐">
+                  <i class="fa fa-chevron-left"></i> 毕业快乐
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/4987aa35/" rel="prev" title="再出发">
+                  再出发 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Overview"><span class="nav-number">1.</span> <span class="nav-text">Overview</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#发展历史"><span class="nav-number">1.1.</span> <span class="nav-text">发展历史</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#应用部署演进"><span class="nav-number">1.2.</span> <span class="nav-text">应用部署演进</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#核心功能"><span class="nav-number">1.3.</span> <span class="nav-text">核心功能</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Kubernetes-Components"><span class="nav-number">2.</span> <span class="nav-text">Kubernetes Components</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Control-Plane-Components"><span class="nav-number">2.1.</span> <span class="nav-text">Control Plane Components</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#API-Server"><span class="nav-number">2.1.1.</span> <span class="nav-text">API Server</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Etcd"><span class="nav-number">2.1.2.</span> <span class="nav-text">Etcd</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Controller-Manager"><span class="nav-number">2.1.3.</span> <span class="nav-text">Controller Manager</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Scheduler"><span class="nav-number">2.1.4.</span> <span class="nav-text">Scheduler</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Node-Components"><span class="nav-number">2.2.</span> <span class="nav-text">Node Components</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Kubelet"><span class="nav-number">2.2.1.</span> <span class="nav-text">Kubelet</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Kube-Proxy"><span class="nav-number">2.2.2.</span> <span class="nav-text">Kube-Proxy</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Container-Runtime"><span class="nav-number">2.2.3.</span> <span class="nav-text">Container Runtime</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Addons"><span class="nav-number">2.3.</span> <span class="nav-text">Addons</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#DNS"><span class="nav-number">2.3.1.</span> <span class="nav-text">DNS</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Dashboard"><span class="nav-number">2.3.2.</span> <span class="nav-text">Dashboard</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Container-Resource-Monitoring"><span class="nav-number">2.3.3.</span> <span class="nav-text">Container Resource Monitoring</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Cluster-level-Logging"><span class="nav-number">2.3.4.</span> <span class="nav-text">Cluster-level Logging</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Example"><span class="nav-number">2.4.</span> <span class="nav-text">Example</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#The-Kubernetes-API"><span class="nav-number">3.</span> <span class="nav-text">The Kubernetes API</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#API-版本"><span class="nav-number">3.1.</span> <span class="nav-text">API 版本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#API-描述"><span class="nav-number">3.2.</span> <span class="nav-text">API 描述</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Kubernetes-Objects"><span class="nav-number">4.</span> <span class="nav-text">Kubernetes Objects</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Object-Spec-and-Status"><span class="nav-number">4.1.</span> <span class="nav-text">Object Spec and Status</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Describing-a-Kubernetes-object"><span class="nav-number">4.2.</span> <span class="nav-text">Describing a Kubernetes object</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Required-Fields"><span class="nav-number">4.3.</span> <span class="nav-text">Required Fields</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关键概念"><span class="nav-number">5.</span> <span class="nav-text">关键概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Pod"><span class="nav-number">5.1.</span> <span class="nav-text">Pod</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Volume"><span class="nav-number">5.2.</span> <span class="nav-text">Volume</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Deployment"><span class="nav-number">5.3.</span> <span class="nav-text">Deployment</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Service"><span class="nav-number">5.4.</span> <span class="nav-text">Service</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Namespace"><span class="nav-number">5.5.</span> <span class="nav-text">Namespace</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#命令备忘"><span class="nav-number">5.6.</span> <span class="nav-text">命令备忘</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

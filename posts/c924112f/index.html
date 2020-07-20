@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="这里是 2020 年 「朝花夕拾」第二期，这一期我们来聊一聊 个人知识管理 哦对了，上周的「朝花夕拾」发布之后，北京就迎来了 2020 年的第一场雪。冬雪覆盖的燕园美丽的让人心醉，今天的封面图是大雪的第二天早上在学校转悠的时候拍的。古色古香的静园，加上堆雪人的活泼小姐姐们，很喜欢。">
+<meta name="keywords" content="PKM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Do You Want To Build A Snowman?">
+<meta property="og:url" content="http://houmin.cc/posts/c924112f/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="这里是 2020 年 「朝花夕拾」第二期，这一期我们来聊一聊 个人知识管理 哦对了，上周的「朝花夕拾」发布之后，北京就迎来了 2020 年的第一场雪。冬雪覆盖的燕园美丽的让人心醉，今天的封面图是大雪的第二天早上在学校转悠的时候拍的。古色古香的静园，加上堆雪人的活泼小姐姐们，很喜欢。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-05_snow-car.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-05_big-eye.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-05_flag.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-05_snow-branch.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-05_carrier.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-06_snow-duck.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-06_calabash.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-06_roof.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-06_build-snowman.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-06_south-north.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-06_daya.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-06_cervantes.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-12_rescue-time-week-report.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-12_google-calender.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-12_forest.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-12_trello.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-14_dimw-pyramid-adaptation.png">
+<meta property="og:updated_time" content="2020-07-20T01:30:36.293Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-05_snow-car.jpg">
+
+<link rel="canonical" href="http://houmin.cc/posts/c924112f/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Do You Want To Build A Snowman? | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+<link rel="stylesheet" href="/assets/css/APlayer.min.css" class="aplayer-style-marker">
+<script src="/assets/js/APlayer.min.js" class="aplayer-script-marker"></script>
+<script src="/assets/js/Meting.min.js" class="meting-script-marker"></script>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/c924112f/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Do You Want To Build A Snowman?
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-01-11 15:19:39" itemprop="dateCreated datePublished" datetime="2020-01-11T15:19:39+08:00">2020-01-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%9D%E8%8A%B1%E5%A4%95%E6%8B%BE/" itemprop="url" rel="index">
+                    <span itemprop="name">朝花夕拾</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/c924112f/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/c924112f/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>这里是 2020 年 「朝花夕拾」第二期，这一期我们来聊一聊 <code>个人知识管理</code></p>
+<p>哦对了，上周的「朝花夕拾」发布之后，北京就迎来了 2020 年的第一场雪。冬雪覆盖的燕园美丽的让人心醉，今天的封面图是大雪的第二天早上在学校转悠的时候拍的。古色古香的静园，加上堆雪人的活泼小姐姐们，很喜欢。</p>
+
+    <div id="aplayer-ZOFNuaXw" class="aplayer aplayer-tag-marker meting-tag-marker" data-id="28031114" data-server="netease" data-type="song" data-mode="circulation" data-autoplay="false" data-mutex="true" data-listmaxheight="340px" data-preload="auto" data-theme="#555"></div>
+<a id="more"></a>
+<h2 id="路上的风景"><a href="#路上的风景" class="headerlink" title="路上的风景"></a>路上的风景</h2><p>今年的雪特别的多，没过几天，又下了 2020 的第一场雪。趁着大雪，又拿着相机在学校到处拍了好些，这里是其中的些许片段。</p>
+<p><img alt="冰雪中仍然在工作的雷达气象车" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-05_snow-car.jpg"></p>
+<p><img alt="一直想拍的大眼睛" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-05_big-eye.jpg"></p>
+<p><img alt="走到百讲，晚上大学中风雪中飘舞的国旗" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-05_flag.jpg"></p>
+<p><img alt="雪中的枝丫" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-05_snow-branch.jpg"></p>
+<p><img alt="快回到宿舍，还在抓紧时间送外卖的小哥" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-05_carrier.jpg"></p>
+<p>第二天早上起来，继续拍照，哈哈哈</p>
+<p><img alt="从燕南过去，不知哪位聪明的小可爱在墙上种上了小鸭子" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-06_snow-duck.jpg"></p>
+<p><img alt="其实，我的第一反应是葫芦娃，哈哈哈哈" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-06_calabash.jpg"></p>
+<p><img alt="二体" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-06_roof.jpg"></p>
+<p><img alt="在静园堆雪人的小姐姐们" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-06_build-snowman.jpg"></p>
+<p><img alt="玲珑剔透的南北阁" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-06_south-north.jpg"></p>
+<p><img alt="大雅之堂" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-06_daya.jpg"></p>
+<p><img alt="风雪中的塞万提斯" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-06_cervantes.jpg"></p>
+<h2 id="一周复盘"><a href="#一周复盘" class="headerlink" title="一周复盘"></a>一周复盘</h2><p>复盘的基准仍然是数据。根据上次总结的四个工具，这次来好好复盘一下过去一周的工作和生活。</p>
+<h3 id="Rescue-Time"><a href="#Rescue-Time" class="headerlink" title="Rescue Time"></a>Rescue Time</h3><p>在过去的一周里，我用通过 Rescue Time 统计的时间达到了 83 个小时，平均每天记录 12 个小时。Productive Time 为 34 个小时，平均每天 Productive Time 为 5 个小时。</p>
+<p><img alt="Rescue Time Week Report - Jan 5 ~ Jan 11, 2020" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-12_rescue-time-week-report.png"></p>
+<ul>
+<li>按照每天 8小时睡眠的话，一天的有效时间是16 个小时。</li>
+<li>按照早上 3 个小时，中午 4 个小时，晚上 3 个小时的话，一天的可以工作的时间为 10 个小时。不可能每时每刻都在工作，按照 80% 的能效比，Productive Time 为 8 小时。</li>
+</ul>
+<p>鉴于过去一周包括生病和运动等其他的时间，总体上这个最终有日均 5 小时的产出时间还是很满意的。显而易见，Red Part 主要是微信、微博和 B 站的时间，这也是我每天消耗时间最多的几个 App。倒也不是说，用这几个 App 都一定是在划水，比如有时候会用 B 站看一些学习的视频，有时候用微信公众号看一些有意思的文章。Anyway，姑且用这个分类，在下周的话，期待自己的日均 Productive Time 能够达到 6 个小时。在 Productive Time 里面，目前主要是写作和后期，代码写的还不是很多，期待以后在产出时间上会更加的多样性。</p>
+<h3 id="Google-Calender-和-Forest"><a href="#Google-Calender-和-Forest" class="headerlink" title="Google Calender 和 Forest"></a>Google Calender 和 Forest</h3><p>在过去的一周，我基本上把 <code>Google Calender</code>当做了自己的日记本。不仅能够记录下每天的所有行程，做明日计划，还能够通过每日总结直接在上面记录复盘一天的所有的得失。这种数据采集方式，我很满意。</p>
+<p>对于 Forest，主要就是在番茄工作法的时候使用。目前对于这个的使用程度还不是很熟练，好像是可有可无？但是如果记起来的话，确实能够很大程度的减少你耍手机的频率。</p>
+<div class="group-picture"><div class="group-picture-container"><div class="group-picture-row"><div class="group-picture-column" style="width: 50%;"><img alt="Google Calender - Jan 5 ~ Jan 11, 2020" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-12_google-calender.jpg"></div><div class="group-picture-column" style="width: 50%;"><img alt="Forest - Jan 5 ~ Jan 11, 2020" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-12_forest.jpg"></div></div></div></div>
+<p>可以看到，过去一周</p>
+<ul>
+<li>基本上保持在 8 点半能够起床，12 点前睡觉。虽然和我自己定的早睡早起的目标还有差距，但是继续努力嘛</li>
+<li>一周能够运动三次，虽然这周只是跑了 10 公里，没有达到 15 公里，但是生病了还是可以理解的</li>
+<li>卡林巴琴在这周后半段有点懈怠了，最近想练伴奏版青花瓷，还需继续努力</li>
+<li>本周的开始，本来是想把之前无锁队列的坑给填了，但是做的时候还有越来越多的坑需要去填，最后是完成了两篇总结性的技术博客，下周争取完成这个系列</li>
+<li>校园采风三次，两次大雪，一次是第一次上了理二的九楼</li>
+<li>最后两天也是病恹恹的，一口气看了 3 部电影</li>
+<li>总体上还算 OK，但是是不是太单调？下周出去转转？</li>
+</ul>
+<h3 id="Trello"><a href="#Trello" class="headerlink" title="Trello"></a>Trello</h3><p>在过去的一周，我的 Trello 的「朝花夕拾」看板里面把所有的事情分为</p>
+<ul>
+<li>2020 年度目标    -&gt;    主要是 2020 年想要完成的目标</li>
+<li>Hold                    -&gt;    不紧急但是需要做的事情但是被搁置的事情</li>
+<li>To Do                  -&gt;    最近要做的事情</li>
+<li>Doing                  -&gt;    当前正在做的事情</li>
+<li>Done                   -&gt;    已经完成的事情</li>
+<li>Inbox                   -&gt;    突然想起但是还没有排期的事情</li>
+<li>White Note          -&gt;    一些有意思的课题</li>
+</ul>
+<p>经过一周的实践，现在尝试做一点简单的修正。正如我曾经说过，如果你想要做成一件事情，那么你首先要 <code>set a goal</code>, 然后根据这个 goal 你要 <code>set a plan</code>，接下来就是 <code>follow the plan and adjust it according your state</code>。（或者关于目标这个话题下次可以再聊一期？）</p>
+<p>很明显，在我的这个看板中，我设定了一个一年期的中长期目标。但是，正如所有的年度目标一样，如果没有一个切实的短期目标和计划的话，过了一段时间个人的轨迹就很容易和目标偏离。幸好呀，我们还有定期的复盘：）</p>
+<p>根据过去的经验，我把看板重新调整为以下样式，下周再试行一周。</p>
+<p><img alt="Trello Board" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-12_trello.png"></p>
+<h3 id="小日常"><a href="#小日常" class="headerlink" title="小日常"></a>小日常</h3><p>emmm…这个工具的数据采集工作这周只用了 3 天，后面完全忘记。</p>
+<p>下周再看看？不然，这个工具可能就要被淘汰了…</p>
+<h2 id="个人知识管理"><a href="#个人知识管理" class="headerlink" title="个人知识管理"></a>个人知识管理</h2><p>Finally，总算到了这周的主题，<code>个人知识管理</code>，也就是 <code>PKM(Personal Knowledge Management)</code></p>
+<p>这是一个长期以来伴随我们整个学生时代的课题。在工作之后，这个课题也将会继续存在。这一期，我不追求能够给自己定下一个完美的知识管理范式，只是期待能够有一个简单的开始。根据之前十几年的经验，能够总结出一个也许粗略的模型，和一些持久易用的工具。在面向未来几十年的时间里，这个模型能够动态的变化和修正，以期未来能够更好的符合我的节奏。</p>
+<h3 id="DIKW"><a href="#DIKW" class="headerlink" title="DIKW"></a>DIKW</h3><p>在 <code>知识管理</code> 领域有一个经典的 <code>DIKW</code> 体系，DIKW是即 <code>Data, Information, Knowledge, Wisdom</code>。这个体系最早可以追溯到诗人 <code>Thomas Stearns Eliot</code>的诗：</p>
+<blockquote>
+<p>Where is the life we have lost in living ?</p>
+<p>Where is the wisdom we have lost in knowledge ?</p>
+<p>Where is the knowledge we have lost in information ?</p>
+</blockquote>
+<p>下面是该模型的具体内容</p>
+<p><img alt="DIKW Pyramid" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-14_dimw-pyramid-adaptation.png"></p>
+<ul>
+<li><code>Data</code>是即在上一周我认真谈过的数据，是我们从各个地方采集到的原始数据</li>
+<li><code>Information</code> 是我们从数据从提取出来的信息，需要我们有选择的从数据中去掉无用的噪声和干扰信息 —&gt; 对应于 <code>What</code></li>
+<li><code>Knowledge</code> 是我们对信息进一步加工整理，从众多信息中发现信息之间的关系，并提炼出的规范化、体系化的知识 —&gt; 对应于 <code>How</code></li>
+<li><code>Wisdom</code> 是对知识的灵活整理和创造性运用，智慧的生成过程是知识的内化过程 —&gt; 对应于 <code>Why</code></li>
+</ul>
+<p>其实这个模型就对应着我们对于知识从输入到内化的整个过程，知识体系化之后就可以自如的向外输出，乃至总结出属于自己的智慧。</p>
+<p>生活中经常会遇见的一个问题是，读过一本书或者一篇文章之后，当时觉得很好，但是过段时间之后，再让自己说些什么的时候，却言之无物。为什么呢？这就是典型的缺乏内化的过程。</p>
+<p><strong>读了那么多书，却仍然一无所知</strong></p>
+<ul>
+<li>免费让我们获得各种有用和无用的知识，但却没有一个很好的吸收消化方式；<ul>
+<li>学会内化，将看到知识分类，转化为自己的知识体系</li>
+</ul>
+</li>
+<li>穿梭在信息流中，常常感觉自己会了很多，又突然感觉自己什么都不会，没有沉淀下来的知识；<ul>
+<li>知识输出，提升自己的思考深度，持续迭代</li>
+</ul>
+</li>
+</ul>
+<p>在我看来，一个知识内化的过程应该是下面这样的 Pipeline:</p>
+<pre class="mermaid">graph LR
+Input[输入] --> Collect(收集)
+Collect --> System[系统化]
+System --> Output(输出)</pre>
+
+<p>针对于这个 Pipeline，下面我会探讨一下现在常用的工具</p>
+<h3 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h3><p>在我看来，信息收集分为两类：</p>
+<ul>
+<li>主动式信息收集：自己有问题，去上网查询、去看书，根据问题去爬取获得相应的信息</li>
+<li>被动式信息收集：订阅一些优质微信公众号、订阅 RSS 信息源，刷微博等等</li>
+</ul>
+<p>主动的信息收集，有一个最常见的思路，就是用书签。但是历史的经验告诉我，看到了一些好的内容，如果只是用书签收藏下来，绝大多数的情况是并不会再去打开。既然这样，还不如一开始就一次性的纳入到自己的整理箱，从而更快速的归于整体的知识体系的一部分。</p>
+<blockquote>
+<p><a href="https://zh.wikipedia.org/wiki/書籤_(瀏覽器" target="_blank" rel="external nofollow noopener noreferrer">书签 (万维网) - 维基百科，自由的百科全书</a>)：<strong>书签</strong>是<a href="https://zh.wikipedia.org/wiki/瀏覽器" target="_blank" rel="external nofollow noopener noreferrer">浏览器</a>中用以存储<a href="https://zh.wikipedia.org/wiki/網址" target="_blank" rel="external nofollow noopener noreferrer">网址</a>的一个设计，方便用户不须以纸笔抄写或记住网址即能迅速链接至网站。所有现代网页浏览器都有书签功能。书签在<a href="https://zh.wikipedia.org/wiki/Internet_Explorer" target="_blank" rel="external nofollow noopener noreferrer">Internet Explorer</a>中叫<strong>收藏夹</strong>（简体中文）或<strong>我的最爱</strong>（繁体中文）。</p>
+</blockquote>
+<p>从 Wiki 的解释就可以看出，书签在最初被设计时（可想而知当时的门户网页其实很少）的功能应当更加偏向于如何<strong>让用户更快抵达某一网站</strong>，作为用户所收藏的网页集合而不至于每次都要重新输入链接。从这个角度来理解现在网络环境下的书签功能，则更应当只是把它<strong>作为常用网站首页（即主站）的索引，而不是存储资料的方式</strong>，毕竟保存的链接是有可能失效的，而保存的内容则永远不会发生变化。</p>
+<p>比如在搜索一些资料的时候，在当前因为各种原因看不了，我们可以很简单的直接用印象笔记的 <code>Web Clipper</code> 插件直接将其保存到印象笔记的 <code>Inbox</code> 笔记本。收集完成之后，则需要我们通过定期总结去消化它。</p>
+<p>对于被动接受的一些信息，可以通过 <code>Read it later</code>工具，这里我用的是 <code>Pocket</code>。基本上你在刷微信、知乎、微博的时候，觉得有意思可以再读一次的内容可以直接发送到Pocket，然后在合适的时间去消化处理吸收。</p>
+<p>在 <code>Pocket</code> 中，如果觉得某一篇特别有价值，可以利用 IFTTT 工具直接保存在 EverNote。</p>
+<h3 id="知识内化"><a href="#知识内化" class="headerlink" title="知识内化"></a>知识内化</h3><p>关于知识内化的几个误区：</p>
+<ul>
+<li>逃离记忆：任何事情百度一下，不需要再专门记录了，遇到再百度<ul>
+<li>搜索成本一次次重复，而且下次未必能找到，永远不是自己的。比如excel函数</li>
+</ul>
+</li>
+<li>记忆和内化一样：背下来就行<ul>
+<li>背诵是一方面，了解逻辑并融入自己的理解是另一方面。看了直通车打款计划，但店铺和自己的品类、体量、推广费用都没有可比性。</li>
+</ul>
+</li>
+<li>过于依赖：保存在电脑中就不用记了<ul>
+<li>依赖一些知识存储后，只要用到再搜索。关键常调用知识还需要记忆，提升效率；另外知识组块，比如新零售概念等，脑中要随时有，才能持续迸发创意。</li>
+</ul>
+</li>
+<li>多重复来记忆：脑子不好只能多看<ul>
+<li>利用必要难度、间隔记忆、遗忘曲线、复述意识、图像记忆等（思维导图的视觉化可以起到很好提升记忆效果）</li>
+</ul>
+</li>
+</ul>
+<h4 id="Wiki"><a href="#Wiki" class="headerlink" title="Wiki"></a>Wiki</h4><p>Wiki 是组织知识非常有效的形式，维基百科就是一个最成功的范例。之前曾经用 <code>MediaWiki</code> 搭过一套自己的 wiki 平台，但是后来没有持续性的维护，就放弃了。现在可以在自己的博客中，在不同博文之间链接，也能够基本实现 wiki 的功能。</p>
+<p>现在这个还在探索中。</p>
+<h4 id="Mindmap"><a href="#Mindmap" class="headerlink" title="Mindmap"></a>Mindmap</h4><p>思维导图对于思路整理是一个非常有效的工具。现在准备用 Xmind 作为自己的思维导图工具。</p>
+<p>持续性探索中。</p>
+<h4 id="EverNote"><a href="#EverNote" class="headerlink" title="EverNote"></a>EverNote</h4><p>现在用的是印象笔记作为自己的笔记类应用（EverNote 的中国区版本），加上有道云笔记作为辅助。</p>
+<p>持续性探索中。</p>
+
+    </div>
+
+    
+    
+    
+      
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/c924112f/" title="Do You Want To Build A Snowman?">http://houmin.cc/posts/c924112f/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/PKM/" rel="tag"><i class="fa fa-tag"></i> PKM</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/b893097a/" rel="next" title="【计算机体系结构】NUMA架构详解">
+                  <i class="fa fa-chevron-left"></i> 【计算机体系结构】NUMA架构详解
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/f5d73ad0/" rel="prev" title="Hexo 博客容器化">
+                  Hexo 博客容器化 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#路上的风景"><span class="nav-number">1.</span> <span class="nav-text">路上的风景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一周复盘"><span class="nav-number">2.</span> <span class="nav-text">一周复盘</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Rescue-Time"><span class="nav-number">2.1.</span> <span class="nav-text">Rescue Time</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Google-Calender-和-Forest"><span class="nav-number">2.2.</span> <span class="nav-text">Google Calender 和 Forest</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Trello"><span class="nav-number">2.3.</span> <span class="nav-text">Trello</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#小日常"><span class="nav-number">2.4.</span> <span class="nav-text">小日常</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#个人知识管理"><span class="nav-number">3.</span> <span class="nav-text">个人知识管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#DIKW"><span class="nav-number">3.1.</span> <span class="nav-text">DIKW</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#信息收集"><span class="nav-number">3.2.</span> <span class="nav-text">信息收集</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#知识内化"><span class="nav-number">3.3.</span> <span class="nav-text">知识内化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Wiki"><span class="nav-number">3.3.1.</span> <span class="nav-text">Wiki</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Mindmap"><span class="nav-number">3.3.2.</span> <span class="nav-text">Mindmap</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#EverNote"><span class="nav-number">3.3.3.</span> <span class="nav-text">EverNote</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

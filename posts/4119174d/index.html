@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="这里是「朝花夕拾」第四期，这一期我会梳理过去三周发生种种迷幻的事情。是的，如你所知，我最近给自己放了三个星期的假，「朝花夕拾」已经停更了两期；如你所知，我是一个武汉人，身在局中，这场疫情还在继续发展，往者不谏，来者可追。 我们到底，还要付出多大代价？">
+<meta name="keywords" content="武汉,新冠肺炎">
+<meta property="og:type" content="article">
+<meta property="og:title" content="武汉日记">
+<meta property="og:url" content="http://houmin.cc/posts/4119174d/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="这里是「朝花夕拾」第四期，这一期我会梳理过去三周发生种种迷幻的事情。是的，如你所知，我最近给自己放了三个星期的假，「朝花夕拾」已经停更了两期；如你所知，我是一个武汉人，身在局中，这场疫情还在继续发展，往者不谏，来者可追。 我们到底，还要付出多大代价？">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-02_rumor.png">
+<meta property="og:updated_time" content="2020-07-14T08:24:44.100Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-02_rumor.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/4119174d/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>武汉日记 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/4119174d/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          武汉日记
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-08 23:00:42" itemprop="dateCreated datePublished" datetime="2020-02-08T23:00:42+08:00">2020-02-08</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%9D%E8%8A%B1%E5%A4%95%E6%8B%BE/" itemprop="url" rel="index">
+                    <span itemprop="name">朝花夕拾</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/4119174d/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/4119174d/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>9.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>16 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>这里是「朝花夕拾」第四期，这一期我会梳理过去三周发生种种迷幻的事情。是的，如你所知，我最近给自己放了三个星期的假，「朝花夕拾」已经停更了两期；如你所知，我是一个武汉人，身在局中，这场疫情还在继续发展，往者不谏，来者可追。</p>
+<p>我们到底，还要付出多大代价？</p>
+<a id="more"></a>
+<h2 id="突如其来"><a href="#突如其来" class="headerlink" title="突如其来"></a>突如其来</h2><p>这是一场突如起来的疫情。</p>
+<p>直到 2020 年 1 月 19 日我从北京回武汉时，我都没有把之前关于这场疫情放在心上；</p>
+<p>在 1 月 3 日，KF 在看到新加坡和香港对疫情预警处理新闻，在寝室和我们讨论的时候，我依然毫不在意；</p>
+<p>在1 月 8 日，KM 从武汉来湖北找我的时候，我们还开玩笑是否他不会把不明肺炎传染给我吧；</p>
+<p>到 20 日上午的时候，我还在为 21 日和老妈老姐去广东过年的行程做着准备；</p>
+<p>即使在 20 日晚上听到了钟南山肯定不明肺炎人传人新闻的时候，即使心中有些许担忧，还是决定去广东；</p>
+<p>21 日上午一大早，躺在床上刷着一条又一条关于不明肺炎新闻的时候，我才开始意识到这次肺炎的严重性，赶紧跑到老妈房里向她说明当时的情况，此时的她正在兴冲冲的整理行李，对于头天晚上的新闻毫不在意；</p>
+<p>到 23 日早上传出武汉封城新闻的时候，我还在想这次能不能在元宵节前结束，说不定还能赶上和 PF 的湖南之行。</p>
+<p>随着每天通报的确诊数越来越多，随着病情从武汉向湖北、向全国、向全世界扩散，随着春节假期延长，随着各地返工时间不断延迟，随着每天网络上此起彼伏的新闻的轰炸，我终于意识到了这次疫情对我造成的后果了：</p>
+<p><strong>这一次我至少在家要呆在 3 月份了，甚至可能 5 月份才能返校</strong></p>
+<p>因为这次疫情，全国人民都不得不呆在家中，服务业全方面停摆… 虽然这次新冠肺炎对我的影响只是上面简单的几笔，于国家于社会却已经造成了巨大的国民经济损失。这是一次影响远超 SARS 的历史疫情，不仅仅是经济损失，还有公共卫生变革、社会舆情管理、政治体制改革，到底如何还要由历史检验。</p>
+<h2 id="蓄谋已久"><a href="#蓄谋已久" class="headerlink" title="蓄谋已久"></a>蓄谋已久</h2><p>这不是一场突如其来的疫情。</p>
+<p>恰恰相反，这次新冠肺炎蓄谋已久，它巧妙地在武汉和湖北两会期间扩散，并在春节期间爆发，为自己争取到了可以匹敌 <code>非典型肺炎</code>的名称：<code>新冠肺炎</code>。我用思维导图整理了疫情开始到现在的时间线，种种的一切表明这不仅仅是一场天灾，更是人祸。</p>
+<embed src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-02-08_wuhan-timeline.svg" style="display:block;width:100%;height:100%" onclick>
+
+<p>根据后期披露出来的各种信息，我们可以看到，早在 <code>2019年12月1日</code>已有患者发病。</p>
+<p> <code>2019年12月20日</code>稳健医疗取消在湖北召开高管年会，作为一个局外人的医疗企业，凭借当时和医疗系统联系的信息，已经推演出了大规模的人传人疫情传播的可能性，及早取消了湖北的年会。那么身为局内人的卫生系统呢？后续的时间线证明了一线的医生在 12 月 25 日时已经意识到了此次新冠肺炎的传染性，并且按照规定向疾控中心上报疫情。截止到 2019 年底，事件都还在正常的路线上发展着，不好不坏无可指摘，国家卫健委专家组也抵达武汉正式介入调查。</p>
+<p>可是进入 2020 年之后，事情的发展开始走偏：</p>
+<ul>
+<li>央视报道武汉8名散布谣言者被查出</li>
+<li>提前在微信群中给身边朋友预警的李文亮医生遭到武汉警方训诫</li>
+<li>武汉医护感染病例逐渐增加，而武汉市卫健委直到 1 月 19 日之前仍在宣称 「未发现明显人传人」和「医护感染」，此次疫情「可防可控」</li>
+<li><strong>武汉市两会和湖北省两会接连召开</strong>，武汉卫健委连续 12 天或者无通告，或者通告无新增病例</li>
+<li>武汉市百步亭社区万家宴按期举办</li>
+</ul>
+<p>直到 1 月 20 日，钟南山面对央视采访，明确肯定「确认人传人」，并且已有「医护感染」</p>
+<p>然而庞大的官僚系统显示了它巨大的惯性、对于专业意见的蔑视，和 03 年没有什么不同：</p>
+<ul>
+<li>1 月 20 日晚间，湖北省应急管理厅成功举办春节联欢会</li>
+<li>1 月 21 日晚间，湖北省春节团拜文艺演出成功举办</li>
+</ul>
+<p>到了 1 月 22 日，整个事件的发展陡转直下：</p>
+<ul>
+<li>湖北省启动突发公共卫生事件II级应急响应</li>
+<li>国务院副总理孙春兰开始检查指导肺炎疫情防控工作</li>
+</ul>
+<p>终于，1 月 23 日，武汉封城。一个人口超 1100 万人的城市封城，这是人类历史上首次，这一刻，我见证了历史，我也是历史的参与者。另一个令人注意的点是，还有一天，就是中国的春节，此时距离 2020 年铁路春运已经过去了两个星期。</p>
+<p>以武汉封城作为一个时间节点，接下来的两个星期，放假在家的人们经历了一次又一次爆炸性的舆论浪潮。就像是一场全民直播，所有人既是看直播的人，也是在镜头面前表演的人。</p>
+<h2 id="现场直播"><a href="#现场直播" class="headerlink" title="现场直播"></a>现场直播</h2><p>过去的两个星期，从春节假期的开始，我们经历了一波又一波的舆论浪潮，就像是一场高维空间现场直播。所有的人，都拥有大量的空闲时间来生产和消费信息。春晚早就失去了它在上世纪 90 年代曾经拥有过的关注度和讨论价值。取代春晚的，是在这次疫情中发生的一个又一个与所有人都息息相关的故事。</p>
+<p>信息的开始「高维化」。在过去的两个星期中，得益于移动互联网和自媒体时代信息的传播，关于这场疫情所有的细节，都被不同行业、不同方向的人们，从不同的角度捕捉、深挖，通过微博微信等自媒体平台，形成了一个又一个热点。就像在春晚直播的同时，摄影师也开了直播，台下的观众开了直播，台上的道具也开了直播，事件各方的一线参与者、一颗颗螺丝钉们都在输出这信息。那些虽然没有在一线，但是对于整个体系和链条熟悉的专业人士也在输出着信息。最终，形成了这次多年不见的持续到舆论浪潮。</p>
+<p>距今为止，这次疫情中最大的三个热点是</p>
+<ul>
+<li>红十字会事件</li>
+<li>CDC论文事件</li>
+<li>李文亮事件</li>
+</ul>
+<p>而这三个热点不仅仅是一件事，而是伴随着牵扯出了一系列的热点</p>
+<ul>
+<li>央视报道武汉 8 名散布谣言者被查处</li>
+<li>百步亭社区万家宴</li>
+<li>湖北省春节团拜会</li>
+<li>湖北省长 108 亿口罩产能</li>
+<li>武汉市长称此前信息披露不及时是因为作为地方政府需要授权</li>
+<li>火神山渣土车被蔡甸城管锁扣</li>
+<li>黄冈唐主任一问三不知事件</li>
+<li>武汉病毒所所长履历问题</li>
+<li>双黄连事件</li>
+<li>…</li>
+</ul>
+<p>接下来我想以这几个热点为出发点，讨论一下事情发生到现在，到底是哪出了问题？当然，开始之前，你就知道，这根本就不是一点的问题，这是一艘到处都露着洞的破船，它亟需一些全面的更新换代，未来还需要它承担更多。</p>
+<h3 id="物资到底去哪了"><a href="#物资到底去哪了" class="headerlink" title="物资到底去哪了"></a>物资到底去哪了</h3><p>这不是红十字会第一次出问题。从2011 年的郭美美事件，到更早之前汶川地震时红十字会涉嫌贪污问题，中国红十字会在中国的公信力早已经大大降低。 这一次，因为新冠肺炎疫情，红十字会的问题再一次暴露在大家面前。连续几天，红十字会事件持续发酵：</p>
+<ul>
+<li>最开始大家热情捐赠，国家也积极拨款物资，但是前线医护人员持续爆出医疗物资紧缺的问题，人们开始质疑物资到底去哪了</li>
+<li>接下来有人报出武汉红十字会将医用口罩等物资捐赠给莆田系医院</li>
+<li>然后是央视直播红十字会被保安打断事件引发广泛的舆论热潮，人们对红十字会长期的不满开始爆发</li>
+<li>紧接着鄂 A0260 车辆取口罩事件</li>
+<li>然后是惯常套路红十字会道歉，表示内疚自责</li>
+<li>红十字会被九州通接管效率大幅提高</li>
+<li>最后以湖北省红十字会3名领导被问责结束</li>
+</ul>
+<p>这样的事情不是没有发生过，为什么一而再再而三透支红会的公信力？在这个过程中，中国人民、中国企业的慈善行动是非常积极的，他们踊跃地捐出了自己的一份力，但是因为红十字会低效的分发能力一直没能分发下去。在中国物流行业超级发达的今天，红十字会在物资发放的时候，还在按传统的人工填表方式汇总需求，再按领导评估分配，然后通知领取，最后各单位凭介绍信来核查验证。所有的这些，在习惯了互联网高效便捷生活的人们看来简直不可思议，物资的分配发放怎么会如此原始低效。事情的最后，物资分发被委托给九州通这家专业机构，整个效率得到了大幅的提高。</p>
+<p>为什么会发生这样尴尬的事情？社会上有这么多专业力量，却没有得到激活，更没有和政府的社会治理高效融合，从而造成了这样一个尴尬的现象：政府很忙却力不从心，社会力量闲置却只能干着急。更令人质疑气愤的是，即使红十字会如此不给力，政府还是号召大家捐赠要通过红十字会统一处理，理由是这样便于统计分发。</p>
+<p>怎么办？还是那句话，让专业的人做专业的事情。政府需要分权，和社会力量一起，共同高效治理。期待经过这一次，中国的慈善能够有一次系统升级。</p>
+<p>慈善不应该垄断，慈善不应该只有中国红十字会这样的官方政府机构。这一次，韩红慈善基金会得到了大家的广泛赞扬，「一包方便面都能公示，为什么你不做？」，这是我们看到的民间慈善力量的积极发展。于此同时，所有的慈善机构都应该得到监管，需要有强制的信息公开机制，不论是官方慈善机构还是民间慈善机构，这些都需要在法律法规中得到体现。</p>
+<p>另一方面，这一次只是红十字会在放大镜下得到了我们的审视。由此思之，还有多少政府行政单位的效率是一样的低下。在上一波移动互联网浪潮发展下，我们拥有了便携的线上线下生活。下一波「智慧城市」，还有多少这样原始的政府办事流程可以得到优化可想而知。</p>
+<h3 id="到底是谁在瞒报"><a href="#到底是谁在瞒报" class="headerlink" title="到底是谁在瞒报"></a>到底是谁在瞒报</h3><p>梳理时间线，我们可以看到早在 1 月 8 日，<strong>国家卫健委已经确认了新型冠状病毒为疫情病源</strong>，在此期间，也一直有病例确诊，为什么在湖北和武汉的两会期间，一直无通报或者通报无新确诊案例。整个武汉无新增病例的平静时间长达12天，为什么没有通报？这段时间里，医疗体系和疾控部门以及湖北省、武汉市政府的内部到底发生了什么？</p>
+<p>武汉市长在 1 月 27 日的央视采访上表示，说他需要授权才能依法披露：</p>
+<blockquote>
+<p>这次我们的疫情其实各方面对我们信息的披露是不满意的，我们既有披露不及时的一面，也有我们利用很多有效信息来完善我们的工作不到位的一面。前面这个披露的不及时，这一点大家要理解，因为它是传染病，传染病有<strong>「传染病防治法」</strong>，它必须依法披露，作为地方政府，我获得这个信息以后，授权以后，我才能披露，所以这一点在当时很多不理解。</p>
+</blockquote>
+<p>周市长说的很明确，他承认了自己的责任：</p>
+<ul>
+<li>信息披露不及时</li>
+<li>有效信息下工作不到位</li>
+</ul>
+<p>先不论信息披露的责任到底在谁，稳健医疗作为一个医疗企业都能够凭借自己获得的信息做到预警，武汉市长根据他所获得的信息是应该能够意识到问题的严重性的。可以说，相对 SARS本次新冠肺炎早期的防治工作是很不错的。从 2019 年 12 月 8 日发现第一例通报，12 月中旬获得病毒样本并传至 CDC，12 月 29 日聚焦到华南海鲜市场，次日启动调查，1 月 1 日关闭市场，1 月 9 日成功破译确定发现新型冠状病毒基因组，并随即将该病毒基因组信息共享到相关国际网站。这么短的时间找到病因，甚至病毒测序都得以完成发表，是一个非常了不起的成绩。在这个时候，通过媒体的民众教育十分关键。佩戴口罩，勤洗手，公布早起患病人员的行动轨迹，这都是应该在早期做到的。这不会引起恐慌，与此相反反而能够在早期就遏制疫情的发展。我在 1 月 19 日从北京回武汉时，基本上没有多少人佩戴口罩。这真的不是武汉市民心大，这是武汉市政府没有起到应有的教育预警功能，甚至还发生了万家宴这种事情。</p>
+<p>OK，接下来再看信息披露的问题。</p>
+<p>为什么在平静的 12 天内，武汉不通报确诊信息，其中<a href="https://mp.weixin.qq.com/s/DDP846cgEhkiFhTgNVIXxw" target="_blank" rel="external nofollow noopener noreferrer">试剂盒是主要问题</a>。直到 1 月 16 日，首批针对新型冠状病毒生产的PCR试剂盒才被下发到各省级疾控中心。而下达到省级疾控中心并不会下达到一线的医院，于此同时，试剂盒的生产也成为瓶颈。</p>
+<p>查阅<strong>中华人民共和国传染病防治法</strong> 第三十八条显示：</p>
+<blockquote>
+<p>国家建立传染病疫情信息公布制度。</p>
+<p>国务院卫生行政部门定期公布全国传染病疫情信息。省、自治区、直辖市人民政府卫生行政部门定期公布本行政区域的传染病疫情信息。</p>
+<p><strong>传染病暴发、流行时，国务院卫生行政部门负责向社会公布传染病疫情信息，并可以授权省、自治区、直辖市人民政府卫生行政部门向社会公布本行政区域的传染病疫情信息。</strong></p>
+<p>公布传染病疫情信息应当及时、准确。</p>
+</blockquote>
+<p>确实如周市长所言，地方政府卫生行政部门需要国务院卫生行政部门的授权才能向社会公布本行政区域的疫情信息。依据行政区划分类，武汉市是副省级城市，行政区划类别为省辖市，并非省、自治区、直辖市，基于现行法律法规，武汉市的卫生行政部门不是疫情公布主体，因此，武汉市市长无权决定公布传染病疫情。</p>
+<p>国务院的卫生行政部门是什么呢？当前的国家卫生行政部门即是国家卫生健康委员会。此次舆论中心的中国疾控中心（CCDC）则是国家卫健委直属的事业单位，CDC 作为一个研究性单位，是一个科研机构+公益机构+政策咨询机构。</p>
+<p>查阅<strong>中华人民共和国传染病防治法</strong> 第三十三条显示：</p>
+<blockquote>
+<p>疾病预防控制机构应当主动收集、分析、调查、核实传染病疫情信息。接到甲类、乙类传染病疫情报告或者发现传染病暴发、流行时，<strong>应当立即报告当地卫生行政部门</strong>，由当地卫生行政部门立即报告当地人民政府，同时报告上级卫生行政部门和国务院卫生行政部门。</p>
+<p>疾病预防控制机构应当设立或者指定专门的部门、人员负责传染病疫情信息管理工作，及时对疫情报告进行核实、分析。</p>
+</blockquote>
+<p>依据当前法律，CDC 是没有权力向公众公布信息的，他只能向卫生行政部门报告。我不相信高福院士他们为了抢发论文不向公众公布数据，实际上疾控中心1月23日拿到数据开始做的研究分析，25日到26日提交的论文，这是在确认人传人之后的工作。从法律上来说，他们本就没有公布数据的权力。于此同时，因为 PCR 试剂盒的限制，导致武汉地方确诊数目一直不变。根据那张广为流传的直方图，CDC 早在 1 月 6 日已经给出了二级预警。那么为什么给出了二级预警之后地方行政部门还是无动于衷呢？为什么卫健委不向公众公布相关疫情情况呢？</p>
+<p>这里不是在给 CDC 洗白，这一次 CDC 在法律上没有做错任何事情，其最大的错误在于：<strong>「在需要他们以预防医学的思维来指导整个疫情控制的时候，他们错误的选择了科研思维。」</strong></p>
+<p>根据<a href="https://zhuanlan.zhihu.com/p/104541604" target="_blank" rel="external nofollow noopener noreferrer">知识分子的报道</a>:</p>
+<blockquote>
+<p><strong>CDC承认早有推论人传人，但下结论“保守”“谨慎”</strong></p>
+<p>在1月31日接受《新京报》采访时，论文的通讯作者之一、中国CDC的副主任冯子健承认，从“未发现明显人传人现象” 到 “不能排除有限人传人的可能”，CDC是 “保守的”， “谨慎的”。</p>
+<p>关于 “人传人” 的推论，冯子健说，他们比较早就已经有这样的看法，但需要调查核实，包括详细询问、核实每个患者的暴露史。</p>
+<p>冯子健同时表示，中国CDC从最早开始，就把它（新型冠状病毒）当作有高度传染性的疾病来对待，第一时间采取了密切接触者管理等措施。</p>
+<p>他说，对疾病的认识有个过程，公布信息要谨慎，所以从开始的“未发现明显人传人现象” 到 “不能排除有限人传人的可能”，和病例诊断、实验室检测结果逐步用于病人的甄别有关。</p>
+<p>而根据《第一财经》的报道，高福表示，回顾性调查的工作正是CDC的职责之一，找到元凶，回顾性调查，指导未来防控。“我们的防控一直没有停，一个月来大家都没有觉睡。”</p>
+<p>对于中国CDC在此次疫情中的表现，一位不愿具名的资深流行病学家认为，”<strong>中国疾控中心在7天之内成功地对新型冠状病毒进行了测序，并将结果推向了国际社会，这令人印象深刻。</strong>”</p>
+<p>“从发表于425例患者的论文中，高福博士被批评掩盖了数据，却没有在官方网站上报告。据我了解，作为中国疾控中心主任，<strong>高福博士无意掩盖流行病学数据。政府中可能有一些行政程序，延迟了报告过程。如果不将这些数据发布到国际文献中，我们可能永远不知道真正发生了什么</strong>。” 上述流行病学家告诉《知识分子》。</p>
+<p>“由于政府和管理部门对预防医学公共卫生的不重视，中国疾病预防控制中心失去了许多优秀的流行病学家和公共卫生专家。自从这一流行病开始以来，他不是第一组专家也没有说该病毒不是人传人传播。实际上，<strong>在全国范围内爆发疫情的主要原因在很大程度上是由于武汉市政府无法遏制这种流行病，并不断告诉人们该病并非人传人，是有限人传人，在很长时间内，最基本防疫系统和程序没有得到认真的实施（例如戴口罩）。从实践的过程中促进了武汉肺炎在本地的社区感染，向全省、全国的扩散。与地方政府相反，高博士在文章评论中清楚地提到了该病毒是人传人。</strong>” 他继续说道。</p>
+</blockquote>
+<p>至此，责任到底在谁明白了，CDC 早就已经有了人传人的推论，但是下结论过于保守慎重，以科研思维去验证疫情人传人的证据，而没有以预防医学的思维去指导控制整个疫情控制。从而国家卫健委的持续发布「可防可控」，不排除「有限人传人」的消息，地方政府与此同时也失灵，疏忽了对于疫情的基本防控，最终导致了最后的疫情大爆发。</p>
+<p>所以，教训是什么，以后怎么办？<a href="https://mp.weixin.qq.com/s/-VhdDtf2A-dA86J5VB010A" target="_blank" rel="external nofollow noopener noreferrer">这篇文章</a>给出了非常专业的建议。</p>
+<blockquote>
+<p>建议人大以后修法要明文规定，<strong>CDC重大疫情预警发布应该自主独立</strong>…</p>
+<p>CDC掌握疫情后，当然<strong>要与有关专家充分沟通，防止重大差错</strong>。也应该<strong>知会政府主管机构和相关部门</strong>。但这不应该是征求许可，而是<strong>需要政府支持和做具体工作</strong>。比如关闭野生动物市场，必须假手工商管理部门，医院清空病房需要卫健委部署执行，关停剧院图书馆等公共设施，取消大会团拜等，需要政府做出姿态。</p>
+<p><strong>在疫情监测数据采集处理分析到发布，都是非常专业的技术活儿</strong>。拿这些去考问官员，如果不是学有关专业出身的，不具备相应学识，这不是赶鸭子上架么？不是学医出身的，死人的事儿都沒有机会亲历，不知道历害，从何来做决策需要的胆识？</p>
+</blockquote>
+<h3 id="不应该只有一种声音"><a href="#不应该只有一种声音" class="headerlink" title="不应该只有一种声音"></a>不应该只有一种声音</h3><blockquote>
+<p>真相更重要，一个健康的社会不应该只有一种声音。</p>
+</blockquote>
+<p>上面这句话，来自一个刚刚离开我们不久的鲜活的生命，而它的代价，更是数以千计的生命与家庭。李文亮的去世，在互联网上造就了罕见的流量热度，是疫情发生以来人们对于湖北武汉政府防控不力不满的一次强烈的情感宣泄，也是人们对于一直以来官方网络管控的一次声讨。</p>
+<p>李文亮医生只是一个普通人，他从没有想过当英雄，他所做的只是在微信群里小范围的提醒身边的人注意可能传染的微信。然而仅仅就是因为这，他得到的是武汉警方粗暴的训诫。</p>
+<blockquote>
+<p>「你能做到吗」 —— 「能」</p>
+<p>「你明白了吗」 —— 「明白」</p>
+</blockquote>
+<p>在一月初最开始看到新闻报道武汉八名散播谣言者被查处的时候，我对于官方的报道基本确信无疑的。没想到的是，所谓的造谣者，竟然是专业的医生，他也并没有特意的想要传播出去，还在微信群里提醒大家不要传出去。李文亮医生不是经典意义上的英雄，他没有想对抗谁，也没有想破坏什么，甚至也没有想要去救苦救难。他不过是一个有职业精神和职业道德的专业人士，忽然被自己的政府打压训诫，然后继续兢兢业业奋战在一线，直到最后染病身亡。他不想做英雄，却比经典意义上有强大对立面需要对抗的英雄更加悲剧。</p>
+<p>我们见过了太多的辟谣与反辟谣，弄得现在我们都不太敢在互联网上发表意见。每一次发表意见，都会有人出来质疑是不是在带节奏，是不是在吃馒头，我们似乎需要像上帝一样成为全知者才能发表意见，而且还得表现出自己的理性客观中立周全。我们被告知要等权威部门发布权威信息，然后是的，我们等到了权威部门的报道。我们相信权威，我们相信可防可控，我们不是心大，我们相信政府部门，但最后我们得到了什么？</p>
+<p><img alt="权威部门报道" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-02_rumor.png"></p>
+<p>为什么会这个样子？为什么你不容得一点批评？为什么是一次又一次的 404？</p>
+<p>我承认改革是一件长久的事情，我承认这是一个艰巨的任务，我承认我们每一个人都需要为了更好的中国去奋斗。但是，这个和我发表意见并不冲突。与其让网友失控责骂，不如让专业的人干专业的事，让你们自己的专业媒体去作出专业的批评，去正确引导舆论方向。我们听过了太多的假话、空话、套话，我们想听真话、实话。</p>
+<p>在当下的中国，有太多的问题值得讨论。与我们息息相关的教育、医疗、科研等等问题，有关具体的政策措施，都应该让民众知道更多的事情，不能仅仅就以民众科学素质太差而推脱。正是因为国民基础素养薄弱，才需要你做更多的工作啊。</p>
+<p>这一次疫情，我们看到了良心媒体如三联、如财新的报道，可是他们却也要承担很多的压力。我们看到了湖北武汉本地媒体长达一个月的集体失语，本地媒体的监督功能完全瘫痪。我们看到了官媒关于疫情中各种感人事迹的报道，是的他们是伟大的，但是能否请你们更多的发出一些理性监督的声音，而不是像人民日报那样愚蠢而又不负责的双黄连新闻。</p>
+<p>我总是说「未来会更好的」，我现在也仍然相信，我会努力的，只是希望你们也能够努力一些。</p>
+<h2 id="关于未来"><a href="#关于未来" class="headerlink" title="关于未来"></a>关于未来</h2><p>未来怎么办？</p>
+<p>这么多天来，我们见识了太多光怪陆离的事情，我们见证了太多感动人心的事情。疫情还在继续，医护人员们还在前线奋斗，也有很多基层工作人员在辛苦工作，也仍然有领导继续发布一些愚蠢的行政措施。我相信，这场战役我们终将取得胜利，区别在于我们将付出多大的代价。03 年我们已经付出了沉重的代价，未来怎么办？</p>
+<p>为什么人们会怀念 03 年的王岐山市长，因为他在说人话，没有说官话。这一次湖北政府和武汉政府的表现让人大跌眼镜，这是一个连续几年经济增速在全国名列前茅的政府所应该有的素质吗？发布会期间通篇不敢通稿，对于自己所说的数字没有概念，一而再再而三的发生错误，对说的就是你，湖北省长王晓东。面对媒体质询视而不见或者答非所问，对说的就是你，湖北省委书记蒋超良。我们不需要那么多的讲话、我们不需要那么多的会议。</p>
+<p>很多的基层干部是很辛苦的，距今已有多起地方公务人员以身殉职的报道，他们是官僚主义最直接的受害者。我们不否认各级政府对于此次疫情的重视，此次疫情的响应速度也很快，但是问题在于意识到位、文件到位、人也到位，可就是方法不到位，只能说狠话， 干着急，使蛮力。再好的讲话精神，也只会层层下压，在基层造成各种粗暴、混乱、过激、非法且低效的高压管制（封路、封门）。我不是一个专业人员，我现在只是一个略带情绪的评论者。我想到的办法就是，让专业的人干专业的事，政府需要更多的专业人士进入官僚系统，不论是来自于医疗、科研，还是来自于企业的专业人才。</p>
+<p>还有呢？</p>
+<p>这不是一个简单的整改，这里涉及到整个社会体制、整个社会治理体系的全方位更新换代。这个不是一天两天的事情，也不是喊一个口号就完了。我在这里键盘侠很简单，具体落实下来的是一张又一张的法律条文，一个又一个新的行政体系，一点又一点新的风气风貌。</p>
+<p>未来会好的吧，我相信。</p>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>这是一篇在 2 月 7 日的开始编写的文章，直到 2 月 12 日才基本写完，真的是够拖的了。从最开始查阅各方的资料用思维导图绘制时间线，到去看过去两个星期发生的各种事情的细节，时而激动，时而感动。我一向认为自己是一个政治观念保守的人，我不认同激进的变革，任何事情都是妥协的产物，我们需要的是温和的改革。我理解治理一省一市之艰难，但这也正能体现出不同官员能力的巨大差别。我不想偏激，但是有时候我是真的想骂人，尤其这段时间。</p>
+<p>这里只是一个普通公民自己的思考，这是我在这段时间里的记忆。这段历史绝不能够被忘记，正如非典一样。在 GitHub 上，也已经有人开始为这段历史存档，这些都是很好的参考资料。</p>
+<ul>
+<li><a href="https://github.com/2019ncovmemory/nCovMemory" target="_blank" rel="external nofollow noopener noreferrer">nCovMemory</a></li>
+<li><a href="https://github.com/Pratitya/wuhan2020-timeline" target="_blank" rel="external nofollow noopener noreferrer">wuhan2020-timeline</a></li>
+<li><a href="https://shimo.im/docs/onq7MwVO6pf4FjA9/read" target="_blank" rel="external nofollow noopener noreferrer">Anti404 - 2019nCov信息ICU</a></li>
+<li><a href="https://shimo.im/sheets/QjTYy6rgVV3WDRkh/MODOC/" target="_blank" rel="external nofollow noopener noreferrer">2020新型冠状病毒报道汇总</a></li>
+</ul>
+<p>根据官方统计，截止到现在因为新冠肺炎死去的人数已经上千了。这些不是简单的数字，而是一条又一条的生命，一个又一个的家庭。作为一个普通人，除了每天看新闻，除了宅在家里，我们还能做什么呢？已经给自己放了三个多星期的假，是时候收假了，是时候重启之前的数据收集机制了，做好自己的本职工作吧，等待雨后天晴的那一天。</p>
+
+    </div>
+
+    
+    
+    
+      
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/4119174d/" title="武汉日记">http://houmin.cc/posts/4119174d/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E6%AD%A6%E6%B1%89/" rel="tag"><i class="fa fa-tag"></i> 武汉</a>
+              <a href="/tags/%E6%96%B0%E5%86%A0%E8%82%BA%E7%82%8E/" rel="tag"><i class="fa fa-tag"></i> 新冠肺炎</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/8082c63c/" rel="next" title="聊聊行业">
+                  <i class="fa fa-chevron-left"></i> 聊聊行业
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/cab4606c/" rel="prev" title="也谈「远程办公」">
+                  也谈「远程办公」 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#突如其来"><span class="nav-number">1.</span> <span class="nav-text">突如其来</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#蓄谋已久"><span class="nav-number">2.</span> <span class="nav-text">蓄谋已久</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#现场直播"><span class="nav-number">3.</span> <span class="nav-text">现场直播</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#物资到底去哪了"><span class="nav-number">3.1.</span> <span class="nav-text">物资到底去哪了</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#到底是谁在瞒报"><span class="nav-number">3.2.</span> <span class="nav-text">到底是谁在瞒报</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#不应该只有一种声音"><span class="nav-number">3.3.</span> <span class="nav-text">不应该只有一种声音</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关于未来"><span class="nav-number">4.</span> <span class="nav-text">关于未来</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#写在最后"><span class="nav-number">5.</span> <span class="nav-text">写在最后</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

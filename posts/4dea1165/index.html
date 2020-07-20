@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Test 测试单元测试单元测试一般是用来测试我们的代码逻辑有没有问题，有没有按照我们期望的运行，以保证代码质量。大多数的单元测试，都是对某一个函数方法进行测试，以尽可能的保证没有问题或者问题可被我们预知。为了达到这个目的，我们可以使用各种手段、逻辑，模拟不同的场景进行测试。1234&#x2F;&#x2F; add.gofunc Add(a, b int) int &amp;#123;	return a + b&amp;#125;">
+<meta name="keywords" content="Go,测试">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Testing in Go">
+<meta property="og:url" content="http://houmin.cc/posts/4dea1165/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="Test 测试单元测试单元测试一般是用来测试我们的代码逻辑有没有问题，有没有按照我们期望的运行，以保证代码质量。大多数的单元测试，都是对某一个函数方法进行测试，以尽可能的保证没有问题或者问题可被我们预知。为了达到这个目的，我们可以使用各种手段、逻辑，模拟不同的场景进行测试。1234&#x2F;&#x2F; add.gofunc Add(a, b int) int &amp;#123;	return a + b&amp;#125;">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2018-09-16-golang-test-cover.png">
+<meta property="og:updated_time" content="2020-07-14T08:24:44.097Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2018-09-16-golang-test-cover.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/4dea1165/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Testing in Go | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/4dea1165/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Testing in Go
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-09-16 22:16:13" itemprop="dateCreated datePublished" datetime="2018-09-16T22:16:13+08:00">2018-09-16</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/4dea1165/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/4dea1165/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>8 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <a id="more"></a><h2 id="Test-测试"><a href="#Test-测试" class="headerlink" title="Test 测试"></a>Test 测试</h2><h3 id="单元测试"><a href="#单元测试" class="headerlink" title="单元测试"></a>单元测试</h3><p>单元测试一般是用来测试我们的代码逻辑有没有问题，有没有按照我们期望的运行，以保证代码质量。</p><p>大多数的单元测试，都是对某一个函数方法进行测试，以尽可能的保证没有问题或者问题可被我们预知。为了达到这个目的，我们可以使用各种手段、逻辑，模拟不同的场景进行测试。</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// add.go</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Add</span><span class="params">(a, b <span class="keyword">int</span>)</span> <span class="title">int</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> a + b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><a id="more"></a>
+
+
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// add_test.go</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TestAdd</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line">	sum := Add(<span class="number">1</span>,<span class="number">2</span>)</span><br><span class="line">	<span class="keyword">if</span> sum == <span class="number">3</span> &#123;</span><br><span class="line">		t.Log(<span class="string">"the result is ok"</span>)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		t.Fatal(<span class="string">"the result is wrong"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后我们在终端的项目目录下运行<code>go test -v</code>就可以看到测试结果了。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ go <span class="built_in">test</span> -v</span><br><span class="line">=== RUN   TestAdd</span><br><span class="line">--- PASS: TestAdd (0.00s)</span><br><span class="line">        add_test.go:26: the result is ok</span><br><span class="line">PASS</span><br><span class="line">ok             0.007s</span><br></pre></td></tr></table></figure>
+<p>Go语言为我们提供了测试框架，以便帮助我们更容易的进行单元测试，但是要使用这个框架，需要遵循如下几点规则：</p>
+<ol>
+<li>含有单元测试代码的go文件必须以<code>_test.go</code>结尾，Go语言测试工具只认符合这个规则的文件</li>
+<li>单元测试文件名<code>_test.go</code>前面的部分最好是被测试的方法所在go文件的文件名，比如例子中是<code>add_test.go</code>，因为测试的<code>Add</code>函数，在<code>add.go</code>文件里</li>
+<li>单元测试的函数名必须以<code>Test</code>开头，是可导出公开的函数</li>
+<li>测试函数的签名必须接收一个指向<code>testing.T</code>类型的指针，并且不能返回任何值</li>
+<li>函数名最好是Test+要测试的方法函数名，比如例子中是<code>TestAdd</code>，表示测试的是<code>Add</code>这个这个函数</li>
+</ol>
+<h3 id="测试覆盖率"><a href="#测试覆盖率" class="headerlink" title="测试覆盖率"></a>测试覆盖率</h3><p>我们尽可能的模拟更多的场景来测试我们代码的不同情况，但是有时候的确也有忘记测试的代码，这时候我们就需要测试覆盖率作为参考了。</p>
+<p>由单元测试的代码，触发运行到的被测试代码的代码行数占所有代码行数的比例，被称为<strong>测试覆盖率</strong>，代码覆盖率不一定完全精准，但是可以作为参考，可以帮我们测量和我们预计的覆盖率之间的差距，<code>go test</code>工具，就为我们提供了这么一个度量测试覆盖率的能力。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// tag.go</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Tag</span><span class="params">(tag <span class="keyword">int</span>)</span></span>&#123;</span><br><span class="line">	<span class="keyword">switch</span> tag &#123;</span><br><span class="line">	<span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line">		fmt.Println(<span class="string">"Android"</span>)</span><br><span class="line">	<span class="keyword">case</span> <span class="number">2</span>:</span><br><span class="line">		fmt.Println(<span class="string">"Go"</span>)</span><br><span class="line">	<span class="keyword">case</span> <span class="number">3</span>:</span><br><span class="line">		fmt.Println(<span class="string">"Java"</span>)</span><br><span class="line">    <span class="keyword">case</span> <span class="number">4</span>:</span><br><span class="line">        fmt.Println(<span class="string">"Python"</span>)</span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">		fmt.Println(<span class="string">"C"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// tag_test.go</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TestTag</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line">	Tag(<span class="number">1</span>)</span><br><span class="line">	Tag(<span class="number">2</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>现在我们使用<code>go test</code>工具运行单元测试，和前几次不一样的是，我们要显示测试覆盖率，所以要多加一个参数<code>-coverprofile</code>,所以完整的命令为：<code>go test -v -coverprofile=c.out</code>，<code>-coverprofile</code>是指定生成的覆盖率文件，例子中是<code>c.out</code>，这个文件一会我们会用到。现在我们看终端输出，已经有了一个覆盖率。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ go <span class="built_in">test</span> -v -coverprofile=c.out</span><br><span class="line">=== RUN   TestTag</span><br><span class="line">Android</span><br><span class="line">Go</span><br><span class="line">--- PASS: TestTag (0.00s)</span><br><span class="line">PASS</span><br><span class="line">coverage: 50.0% of statements</span><br><span class="line">ok  	<span class="built_in">test</span>	0.001s</span><br></pre></td></tr></table></figure>
+<p><code>coverage: 50.0% of statements</code>，50%的测试覆盖率，还没有到100%，那么我们看看还有那些代码没有被测试到。这就需要我们刚刚生成的测试覆盖率文件<code>c.out</code>生成测试覆盖率报告了。生成报告有go为我们提供的工具，使用<code>go tool cover -html=c.out -o=tag.html</code>，即可生成一个名字为<code>tag.html</code>的HTML格式的测试覆盖率报告，这里有详细的信息告诉我们哪一行代码测试到了，哪一行代码没有测试到。</p>
+<p><img alt data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2018-09-16-golang-test-cover.png"></p>
+<p>从上图中可以看到，标记为绿色的代码行已经被测试了；标记为红色的还没有测试到，有2行的，现在我们根据没有测试到的代码逻辑，完善我的单元测试代码即可。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TestTag</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line">	Tag(<span class="number">1</span>)</span><br><span class="line">	Tag(<span class="number">2</span>)</span><br><span class="line">	Tag(<span class="number">3</span>)</span><br><span class="line">    Tag(<span class="number">4</span>)</span><br><span class="line">	Tag(<span class="number">6</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Benchmark测试"><a href="#Benchmark测试" class="headerlink" title="Benchmark测试"></a>Benchmark测试</h2><p>基准测试，是一种测试代码性能的方法，比如你有多种不同的方案，都可以解决问题，那么到底是那种方案性能更好呢？这时候基准测试就派上用场了。</p>
+<p>基准测试主要是通过测试CPU和内存的效率问题，来评估被测试代码的性能，进而找到更好的解决方案。比如链接池的数量不是越多越好，那么哪个值才是最优值呢，这就需要配合基准测试不断调优了。</p>
+<h3 id="基准测试"><a href="#基准测试" class="headerlink" title="基准测试"></a>基准测试</h3><p>基准测试代码的编写和单元测试非常相似，它也有一定的规则，我们先看一个示例。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// itoa_test.go</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">BenchmarkSprintf</span><span class="params">(b *testing.B)</span></span>&#123;</span><br><span class="line">	num:=<span class="number">10</span></span><br><span class="line">	b.ResetTimer()</span><br><span class="line">	<span class="keyword">for</span> i:=<span class="number">0</span>;i&lt;b.N;i++&#123;</span><br><span class="line">		fmt.Sprintf(<span class="string">"%d"</span>,num)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这是一个基准测试的例子，从中我们可以看出以下规则：</p>
+<ol>
+<li>基准测试的代码文件必须以_test.go结尾</li>
+<li>基准测试的函数必须以Benchmark开头，必须是可导出的</li>
+<li>基准测试函数必须接受一个指向Benchmark类型的指针作为唯一参数</li>
+<li>基准测试函数不能有返回值</li>
+<li><code>b.ResetTimer</code>是重置计时器，这样可以避免for循环之前的初始化代码的干扰</li>
+<li>最后的for循环很重要，被测试的代码要放到循环里</li>
+<li>b.N是基准测试框架提供的，表示循环的次数，因为需要反复调用测试的代码，才可以评估性能</li>
+</ol>
+<p>下面我们运行下基准测试，看看效果。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ go <span class="built_in">test</span> -bench=. -run=none</span><br><span class="line">BenchmarkSprintf-8      20000000               117 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      flysnow.org/hello       2.474s</span><br></pre></td></tr></table></figure>
+<p>运行基准测试也要使用<code>go test</code>命令，不过我们要加上<code>-bench=</code>标记，它接受一个表达式作为参数，匹配基准测试的函数，<code>.</code>表示运行所有基准测试。</p>
+<p>因为默认情况下 <code>go test</code> 会运行单元测试，为了防止单元测试的输出影响我们查看基准测试的结果，可以使用<code>-run=</code>匹配一个从来没有的单元测试方法，过滤掉单元测试的输出，我们这里使用<code>none</code>，因为我们基本上不会创建这个名字的单元测试方法。</p>
+<p>下面着重解释下说出的结果，看到函数后面的<code>-8</code>了吗？这个表示运行时对应的GOMAXPROCS的值。接着的<code>20000000</code>表示运行for循环的次数，也就是调用被测试代码的次数，最后的<code>117 ns/op</code>表示每次需要话费117纳秒。</p>
+<p>以上是测试时间默认是1秒，也就是1秒的时间，调用两千万次，每次调用花费117纳秒。如果想让测试运行的时间更长，可以通过<code>-benchtime</code>指定，比如3秒。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ go <span class="built_in">test</span> -bench=. -benchtime=3s -run=none</span><br><span class="line">BenchmarkSprintf-8      50000000               109 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      flysnow.org/hello       5.628s</span><br></pre></td></tr></table></figure>
+<h3 id="性能对比"><a href="#性能对比" class="headerlink" title="性能对比"></a>性能对比</h3><p>上面那个基准测试的例子，其实是一个int类型转为string类型的例子，标准库里还有几种方法，我们看下哪种性能更加。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">BenchmarkSprintf</span><span class="params">(b *testing.B)</span></span>&#123;</span><br><span class="line">	num:=<span class="number">10</span></span><br><span class="line">	b.ResetTimer()</span><br><span class="line">	<span class="keyword">for</span> i:=<span class="number">0</span>;i&lt;b.N;i++&#123;</span><br><span class="line">		fmt.Sprintf(<span class="string">"%d"</span>,num)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">BenchmarkFormat</span><span class="params">(b *testing.B)</span></span>&#123;</span><br><span class="line">	num:=<span class="keyword">int64</span>(<span class="number">10</span>)</span><br><span class="line">	b.ResetTimer()</span><br><span class="line">	<span class="keyword">for</span> i:=<span class="number">0</span>;i&lt;b.N;i++&#123;</span><br><span class="line">		strconv.FormatInt(num,<span class="number">10</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">BenchmarkItoa</span><span class="params">(b *testing.B)</span></span>&#123;</span><br><span class="line">	num:=<span class="number">10</span></span><br><span class="line">	b.ResetTimer()</span><br><span class="line">	<span class="keyword">for</span> i:=<span class="number">0</span>;i&lt;b.N;i++&#123;</span><br><span class="line">		strconv.Itoa(num)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行基准测试，看看结果</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ go <span class="built_in">test</span> -bench=. -run=none              </span><br><span class="line">BenchmarkSprintf-8   	20000000	        82.8 ns/op</span><br><span class="line">BenchmarkFormat-8    	500000000	         3.06 ns/op</span><br><span class="line">BenchmarkItoa-8      	300000000	         4.78 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok  	<span class="built_in">test</span>	5.508s</span><br></pre></td></tr></table></figure>
+<p>从结果上看<code>strconv.FormatInt</code>函数是最快的，其次是<code>strconv.Itoa</code>，然后是<code>fmt.Sprintf</code>最慢，前两个函数性能达到了最后一个的3倍多。那么最后一个为什么这么慢的，我们再通过<code>-benchmem</code>找到根本原因。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ go <span class="built_in">test</span> -bench=. -run=none              </span><br><span class="line">BenchmarkSprintf-8   	20000000	        83.5 ns/op	      16 B/op	       2 allocs/op</span><br><span class="line">BenchmarkFormat-8    	500000000	         3.08 ns/op	       0 B/op	       0 allocs/op</span><br><span class="line">BenchmarkItoa-8      	300000000	         4.73 ns/op	       0 B/op	       0 allocs/op</span><br><span class="line">PASS</span><br><span class="line">ok  	<span class="built_in">test</span>	5.518s</span><br></pre></td></tr></table></figure>
+<p><code>-benchmem</code>可以提供每次操作分配内存的次数，以及每次操作分配的字节数。从结果我们可以看到，性能高的两个函数，每次操作都是进行0次内存分配，而最慢的那个要分配2次；性能高的每次操作分配2个字节内存，而慢的那个函数每次需要分配0字节的内存。从这个数据我们就知道它为什么这么慢了，内存分配都占用都太高。</p>
+<h2 id="Example测试"><a href="#Example测试" class="headerlink" title="Example测试"></a>Example测试</h2><h2 id="子测试"><a href="#子测试" class="headerlink" title="子测试"></a>子测试</h2><h2 id="Main测试"><a href="#Main测试" class="headerlink" title="Main测试"></a>Main测试</h2><h2 id="HTTP测试"><a href="#HTTP测试" class="headerlink" title="HTTP测试"></a>HTTP测试</h2>
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/4744ce1d/" rel="bookmark">Context In Go</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/cb5a5d4d/" rel="bookmark">Doc In Go</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/8d40ba8e/" rel="bookmark">String In Go</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/4dea1165/" title="Testing in Go">http://houmin.cc/posts/4dea1165/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Go/" rel="tag"><i class="fa fa-tag"></i> Go</a>
+              <a href="/tags/%E6%B5%8B%E8%AF%95/" rel="tag"><i class="fa fa-tag"></i> 测试</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/4744ce1d/" rel="next" title="Context In Go">
+                  <i class="fa fa-chevron-left"></i> Context In Go
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/cb5a5d4d/" rel="prev" title="Doc In Go">
+                  Doc In Go <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Test-测试"><span class="nav-number">1.</span> <span class="nav-text">Test 测试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#单元测试"><span class="nav-number">1.1.</span> <span class="nav-text">单元测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#测试覆盖率"><span class="nav-number">1.2.</span> <span class="nav-text">测试覆盖率</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Benchmark测试"><span class="nav-number">2.</span> <span class="nav-text">Benchmark测试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#基准测试"><span class="nav-number">2.1.</span> <span class="nav-text">基准测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#性能对比"><span class="nav-number">2.2.</span> <span class="nav-text">性能对比</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Example测试"><span class="nav-number">3.</span> <span class="nav-text">Example测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#子测试"><span class="nav-number">4.</span> <span class="nav-text">子测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Main测试"><span class="nav-number">5.</span> <span class="nav-text">Main测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTP测试"><span class="nav-number">6.</span> <span class="nav-text">HTTP测试</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,42 @@
+{
+    "meta": {
+        "name": "知春里知春",
+        "cover": "2020-07-06_sunset.jpg",
+        "description": "记录知春里1号楼外的光影",
+        "created": "2020-07-19 22:22:20",
+        "updated": "2020-07-19 22:50:27",
+        "imageBed": "https://images-cosmos.s3-ap-southeast-1.amazonaws.com/album",
+        "number": 3
+    },
+    "data": [
+        {
+            "date": "2020-07",
+            "images": [
+                {
+                    "name": "2020-07-19_sunset.jpg",
+                    "caption": "又见日落🌄",
+                    "type": "image",
+                    "date": "2020-07-19",
+                    "width": 1000,
+                    "height": 667
+                },
+                {
+                    "name": "2020-07-17_rainy-night.jpg",
+                    "caption": "周五的晚上，下着淅淅沥沥的小雨，周末的休息时间再次到来",
+                    "type": "image",
+                    "date": "2020-07-17",
+                    "width": 1000,
+                    "height": 667
+                },
+                {
+                    "name": "2020-07-06_sunset.jpg",
+                    "caption": "今天北京有双彩虹，可是我没有拍到，只拍到了1号楼外的晚霞",
+                    "type": "image",
+                    "date": "2020-07-06",
+                    "width": 1000,
+                    "height": 667
+                }
+            ]
+        }
+    ]
+}

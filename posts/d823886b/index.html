@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="ECharts，是百度开源的一个纯 Javascript 的图表库，可以流畅的运行在 PC 和移动设备上，兼容当前绝大部分浏览器（IE8&#x2F;9&#x2F;10&#x2F;11，Chrome，Firefox，Safari等），底层依赖轻量级的 Canvas 类库 ZRender，提供直观，生动，可交互，可高度个性化定制的数据可视化图。 本文介绍了在 Hexo 博客中插入 ECharts 动态图表的方法，并展示了 ECha">
+<meta name="keywords" content="Hexo,ECharts">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo 插入 ECharts 动态图表">
+<meta property="og:url" content="http://houmin.cc/posts/d823886b/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="ECharts，是百度开源的一个纯 Javascript 的图表库，可以流畅的运行在 PC 和移动设备上，兼容当前绝大部分浏览器（IE8&#x2F;9&#x2F;10&#x2F;11，Chrome，Firefox，Safari等），底层依赖轻量级的 Canvas 类库 ZRender，提供直观，生动，可交互，可高度个性化定制的数据可视化图。 本文介绍了在 Hexo 博客中插入 ECharts 动态图表的方法，并展示了 ECha">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-07-20T01:30:36.293Z">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://houmin.cc/posts/d823886b/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Hexo 插入 ECharts 动态图表 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/d823886b/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Hexo 插入 ECharts 动态图表
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-03-09 16:27:51" itemprop="dateCreated datePublished" datetime="2020-03-09T16:27:51+08:00">2020-03-09</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/d823886b/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/d823886b/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>10k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>18 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><a href="http://echarts.baidu.com/index.html" target="_blank" rel="external nofollow noopener noreferrer">ECharts</a>，是百度开源的一个纯 Javascript 的图表库，可以流畅的运行在 PC 和移动设备上，兼容当前绝大部分浏览器（IE8/9/10/11，Chrome，Firefox，Safari等），底层依赖轻量级的 Canvas 类库 ZRender，提供直观，生动，可交互，可高度个性化定制的数据可视化图。</p>
+<p>本文介绍了在 Hexo 博客中插入 ECharts 动态图表的方法，并展示了 ECharts 图表的常用情景。</p>
+<a id="more"></a>
+<h2 id="环境配置"><a href="#环境配置" class="headerlink" title="环境配置"></a>环境配置</h2><p>Hexo 需要安装插件来渲染 ECharts 代码，这里使用的是 <a href="https://github.com/Cloving/hexo-tag-echarts-chart" target="_blank" rel="external nofollow noopener noreferrer">hexo-tag-echarts-chart</a>。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> npm install hexo-tag-echarts-chart --save</span></span><br></pre></td></tr></table></figure>
+<p>之后在文章内使用 ECharts 的 <code>tag</code> 就可以了：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;% echarts <span class="number">400</span> <span class="string">'85%'</span> %&#125;</span><br><span class="line">\\TODO echarts codes goes here</span><br><span class="line">&#123;% endecharts %&#125;</span><br></pre></td></tr></table></figure>
+<p>其中 <code>echarts</code> 是标签名，不需要更改，<code>400</code> 是图表容器的高度，<code>85%</code> 是图表容器的相对宽度。而在 <code>tag</code> 之间的部分，则是需要自己填充的图表数据了。</p>
+<p>关于 ECharts 的语法，可以参考<a href="https://www.echartsjs.com/zh/tutorial.html" target="_blank" rel="external nofollow noopener noreferrer">教程</a></p>
+<h2 id="典型用法"><a href="#典型用法" class="headerlink" title="典型用法"></a>典型用法</h2><h3 id="折线图"><a href="#折线图" class="headerlink" title="折线图"></a>折线图</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br></pre></td><td class="code"><pre><span class="line">&#123;% echarts <span class="number">600</span> <span class="string">'100%'</span> %&#125;</span><br><span class="line">option = &#123;</span><br><span class="line">    title: &#123;</span><br><span class="line">        text: <span class="string">'堆叠区域图'</span></span><br><span class="line">    &#125;,</span><br><span class="line">    tooltip: &#123;</span><br><span class="line">        trigger: <span class="string">'axis'</span>,</span><br><span class="line">        axisPointer: &#123;</span><br><span class="line">            type: <span class="string">'cross'</span>,</span><br><span class="line">            label: &#123;</span><br><span class="line">                backgroundColor: <span class="string">'#6a7985'</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    legend: &#123;</span><br><span class="line">        data: [<span class="string">'邮件营销'</span>, <span class="string">'联盟广告'</span>, <span class="string">'视频广告'</span>, <span class="string">'直接访问'</span>, <span class="string">'搜索引擎'</span>]</span><br><span class="line">    &#125;,</span><br><span class="line">    toolbox: &#123;</span><br><span class="line">        feature: &#123;</span><br><span class="line">            dataView: &#123;<span class="attr">show</span>: <span class="literal">true</span>, <span class="attr">readOnly</span>: <span class="literal">true</span>&#125;,</span><br><span class="line">            magicType: &#123;<span class="attr">show</span>: <span class="literal">true</span>, <span class="attr">type</span>: [<span class="string">'line'</span>, <span class="string">'bar'</span>]&#125;,</span><br><span class="line">            restore: &#123;<span class="attr">show</span>: <span class="literal">true</span>&#125;,</span><br><span class="line">            saveAsImage: &#123;<span class="attr">show</span>: <span class="literal">true</span>&#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    grid: &#123;</span><br><span class="line">        left: <span class="string">'3%'</span>,</span><br><span class="line">        right: <span class="string">'4%'</span>,</span><br><span class="line">        bottom: <span class="string">'3%'</span>,</span><br><span class="line">        containLabel: <span class="literal">true</span></span><br><span class="line">    &#125;,</span><br><span class="line">    xAxis: [</span><br><span class="line">        &#123;</span><br><span class="line">            type: <span class="string">'category'</span>,</span><br><span class="line">            boundaryGap: <span class="literal">false</span>,</span><br><span class="line">            data: [<span class="string">'周一'</span>, <span class="string">'周二'</span>, <span class="string">'周三'</span>, <span class="string">'周四'</span>, <span class="string">'周五'</span>, <span class="string">'周六'</span>, <span class="string">'周日'</span>]</span><br><span class="line">        &#125;</span><br><span class="line">    ],</span><br><span class="line">    yAxis: [</span><br><span class="line">        &#123;</span><br><span class="line">            type: <span class="string">'value'</span></span><br><span class="line">        &#125;</span><br><span class="line">    ],</span><br><span class="line">    series: [</span><br><span class="line">        &#123;</span><br><span class="line">            name: <span class="string">'邮件营销'</span>,</span><br><span class="line">            type: <span class="string">'line'</span>,</span><br><span class="line">            stack: <span class="string">'总量'</span>,</span><br><span class="line">            areaStyle: &#123;&#125;,</span><br><span class="line">            data: [<span class="number">120</span>, <span class="number">132</span>, <span class="number">101</span>, <span class="number">134</span>, <span class="number">90</span>, <span class="number">230</span>, <span class="number">210</span>]</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            name: <span class="string">'联盟广告'</span>,</span><br><span class="line">            type: <span class="string">'line'</span>,</span><br><span class="line">            stack: <span class="string">'总量'</span>,</span><br><span class="line">            areaStyle: &#123;&#125;,</span><br><span class="line">            data: [<span class="number">220</span>, <span class="number">182</span>, <span class="number">191</span>, <span class="number">234</span>, <span class="number">290</span>, <span class="number">330</span>, <span class="number">310</span>]</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            name: <span class="string">'视频广告'</span>,</span><br><span class="line">            type: <span class="string">'line'</span>,</span><br><span class="line">            stack: <span class="string">'总量'</span>,</span><br><span class="line">            areaStyle: &#123;&#125;,</span><br><span class="line">            data: [<span class="number">150</span>, <span class="number">232</span>, <span class="number">201</span>, <span class="number">154</span>, <span class="number">190</span>, <span class="number">330</span>, <span class="number">410</span>]</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            name: <span class="string">'直接访问'</span>,</span><br><span class="line">            type: <span class="string">'line'</span>,</span><br><span class="line">            stack: <span class="string">'总量'</span>,</span><br><span class="line">            areaStyle: &#123;&#125;,</span><br><span class="line">            data: [<span class="number">320</span>, <span class="number">332</span>, <span class="number">301</span>, <span class="number">334</span>, <span class="number">390</span>, <span class="number">330</span>, <span class="number">320</span>]</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            name: <span class="string">'搜索引擎'</span>,</span><br><span class="line">            type: <span class="string">'line'</span>,</span><br><span class="line">            stack: <span class="string">'总量'</span>,</span><br><span class="line">            label: &#123;</span><br><span class="line">                normal: &#123;</span><br><span class="line">                    show: <span class="literal">true</span>,</span><br><span class="line">                    position: <span class="string">'top'</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;,</span><br><span class="line">            areaStyle: &#123;&#125;,</span><br><span class="line">            data: [<span class="number">820</span>, <span class="number">932</span>, <span class="number">901</span>, <span class="number">934</span>, <span class="number">1290</span>, <span class="number">1330</span>, <span class="number">1320</span>]</span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;;</span><br><span class="line">&#123;% endecharts %&#125;</span><br></pre></td></tr></table></figure>
+<div id="echarts2332" style="width: 100%;height: 600px;margin: 0 auto"></div>
+<script type="text/javascript" src="https://cdn.bootcss.com/echarts/4.2.0-rc.2/echarts.min.js"></script>
+<script type="text/javascript" src="http://gallery.echartsjs.com/dep/echarts/map/js/china.js"></script>
+<script type="text/javascript">
+  // 基于准备好的dom，初始化echarts实例
+  var myChart = echarts.init(document.getElementById('echarts2332'));
+  // 指定图表的配置项和数据
+  option = {
+    title: {
+        text: '堆叠区域图'
+    },
+    tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+            type: 'cross',
+            label: {
+                backgroundColor: '#6a7985'
+            }
+        }
+    },
+    legend: {
+        data: ['邮件营销', '联盟广告', '视频广告', '直接访问', '搜索引擎']
+    },
+    toolbox: {
+        feature: {
+            saveAsImage: {}
+        }
+    },
+    grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+    },
+    xAxis: [
+        {
+            type: 'category',
+            boundaryGap: false,
+            data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+        }
+    ],
+    yAxis: [
+        {
+            type: 'value'
+        }
+    ],
+    series: [
+        {
+            name: '邮件营销',
+            type: 'line',
+            stack: '总量',
+            areaStyle: {},
+            data: [120, 132, 101, 134, 90, 230, 210]
+        },
+        {
+            name: '联盟广告',
+            type: 'line',
+            stack: '总量',
+            areaStyle: {},
+            data: [220, 182, 191, 234, 290, 330, 310]
+        },
+        {
+            name: '视频广告',
+            type: 'line',
+            stack: '总量',
+            areaStyle: {},
+            data: [150, 232, 201, 154, 190, 330, 410]
+        },
+        {
+            name: '直接访问',
+            type: 'line',
+            stack: '总量',
+            areaStyle: {},
+            data: [320, 332, 301, 334, 390, 330, 320]
+        },
+        {
+            name: '搜索引擎',
+            type: 'line',
+            stack: '总量',
+            label: {
+                normal: {
+                    show: true,
+                    position: 'top'
+                }
+            },
+            areaStyle: {},
+            data: [820, 932, 901, 934, 1290, 1330, 1320]
+        }
+    ]
+};
+  // 使用刚指定的配置项和数据显示图表。
+  myChart.setOption(option);
+</script>
+
+<h3 id="柱状图"><a href="#柱状图" class="headerlink" title="柱状图"></a>柱状图</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line">&#123;% echarts <span class="number">600</span> <span class="string">'100%'</span> %&#125;</span><br><span class="line">option = &#123;</span><br><span class="line">    tooltip: &#123;</span><br><span class="line">        trigger: <span class="string">'axis'</span>,</span><br><span class="line">        axisPointer: &#123;</span><br><span class="line">            type: <span class="string">'cross'</span>,</span><br><span class="line">            crossStyle: &#123;</span><br><span class="line">                color: <span class="string">'#999'</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    toolbox: &#123;</span><br><span class="line">        feature: &#123;</span><br><span class="line">            dataView: &#123;<span class="attr">show</span>: <span class="literal">true</span>, <span class="attr">readOnly</span>: <span class="literal">false</span>&#125;,</span><br><span class="line">            magicType: &#123;<span class="attr">show</span>: <span class="literal">true</span>, <span class="attr">type</span>: [<span class="string">'line'</span>, <span class="string">'bar'</span>]&#125;,</span><br><span class="line">            restore: &#123;<span class="attr">show</span>: <span class="literal">true</span>&#125;,</span><br><span class="line">            saveAsImage: &#123;<span class="attr">show</span>: <span class="literal">true</span>&#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    legend: &#123;</span><br><span class="line">        data: [<span class="string">'蒸发量'</span>, <span class="string">'降水量'</span>, <span class="string">'平均温度'</span>]</span><br><span class="line">    &#125;,</span><br><span class="line">    xAxis: [</span><br><span class="line">        &#123;</span><br><span class="line">            type: <span class="string">'category'</span>,</span><br><span class="line">            data: [<span class="string">'1月'</span>, <span class="string">'2月'</span>, <span class="string">'3月'</span>, <span class="string">'4月'</span>, <span class="string">'5月'</span>, <span class="string">'6月'</span>, <span class="string">'7月'</span>, <span class="string">'8月'</span>, <span class="string">'9月'</span>, <span class="string">'10月'</span>, <span class="string">'11月'</span>, <span class="string">'12月'</span>],</span><br><span class="line">            axisPointer: &#123;</span><br><span class="line">                type: <span class="string">'shadow'</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    ],</span><br><span class="line">    yAxis: [</span><br><span class="line">        &#123;</span><br><span class="line">            type: <span class="string">'value'</span>,</span><br><span class="line">            name: <span class="string">'水量'</span>,</span><br><span class="line">            min: <span class="number">0</span>,</span><br><span class="line">            max: <span class="number">250</span>,</span><br><span class="line">            interval: <span class="number">50</span>,</span><br><span class="line">            axisLabel: &#123;</span><br><span class="line">                formatter: <span class="string">'&#123;value&#125; ml'</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            type: <span class="string">'value'</span>,</span><br><span class="line">            name: <span class="string">'温度'</span>,</span><br><span class="line">            min: <span class="number">0</span>,</span><br><span class="line">            max: <span class="number">25</span>,</span><br><span class="line">            interval: <span class="number">5</span>,</span><br><span class="line">            axisLabel: &#123;</span><br><span class="line">                formatter: <span class="string">'&#123;value&#125; °C'</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    ],</span><br><span class="line">    series: [</span><br><span class="line">        &#123;</span><br><span class="line">            name: <span class="string">'蒸发量'</span>,</span><br><span class="line">            type: <span class="string">'bar'</span>,</span><br><span class="line">            data: [<span class="number">2.0</span>, <span class="number">4.9</span>, <span class="number">7.0</span>, <span class="number">23.2</span>, <span class="number">25.6</span>, <span class="number">76.7</span>, <span class="number">135.6</span>, <span class="number">162.2</span>, <span class="number">32.6</span>, <span class="number">20.0</span>, <span class="number">6.4</span>, <span class="number">3.3</span>]</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            name: <span class="string">'降水量'</span>,</span><br><span class="line">            type: <span class="string">'bar'</span>,</span><br><span class="line">            data: [<span class="number">2.6</span>, <span class="number">5.9</span>, <span class="number">9.0</span>, <span class="number">26.4</span>, <span class="number">28.7</span>, <span class="number">70.7</span>, <span class="number">175.6</span>, <span class="number">182.2</span>, <span class="number">48.7</span>, <span class="number">18.8</span>, <span class="number">6.0</span>, <span class="number">2.3</span>]</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            name: <span class="string">'平均温度'</span>,</span><br><span class="line">            type: <span class="string">'line'</span>,</span><br><span class="line">            yAxisIndex: <span class="number">1</span>,</span><br><span class="line">            data: [<span class="number">2.0</span>, <span class="number">2.2</span>, <span class="number">3.3</span>, <span class="number">4.5</span>, <span class="number">6.3</span>, <span class="number">10.2</span>, <span class="number">20.3</span>, <span class="number">23.4</span>, <span class="number">23.0</span>, <span class="number">16.5</span>, <span class="number">12.0</span>, <span class="number">6.2</span>]</span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;;</span><br><span class="line">&#123;% endecharts %&#125;</span><br></pre></td></tr></table></figure>
+<div id="echarts3154" style="width: 100%;height: 600px;margin: 0 auto"></div>
+<script type="text/javascript" src="https://cdn.bootcss.com/echarts/4.2.0-rc.2/echarts.min.js"></script>
+<script type="text/javascript" src="http://gallery.echartsjs.com/dep/echarts/map/js/china.js"></script>
+<script type="text/javascript">
+  // 基于准备好的dom，初始化echarts实例
+  var myChart = echarts.init(document.getElementById('echarts3154'));
+  // 指定图表的配置项和数据
+  option = {
+    tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+            type: 'cross',
+            crossStyle: {
+                color: '#999'
+            }
+        }
+    },
+    toolbox: {
+        feature: {
+            dataView: {show: true, readOnly: false},
+            magicType: {show: true, type: ['line', 'bar']},
+            restore: {show: true},
+            saveAsImage: {show: true}
+        }
+    },
+    legend: {
+        data: ['蒸发量', '降水量', '平均温度']
+    },
+    xAxis: [
+        {
+            type: 'category',
+            data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+            axisPointer: {
+                type: 'shadow'
+            }
+        }
+    ],
+    yAxis: [
+        {
+            type: 'value',
+            name: '水量',
+            min: 0,
+            max: 250,
+            interval: 50,
+            axisLabel: {
+                formatter: '{value} ml'
+            }
+        },
+        {
+            type: 'value',
+            name: '温度',
+            min: 0,
+            max: 25,
+            interval: 5,
+            axisLabel: {
+                formatter: '{value} °C'
+            }
+        }
+    ],
+    series: [
+        {
+            name: '蒸发量',
+            type: 'bar',
+            data: [2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 135.6, 162.2, 32.6, 20.0, 6.4, 3.3]
+        },
+        {
+            name: '降水量',
+            type: 'bar',
+            data: [2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6, 182.2, 48.7, 18.8, 6.0, 2.3]
+        },
+        {
+            name: '平均温度',
+            type: 'line',
+            yAxisIndex: 1,
+            data: [2.0, 2.2, 3.3, 4.5, 6.3, 10.2, 20.3, 23.4, 23.0, 16.5, 12.0, 6.2]
+        }
+    ]
+};
+  // 使用刚指定的配置项和数据显示图表。
+  myChart.setOption(option);
+</script>
+
+<h3 id="饼状图"><a href="#饼状图" class="headerlink" title="饼状图"></a>饼状图</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line">&#123;% echarts <span class="number">600</span> <span class="string">'85%'</span> %&#125;</span><br><span class="line">option = &#123;</span><br><span class="line">    title: &#123;</span><br><span class="line">        text: <span class="string">"某站点用户访问来源"</span>,</span><br><span class="line">        subtext: <span class="string">"纯属虚构"</span>,</span><br><span class="line">        x: <span class="string">"center"</span></span><br><span class="line">    &#125;,</span><br><span class="line">    tooltip: &#123;</span><br><span class="line">        trigger: <span class="string">"item"</span>,</span><br><span class="line">        formatter: <span class="string">"&#123;a&#125; &#123;b&#125; : &#123;c&#125; (&#123;d&#125;%)"</span></span><br><span class="line">    &#125;,</span><br><span class="line">    legend: &#123;</span><br><span class="line">        orient: <span class="string">"vertical"</span>,</span><br><span class="line">        x: <span class="string">"left"</span>,</span><br><span class="line">        data: [<span class="string">"直接访问"</span>, <span class="string">"邮件营销"</span>, <span class="string">"联盟广告"</span>, <span class="string">"视频广告"</span>, <span class="string">"搜索引擎"</span>]</span><br><span class="line">    &#125;,</span><br><span class="line">    toolbox: &#123;</span><br><span class="line">        show: <span class="literal">true</span>,</span><br><span class="line">        feature: &#123;</span><br><span class="line">            mark: &#123;</span><br><span class="line">                show: <span class="literal">true</span></span><br><span class="line">            &#125;,</span><br><span class="line">            dataView: &#123;</span><br><span class="line">                show: <span class="literal">true</span>,</span><br><span class="line">                readOnly: <span class="literal">true</span></span><br><span class="line">            &#125;,</span><br><span class="line">            restore: &#123;</span><br><span class="line">                show: <span class="literal">true</span></span><br><span class="line">            &#125;,</span><br><span class="line">            saveAsImage: &#123;</span><br><span class="line">                show: <span class="literal">true</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    calculable: <span class="literal">true</span>,</span><br><span class="line">    series: [</span><br><span class="line">        &#123;</span><br><span class="line">            name: <span class="string">"访问来源"</span>,</span><br><span class="line">            type: <span class="string">"pie"</span>,</span><br><span class="line">            radius: <span class="string">"55%"</span>,</span><br><span class="line">            center: [<span class="string">"50%"</span>, <span class="string">"60%"</span>],</span><br><span class="line">            data: [</span><br><span class="line">                &#123;</span><br><span class="line">                    value: <span class="number">335</span>,</span><br><span class="line">                    name: <span class="string">"直接访问"</span></span><br><span class="line">                &#125;,</span><br><span class="line">                &#123;</span><br><span class="line">                    value: <span class="number">310</span>,</span><br><span class="line">                    name: <span class="string">"邮件营销"</span></span><br><span class="line">                &#125;,</span><br><span class="line">                &#123;</span><br><span class="line">                    value: <span class="number">234</span>,</span><br><span class="line">                    name: <span class="string">"联盟广告"</span></span><br><span class="line">                &#125;,</span><br><span class="line">                &#123;</span><br><span class="line">                    value: <span class="number">135</span>,</span><br><span class="line">                    name: <span class="string">"视频广告"</span></span><br><span class="line">                &#125;,</span><br><span class="line">                &#123;</span><br><span class="line">                    value: <span class="number">1548</span>,</span><br><span class="line">                    name: <span class="string">"搜索引擎"</span></span><br><span class="line">                &#125;</span><br><span class="line">            ]</span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;;</span><br><span class="line">&#123;% endecharts %&#125;</span><br></pre></td></tr></table></figure>
+<div id="echarts5307" style="width: 85%;height: 600px;margin: 0 auto"></div>
+<script type="text/javascript" src="https://cdn.bootcss.com/echarts/4.2.0-rc.2/echarts.min.js"></script>
+<script type="text/javascript" src="http://gallery.echartsjs.com/dep/echarts/map/js/china.js"></script>
+<script type="text/javascript">
+  // 基于准备好的dom，初始化echarts实例
+  var myChart = echarts.init(document.getElementById('echarts5307'));
+  // 指定图表的配置项和数据
+  option = {
+    title: {
+        text: "某站点用户访问来源",
+        subtext: "纯属虚构",
+        x: "center"
+    },
+    tooltip: {
+        trigger: "item",
+        formatter: "{a} {b} : {c} ({d}%)"
+    },
+    legend: {
+        orient: "vertical",
+        x: "left",
+        data: ["直接访问", "邮件营销", "联盟广告", "视频广告", "搜索引擎"]
+    },
+    toolbox: {
+        show: true,
+        feature: {
+            mark: {
+                show: true
+            },
+            dataView: {
+                show: true,
+                readOnly: true
+            },
+            restore: {
+                show: true
+            },
+            saveAsImage: {
+                show: true
+            }
+        }
+    },
+    calculable: true,
+    series: [
+        {
+            name: "访问来源",
+            type: "pie",
+            radius: "55%",
+            center: ["50%", "60%"],
+            data: [
+                {
+                    value: 335,
+                    name: "直接访问"
+                },
+                {
+                    value: 310,
+                    name: "邮件营销"
+                },
+                {
+                    value: 234,
+                    name: "联盟广告"
+                },
+                {
+                    value: 135,
+                    name: "视频广告"
+                },
+                {
+                    value: 1548,
+                    name: "搜索引擎"
+                }
+            ]
+        }
+    ]
+};
+  // 使用刚指定的配置项和数据显示图表。
+  myChart.setOption(option);
+</script>
+
+<h3 id="地理图"><a href="#地理图" class="headerlink" title="地理图"></a>地理图</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br></pre></td><td class="code"><pre><span class="line">option = &#123;</span><br><span class="line">    title: &#123;</span><br><span class="line">        text: <span class="string">"疫情地图: 2020-03-09"</span>,</span><br><span class="line">        subtext: <span class="string">"作者：@Houmin"</span></span><br><span class="line">    &#125;,</span><br><span class="line">    tooltip: &#123;</span><br><span class="line">        triggerOn: <span class="string">"click"</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    toolbox: &#123;</span><br><span class="line">        feature: &#123;</span><br><span class="line">            dataView: &#123;<span class="attr">show</span>: <span class="literal">true</span>, <span class="attr">readOnly</span>: <span class="literal">true</span>&#125;,</span><br><span class="line">            restore: &#123;<span class="attr">show</span>: <span class="literal">true</span>&#125;,</span><br><span class="line">            saveAsImage: &#123;<span class="attr">show</span>: <span class="literal">true</span>&#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    visualMap: &#123;</span><br><span class="line">        min: <span class="number">0</span>,</span><br><span class="line">        max: <span class="number">100000</span>,</span><br><span class="line">        left: <span class="number">26</span>,</span><br><span class="line">        bottom: <span class="number">40</span>,</span><br><span class="line">        showLabel: !<span class="number">0</span>,</span><br><span class="line">        text: [<span class="string">"高"</span>, <span class="string">"低"</span>],</span><br><span class="line">        pieces: [&#123;</span><br><span class="line">            gt: <span class="number">10000</span>,</span><br><span class="line">            label: <span class="string">"&gt; 10000"</span>,</span><br><span class="line">            color: <span class="string">"#7f1100"</span></span><br><span class="line">        &#125;, &#123;</span><br><span class="line">            gte: <span class="number">1000</span>,</span><br><span class="line">            lte: <span class="number">10000</span>,</span><br><span class="line">            label: <span class="string">"1000 - 9999"</span>,</span><br><span class="line">            color: <span class="string">"#cf1e06"</span></span><br><span class="line">        &#125;, &#123;</span><br><span class="line">            gte: <span class="number">100</span>,</span><br><span class="line">            lt: <span class="number">1000</span>,</span><br><span class="line">            label: <span class="string">"100 - 999"</span>,</span><br><span class="line">            color: <span class="string">"#ff5428"</span></span><br><span class="line">        &#125;, &#123;</span><br><span class="line">            gte: <span class="number">10</span>,</span><br><span class="line">            lt: <span class="number">100</span>,</span><br><span class="line">            label: <span class="string">"10 - 99"</span>,</span><br><span class="line">            color: <span class="string">"#ff8c71"</span></span><br><span class="line">        &#125;, &#123;</span><br><span class="line">            gte: <span class="number">1</span>,</span><br><span class="line">            lt: <span class="number">10</span>,</span><br><span class="line">            label: <span class="string">"1 - 9"</span>,</span><br><span class="line">            color: <span class="string">"#ffd768"</span></span><br><span class="line">        &#125;, &#123;</span><br><span class="line">            value: <span class="number">0</span>,</span><br><span class="line">            color: <span class="string">"#ffffff"</span></span><br><span class="line">        &#125;],</span><br><span class="line">        show: !<span class="number">0</span></span><br><span class="line">    &#125;,</span><br><span class="line">    geo: &#123;</span><br><span class="line">        map: <span class="string">"china"</span>,</span><br><span class="line">        roam: !<span class="number">1</span>,</span><br><span class="line">        scaleLimit: &#123;</span><br><span class="line">            min: <span class="number">1</span>,</span><br><span class="line">            max: <span class="number">2</span></span><br><span class="line">        &#125;,</span><br><span class="line">        zoom: <span class="number">1.23</span>,</span><br><span class="line">        top: <span class="number">120</span>,</span><br><span class="line">        label: &#123;</span><br><span class="line">            normal: &#123;</span><br><span class="line">                show: !<span class="number">0</span>,</span><br><span class="line">                fontSize: <span class="string">"14"</span>,</span><br><span class="line">                color: <span class="string">"rgba(0,0,0,0.7)"</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;,</span><br><span class="line">        itemStyle: &#123;</span><br><span class="line">            normal: &#123;</span><br><span class="line">                borderColor: <span class="string">"rgba(0, 0, 0, 0.2)"</span></span><br><span class="line">            &#125;,</span><br><span class="line">            emphasis: &#123;</span><br><span class="line">                areaColor: <span class="string">"#f2d5ad"</span>,</span><br><span class="line">                shadowOffsetX: <span class="number">0</span>,</span><br><span class="line">                shadowOffsetY: <span class="number">0</span>,</span><br><span class="line">                borderWidth: <span class="number">0</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    series: [&#123;</span><br><span class="line">        name: <span class="string">"确诊病例"</span>,</span><br><span class="line">        type: <span class="string">"map"</span>,</span><br><span class="line">        geoIndex: <span class="number">0</span>,</span><br><span class="line">        data: dataList # 这里的 dataList 是描述现存确诊病例的 JSON 数据</span><br><span class="line">    &#125;]</span><br><span class="line">&#125;;</span><br><span class="line">&#123;% endecharts %&#125;</span><br></pre></td></tr></table></figure>
+<div id="echarts8228" style="width: 85%;height: 700px;margin: 0 auto"></div>
+<script type="text/javascript" src="https://cdn.bootcss.com/echarts/4.2.0-rc.2/echarts.min.js"></script>
+<script type="text/javascript" src="http://gallery.echartsjs.com/dep/echarts/map/js/china.js"></script>
+<script type="text/javascript">
+  // 基于准备好的dom，初始化echarts实例
+  var myChart = echarts.init(document.getElementById('echarts8228'));
+  // 指定图表的配置项和数据
+  dataList = [{
+        name: "南海诸岛",
+        value: 0
+    },
+    {
+        name: '北京',
+        value: 105
+    },
+    {
+        name: '天津',
+        value: 3
+    },
+    {
+        name: '上海',
+        value: 24
+    },
+    {
+        name: '重庆',
+        value: 42
+    },
+    {
+        name: '河北',
+        value: 5
+    },
+    {
+        name: '河南',
+        value: 3
+    },
+    {
+        name: '云南',
+        value: 2
+    },
+    {
+        name: '辽宁',
+        value: 15
+    },
+    {
+        name: '黑龙江',
+        value: 45
+    },
+    {
+        name: '湖南',
+        value: 35
+    },
+    {
+        name: '安徽',
+        value: 0
+    },
+    {
+        name: '山东',
+        value: 52
+    },
+    {
+        name: '新疆',
+        value: 0
+    },
+    {
+        name: '江苏',
+        value: 10
+    },
+    {
+        name: '浙江',
+        value: 38
+    },
+    {
+        name: '江西',
+        value: 11
+    },
+    {
+        name: '湖北',
+        value: 18248
+    },
+    {
+        name: '广西',
+        value: 20
+    },
+    {
+        name: '甘肃',
+        value: 35
+    },
+    {
+        name: '山西',
+        value: 6
+    },
+    {
+        name: '内蒙古',
+        value: 4
+    },
+    {
+        name: '陕西',
+        value: 17
+    },
+    {
+        name: '吉林',
+        value: 2
+    },
+    {
+        name: '福建',
+        value: 0
+    },
+    {
+        name: '贵州',
+        value: 21
+    },
+    {
+        name: '广东',
+        value: 84
+    },
+    {
+        name: '青海',
+        value: 0
+    },
+    {
+        name: '西藏',
+        value: 0
+    },
+    {
+        name: '四川',
+        value: 70
+    },
+    {
+        name: '宁夏',
+        value: 4
+    },
+    {
+        name: '海南',
+        value: 3
+    },
+    {
+        name: '台湾',
+        value: 29
+    },
+    {
+        name: '香港',
+        value: 53
+    },
+    {
+        name: '澳门',
+        value: 0
+    }
+];
+option = {
+    title: {
+        text: "疫情地图: 2020-03-09",
+        subtext: "作者：@Houmin"
+    },
+    tooltip: {
+        triggerOn: "click",
+    },
+    toolbox: {
+        feature: {
+            dataView: {show: true, readOnly: true},
+            restore: {show: true},
+            saveAsImage: {show: true}
+        }
+    },
+    visualMap: {
+        min: 0,
+        max: 100000,
+        left: 26,
+        bottom: 40,
+        showLabel: !0,
+        text: ["高", "低"],
+        pieces: [{
+            gt: 10000,
+            label: "> 10000",
+            color: "#7f1100"
+        }, {
+            gte: 1000,
+            lte: 10000,
+            label: "1000 - 9999",
+            color: "#cf1e06"
+        }, {
+            gte: 100,
+            lt: 1000,
+            label: "100 - 999",
+            color: "#ff5428"
+        }, {
+            gte: 10,
+            lt: 100,
+            label: "10 - 99",
+            color: "#ff8c71"
+        }, {
+            gte: 1,
+            lt: 10,
+            label: "1 - 9",
+            color: "#ffd768"
+        }, {
+            value: 0,
+            color: "#ffffff"
+        }],
+        show: !0
+    },
+    geo: {
+        map: "china",
+        roam: !1,
+        scaleLimit: {
+            min: 1,
+            max: 2
+        },
+        zoom: 1.23,
+        top: 120,
+        label: {
+            normal: {
+                show: !0,
+                fontSize: "14",
+                color: "rgba(0,0,0,0.7)"
+            }
+        },
+        itemStyle: {
+            normal: {
+                borderColor: "rgba(0, 0, 0, 0.2)"
+            },
+            emphasis: {
+                areaColor: "#f2d5ad",
+                shadowOffsetX: 0,
+                shadowOffsetY: 0,
+                borderWidth: 0
+            }
+        }
+    },
+    series: [{
+        name: "确诊病例",
+        type: "map",
+        geoIndex: 0,
+        data: dataList
+    }]
+};
+  // 使用刚指定的配置项和数据显示图表。
+  myChart.setOption(option);
+</script>
+
+<h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><p>ECharts 可以画出各种各样漂亮的图表，包括 <code>K 线图</code>、<code>雷达图</code>、<code>关系图</code>、<code>矩形树图</code>等等，可以参考<a href="https://www.echartsjs.com/examples/zh/index.html" target="_blank" rel="external nofollow noopener noreferrer">官方案例</a>。</p>
+<h2 id="备注"><a href="#备注" class="headerlink" title="备注"></a>备注</h2><p>当前画图时，如果需要从外部引入数据，比如引入 JSON 文件，在这个插件下会有部分问题。</p>
+<ul>
+<li>识别不了 <code>jquery</code>中的 <code>$</code>符号，这个可以通过修改 <code>template.html</code>来实现，在 <code>echarts.js</code>上一行引用 <code>jquery.js</code>即可</li>
+<li>插入多个图表的时候会有重叠，这个坑以后再填？</li>
+<li>ECharts 确实很好看，以后 Python 专用库，以后画图也可以直接用 Python 来画。</li>
+</ul>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://github.com/Cloving/hexo-tag-echarts-chart" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/Cloving/hexo-tag-echarts-chart</a></li>
+<li><a href="https://kchen.cc/2016/11/05/echarts-in-hexo" target="_blank" rel="external nofollow noopener noreferrer">https://kchen.cc/2016/11/05/echarts-in-hexo</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/a63a603e/" rel="bookmark">Hexo NexT 深度定制</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d487dd02/" rel="bookmark">Hexo NexT 添加多级相册功能</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/f5d73ad0/" rel="bookmark">Hexo 博客容器化</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/3fcce178/" rel="bookmark">Hexo 插入 Mermaid 图表</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/d823886b/" title="Hexo 插入 ECharts 动态图表">http://houmin.cc/posts/d823886b/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Hexo/" rel="tag"><i class="fa fa-tag"></i> Hexo</a>
+              <a href="/tags/ECharts/" rel="tag"><i class="fa fa-tag"></i> ECharts</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/3fcce178/" rel="next" title="Hexo 插入 Mermaid 图表">
+                  <i class="fa fa-chevron-left"></i> Hexo 插入 Mermaid 图表
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/fb3d782a/" rel="prev" title="Key Numbers Every Programmer Should Know">
+                  Key Numbers Every Programmer Should Know <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#环境配置"><span class="nav-number">1.</span> <span class="nav-text">环境配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#典型用法"><span class="nav-number">2.</span> <span class="nav-text">典型用法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#折线图"><span class="nav-number">2.1.</span> <span class="nav-text">折线图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#柱状图"><span class="nav-number">2.2.</span> <span class="nav-text">柱状图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#饼状图"><span class="nav-number">2.3.</span> <span class="nav-text">饼状图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#地理图"><span class="nav-number">2.4.</span> <span class="nav-text">地理图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其他"><span class="nav-number">2.5.</span> <span class="nav-text">其他</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#备注"><span class="nav-number">3.</span> <span class="nav-text">备注</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">4.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

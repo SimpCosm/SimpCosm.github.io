@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="这里是 linux kernel Documentation 阅读系列第一篇，在这个系列中，我会记录每一次阅读到的 linux 内核文档。这一篇阅读的是 ramfs, rootfs and initramfs，主要是介绍 initramfs。">
+<meta name="keywords" content="linux,kernel,Documentation,ramfs,rootfs,initramfs">
+<meta property="og:type" content="article">
+<meta property="og:title" content="理解 initramfs">
+<meta property="og:url" content="http://houmin.cc/posts/7c0e6000/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="这里是 linux kernel Documentation 阅读系列第一篇，在这个系列中，我会记录每一次阅读到的 linux 内核文档。这一篇阅读的是 ramfs, rootfs and initramfs，主要是介绍 initramfs。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-07-14T08:24:44.103Z">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://houmin.cc/posts/7c0e6000/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>理解 initramfs | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/7c0e6000/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          理解 initramfs
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-03-25 12:19:54" itemprop="dateCreated datePublished" datetime="2020-03-25T12:19:54+08:00">2020-03-25</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/7c0e6000/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/7c0e6000/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>10 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>这里是 linux kernel <a href="../../tags/Documentation">Documentation</a> 阅读系列第一篇，在这个系列中，我会记录每一次阅读到的 linux 内核文档。这一篇阅读的是 <a href="https://www.kernel.org/doc/Documentation/filesystems/ramfs-rootfs-initramfs.txt" target="_blank" rel="external nofollow noopener noreferrer">ramfs, rootfs and initramfs</a>，主要是介绍 <code>initramfs</code>。</p>
+<a id="more"></a>
+<h2 id="What-is-ramfs"><a href="#What-is-ramfs" class="headerlink" title="What is ramfs?"></a>What is ramfs?</h2><p><code>ramfs</code>是 linux 中利用linux的<code>disk caching</code>机制（page cache 和 dentry cache）实现的可动态伸缩的基于RAM做存储的文件系统。</p>
+<p>文件一般放在磁盘上，当需要对其读写的时候会将其加载到内存中。为了提高文件的读写效率，根据局部性原理，linux 基本上都会文件缓存到内存中。</p>
+<ul>
+<li>当文件的数据被 OS 从后端存储读取到内存的时候，因为这段数据可能之后会被用到，并不会被马上释放，这块数据将会被标记为 <code>clean</code>，就是说可以被释放掉。只有当 VM 系统需要用到这块内存做其他事情的时候，这些数据才会被释放掉。</li>
+<li>当有数据写到文件后，这段数据也会被标记为 <code>clean</code>，但是仍然保存在内存中而不释放，以用作缓存的目的。只有当 VM 系统重新申请这块内存的时候，这段数据才会被释放掉。</li>
+</ul>
+<p>对于 <code>dentry cache</code>，linux 也有类似的机制，从而大大加快了对于目录的访问。</p>
+<p>上述说的是我们常见文件系统的机制，对于 <code>ramfs</code>而言，这里根本没有所谓的后端存储。当你要向 <code>ramfs</code>写文件时，我们像原来一样，在内存上分配 <code>page cache</code>和<code>dentry cache</code>，但是这些 cache 不会被写到磁盘这些后端存储中 。所以，这些 cache根本不会被标记为 <code>clean</code>，而会一直存在于内存中，VM系统也无法回收他们的内存，重新分配做它用。</p>
+<p>实现 <code>ramfs</code>需要的代码量非常的少，因为他们基本上就是依靠Linux现有的<code>caching infastructure</code>。对于用户而言，我们只是把一个 <code>disk cache</code>加载成文件系统。因此，<code>ramfs</code>就不是通过<code>menuconfig</code>可以被移去的可选模块，它底层的机制是 linux 所必须的。</p>
+<p>下面做了一个简单的实验，这是当前系统能够看到的文件系统。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">vagrant@cosmos:~$ df -a</span><br><span class="line">文件系统                   1K-块      已用     可用 已用% 挂载点</span><br><span class="line">sysfs                          0         0        0     - /sys</span><br><span class="line">proc                           0         0        0     - /proc</span><br><span class="line">udev                     1014960         0  1014960    0% /dev</span><br><span class="line">devpts                         0         0        0     - /dev/pts</span><br><span class="line">tmpfs                     204804      5784   199020    3% /run</span><br><span class="line">/dev/sda1               10098468   1978740  8103344   20% /</span><br><span class="line">tmpfs                    1024004         0  1024004    0% /dev/shm</span><br><span class="line">tmpfs                       5120         0     5120    0% /run/lock</span><br><span class="line">home_vagrant_workspace 244810132 199558164 45251968   82% /home/vagrant/workspace</span><br></pre></td></tr></table></figure>
+<p>我们可以通过下列命令自己创建 <code>ramfs</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">vagrant@cosmos:~$ mkdir ramfs</span><br><span class="line">vagrant@cosmos:~$ sudo mount -t ramfs -o size=10M ramfs ./ramfs/</span><br><span class="line">vagrant@cosmos:~$ df -a</span><br><span class="line">文件系统                   1K-块      已用     可用 已用% 挂载点</span><br><span class="line">sysfs                          0         0        0     - /sys</span><br><span class="line">proc                           0         0        0     - /proc</span><br><span class="line">udev                     1014960         0  1014960    0% /dev</span><br><span class="line">devpts                         0         0        0     - /dev/pts</span><br><span class="line">tmpfs                     204804      5784   199020    3% /run</span><br><span class="line">/dev/sda1               10098468   1978740  8103344   20% /</span><br><span class="line">tmpfs                    1024004         0  1024004    0% /dev/shm</span><br><span class="line">tmpfs                       5120         0     5120    0% /run/lock</span><br><span class="line">home_vagrant_workspace 244810132 199558164 45251968   82% /home/vagrant/workspace</span><br><span class="line">ramfs                          0         0        0     - /home/vagrant/ramfs</span><br><span class="line">vagrant@cosmos:~$ ls -alh ramfs/</span><br><span class="line">总用量 21M</span><br><span class="line">drwxr-xr-x 2 root    root       0 3月  30 09:34 .</span><br><span class="line">drwxr-xr-x 7 vagrant vagrant 4.0K 3月  30 09:32 ..</span><br><span class="line">-rw-r--r-- 1 root    root     20M 3月  30 09:25 test.file</span><br></pre></td></tr></table></figure>
+<h2 id="ramfs-and-ramdisk"><a href="#ramfs-and-ramdisk" class="headerlink" title="ramfs and ramdisk"></a>ramfs and ramdisk</h2><p><code>ramdisk</code>是比<code>ramfs</code>出现更早的机制，是利用 RAM 模拟生成一个块设备，以此作为文件系统的后端存储。这个块设备是固定大小的，所以它上面 mount 的文件系统也是固定大小的。和实际的块设备一样，我们需要把<code>page cache</code>从这块假的块设备复制到内存，然后把改变复制回去，对于 <code>dentry cache</code>也是一样。除此之外，它还需要文件系统驱动（比如 ext2）去格式化和解释这段数据。</p>
+<p>相较于<code>ramfs</code>，<code>ramdisk</code>会浪费更多的内存，占用更多的内存总线带宽，给 CPU 带来更多的工作，并且污染 CPU 的 cache。相较而言，<code>ramfs</code>的实现机制更加简单和高效。</p>
+<p><code>loopback devices</code>是导致 <code>ramdisk</code> 淘汰的另一个原因，它相对于<code>ramdisk</code>而言提供了一种更加灵活和方便的方式来创建块设备，现在是通过文件而不是通过内存。</p>
+<h2 id="ramfs-and-tmpfs"><a href="#ramfs-and-tmpfs" class="headerlink" title="ramfs and tmpfs"></a>ramfs and tmpfs</h2><p><code>ramfs</code>的一个问题是，你可以一直往 <code>ramfs</code>里面写数据，直到你用完了所有的内存。而且 VM 系统也不能释放这段内存，因为 VM 认为这些数据应该被写到后端存储，而对于 <code>ramfs</code>而言他没有后端存储。因此，只有 root用户能够往 <code>ramfs</code>写数据。</p>
+<p>为了解决上述问题，linux 内核开发者又发明了 <code>tmpfs</code>，给添加了大小的限制和普通用户写数据的权限。</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">特性</th>
+<th style="text-align:center">tmpfs</th>
+<th style="text-align:center">ramfs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">达到空间上限时继续写入</td>
+<td style="text-align:center">提示错误信息并终止</td>
+<td style="text-align:center">可以继续写尚未分配的空间</td>
+</tr>
+<tr>
+<td style="text-align:center">是否固定大小</td>
+<td style="text-align:center">是</td>
+<td style="text-align:center">否</td>
+</tr>
+<tr>
+<td style="text-align:center">是否使用swap</td>
+<td style="text-align:center">是</td>
+<td style="text-align:center">否</td>
+</tr>
+<tr>
+<td style="text-align:center">具有易失性</td>
+<td style="text-align:center">是</td>
+<td style="text-align:center">是</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="What-is-rootfs"><a href="#What-is-rootfs" class="headerlink" title="What is rootfs?"></a>What is rootfs?</h2><p><code>rootfs</code>是<code>ramfs</code>或者<code>tmpfs</code>的一种特殊实例，根文件系统包含系统启动时所必须的目录和关键性的文件，以及使其他文件系统得以挂载（mount）所必要的文件。例如：</p>
+<ul>
+<li>init进程的应用程序必须运行在根文件系统上</li>
+<li>根文件系统提供了根目录“/”</li>
+<li>linux挂载分区时所依赖的信息存放于根文件系统/etc/fstab这个文件中</li>
+<li>shell命令程序必须运行在根文件系统上，譬如ls、cd等命令</li>
+</ul>
+<p>一套linux体系，只有内核本身是不能工作的，必须要rootfs（上的etc目录下的配置文件、/bin /sbin等目录下的shell命令，还有/lib目录下的库文件等···）相配合才能工作。</p>
+<p>Linux启动时，第一个必须挂载的是根文件系统；若系统不能从指定设备上挂载根文件系统，则系统会出错而退出启动。成功之后可以自动或手动挂载其他的文件系统。</p>
+<p>下面是 linux 的内核代码。rootfs是基于内存的文件系统，所有操作都在内存中完成；也没有实际的存储设备，所以不需要设备驱动程序的参与。基于以上原因，linux在启动阶段使用rootfs文件系统，当磁盘驱动程序和磁盘文件系统成功加载后，linux系统会将系统根目录从rootfs切换到磁盘文件系统。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">init/main.c-&gt;</span><br><span class="line">  start_kernel()-&gt;</span><br><span class="line">  	vfs_caches_init(totalram_pages)–&gt;</span><br><span class="line">  		mnt_init()–&gt;</span><br><span class="line">　　　　　<span class="comment">/* sysfs用来记录和展示linux驱动模型，sysfs先于rootfs挂载是为全面展示linux驱动模型做好准备 */</span></span><br><span class="line">　　　　　sysfs_init();</span><br><span class="line">　　　　　<span class="comment">/* mnt_init()调用sysfs_init()注册并挂载sysfs文件系统，然后调用kobject_create_and_add()创建fs目录 */</span></span><br><span class="line">				fs_kobj = kobject_create_and_add(<span class="string">"fs"</span>, <span class="literal">NULL</span>);</span><br><span class="line">　　　　　<span class="comment">/* init_rootfs()注册rootfs，然后调用init_mount_tree()挂载rootfs */</span></span><br><span class="line">　　　　　init_rootfs();</span><br><span class="line">　　　　　init_mount_tree();</span><br></pre></td></tr></table></figure>
+<p>下面是 <code>init_rootfs</code>的代码，可以看到，如果 <code>CONFIG_TMPFS</code>开启，rootfs 将会默认使用 <code>tmpfs</code>，否则使用 <code>ramfs</code>。</p>
+<figure class="highlight c"><figcaption><span>init/do_mounts.c</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> __init <span class="title">init_rootfs</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> err = register_filesystem(&amp;rootfs_fs_type);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (err)</span><br><span class="line">		<span class="keyword">return</span> err;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (IS_ENABLED(CONFIG_TMPFS) &amp;&amp; !saved_root_name[<span class="number">0</span>] &amp;&amp;</span><br><span class="line">		(!root_fs_names || <span class="built_in">strstr</span>(root_fs_names, <span class="string">"tmpfs"</span>))) &#123;</span><br><span class="line">		err = shmem_init();</span><br><span class="line">		is_tmpfs = <span class="literal">true</span>;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		err = init_ramfs_fs();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (err)</span><br><span class="line">		unregister_filesystem(&amp;rootfs_fs_type);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> err;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="What-is-initramfs"><a href="#What-is-initramfs" class="headerlink" title="What is initramfs?"></a>What is initramfs?</h2><p>initramfs是一种ramfs文件系统，在内核启动完成后把它复制到rootfs中，作为内核初始的根文件系统，它的任务是挂载系统真正的根文件系统。所有的 2.6 版本的 linux 内核都包含一个gzip 压缩过的 cpio 存档，在kernel 启动的时候，将会将其解压成 <code>rootfs</code>。解压之后，内核将会检查 rootfs 是否有一个 <code>init</code>文件，如果有的话，将会执行 <code>init</code>程序作为 PID 为 1 的进程。在这之后，<code>init</code>进程将会负责其启动整个系统，包括找到并加载真正的根设备。</p>
+<p>相对于老的 <code>initrd</code>机制，<code>initramfs</code>有以下几点区别：</p>
+<ul>
+<li>老的 <code>initrd</code>总是一个独立的文件，而<code>initramfs</code>存档是被链接到内核镜像中去的</li>
+<li>老的 <code>initrd</code>文件是一个 gzip 压缩过的文件系统镜像，新的 <code>initramfs</code>是 gzip 压缩过的 cpio存档，相对而言更简单</li>
+<li>以往的基于ramdisk 的initrd 使用pivot_root命令切换到新的根文件系统，然后卸载ramdisk。但是initramfs是rootfs，而rootfs既不能pivot_root，也不能umount。为了从initramfs中切换到新根文件系统，需要作如下处理：<ul>
+<li>删除rootfs的全部内容，释放空间<br><code>find -xdev / -exec rm &#39;{}&#39; &#39;;&#39;</code></li>
+<li>安装新的根文件系统，并切换<br><code>cd /newmount; mount --move . /; chroot .</code></li>
+<li>把stdin/stdout/stderr 附加到新的/dev/console，然后执行新文件系统的init程序</li>
+</ul>
+</li>
+</ul>
+<p>上述步骤比较麻烦，而且要解决一个重要的问题：第一步删除rootfs的所有内容也删除了所有的命令，那么后续如何再使用这些命令完成其他步骤？busybox的解决方案是，提供了switch_root命令，完成全部的处理过程，使用起来非常方便。</p>
+<p><code>switch_root</code>命令的格式是：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ switch_root [options] &lt;newrootdir&gt; &lt;init&gt; &lt;args to init&gt;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>newrootdir</code>是实际的根文件系统的挂载目录，执行switch_root命令前需要挂载到系统中</li>
+<li>init<code>是实际根文件系统的init程序的路径，一般是/sbin/init；</code></li>
+<li>args to init`则是传递给实际的根文件系统的init程序的参数，也是可选的。</li>
+</ul>
+<p><strong>需要特别注意的是</strong>：switch_root命令必须由PID=1的进程调用，也就是必须由initramfs的init程序直接调用，不能由init派生的其他进程调用，否则会出错，提示：<code>switch_root: not rootfs</code>。也是同样的原因，init脚本调用switch_root命令必须用exec命令调用，否则也会出错，提示：<code>switch_root: not rootfs</code></p>
+<h2 id="Contents-of-initramfs"><a href="#Contents-of-initramfs" class="headerlink" title="Contents of initramfs"></a>Contents of initramfs</h2><blockquote>
+<p>An initramfs archive is a complete self-contained root filesystem for Linux.</p>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">$ cat &gt; hello.c &lt;&lt; EOF</span><br><span class="line"><span class="comment">#include &lt;stdio.h&gt;</span></span><br><span class="line"><span class="comment">#include &lt;unistd.h&gt;</span></span><br><span class="line"></span><br><span class="line">int main(int argc, char *argv[])</span><br><span class="line">&#123;</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">"Hello world!\n"</span>);</span><br><span class="line">  sleep(999999999);</span><br><span class="line">&#125;</span><br><span class="line">EOF</span><br><span class="line">$ gcc -static hello.c -o init</span><br><span class="line">$ <span class="built_in">echo</span> init | cpio -o -H newc | gzip &gt; test.cpio.gz</span><br><span class="line"><span class="comment"># Testing external initramfs using the initrd loading mechanism.</span></span><br><span class="line">$ qemu -kernel /boot/vmlinuz -initrd test.cpio.gz /dev/zero</span><br></pre></td></tr></table></figure>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://www.kernel.org/doc/Documentation/filesystems/ramfs-rootfs-initramfs.txt" target="_blank" rel="external nofollow noopener noreferrer">https://www.kernel.org/doc/Documentation/filesystems/ramfs-rootfs-initramfs.txt</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/f2195e8a/" rel="bookmark">GDB笔记</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/f8586b35/" rel="bookmark">Shell笔记</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/e27e5d75/" rel="bookmark">Linux启动过程</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/63a566a0/" rel="bookmark">Ubuntu自动选择镜像源</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/7c0e6000/" title="理解 initramfs">http://houmin.cc/posts/7c0e6000/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/linux/" rel="tag"><i class="fa fa-tag"></i> linux</a>
+              <a href="/tags/kernel/" rel="tag"><i class="fa fa-tag"></i> kernel</a>
+              <a href="/tags/Documentation/" rel="tag"><i class="fa fa-tag"></i> Documentation</a>
+              <a href="/tags/ramfs/" rel="tag"><i class="fa fa-tag"></i> ramfs</a>
+              <a href="/tags/rootfs/" rel="tag"><i class="fa fa-tag"></i> rootfs</a>
+              <a href="/tags/initramfs/" rel="tag"><i class="fa fa-tag"></i> initramfs</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/e27e5d75/" rel="next" title="Linux启动过程">
+                  <i class="fa fa-chevron-left"></i> Linux启动过程
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/d4ef9777/" rel="prev" title="流れ行く雲">
+                  流れ行く雲 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#What-is-ramfs"><span class="nav-number">1.</span> <span class="nav-text">What is ramfs?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ramfs-and-ramdisk"><span class="nav-number">2.</span> <span class="nav-text">ramfs and ramdisk</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ramfs-and-tmpfs"><span class="nav-number">3.</span> <span class="nav-text">ramfs and tmpfs</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#What-is-rootfs"><span class="nav-number">4.</span> <span class="nav-text">What is rootfs?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#What-is-initramfs"><span class="nav-number">5.</span> <span class="nav-text">What is initramfs?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Contents-of-initramfs"><span class="nav-number">6.</span> <span class="nav-text">Contents of initramfs</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">7.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="容器化技术已经越来越成为互联网应用的潮流，本文记录了我的 Hexo 博客容器化的过程。">
+<meta name="keywords" content="Hexo,container,docker,https">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo 博客容器化">
+<meta property="og:url" content="http://houmin.cc/posts/f5d73ad0/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="容器化技术已经越来越成为互联网应用的潮流，本文记录了我的 Hexo 博客容器化的过程。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-15_ssl-handshake.png">
+<meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/PublicKeyCertificateDiagram_It.svg/1024px-PublicKeyCertificateDiagram_It.svg.png">
+<meta property="og:updated_time" content="2020-07-14T08:24:44.100Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-15_ssl-handshake.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/f5d73ad0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Hexo 博客容器化 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/f5d73ad0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Hexo 博客容器化
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-01-15 13:03:04" itemprop="dateCreated datePublished" datetime="2020-01-15T13:03:04+08:00">2020-01-15</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/f5d73ad0/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/f5d73ad0/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>13k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>23 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>容器化技术已经越来越成为互联网应用的潮流，本文记录了我的 Hexo 博客容器化的过程。</p>
+<a id="more"></a>
+<p>容器化应用，不仅可以提高现有应用的安全性和可移植性，还能节省成本。想一想，如果每一次更换云服务器，都需要重新把 <a href="../a63a603e">这篇博文</a> 的操作重复一遍，该是多么痛苦的一件事情。容器化之后，我们只需要有一个 <code>Dockerfile</code> 就可以方便的迁移博客，所有的网站和博客的更新都可以版本化控制。</p>
+<p>下面所有的操作，默认是在一个已经配置好 docker 环境的云服务器上。首先我会简单说一下系统的模块设计，然后针对三个不同的模块详细介绍，实现系统的基本功能。在之后是在已经实现的基本功能基础上，一步一步的加上一些扩展功能，更加完善当前系统，使其更加方便易用。</p>
+<h2 id="模块设计"><a href="#模块设计" class="headerlink" title="模块设计"></a>模块设计</h2><p>在 <a href="./a63a603e">深度定制Hexo博客</a> 这篇文章中，服务器所有的模块其实可以分为三个部分:</p>
+<ul>
+<li>Git 服务器模块</li>
+<li>Hexo 解析渲染模块</li>
+<li>Nginx 服务器模块</li>
+</ul>
+<p>整个系统的操作逻辑如下：</p>
+<ul>
+<li>Git 服务器模块存储了 blog 的 repo，这个 repo 里面保存的是网站所有源代码的内容，而不是像 github 那种保存源文件渲染之后的内容。还需要注意的是，这里的 repo 是对应的 blog.git，而客户端存储的是 blog。</li>
+<li>客户端，也就是自己的笔记本也存储了 blog 的源文件。每次更新博客是在客户端进行，更新完之后会自动上修改上传到 Git 服务器。</li>
+<li>Git 服务器自己的 hook 工具会自动将这份更新同步到 Hexo 解析渲染模块。</li>
+<li>Hexo 解析渲染模块有一份和客户端同步的 blog 源文件。每次客户端 push 到 git 服务器之后，git 服务器就会自动同步 Hexo 解析渲染模块的文件。然后执行 <code>hexo generate</code> 的命令，生成对应的网站的 HTML 文件，放在对应的 <code>public</code> 文件夹中</li>
+<li>Nginx 服务器根据配置，指定对应的 root 目录即可</li>
+</ul>
+<p>虽然在 <a href="./a63a603e">深度定制Hexo博客</a> 这篇文章中我还增加了一些扩展功能，比如 https，比如 在线编辑 的功能，但是基本的操作实际上就是上面这个模型的。</p>
+<p>对应于微服务化，我应该如何去设计我自己的Docker镜像和对应的配置文件呢？</p>
+<p>最直接的，我们按照这个功能划分，把这个系统分为三个模块，具体的用 <code>docker-compose</code>的方式展现出来，就是</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">'2'</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">git-server:</span></span><br><span class="line">    <span class="attr">container-name:</span> <span class="string">hexo-git-server</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">houmin/git-server</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./git-server/keys:/git-server/keys</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./git-server/repos:/git-server/repos</span></span><br><span class="line">	  <span class="attr">ports:</span></span><br><span class="line">	    <span class="bullet">-</span> <span class="string">"2222:22"</span></span><br><span class="line">  <span class="attr">hexo:</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">hexo_build</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">houmin/alpine-hexo</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./source:/hexo/source:ro</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./themes:/hexo/themes:ro</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./public:/hexo/public</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./node_modules:/hexo/node_modules</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">"4000:4000"</span></span><br><span class="line">  <span class="attr">nginx:</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">hexo_web</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">nginx:1.17</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./public:/usr/share/nginx/html:ro</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./conf:/ect/nginx/conf.d</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">"80:80"</span></span><br></pre></td></tr></table></figure>
+<p>看起来很不错，我们期待的是，每次客户端更新博客之后，将更新 push 到 git 服务器，然后 git 服务器上面的 hook 就会自动去更新 hexo 解析渲染模块的内容，渲染出最新的网页内容。然后因为 hexo 解析渲染模块的生成目录，实际上就是 Nginx 服务内容的目录，所以渲染之后网页内容就可以及时的更新。</p>
+<p>现在的一个问题就是，如果把 git 服务器模块和 hexo 渲染模块放在两个容器里面运行，在 git 服务器模块中怎么使用 hook 去更新 hexo 渲染模块里面命令，具体的就是 <code>hexo generate</code>。</p>
+<p>在同一台物理机上，我的 hook 操作如下</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/bin/bash</span></span><br><span class="line"></span><br><span class="line">HEXO_PATH="/home/git/hexo"</span><br><span class="line">unset GIT_DIR</span><br><span class="line">git -C $HEXO_PATH fetch origin;</span><br><span class="line">git -C $HEXO_PATH rebase origin/master;</span><br><span class="line">hexo --cwd $HEXO_PATH generate;</span><br></pre></td></tr></table></figure>
+<p>直接去执行本机的 hexo 命令，指定本机的路径。这个操作在同一台物理机上是可以的，但是微服务化之后容器间就不太行了。到了这一步，就回到了微服务化的常见套路了，两个可选方案：</p>
+<ul>
+<li>RPC</li>
+<li>REST</li>
+</ul>
+<p>两种方案都可以，但是既然只是作为一个简单的博客，我想实现的事情很简单，就是一个容器让另外一个容器执行一个命令。考虑到 hexo 解析渲染模块已经有 js 的所有环境，使用 js 实现一个 REST server 服务也不难，所以就直接采用 REST 了。</p>
+<h2 id="基本功能"><a href="#基本功能" class="headerlink" title="基本功能"></a>基本功能</h2><h3 id="Git-服务器模块"><a href="#Git-服务器模块" class="headerlink" title="Git 服务器模块"></a>Git 服务器模块</h3><p>这里的 git 服务器主要是参考了 <a href="https://github.com/jkarlosb/git-server-docker" target="_blank" rel="external nofollow noopener noreferrer">git-server-docker</a>，针对自己的需求做了定制。</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> alpine:<span class="number">3.4</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">MAINTAINER</span> houmin &lt;houmin.wei@pku.edu.cn&gt;</span><br><span class="line"></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> apk add --no-cache \</span></span><br><span class="line"><span class="bash">        openssh \</span></span><br><span class="line"><span class="bash">        git \</span></span><br><span class="line"><span class="bash">        curl</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Key generation on the server</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> ssh-keygen -A</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">WORKDIR</span><span class="bash"> /git-server</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># -D flag avoids password generation</span></span><br><span class="line"><span class="comment"># -s flag changes user's shell</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> mkdir /git-server/keys \</span></span><br><span class="line"><span class="bash">  &amp;&amp; adduser -D -s /usr/bin/git-shell git \</span></span><br><span class="line"><span class="bash">  &amp;&amp; <span class="built_in">echo</span> git:12345 | chpasswd \</span></span><br><span class="line"><span class="bash">  &amp;&amp; mkdir /home/git/.ssh</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">COPY</span><span class="bash"> git-shell-commands /home/git/git-shell-commands</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">COPY</span><span class="bash"> sshd_config /etc/ssh/sshd_config</span></span><br><span class="line"><span class="keyword">COPY</span><span class="bash"> start.sh start.sh</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">22</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">VOLUME</span><span class="bash"> [<span class="string">"/git-server/keys"</span>]</span></span><br><span class="line"><span class="keyword">VOLUME</span><span class="bash"> [<span class="string">"/git-server/repos"</span>]</span></span><br><span class="line"><span class="keyword">VOLUME</span><span class="bash"> [<span class="string">"/hexo"</span>]</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">CMD</span><span class="bash"> [<span class="string">"sh"</span>, <span class="string">"start.sh"</span>]</span></span><br></pre></td></tr></table></figure>
+<p>注意，为了使得 <code>git-shell-commands</code> 能够生效，需要使得其具有执行权限 <code>chmod +x -R git-shell-commands</code></p>
+<p><code>start.sh</code> 具体内容如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/bin/sh</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> If there is some public key <span class="keyword">in</span> keys folder</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> <span class="keyword">then</span> it copies its contain <span class="keyword">in</span> authorized_keys file</span></span><br><span class="line">if [ "$(ls -A /git-server/keys/)" ]; then</span><br><span class="line">  cd /home/git</span><br><span class="line">  cat /git-server/keys/*.pub &gt; .ssh/authorized_keys</span><br><span class="line">  chown -R git:git .ssh</span><br><span class="line">  chmod 700 .ssh</span><br><span class="line">  chmod -R 600 .ssh/*</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> Checking permissions and fixing SGID bit <span class="keyword">in</span> repos folder</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> More info: https://github.com/jkarlosb/git-server-docker/issues/1</span></span><br><span class="line">if [ "$(ls -A /git-server/repos/)" ]; then</span><br><span class="line">  cd /git-server/repos</span><br><span class="line">  chown -R git:git .</span><br><span class="line">  chmod -R ug+rwX .</span><br><span class="line">  find . -type d -exec chmod g+s '&#123;&#125;' +</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> <span class="built_in">clone</span> hexo from <span class="built_in">local</span> git repo</span></span><br><span class="line">cd /hexo</span><br><span class="line">git init .</span><br><span class="line">git remote add origin /git-server/repos/hexo.git</span><br><span class="line">git fetch</span><br><span class="line">git branch master origin/master</span><br><span class="line">git checkout master</span><br><span class="line"></span><br><span class="line">chown -R 1000:1000 /hexo</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> -D flag avoids executing sshd as a daemon</span></span><br><span class="line">/usr/sbin/sshd -D</span><br></pre></td></tr></table></figure>
+<p>编译 docker 镜像</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">~/git$: docker build -t houmin/alpine-git-server .</span><br></pre></td></tr></table></figure>
+<p>通过 <code>docker-compose</code> 运行 git-server</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">'2'</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">git-server:</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">git-server</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">houmin/alpine-git-server</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/git-server/keys:/git-server/keys</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/git-server/repos:/git-server/repos</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/hexo:/hexo</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">"2222:22"</span></span><br></pre></td></tr></table></figure>
+<p>把本地 <code>public key</code> 复制到 git server 的 keys 目录，并且重启 git server</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Copy Public Key To Git <span class="symbol">Server:</span> <span class="variable">$ </span>scp ~<span class="regexp">/.ssh/id</span>_rsa.pub user<span class="variable">@host</span><span class="symbol">:~/git-server/keys</span></span><br><span class="line">You need restart the container <span class="keyword">when</span> keys are <span class="symbol">updated:</span></span><br><span class="line"><span class="variable">$ </span>docker restart &lt;container-id&gt;</span><br></pre></td></tr></table></figure>
+<p>这时候使用通过如下命令测试</p>
+<figure class="highlight vbscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ ssh git@&lt;ip-docker-<span class="built_in">server</span>&gt; -p <span class="number">2222</span></span><br><span class="line">...</span><br><span class="line">Welcome <span class="keyword">to</span> git-<span class="built_in">server</span>-docker!</span><br><span class="line">You<span class="comment">'ve successfully authenticated, but I do not</span></span><br><span class="line">provide interactive shell access.</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>把 blog.git 上传到 <code>git-server/repos</code> 目录下</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">From remote:</span><br><span class="line"><span class="meta">$</span><span class="bash"> scp -r myrepo.git user@host:~/git-server/repos</span></span><br></pre></td></tr></table></figure>
+<p>从而可以在客户端本地</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> git <span class="built_in">clone</span> ssh://git@&lt;ip-docker-server&gt;:2222/git-server/repos/myrepo.git</span></span><br></pre></td></tr></table></figure>
+<h3 id="Hexo-解析渲染模块"><a href="#Hexo-解析渲染模块" class="headerlink" title="Hexo 解析渲染模块"></a>Hexo 解析渲染模块</h3><p>Dockerfile 如下</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> mhart/alpine-node:<span class="number">12</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">WORKDIR</span><span class="bash"> /hexo</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">ENV</span> HEXO_VERSION <span class="number">4.0</span>.<span class="number">0</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> npm config <span class="built_in">set</span> registry https://registry.npm.taobao.org \</span></span><br><span class="line"><span class="bash">  &amp;&amp; npm install -g hexo@<span class="variable">$&#123;HEXO_VERSION&#125;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">8080</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">VOLUME</span><span class="bash"> [<span class="string">"/hexo"</span>]</span></span><br><span class="line"><span class="keyword">VOLUME</span><span class="bash"> [<span class="string">"/hexo/node_modules"</span>]</span></span><br><span class="line"><span class="keyword">VOLUME</span><span class="bash"> [<span class="string">"/hexo/public"</span>]</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">COPY</span><span class="bash"> package.json /hexo/package.json</span></span><br><span class="line"><span class="keyword">COPY</span><span class="bash"> entrypoint.sh /hexo/entrypoint.sh</span></span><br><span class="line"><span class="keyword">COPY</span><span class="bash"> _config.yml /hexo/_config.yml</span></span><br><span class="line"><span class="keyword">COPY</span><span class="bash"> server.js /hexo/server.js</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">CMD</span><span class="bash"> [<span class="string">"sh"</span>, <span class="string">"/hexo/entrypoint.sh"</span>]</span></span><br></pre></td></tr></table></figure>
+<p>entrypoint.sh 如下</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/bin/sh</span></span><br><span class="line"></span><br><span class="line">npm install hexo@4.0.0 --save</span><br><span class="line">npm install --production</span><br><span class="line"></span><br><span class="line">hexo douban -bm</span><br><span class="line">hexo generate</span><br><span class="line"></span><br><span class="line">node server.js</span><br></pre></td></tr></table></figure>
+<p>server.js 如下</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> express = <span class="built_in">require</span>(<span class="string">'express'</span>);</span><br><span class="line"><span class="keyword">var</span> execSync = <span class="built_in">require</span>(<span class="string">'child_process'</span>).execSync;</span><br><span class="line"><span class="keyword">var</span> app = express();</span><br><span class="line"><span class="keyword">var</span> fs = <span class="built_in">require</span>(<span class="string">'fs'</span>);</span><br><span class="line"></span><br><span class="line">app.get(<span class="string">'/list'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">req, res</span>) </span>&#123;</span><br><span class="line">    res.send(<span class="string">'Response from REST request /list'</span>);</span><br><span class="line">    <span class="keyword">const</span> output = execSync(<span class="string">'hexo generate'</span>, &#123;<span class="attr">encoding</span>: <span class="string">'utf-8'</span>&#125;);</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">'output:\n'</span> + output);</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> server = app.listen(<span class="number">8080</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> port = server.address().port</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">'application instance, access address: port: %s'</span>, port)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>使用 <code>docker-compose</code> 启动 hexo-parser 模块</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">'2'</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">hexo-parser:</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">hexo-parser</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">houmin/alpine-hexo-parser</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/blog/source:/hexo/source:ro</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/blog/themes:/hexo/themes:ro</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/blog/public:/hexo/public</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/blog/node_modules:/hexo/node_modules</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">"8080:8080"</span></span><br></pre></td></tr></table></figure>
+<h3 id="Nginx-服务器模块"><a href="#Nginx-服务器模块" class="headerlink" title="Nginx 服务器模块"></a>Nginx 服务器模块</h3><p>用 <code>docker-compose</code> 启动 nginx 服务器</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">'2'</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">nginx:</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">hexo-nginx-server</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">nginx:1.17</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/blog/public:/usr/share/nginx/html:ro</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/blog/conf:/ect/nginx/conf.d</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">"80:80"</span></span><br></pre></td></tr></table></figure>
+<h3 id="微服务整合"><a href="#微服务整合" class="headerlink" title="微服务整合"></a>微服务整合</h3><p>至此，通过一个yaml文件就可以启动所有的服务了</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">'2'</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">hexo-git-server:</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">hexo-git-server</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">houmin/alpine-git-server</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/git-server/keys:/git-server/keys</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/git-server/repos:/git-server/repos</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">"2222:22"</span></span><br><span class="line">  <span class="attr">hexo-parser:</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">hexo-parser</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">houmin/alpine-hexo-parser</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/hexo/source:/hexo/source:ro</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/hexo/themes:/hexo/themes:ro</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/hexo/public:/hexo/public</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/hexo/node_modules:/hexo/node_modules</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">"8080:8080"</span></span><br><span class="line">  <span class="attr">hexo-nginx-server:</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">hexo-nginx-server</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">nginx:1.17</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/hexo/public:/usr/share/nginx/html:ro</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/hexo/conf:/ect/nginx/conf.d</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">"80:80"</span></span><br></pre></td></tr></table></figure>
+<p>在上面三个模块中，交互比较紧密的是 <code>git-server</code> 和 <code>hexo-parser</code>。每次用户在本地更新完博客之后，将新的 commit 上传到 <code>git-server</code> 中，<code>git-server</code> 通过 hook 更新 hexo 博客中的源文件，然后向 <code>hexo-parser</code> 发出请求，具体的 hook 如下</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/bin/sh</span></span><br><span class="line"></span><br><span class="line"><span class="string">HEXO_PATH="/hexo"</span></span><br><span class="line"><span class="string">unset</span> <span class="string">GIT_DIR</span></span><br><span class="line"><span class="string">git</span> <span class="string">-C</span> <span class="string">$HEXO_PATH</span> <span class="string">fetch</span> <span class="string">origin;</span></span><br><span class="line"><span class="string">git</span> <span class="string">-C</span> <span class="string">$HEXO_PATH</span> <span class="string">rebase</span> <span class="string">origin/master;</span></span><br><span class="line"><span class="string">curl</span> <span class="string">-X</span> <span class="string">GET</span> <span class="string">http://hexo-parser:8080/list</span></span><br></pre></td></tr></table></figure>
+<p>这里的 <code>http://hexo-parser:8080/list</code> 也就是 <code>server.js</code> 提供的服务。</p>
+<div class="note info">
+            <p>注：为了能够在 <code>git-server</code> 实现 <code>git fetch</code>的功能，在 <code>git-server</code>中 clone 的是 local 的 git repo，而不是通过远端的 ssh 协议，详见 <code>entrypoint.sh</code>。</p>
+          </div>
+<h2 id="扩展功能"><a href="#扩展功能" class="headerlink" title="扩展功能"></a>扩展功能</h2><h3 id="支持-HTTPS"><a href="#支持-HTTPS" class="headerlink" title="支持 HTTPS"></a>支持 HTTPS</h3><p>众所周知，HTTPS 是一件特别繁琐的事情，关于 HTTPS 可以看一看 <a href="https://www.aneasystone.com/archives/2016/04/java-and-https.html" target="_blank" rel="external nofollow noopener noreferrer">这篇文章</a> 。</p>
+<p>简单来说，为了避免中间人攻击，网站服务器需要用证书 certificate 证明自己的身份，下面是用户和网站交互流程图。</p>
+<p><img alt="SSL Handshake" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-15_ssl-handshake.png"></p>
+<p>证书需要从 <code>CA（Certificate Authority）</code> 申请。CA是权威的证书颁发机构，比如GeoTrust、GlobalSign，也有像  <a href="https://letsencrypt.org/" target="_blank" rel="external nofollow noopener noreferrer">Let’s Encrypt</a>  这样的免费证书颁发机构，下面是从 CA 申请证书的示意图。</p>
+<p><img alt="从CA申请证书" data-src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/PublicKeyCertificateDiagram_It.svg/1024px-PublicKeyCertificateDiagram_It.svg.png"></p>
+<p>对于 Nginx，我们通过下面的配置文件来配置证书：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen 80;</span><br><span class="line">    server_name houmin.site;</span><br><span class="line">    location &#x2F; &#123;</span><br><span class="line">        return 301 https:&#x2F;&#x2F;$host$request_uri;</span><br><span class="line">    &#125;</span><br><span class="line">    location &#x2F;.well-known&#x2F;acme-challenge&#x2F; &#123;</span><br><span class="line">        root &#x2F;var&#x2F;www&#x2F;certbot;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">server &#123;</span><br><span class="line">    listen 443 ssl;</span><br><span class="line">    server_name houmin.site;</span><br><span class="line"></span><br><span class="line">    location &#x2F; &#123;</span><br><span class="line">        error_page 404 &#x2F;404&#x2F;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    root &#x2F;usr&#x2F;share&#x2F;nginx&#x2F;html;</span><br><span class="line"></span><br><span class="line">    ssl_certificate &#x2F;etc&#x2F;letsencrypt&#x2F;live&#x2F;houmin.site&#x2F;fullchain.pem;</span><br><span class="line">    ssl_certificate_key &#x2F;etc&#x2F;letsencrypt&#x2F;live&#x2F;houmin.site&#x2F;privkey.pem;</span><br><span class="line"></span><br><span class="line">    include &#x2F;etc&#x2F;letsencrypt&#x2F;options-ssl-nginx.conf;</span><br><span class="line">    ssl_dhparam &#x2F;etc&#x2F;letsencrypt&#x2F;ssl-dhparams.pem;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里的 <code>fullchain.pem</code> 和 <code>privkey.pem</code> 就是网站从 CA 申请到的证书。</p>
+<p><a href="https://letsencrypt.org/" target="_blank" rel="external nofollow noopener noreferrer">Let’s Encrypt</a> 给我们提供了 <code>certbot</code> 工具便于更好的申请和管理证书。这里有一个鸡生蛋蛋生鸡的问题，到底是先有 nginx 呢，还是申请到证书呢？<a href="https://medium.com/@pentacent/nginx-and-lets-encrypt-with-docker-in-less-than-5-minutes-b4b8a60d3a71" target="_blank" rel="external nofollow noopener noreferrer">Nginx and Let’s Encrypt with Docker</a> 的解决方法是，<code>Create a dummy certificate, start nginx, delete the dummy and request the real certificates.</code> </p>
+<p>令人开心的是，这篇博文的作者也顺手给我们提供了一个 bootstrap 的脚本</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/bin/bash</span></span><br><span class="line"></span><br><span class="line">if ! [ -x "$(command -v docker-compose)" ]; then</span><br><span class="line">  echo 'Error: docker-compose is not installed.' &gt;&amp;2</span><br><span class="line">  exit 1</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">domains=(example.org www.example.org)</span><br><span class="line">rsa_key_size=4096</span><br><span class="line">data_path="./data/certbot"</span><br><span class="line">email="" # Adding a valid address is strongly recommended</span><br><span class="line">staging=0 # Set to 1 if you're testing your setup to avoid hitting request limits</span><br><span class="line"></span><br><span class="line">if [ -d "$data_path" ]; then</span><br><span class="line">  read -p "Existing data found for $domains. Continue and replace existing certificate? (y/N) " decision</span><br><span class="line">  if [ "$decision" != "Y" ] &amp;&amp; [ "$decision" != "y" ]; then</span><br><span class="line">    exit</span><br><span class="line">  fi</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">if [ ! -e "$data_path/conf/options-ssl-nginx.conf" ] || [ ! -e "$data_path/conf/ssl-dhparams.pem" ]; then</span><br><span class="line">  echo "### Downloading recommended TLS parameters ..."</span><br><span class="line">  mkdir -p "$data_path/conf"</span><br><span class="line">  curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot-nginx/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf &gt; "$data_path/conf/options-ssl-nginx.conf"</span><br><span class="line">  curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot/certbot/ssl-dhparams.pem &gt; "$data_path/conf/ssl-dhparams.pem"</span><br><span class="line">  echo</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">echo "### Creating dummy certificate for $domains ..."</span><br><span class="line">path="/etc/letsencrypt/live/$domains"</span><br><span class="line">mkdir -p "$data_path/conf/live/$domains"</span><br><span class="line">docker-compose run --rm --entrypoint "\</span><br><span class="line">  openssl req -x509 -nodes -newkey rsa:1024 -days 1\</span><br><span class="line">    -keyout '$path/privkey.pem' \</span><br><span class="line">    -out '$path/fullchain.pem' \</span><br><span class="line">    -subj '/CN=localhost'" certbot</span><br><span class="line">echo</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">echo "### Starting nginx ..."</span><br><span class="line">docker-compose up --force-recreate -d nginx</span><br><span class="line">echo</span><br><span class="line"></span><br><span class="line">echo "### Deleting dummy certificate for $domains ..."</span><br><span class="line">docker-compose run --rm --entrypoint "\</span><br><span class="line">  rm -Rf /etc/letsencrypt/live/$domains &amp;&amp; \</span><br><span class="line">  rm -Rf /etc/letsencrypt/archive/$domains &amp;&amp; \</span><br><span class="line">  rm -Rf /etc/letsencrypt/renewal/$domains.conf" certbot</span><br><span class="line">echo</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">echo "### Requesting Let's Encrypt certificate for $domains ..."</span><br><span class="line"><span class="meta">#</span><span class="bash">Join <span class="variable">$domains</span> to -d args</span></span><br><span class="line">domain_args=""</span><br><span class="line">for domain in "$&#123;domains[@]&#125;"; do</span><br><span class="line">  domain_args="$domain_args -d $domain"</span><br><span class="line">done</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> Select appropriate email arg</span></span><br><span class="line">case "$email" in</span><br><span class="line">  "") email_arg="--register-unsafely-without-email" ;;</span><br><span class="line">  *) email_arg="--email $email" ;;</span><br><span class="line">esac</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> Enable staging mode <span class="keyword">if</span> needed</span></span><br><span class="line">if [ $staging != "0" ]; then staging_arg="--staging"; fi</span><br><span class="line"></span><br><span class="line">docker-compose run --rm --entrypoint "\</span><br><span class="line">  certbot certonly --webroot -w /var/www/certbot \</span><br><span class="line">    $staging_arg \</span><br><span class="line">    $email_arg \</span><br><span class="line">    $domain_args \</span><br><span class="line">    --rsa-key-size $rsa_key_size \</span><br><span class="line">    --agree-tos \</span><br><span class="line">    --force-renewal" certbot</span><br><span class="line">echo</span><br><span class="line"></span><br><span class="line">echo "### Reloading nginx ..."</span><br><span class="line">docker-compose exec nginx nginx -s reload</span><br></pre></td></tr></table></figure>
+<p>准备好脚本和 <code>docker-compose.yml</code> 之后，就可以得到网站的证书了</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">.</span><br><span class="line">├── data</span><br><span class="line">│   ├── certbot</span><br><span class="line">│   │   ├── conf</span><br><span class="line">│   │   │   ├── accounts</span><br><span class="line">│   │   │   │   └── acme-v02.api.letsencrypt.org</span><br><span class="line">│   │   │   │       └── directory [error opening dir]</span><br><span class="line">│   │   │   ├── archive [error opening dir]</span><br><span class="line">│   │   │   ├── csr</span><br><span class="line">│   │   │   │   └── 0000_csr-certbot.pem</span><br><span class="line">│   │   │   ├── keys [error opening dir]</span><br><span class="line">│   │   │   ├── live</span><br><span class="line">│   │   │   │   ├── houmin.site</span><br><span class="line">│   │   │   │   │   ├── cert.pem -&gt; ../../archive/houmin.site/cert1.pem</span><br><span class="line">│   │   │   │   │   ├── chain.pem -&gt; ../../archive/houmin.site/chain1.pem</span><br><span class="line">│   │   │   │   │   ├── fullchain.pem -&gt; ../../archive/houmin.site/fullchain1.pem</span><br><span class="line">│   │   │   │   │   ├── privkey.pem -&gt; ../../archive/houmin.site/privkey1.pem</span><br><span class="line">│   │   │   │   │   └── README</span><br><span class="line">│   │   │   │   └── README</span><br><span class="line">│   │   │   ├── options-ssl-nginx.conf</span><br><span class="line">│   │   │   ├── renewal</span><br><span class="line">│   │   │   │   └── houmin.site.conf</span><br><span class="line">│   │   │   ├── renewal-hooks</span><br><span class="line">│   │   │   │   ├── deploy</span><br><span class="line">│   │   │   │   ├── post</span><br><span class="line">│   │   │   │   └── pre</span><br><span class="line">│   │   │   └── ssl-dhparams.pem</span><br><span class="line">│   │   └── www</span><br><span class="line">│   └── nginx</span><br><span class="line">│       └── app.conf</span><br><span class="line">├── docker-compose.yml</span><br><span class="line">└── init-letsencrypt.sh</span><br></pre></td></tr></table></figure>
+<p>这之后，就可以用 <code>docker-compose</code> 启动网站了。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">'3'</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">nginx:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">nginx:1.17-alpine</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">"80:80"</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">"443:443"</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/hexo/public:/usr/share/nginx/html:ro</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/hexo/nginx:/etc/nginx/conf.d</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./data/certbot/conf:/etc/letsencrypt</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./data/certbot/www:/var/www/certbot</span></span><br><span class="line">    <span class="attr">command:</span> <span class="string">"/bin/sh -c 'while :; do sleep 6h &amp; wait $$&#123;!&#125;; nginx -s reload; done &amp; nginx -g \"daemon off;\"'"</span></span><br><span class="line">  <span class="attr">certbot:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">certbot/certbot</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./data/certbot/conf:/etc/letsencrypt</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./data/certbot/www:/var/www/certbot</span></span><br><span class="line">    <span class="attr">entrypoint:</span> <span class="string">"/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h &amp; wait $$&#123;!&#125;; done;'"</span></span><br></pre></td></tr></table></figure>
+<div class="note info">
+            <p>注：如果在申请证书是失败，有可能是因为这个时候 Nginx 没有启动。而 Nginx 没有启动原因有可能是执行</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot/certbot/ssl-dhparams.pem</span><br></pre></td></tr></table></figure><p>命令的时候，在阿里云上 443错误导致没有获得 <code>ssl-dhparams.pem</code> 导致 Nginx 启动失败</p>
+          </div>
+<p>至此，HTTPS已经配置完毕。</p>
+<h3 id="支持-Hexo-Admin"><a href="#支持-Hexo-Admin" class="headerlink" title="支持 Hexo Admin"></a>支持 Hexo Admin</h3><p> 在 <a href="../a63a603e">这篇博文</a> 中，我利用 Hexo Admin 配置了网站后台，但是后来实践起来发现这个功能倒不是很实用，所以在容器化的这篇文章中暂时没有支持 Hexo Admin。等以后如果需要了，可以再配置。</p>
+<h2 id="多版本网站支持"><a href="#多版本网站支持" class="headerlink" title="多版本网站支持"></a>多版本网站支持</h2><p>促成这篇文章最主要的动力，是因为阿里云通知我 <code>houmin.site</code> 这个域名备案成功，让我在 2 月份之前将网站的备案加上。那么现在我拥有两份网站，<code>houmin.cc</code> 和 <code>houmin.site</code>，其中 <code>houmin.site</code> 是 <code>houmin.cc</code> 的备份。其中，<code>houmin.cc</code> 是在 AWS 上，<code>houmin.site</code> 是在阿里云上。等 AWS 的一年免费体验结束之后，我需要把 <code>houmin.cc</code> 也迁移到 <code>houmin.site</code>中，到时候可能需要用 Nginx 做反向代理，或者玩玩 traefik 也不错🤔</p>
+<p>当网站的一切都版本化和容器化之后，多版本网站显得容易了很多。对于两个网站，分别创建两个branch，网站主要内容相同，区别在于</p>
+<ul>
+<li>站点配置文件<ul>
+<li>url 的配置</li>
+<li>Nofollow</li>
+</ul>
+</li>
+<li>NexT 配置文件<ul>
+<li>备案</li>
+<li>SEO推广</li>
+<li>Valine Appid</li>
+</ul>
+</li>
+<li>robots.txt</li>
+</ul>
+<p>针对上述几点配置之后，每次更新的网站的时候，将更新同步到不同的 branch，推送到不同的 git server 就可以了。</p>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/a63a603e/" rel="bookmark">Hexo NexT 深度定制</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d487dd02/" rel="bookmark">Hexo NexT 添加多级相册功能</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/3fcce178/" rel="bookmark">Hexo 插入 Mermaid 图表</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d823886b/" rel="bookmark">Hexo 插入 ECharts 动态图表</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d1848f4f/" rel="bookmark">自动抓取经济学人</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/f5d73ad0/" title="Hexo 博客容器化">http://houmin.cc/posts/f5d73ad0/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Hexo/" rel="tag"><i class="fa fa-tag"></i> Hexo</a>
+              <a href="/tags/container/" rel="tag"><i class="fa fa-tag"></i> container</a>
+              <a href="/tags/docker/" rel="tag"><i class="fa fa-tag"></i> docker</a>
+              <a href="/tags/https/" rel="tag"><i class="fa fa-tag"></i> https</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/c924112f/" rel="next" title="Do You Want To Build A Snowman?">
+                  <i class="fa fa-chevron-left"></i> Do You Want To Build A Snowman?
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/8082c63c/" rel="prev" title="聊聊行业">
+                  聊聊行业 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#模块设计"><span class="nav-number">1.</span> <span class="nav-text">模块设计</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基本功能"><span class="nav-number">2.</span> <span class="nav-text">基本功能</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Git-服务器模块"><span class="nav-number">2.1.</span> <span class="nav-text">Git 服务器模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hexo-解析渲染模块"><span class="nav-number">2.2.</span> <span class="nav-text">Hexo 解析渲染模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Nginx-服务器模块"><span class="nav-number">2.3.</span> <span class="nav-text">Nginx 服务器模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#微服务整合"><span class="nav-number">2.4.</span> <span class="nav-text">微服务整合</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#扩展功能"><span class="nav-number">3.</span> <span class="nav-text">扩展功能</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#支持-HTTPS"><span class="nav-number">3.1.</span> <span class="nav-text">支持 HTTPS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#支持-Hexo-Admin"><span class="nav-number">3.2.</span> <span class="nav-text">支持 Hexo Admin</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多版本网站支持"><span class="nav-number">4.</span> <span class="nav-text">多版本网站支持</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

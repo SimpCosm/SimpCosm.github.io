@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="这里是「朝花夕拾」第十九期，在过去的一周里，我正式入职腾讯。告别学校，步入职场，不管怎么说，这都算得上一次新的起点。与此同时，一年过半，翻翻2020的年初计划，正好可以梳理往者期待未来，再出发，让我们开始传奇2020的下半年。">
+<meta name="keywords" content="职场,个人管理系统,追光计划">
+<meta property="og:type" content="article">
+<meta property="og:title" content="再出发">
+<meta property="og:url" content="http://houmin.cc/posts/4987aa35/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="这里是「朝花夕拾」第十九期，在过去的一周里，我正式入职腾讯。告别学校，步入职场，不管怎么说，这都算得上一次新的起点。与此同时，一年过半，翻翻2020的年初计划，正好可以梳理往者期待未来，再出发，让我们开始传奇2020的下半年。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-06_settle-down.jpg">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-12_kubernetes-skill-map.png">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-12_investment.jpg">
+<meta property="og:updated_time" content="2020-07-20T01:30:36.294Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-06_settle-down.jpg">
+
+<link rel="canonical" href="http://houmin.cc/posts/4987aa35/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>再出发 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/4987aa35/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          再出发
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-12 22:59:21" itemprop="dateCreated datePublished" datetime="2020-07-12T22:59:21+08:00">2020-07-12</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%9D%E8%8A%B1%E5%A4%95%E6%8B%BE/" itemprop="url" rel="index">
+                    <span itemprop="name">朝花夕拾</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/4987aa35/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/4987aa35/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>这里是「朝花夕拾」第十九期，在过去的一周里，我正式入职腾讯。告别学校，步入职场，不管怎么说，这都算得上一次新的起点。与此同时，一年过半，翻翻2020的年初计划，正好可以梳理往者期待未来，再出发，让我们开始传奇2020的下半年。</p>
+<a id="more"></a>
+<h2 id="饮食起居"><a href="#饮食起居" class="headerlink" title="饮食起居"></a>饮食起居</h2><p>这是我整理完毕的工作台，其中购置了墙布用于装饰墙面，购买了可组装的书桌（拼了将近两个小时才拼好），又自己买了ikbc c87的键盘，从姐姐家里带来的蓝牙音响，还有之前买的LAMY钢笔，皮皮送拇指琴，真的是很喜欢很舒适的工作台了。</p>
+<p><img alt="整理完毕的工作台" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-06_settle-down.jpg"></p>
+<p>在上学时曾经期待过工作之后的生活场景，想着是自己每天上能够自己准备早餐，晚上下班后能够自己在家安排自己的生活。但是一周的上班生活马上用现实教育了我，每天早上8.30点出门直接在公司吃早饭，工作到9点半后下班，到家就10点后了，基本上洗漱完后就可以直接睡觉了。做饭这种事情，只能发生在周末了。然而，在入职前我就反了一个错误，一口气买了好多菜，平时也不做，好些都给浪费了。而且，为了简单，平时做的最多的就是面了。不过，不管怎样，总算是开伙了。即使只是在周末下厨，也不能丧失了生活的乐趣了啊，趁这个机会好好学习做菜是一个不错的想法。为此，我特地创建了一个<a href="../../categories/吃顿好的/">「吃顿好的」</a>专栏，用于记录我周末下厨房的菜谱。在后续的工作生涯中，这个专栏会持续更新。</p>
+<h2 id="追光计划"><a href="#追光计划" class="headerlink" title="追光计划"></a>追光计划</h2><p>「追光计划」源自我在微博上看到一个<a href="https://weibo.com/ttarticle/p/show?id=2309404521623347921078" target="_blank" rel="external nofollow noopener noreferrer">摄影师小姐姐</a>为自己在北京最后一段时间留下记录影像的规划，她这样说道</p>
+<blockquote>
+<p>不知道你是否也有过类似的感觉——越是长久的生活在一个城市，反而越少了了解它的冲动。</p>
+<p>就好比在武汉生活的四五年里，我一次都没有去过黄鹤楼，也几乎不去武大。那些外地游客心心念念的美景，本地人好像都因为太过习惯而熟视无睹。</p>
+<p>在北京我也一样。除了故宫外，其他大众或冷门的景点，我鲜少踏足，也很少抓紧特别的天气去拍点什么，总想着：“以后还有机会的”。我拍过很多日出日落，那些绝美的光影，几乎都来自旅途，却独独少了我生活的北京。</p>
+<p>似乎人总是这样，偶尔难得旅行，就总想紧紧抓住异乡风景。会起早贪黑去追逐日出日落，也乐于打卡各种陌生的小众景点。而你生活的地方，却总忘了多看几眼。</p>
+<p>故事的转机发生在我决定离开北京之后。</p>
+</blockquote>
+<p>小姐姐和我有着类似的生活坐标（武汉与北京），直到决定离开北京后才开始意识到好好拍摄北京的风景。我也是一样，本来决定在离校前好好拍摄北大的风光，却也最终没能够实现。在过去的一两周里，我一直在质疑自己，为什么要留在北京呢？在这里呆了都七年了，为什么不换一个地方生活呢？</p>
+<p>想到这里，我给自已一个三年之期：如果在未来三年，我没能够找到留在北京的理由，或者是因为一个人，或者是因为一件事，三年到期之时也许就是我离开北京的日子。不管到时候是否离开，在这三年里，我也有自己的追光计划。我要好好记录在北京的日子，记录那些光影。作为最基本的示例，我开创了一个新的相册，<a href="../../album/知春里知春/">知春里知春</a>，用于记录我在知春里生活的时光。另外，随着追光计划的开展，我也会把那些美丽的景色放到另一个相册，<a href="../../album/Beijing">北京</a> 。</p>
+<h2 id="职业发展"><a href="#职业发展" class="headerlink" title="职业发展"></a>职业发展</h2><p>我职业生涯的正式起点，开启于腾讯云的kubernetes团队。在过去的一周里，我开始阅读kubernetes源码，在阅读的过程中，我越来越感觉到自己积淀的欠缺。不仅是CNCF云原生的生态发展，还有kubernetes本身机制的原理，或者是Go语言的最佳实践，以及Linux操作系统的基础原理，自己都知之甚少。或者说有时候只是知道一些名词，但是对其原理，发展机制都不太了解。</p>
+<p>作为一个工程师，这些技术点是我的立身之本，必须在接下来的一年内能够快速积淀，给自己的职业发展奠定一个扎实的基础。为此，我列出了在接下来两年我要去点亮的技能树，这只是最基础的专业内容。它涉及的范围很广泛，但是要戒骄戒躁，一步一步来。</p>
+<p><img alt="Kubernetes技能树" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-12_kubernetes-skill-map.png"></p>
+<h2 id="运动健身"><a href="#运动健身" class="headerlink" title="运动健身"></a>运动健身</h2><p>在年初的时候，我大言不惭的说：</p>
+<blockquote>
+<p>数据是最重忠实的记录者，每周 3 次跑步，每次 5 公里，期待明年能够达到 700 公里的跑步量。</p>
+</blockquote>
+<p>现在每一次的跑步都是通过Keep记录，翻开Keep，发现上半年的记录只有27公里，真的是完全不达标啊。也许你可以归因于疫情，但是如此懈怠真的太不自律了。下半年开始，发现在公司地下有免费健身房，正好可以每天中午午饭时间去跑一个小时的步。按照下半年25周，每周5次每次5公里的跑步记录，勉强可以达到625公里的目标。如果再加上周末的户外跑步，比如附近的人民大学，海淀黄庄一带，可以大体满足700公里的目标，加油呀！</p>
+<h2 id="阅读观影"><a href="#阅读观影" class="headerlink" title="阅读观影"></a>阅读观影</h2><p>翻了翻豆瓣，上半年的阅读依旧还是颗粒无收。主要还是没有一个Read List，也没有一个阅读规划，匆匆半年过去，一本书也没读过很正常。预计下半年看书还是会很少，更多的看的是专业相关的技术文档的内容。</p>
+<p>至于观影，上半年看了很多金融相关的电影和纪录片，比如大空头等，对金融与市场有了更多的认识。另外，还入坑了「Rick and Morty」，这个系列可以慢慢刷。不知道为什么，现在好像对刷新的剧没有了之前那么大的激情，更多的是看木鱼和电影最Top对电影的讲解，整体开始偏快餐。</p>
+<h2 id="行万里路"><a href="#行万里路" class="headerlink" title="行万里路"></a>行万里路</h2><p>在年初的时候，我给自己计划了两场旅行：</p>
+<ul>
+<li>和家里的春节南国之旅</li>
+<li>和鹏飞的节后湖南之行</li>
+</ul>
+<p>然而这场疫情改变了一切，上半年创造了上大学以后呆在家的最长纪录，从1.19到5.7的一百多天。之后，我去杭州呆了两个月，好好逛了逛杭州，见识了西湖之美。本来计划的毕业旅行也因为一再爆发的疫情而最终取消，残念。</p>
+<p>今年下半年，有意去新疆走一趟，趁着国庆，看看壮美的新疆，期待最终能够成行。作为一个已经毕业的人，除了国庆之外，已经没有了出去玩的机会，想一想真是心酸。不管怎么样，国庆一定要出去走走，可不能浪费这次假期。</p>
+<h2 id="投资理财"><a href="#投资理财" class="headerlink" title="投资理财"></a>投资理财</h2><p>去年年末给自己定了一个理财的小目标：</p>
+<blockquote>
+<p>给自己定一个小目标，期待自己明年在投资上至少能够有 20 个点的收入，最好能够到 40 个点的收入。</p>
+</blockquote>
+<p>截止到现在，得益于行情好，已经获得了40个点的收益，希望可以在后面半年继续努力：）整体来说，上半年还是偏保守，在2.3春节开盘千股跌停的那天，我几近满仓。然而后面行情低迷是多年不遇的打底没敢全仓进入，只是半仓观望。加上进入资金也不多，最后的收益其实了了。</p>
+<p><img alt="2020上半年收益曲线" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-12_investment.jpg"></p>
+<p>关于理论知识，上半年在疫情期间听了徐高老师的「宏观经济十六讲中国专题」，看了一些炒股的基础知识，但是一直没有落实成文本的形式积淀下来，下半年在空余时间要在落实层面做到更好。毕竟，现在的股票买卖还是没有任何理论依据，选股的原因，买入的时机，抛出的选择都十分无脑，有时候迷之自信，没有任何逻辑。构建自己的交易体系，长路漫漫。</p>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>卡林巴琴停了很久，年初的规划仍在，今天又弹了段「青花瓷」，找回了感觉，下半年的音乐计划继续。</p>
+<p>2020上半年继续单身，工作以后社交状态越发封闭，这段时间先好好调整自己的状态吧，期待在工作上更好的适应，做出自己的成绩。</p>
+<p>这次的半年总结拖了两个星期，工作和生活开始慢慢进入状态，继续加油呀，努力做更好的自己：）</p>
+
+    </div>
+
+    
+    
+    
+      
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/4987aa35/" title="再出发">http://houmin.cc/posts/4987aa35/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E8%81%8C%E5%9C%BA/" rel="tag"><i class="fa fa-tag"></i> 职场</a>
+              <a href="/tags/%E4%B8%AA%E4%BA%BA%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F/" rel="tag"><i class="fa fa-tag"></i> 个人管理系统</a>
+              <a href="/tags/%E8%BF%BD%E5%85%89%E8%AE%A1%E5%88%92/" rel="tag"><i class="fa fa-tag"></i> 追光计划</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/d8b96fe4/" rel="next" title="【Kubernetes解读】开篇">
+                  <i class="fa fa-chevron-left"></i> 【Kubernetes解读】开篇
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/1f0eb2ff/" rel="prev" title="【Kubernetes解读】List/Watch机制和Informer模块详解">
+                  【Kubernetes解读】List/Watch机制和Informer模块详解 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#饮食起居"><span class="nav-number">1.</span> <span class="nav-text">饮食起居</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#追光计划"><span class="nav-number">2.</span> <span class="nav-text">追光计划</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#职业发展"><span class="nav-number">3.</span> <span class="nav-text">职业发展</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#运动健身"><span class="nav-number">4.</span> <span class="nav-text">运动健身</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#阅读观影"><span class="nav-number">5.</span> <span class="nav-text">阅读观影</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#行万里路"><span class="nav-number">6.</span> <span class="nav-text">行万里路</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#投资理财"><span class="nav-number">7.</span> <span class="nav-text">投资理财</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#写在最后"><span class="nav-number">8.</span> <span class="nav-text">写在最后</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">106</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">385k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:40</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>
