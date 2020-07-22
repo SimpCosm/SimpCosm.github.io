@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="本文总结了一些常见的Linux系统监控指标，和它们的计算方式，作为备忘笔记。">
+<meta name="keywords" content="linux,monitor,stats">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【备忘录】Linux常见监控指标">
+<meta property="og:url" content="http://houmin.cc/posts/7f85cd98/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="本文总结了一些常见的Linux系统监控指标，和它们的计算方式，作为备忘笔记。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-07-22T03:32:59.443Z">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://houmin.cc/posts/7f85cd98/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【备忘录】Linux常见监控指标 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/7f85cd98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【备忘录】Linux常见监控指标
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-21 17:19:53" itemprop="dateCreated datePublished" datetime="2020-07-21T17:19:53+08:00">2020-07-21</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/7f85cd98/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/7f85cd98/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>6.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>12 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文总结了一些常见的Linux系统监控指标，和它们的计算方式，作为备忘笔记。</p>
+<a id="more"></a>
+<h2 id="CPU使用率"><a href="#CPU使用率" class="headerlink" title="CPU使用率"></a>CPU使用率</h2><p>CPU使用率衡量的是<strong>程序运行占用的CPU百分比</strong>。Linux的CPU使用率信息可以通过/proc/stat文件计算得到。<code>/proc/stat</code>包含了所有CPU活动的信息，该文件中的所有值都是从系统启动开始累计的，单位为jiffies。如下图所示，cpu一行指的是总的CPU信息，cpu0、cpu1、cpu2、cpu3几行指的是CPU各个核的CPU信息。从这里也可以看出这台服务器共有4个核。每列从左到右的<a href="https://man7.org/linux/man-pages/man5/proc.5.html" target="_blank" rel="external nofollow noopener noreferrer">意思</a>为</p>
+<ul>
+<li><strong>user：</strong>从系统启动开始累计到当前时刻，用户态的CPU时间 ，不包含nice值为负进程所占用的时间</li>
+<li><strong>nice：</strong>从系统启动开始累计到当前时刻，nice值为负的进程所占用的CPU时间</li>
+<li><strong>system：</strong>从系统启动开始累计到当前时刻，内核态时间</li>
+<li><strong>idle：</strong>从系统启动开始累计到当前时刻，除硬盘IO等待时间以外其它等待时间</li>
+<li><strong>iowait：</strong>从系统启动开始累计到当前时刻，硬盘IO等待时间</li>
+<li><strong>irq：</strong>从系统启动开始累计到当前时刻，硬中断时间</li>
+<li><strong>softirq：</strong>从系统启动开始累计到当前时刻，软中断时间</li>
+<li><strong>steal：</strong>在虚拟环境下 CPU 花在处理其他操作系统的时间，Linux 2.6.11 开始才开始支持。</li>
+<li><strong>guest：</strong>在 Linux 内核控制下 CPU 为 guest 操作系统运行虚拟 CPU 的时间，Linux 2.6.24 开始才开始支持。</li>
+<li><strong>guest_nice:</strong> 在 Linux 内核控制下 CPU 为 guest 操作系统在虚拟 CPU 中运行nice进程的时间，Linux 2.6.33 开始才开始支持。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ cat /proc/<span class="built_in">stat</span> | grep cpu</span><br><span class="line">cpu  180296 204 123070 30283108 13956 0 2046 0 0 0</span><br><span class="line">cpu0 45360 53 30785 7560073 10631 0 771 0 0 0</span><br><span class="line">cpu1 45266 47 30779 7573915 1373 0 508 0 0 0</span><br><span class="line">cpu2 44442 54 30724 7574282 1257 0 405 0 0 0</span><br><span class="line">cpu3 45228 48 30781 7574835 693 0 360 0 0 0</span><br></pre></td></tr></table></figure>
+<p>根据这些信息，就可以计算出CPU使用率。网管Agent的CPU使用率采集算法如下（以CPU0为例）：</p>
+<ul>
+<li>cat /proc/stat | grep ‘cpu0’得到cpu0的信息</li>
+<li>cpu_total1=user+nice+system+idle+iowait+irq+softirq</li>
+<li>cpu_used1=user+nice+system+irq+softirq</li>
+<li>sleep 15秒</li>
+<li>再次cat /proc/stat | grep ‘cpu0’得到cpu的信息</li>
+<li>cpu_total2=user+nice+system+idle+iowait+irq+softirq</li>
+<li>cpu_used2=user+nice+system+irq+softirq</li>
+<li>得到cpu0在15秒内的平均使用率：(cpu_used2 - cpu_used1) / (cpu_total2 - cpu_total1) * 100%</li>
+</ul>
+<p>每分钟会采集4次15秒内的CPU平均使用率。为了避免漏采集CPU峰值，可以取这一分钟内四次采集的最大值上报。</p>
+<h2 id="CPU负载"><a href="#CPU负载" class="headerlink" title="CPU负载"></a>CPU负载</h2><p>系统负载指的是计算机系统执行计算工作的表现，CPU负载指的是在一段时间内计算机的系统负载，一般用1分钟内、5分钟内、15分钟内这三个数字衡量。通过<code>uptime</code>命令可以显示CPU负载。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ uptime</span><br><span class="line"> 14:34:03 up 10:43,  4 users,  load average: 0.06, 0.11, 0.09</span><br></pre></td></tr></table></figure>
+<ul>
+<li>对于单核单CPU，CPU负载为0表示CPU完全空闲，CPU负载为1.00表示CPU恰好发挥其最大能力，CPU负载大于1表示系统过载，有进程正在等待调度</li>
+<li>对于多核或者多CPU系统，CPU负载为每个核的CPU负载总和</li>
+</ul>
+<p>关于CPU负载的计算机制，可以参考我的另一篇<a href="../">博客</a>。</p>
+<h2 id="内存"><a href="#内存" class="headerlink" title="内存"></a>内存</h2><p> <code>free</code>命令通过读取 <code>/proc/meminfo</code>，可以显示系统中的使用的和空闲的物理内存、Swap内存，同时也可以显示内核使用的buffer和cache，如下图所示。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ free -w</span><br><span class="line">              total        used        free      shared     buffers       cache   available</span><br><span class="line">Mem:        7773244      311800     2456280         872      233560     4771604     7169352</span><br><span class="line">Swap:             0           0           0</span><br></pre></td></tr></table></figure>
+<p>其中各个字段意义为：</p>
+<ul>
+<li>total：所有可以使用的内存（包括/proc/meminfo中的MemTotal和SwapTotal）</li>
+<li>used：使用的内存，通过 <code>total - free - buffers - cache</code> 计算得到</li>
+<li>free：没有使用的内存（包括/proc/meminfo中的MemFree和SwapFree）</li>
+<li>shared：主要是指tmpfs使用的内存，现在已经废弃不用，总是为0</li>
+<li>buffers：被内核Buffers使用的内存</li>
+<li>cache：被内核的Page Cache和Slab使用的内存</li>
+<li>buff/cache：buffers和cache的总和</li>
+<li>available：对于开启一个新的应用还能使用多少内存的估计，不同于cache和free内存外，还考虑了page cache和可再回收的slab内存</li>
+</ul>
+<h2 id="磁盘IO"><a href="#磁盘IO" class="headerlink" title="磁盘IO"></a>磁盘IO</h2><p>可以通过 <code>iostat</code>命令来监测磁盘的IO活动，它通过读取 <code>/proc/diskstats</code>文件来获取相关信息。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># cat /proc/diskstats</span></span><br><span class="line">3    0   hda 446216 784926 9550688 4382310 424847 312726 5922052 19310380 0 3376340 23705160 0 0 0 0</span><br></pre></td></tr></table></figure>
+<p>hda后的各个参数含义如下：</p>
+<figure class="highlight monkey"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">Field</span>  <span class="number">1</span> --<span class="meta"> # of reads completed</span></span><br><span class="line"><span class="keyword">Field</span>  <span class="number">2</span> --<span class="meta"> # of reads merged, field 6 -- # of writes merged</span></span><br><span class="line">	为了提高IO的效率，两个相邻的读写操作会被合并，所以两个<span class="number">4</span>K的读操作在提交给磁盘之前会被合并为一个<span class="number">8</span>K的读操作，杜宇磁盘来说只会视作只有一个读操作。</span><br><span class="line"><span class="keyword">Field</span>  <span class="number">3</span> --<span class="meta"> # of sectors read</span></span><br><span class="line"><span class="keyword">Field</span>  <span class="number">4</span> --<span class="meta"> # of milliseconds spent reading</span></span><br><span class="line"><span class="keyword">Field</span>  <span class="number">5</span> --<span class="meta"> # of writes completed</span></span><br><span class="line"><span class="keyword">Field</span>  <span class="number">6</span> --<span class="meta"> # of writes merged</span></span><br><span class="line"><span class="keyword">Field</span>  <span class="number">7</span> --<span class="meta"> # of sectors written</span></span><br><span class="line"><span class="keyword">Field</span>  <span class="number">8</span> --<span class="meta"> # of milliseconds spent writing</span></span><br><span class="line"><span class="keyword">Field</span>  <span class="number">9</span> --<span class="meta"> # of I/Os currently in progress</span></span><br><span class="line"><span class="keyword">Field</span> <span class="number">10</span> --<span class="meta"> # of milliseconds spent doing I/Os</span></span><br><span class="line"><span class="keyword">Field</span> <span class="number">12</span> --<span class="meta"> # of discards completed</span></span><br><span class="line"><span class="keyword">Field</span> <span class="number">13</span> --<span class="meta"> # of discards merged</span></span><br><span class="line"><span class="keyword">Field</span> <span class="number">14</span> --<span class="meta"> # of sectors discarded</span></span><br><span class="line"><span class="keyword">Field</span> <span class="number">15</span> --<span class="meta"> # of milliseconds spent discarding</span></span><br></pre></td></tr></table></figure>
+<p>跟记录CPU信息的/proc/stat文件一样，/proc/diskstats中每个字段的数值也是从系统启动后一直累加的。通过这些参数，可以计算出通过 <code>iostat</code>命令算出的参数，具体可以参考<a href="../#iostat">iostat</a> 。我们用delta来表示在时间t内某个字段的增量。例如<strong>定义delta(reads merged)为当前reads merged的值减去t秒前reads merged的值</strong>。</p>
+<ul>
+<li>rrqm/s：delta(<em>reads merged</em>) / t  （得到时间t内平均每秒reads merged的值）</li>
+<li>wrqm/s：delta(<em>writes merged</em>) / t</li>
+<li>r/s：delta(<em>reads completed</em>) / t</li>
+<li>w/s：delta(<em>writes completed</em>) / t</li>
+<li>rsec/s：delta(<em>sectors read</em>) / t</li>
+<li>wsec/s：delta(<em>sectors written</em>) / t</li>
+<li>rkB/s：delta(<em>sectors read</em>) / t / 2  （因为1 扇区为512字节，所以rkB/s为rsec/s的一半）</li>
+<li>wkB/s：delta(<em>sectors written</em>) / t / 2</li>
+<li>avgrq-sz：(delta(<em>sectors read</em>) + delta(<em>sectors written</em>)) / (delta(<em>reads completed</em>) + delta(<em>writes completed</em>))</li>
+<li><strong>avgqu-sz</strong>：<em>*delta(</em>weighted time spent doing I/Os*) / t / 1000 （单位为毫秒，所以除以1000）</li>
+<li><strong>await：</strong>(delta(<em>time spent reading</em>) + delta(<em>time spent writing</em>)) / (delta(<em>reads completed</em>) + delta(<em>writes completed</em>))</li>
+<li><strong>svctm：</strong>delta(<em>time spent doing I/Os</em>)/ (delta(<em>reads completed</em>) + delta(<em>writes completed</em>))**</li>
+<li><strong>%util：</strong>delta(<em>time spent doing I/Os</em>) / t / 1000 * 100%</li>
+</ul>
+<p>所有磁盘汇总采集项：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>采集项</th>
+<th>采集项说明</th>
+<th>是否乘以100以保留精度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>avgqu_sz_max</td>
+<td>所有磁盘avgqu_sz最大值</td>
+<td>是</td>
+</tr>
+<tr>
+<td>svctm_time_max</td>
+<td>所有磁盘svctm最大值</td>
+<td>是</td>
+</tr>
+<tr>
+<td>await_time_max</td>
+<td>所有磁盘await最大值</td>
+<td>是</td>
+</tr>
+<tr>
+<td>util_max</td>
+<td>所有磁盘%util最大值</td>
+<td>否</td>
+</tr>
+<tr>
+<td>disk_total_read</td>
+<td>所有磁盘的r/s总和</td>
+<td>是</td>
+</tr>
+<tr>
+<td>disk_total_write</td>
+<td>所有磁盘的w/s总和</td>
+<td>是</td>
+</tr>
+<tr>
+<td>磁盘IO disk_block_in</td>
+<td>所有磁盘的rkB/s总和。bi即block in，表示从块设备（如磁盘）读取的块数。Linux块设备的块大小都为1024字节，所以disk_bi等于rkB/s。</td>
+<td>否</td>
+</tr>
+<tr>
+<td>磁盘IO disk_block_out</td>
+<td>所有磁盘的rkB/s总和bo即block out，表示发给块设备的块数，即写磁盘。Linux块设备的块大小都为1024字节，所以disk_bi等于wkB/s。</td>
+<td>否</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>单个磁盘采集项：</p>
+<p>对于安装了1个以上的磁盘的服务器，可以采集单个磁盘的IO数据。最多支持24个盘。</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>采集项</th>
+<th>采集项说明</th>
+<th>是否乘以100以保留精度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>disk_n_util（n为0-23）</td>
+<td>第n个磁盘的%util值</td>
+<td>否</td>
+</tr>
+<tr>
+<td>disk_n_await</td>
+<td>第n个磁盘的await值</td>
+<td>是</td>
+</tr>
+<tr>
+<td>disk_n_read</td>
+<td>第n个磁盘的r/s值</td>
+<td>是</td>
+</tr>
+<tr>
+<td>disk_n_write</td>
+<td>第n个磁盘的w/s值</td>
+<td>是</td>
+</tr>
+<tr>
+<td>disk_n_block_in</td>
+<td>第n个磁盘的rkB/s值</td>
+<td>否</td>
+</tr>
+<tr>
+<td>disk_n_block_out</td>
+<td>第n个磁盘的wkB/s值</td>
+<td>否</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="网络IO"><a href="#网络IO" class="headerlink" title="网络IO"></a>网络IO</h2><h3 id="流量包量"><a href="#流量包量" class="headerlink" title="流量包量"></a>流量包量</h3><p>通过<code>/proc/net/dev</code>文件，可以计算出服务器的流量及包量。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># cat /proc/net/dev</span></span><br><span class="line">Inter-|   Receive                                                |  Transmit</span><br><span class="line"> face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed</span><br><span class="line">    lo:   69570    1756    0    0    0     0          0         0    69570    1756    0    0    0     0       0          0</span><br><span class="line">  eth0: 2012939491 4197833    0    0    0     0          0         0 277523863 3280731    0    0    0     0       0          0</span><br><span class="line">docker0:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0</span><br></pre></td></tr></table></figure>
+<p>与记录CPU信息的 <code>/proc/stat</code>文件类似，<code>/proc/net/dev</code>中的数值，也是从系统启动后一直累加的。</p>
+<p>计算网卡流量方法如下：</p>
+<ul>
+<li>读取/proc/net/dev文件，获取eth0的Receive bytes、Receive packets、Transmit bytes、Transmit packets，分别记为receive_bytes0、receive_packets0、transmit_bytes0、transmit_packets0</li>
+<li>sleep 60秒</li>
+<li>再次读取/proc/net/dev文件，获取eth0的Receive bytes、Receive packets、Transmit bytes、Transmit packets，分别记为receive_bytes1、receive_packets1、transmit_bytes1、transmit_packets1</li>
+<li>根据60秒前后的/proc/net/dev文件，便可计算出下面的指标：<ul>
+<li>60秒内平均每秒入流量：(receive_bytes1 - receive_bytes0) * 8 / 60 / 1000 （kbps）（乘以8是为了把bytes转成bit，除以1000是为了把单位转成k，除以60则是取60秒内的平均值）</li>
+<li>60 秒内平均每秒出流量：(transmit_bytes1 - transmit_bytes0) * 8 / 60 / 1000 （kbps）</li>
+<li>60秒内平均每秒入包数：(receive_packets1 - receive_packets0) / 60 （个）</li>
+<li>60秒内平均每秒出包数：(transmit_packets1 - transmit_packets0) / 60 （个）</li>
+</ul>
+</li>
+</ul>
+<h3 id="TCP连接数"><a href="#TCP连接数" class="headerlink" title="TCP连接数"></a>TCP连接数</h3><p><code>/proc/net/snmp</code>记录了一些TCP信息，其中比较有用的是 <code>CurrEstab</code>字段，即当前已建立的TCP连接数。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># cat /proc/net/snmp</span></span><br><span class="line">Ip: Forwarding DefaultTTL InReceives InHdrErrors InAddrErrors ForwDatagrams InUnknownProtos InDiscards InDelivers OutRequests OutDiscards OutNoRoutes ReasmTimeout ReasmReqds ReasmOKs ReasmFails FragOKs FragFails FragCreates</span><br><span class="line">Ip: 1 64 3527912 0 23 1893737 0 0 1634151 3266670 18 40 0 0 0 0 0 0 0</span><br><span class="line">Icmp: InMsgs InErrors InCsumErrors InDestUnreachs InTimeExcds InParmProbs InSrcQuenchs InRedirects InEchos InEchoReps InTimestamps InTimestampReps InAddrMasks InAddrMaskReps OutMsgs OutErrors OutDestUnreachs OutTimeExcds OutParmProbs OutSrcQuenchs OutRedirects OutEchos OutEchoReps OutTimestamps OutTimestampReps OutAddrMasks OutAddrMaskReps</span><br><span class="line">Icmp: 92566 32 0 65 0 0 0 0 92501 0 0 0 0 0 93265 0 746 0 0 0 18 0 92501 0 0 0 0</span><br><span class="line">IcmpMsg: InType3 InType8 OutType0 OutType3 OutType5</span><br><span class="line">IcmpMsg: 65 92501 92501 746 18</span><br><span class="line">Tcp: RtoAlgorithm RtoMin RtoMax MaxConn ActiveOpens PassiveOpens AttemptFails EstabResets CurrEstab InSegs OutSegs RetransSegs InErrs OutRsts InCsumErrors</span><br><span class="line">Tcp: 1 200 120000 -1 65567 687 59 249 8 1516787 1268763 805 4 33191 4</span><br><span class="line">Udp: InDatagrams NoPorts InErrors OutDatagrams RcvbufErrors SndbufErrors InCsumErrors IgnoredMulti</span><br><span class="line">Udp: 22034 822 0 21968 0 0 0 0</span><br><span class="line">UdpLite: InDatagrams NoPorts InErrors OutDatagrams RcvbufErrors SndbufErrors InCsumErrors IgnoredMulti</span><br><span class="line">UdpLite: 0 0 0 0 0 0 0 0</span><br></pre></td></tr></table></figure>
+<h3 id="UDP接收和发送数据报"><a href="#UDP接收和发送数据报" class="headerlink" title="UDP接收和发送数据报"></a>UDP接收和发送数据报</h3><p><code>/proc/net/snmp</code>还记录了一些UDP信息，其中比较有用的是<code>InDatagrams</code>及<code>OutDatagrams</code>字段。 </p>
+<p>UDP接收和发送数据报计算方法与 <code>/proc/net/dev</code>类似，步骤如下：</p>
+<ul>
+<li>读取/proc/net/snmp得到InDatagrams及OutDatagrams，分别记为in_data0和out_data0</li>
+<li>Sleep 240秒</li>
+<li>再次读取/proc/net/snmp得到InDatagrams及OutDatagrams，分别记为in_data1和out_data1</li>
+<li>根据240秒前后的/proc/net/snmp文件，便可计算下面两个指标：<ul>
+<li>240秒内平均每秒UDP入数据报：(in_data1 - in_data0) / 240</li>
+<li>240秒内平均每秒UDP出数据报：(out_data1 - out_data0) / 240</li>
+</ul>
+</li>
+<li>UDP数据每240上报一次。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/f8586b35/" rel="bookmark">Shell笔记</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/f2195e8a/" rel="bookmark">GDB笔记</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/7c0e6000/" rel="bookmark">理解 initramfs</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/63a566a0/" rel="bookmark">Ubuntu自动选择镜像源</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/e27e5d75/" rel="bookmark">Linux启动过程</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/7f85cd98/" title="【备忘录】Linux常见监控指标">http://houmin.cc/posts/7f85cd98/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/linux/" rel="tag"><i class="fa fa-tag"></i> linux</a>
+              <a href="/tags/monitor/" rel="tag"><i class="fa fa-tag"></i> monitor</a>
+              <a href="/tags/stats/" rel="tag"><i class="fa fa-tag"></i> stats</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/1f0eb2ff/" rel="next" title="【Kubernetes解读】List/Watch机制和Informer模块详解">
+                  <i class="fa fa-chevron-left"></i> 【Kubernetes解读】List/Watch机制和Informer模块详解
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU使用率"><span class="nav-number">1.</span> <span class="nav-text">CPU使用率</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU负载"><span class="nav-number">2.</span> <span class="nav-text">CPU负载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内存"><span class="nav-number">3.</span> <span class="nav-text">内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#磁盘IO"><span class="nav-number">4.</span> <span class="nav-text">磁盘IO</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#网络IO"><span class="nav-number">5.</span> <span class="nav-text">网络IO</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#流量包量"><span class="nav-number">5.1.</span> <span class="nav-text">流量包量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP连接数"><span class="nav-number">5.2.</span> <span class="nav-text">TCP连接数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#UDP接收和发送数据报"><span class="nav-number">5.3.</span> <span class="nav-text">UDP接收和发送数据报</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">61</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">108</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">394k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:57</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>
