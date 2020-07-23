@@ -1,5 +1,0 @@
----
-title: 相册
-layout: "album"
-comments: false
----
