@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="当我们学习一门新的编程语言时，你需要设置好编程环境，然后打印出Hello World，接下来就可以学习各种语法规则了。与编程一样，搬进出租屋后，我也很快配置好了各种厨具和基本的柴米油盐，具备了条件一道最简单饭菜的条件。但是，学习编程并不仅仅只是为了打印Hello World，你还需要学习各种语法规则，编程技巧，甚至一些「语法糖」，让你的编程更加自然流畅。对于下厨而言，我们的菜谱就像语法规则，而那些">
+<meta name="keywords" content="下厨房">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【下厨房】酸甜麻辣咸">
+<meta property="og:url" content="http://houmin.cc/posts/8f35743d/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="当我们学习一门新的编程语言时，你需要设置好编程环境，然后打印出Hello World，接下来就可以学习各种语法规则了。与编程一样，搬进出租屋后，我也很快配置好了各种厨具和基本的柴米油盐，具备了条件一道最简单饭菜的条件。但是，学习编程并不仅仅只是为了打印Hello World，你还需要学习各种语法规则，编程技巧，甚至一些「语法糖」，让你的编程更加自然流畅。对于下厨而言，我们的菜谱就像语法规则，而那些">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://pic1.zhimg.com/v2-f828837cbf0cf989cfb25b5b1bbdac78_b.webp">
+<meta property="og:image" content="https://pic3.zhimg.com/v2-73bbb13a22c0b7fd1ec322934b73c1ec_b.jpg">
+<meta property="og:image" content="https://pic1.zhimg.com/v2-3a5d4fa5e12fd226862b423e39baf703_b.jpg">
+<meta property="og:image" content="https://pic3.zhimg.com/v2-0af08e21b39bc930a099b05f35c3ccfa_b.jpg">
+<meta property="og:image" content="https://pic2.zhimg.com/v2-471d6358a188a14ebf240fa500d0164f_b.jpg">
+<meta property="og:updated_time" content="2020-07-25T14:18:13.599Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://pic1.zhimg.com/v2-f828837cbf0cf989cfb25b5b1bbdac78_b.webp">
+
+<link rel="canonical" href="http://houmin.cc/posts/8f35743d/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【下厨房】酸甜麻辣咸 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/8f35743d/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【下厨房】酸甜麻辣咸
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-13 21:21:43" itemprop="dateCreated datePublished" datetime="2020-07-13T21:21:43+08:00">2020-07-13</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%90%83%E9%A1%BF%E5%A5%BD%E7%9A%84/" itemprop="url" rel="index">
+                    <span itemprop="name">吃顿好的</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/8f35743d/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/8f35743d/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>6 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>当我们学习一门新的编程语言时，你需要设置好编程环境，然后打印出<code>Hello World</code>，接下来就可以学习各种语法规则了。与编程一样，搬进出租屋后，我也很快配置好了各种厨具和基本的柴米油盐，具备了条件一道最简单饭菜的条件。但是，学习编程并不仅仅只是为了打印<code>Hello World</code>，你还需要学习各种语法规则，编程技巧，甚至一些「语法糖」，让你的编程更加自然流畅。对于下厨而言，我们的菜谱就像语法规则，而那些调味料就是我们的语法糖。用好调料可以为我们制作出酸甜麻辣咸等各种美味的口感，还可以为饭菜增色增香。本期是「吃顿好的」第一篇，用于介绍生活中常见的各种调料的功能与用法，内容转自「美食作家王刚」。</p>
+<a id="more"></a>
+<h2 id="基本调料"><a href="#基本调料" class="headerlink" title="基本调料"></a>基本调料</h2><h3 id="食盐"><a href="#食盐" class="headerlink" title="食盐"></a>食盐</h3><ul>
+<li>盐乃百味之首，主要用于调出咸味。</li>
+<li>做菜时，<strong>在多数情况下</strong>都是在<strong>最后调味阶段再放盐</strong>的，例如炒菜、炖汤、炖菜时，因为这样可以保证盐不会破坏掉其他的味道，也可以保证碘元素少挥发，还能保证菜品不会过咸。</li>
+<li>但如果在准备<strong>食材时需要提前入味</strong>的情况下，就<strong>需要先放盐了</strong>，例如蒸肉、蒸鱼。</li>
+</ul>
+<p><img alt="盐" data-src="https://pic1.zhimg.com/v2-f828837cbf0cf989cfb25b5b1bbdac78_b.webp"></p>
+<h3 id="酱油"><a href="#酱油" class="headerlink" title="酱油"></a>酱油</h3><ul>
+<li>我国传统调料，主要用来增咸提鲜。酱油可分为生抽和老抽。</li>
+<li><strong>老抽</strong>吃到嘴里很浓稠，一般用于给食物上色提鲜。</li>
+<li><strong>生抽</strong>颜色比较淡，味道稍咸，主要用来调味，炒菜或者凉拌菜的时候用得比较多。</li>
+</ul>
+<h3 id="鸡精和味精"><a href="#鸡精和味精" class="headerlink" title="鸡精和味精"></a>鸡精和味精</h3><ul>
+<li>调鲜专用，主要成分都是谷氨酸钠，两者其实在原料上差别不大，只是口感上，<strong>鸡精更鲜，更有风味</strong>。</li>
+<li>值得一提的是，<strong>鸡精和味精其实真的不会致癌</strong>，所以正常做菜使用是没有问题的！</li>
+</ul>
+<p><strong>使用鸡精和味精的注意事项：</strong></p>
+<ul>
+<li>高汤烹制的菜肴不必使用，因为已经很鲜美了；</li>
+<li>酸性强的菜肴，如糖醋、醋溜菜等不宜使用；</li>
+<li>腌菜不要使用味精；</li>
+<li>不宜过早放味精，要在将出锅时放入；</li>
+<li>如果用于凉拌菜，可以先溶解再使用;</li>
+<li>不能在高温下使用。</li>
+</ul>
+<p><img alt="鸡精和味精" data-src="https://pic3.zhimg.com/v2-73bbb13a22c0b7fd1ec322934b73c1ec_b.jpg"></p>
+<h3 id="醋"><a href="#醋" class="headerlink" title="醋"></a>醋</h3><p>我国古代传统调味料之一。有三千多年的历史。醋在分类上通常有以下几类：<strong>米醋、陈醋、白醋。</strong></p>
+<ul>
+<li><strong>米醋</strong>的口感更好，口感酸甜，可用于糖醋排骨。</li>
+<li><strong>陈醋</strong>酸味很浓烈，很开胃，基本上可用于各种常见的调味。</li>
+<li><strong>白醋</strong>的酸味口感较淡，多用于凉拌菜或西餐的使用。</li>
+</ul>
+<p><strong>下面总结一下醋的各种常见功能：</strong></p>
+<ul>
+<li><strong>去腥去膻：</strong>做鱼做羊的时候可加入少许醋去除异味</li>
+<li><strong>减少辣味：</strong>如果炒菜时不小心辣椒放多了，可以放一些醋减少辣味</li>
+<li><strong>增香：</strong>做菜时候加入少许醋，可以增加菜肴香味并减少油腻程度</li>
+<li><strong>催熟：</strong>炖牛羊肉的时候加一点醋能够让菜肴熟得更快</li>
+<li><strong>增甜：</strong>南方朋友做甜粥的时候加入少许醋可以使粥更甜</li>
+</ul>
+<p><img alt="醋" data-src="https://pic1.zhimg.com/v2-3a5d4fa5e12fd226862b423e39baf703_b.jpg"></p>
+<h3 id="糖"><a href="#糖" class="headerlink" title="糖"></a>糖</h3><ul>
+<li><p>增甜味的调料，常见的种类有白糖、红糖、冰糖。</p>
+<ul>
+<li>一般使用白糖作为调料。</li>
+<li>红糖可以补血破淤具有益气、缓中、助脾化食的作用。</li>
+<li>冰糖可以去痰止咳，一般可用于制作红烧类菜肴时增加色泽及口感，也可用于制作甜品。</li>
+</ul>
+</li>
+<li><p>少许白糖可以提鲜。</p>
+</li>
+<li><p>白糖还可以综合酸味，可做醋溜系的菜。</p>
+</li>
+<li><p>由于糖的特性，可做拔丝香蕉等“拔丝类”菜肴</p>
+</li>
+<li><p>挂霜：白糖入锅，加入适量清水，熬至水近干时，倒入经烘烤或油炸过的原料，离火，翻拌，冷却后，成品表面即似白霜状。如糖霜花生、糖山楂、糖霜核桃等。</p>
+</li>
+<li><p>炒糖色：广泛用于卤菜、红烧菜的调色、如红烧猪蹄、红烧排骨等。</p>
+</li>
+<li><p>糖醋菜系必备，开胃可口。</p>
+<p><img alt="糖" data-src="https://pic3.zhimg.com/v2-0af08e21b39bc930a099b05f35c3ccfa_b.jpg"></p>
+</li>
+</ul>
+<h2 id="酒类"><a href="#酒类" class="headerlink" title="酒类"></a>酒类</h2><h3 id="料酒"><a href="#料酒" class="headerlink" title="料酒"></a><strong>料酒</strong></h3><ul>
+<li><strong>去腥</strong>专家，很多肉类、内脏等食材在初加工时，都会使用料酒去腥。</li>
+<li>例如在<strong>炒鸡蛋的时候加入少许料酒也可以去腥提香</strong></li>
+</ul>
+<h3 id="啤酒"><a href="#啤酒" class="headerlink" title="啤酒"></a><strong>啤酒</strong></h3><ul>
+<li>硬菜会用啤酒去腥、调味，请家里常备“宽啤酒”</li>
+</ul>
+<h3 id="高度白酒"><a href="#高度白酒" class="headerlink" title="高度白酒"></a><strong>高度白酒</strong></h3><ul>
+<li>去除腥味较重的食物时可以用到</li>
+</ul>
+<h2 id="酱类"><a href="#酱类" class="headerlink" title="酱类"></a>酱类</h2><p>酱类调料：各类以酱为形式的调料</p>
+<h3 id="豆瓣酱"><a href="#豆瓣酱" class="headerlink" title="豆瓣酱"></a>豆瓣酱</h3><p>川菜之魂，主要<strong>增加菜肴的咸鲜味</strong>。</p>
+<h3 id="甜面酱"><a href="#甜面酱" class="headerlink" title="甜面酱"></a>甜面酱</h3><p>以面粉、水和食盐为原料的一种酱料，<strong>鲜香甜味十足</strong>。可以当做酱料使用（例如蘸黄瓜），也可以调味，是炸酱面、京酱肉丝等菜肴的必备调料。　　</p>
+<h3 id="番茄酱"><a href="#番茄酱" class="headerlink" title="番茄酱"></a>番茄酱</h3><p>用新鲜番茄经过加工而成的酱料，鲜而酸。常用于<strong>增色、添香、增加酸味口感</strong>，如制作松鼠鱼。</p>
+<h3 id="芝麻酱"><a href="#芝麻酱" class="headerlink" title="芝麻酱"></a>芝麻酱</h3><p>顾名思义是芝麻作为原料调制的酱料，非常的香，<strong>增香必备</strong>。可直接作为蘸料，例如北方的同学吃火锅是喜欢蘸麻酱，也常用于制作凉面、凉拌菜等。</p>
+<h3 id="蚝油"><a href="#蚝油" class="headerlink" title="蚝油"></a>蚝油</h3><p>以素有”海底牛奶”之称的蚝牗牡蛎牍为原料，经煮熟取汁浓缩，加辅料精制而成。蚝油味道鲜美、蚝香浓郁，黏稠适度，营养价值高。适合烹制多种食材，如蚝油牛肉、蚝油生菜、蚝油荷兰豆等，还可<strong>调拌各种面食、涮海鲜、佐餐食用</strong>等。</p>
+<h2 id="香料类"><a href="#香料类" class="headerlink" title="香料类"></a>香料类</h2><p>香料分很多种，主要功能是增加各种风味，使味更有层次感。</p>
+<h3 id="干辣椒："><a href="#干辣椒：" class="headerlink" title="干辣椒："></a>干辣椒：</h3><p><strong>增香、增辣。</strong></p>
+<p>油热时和葱姜一起放锅内爆香，一般家常菜都可以用。</p>
+<h3 id="花椒与麻椒"><a href="#花椒与麻椒" class="headerlink" title="花椒与麻椒"></a>花椒与麻椒</h3><p>增加菜肴的<strong>“麻”味</strong>，同时也是<strong>爆香</strong>的“利器”！炒菜的时候加入花椒可以防止油沸，花椒粉也可以用于包子或者饺子的馅料。麻椒比花椒颜色更重，更麻，喜欢重口味的同学可以用麻椒作为调料。</p>
+<h3 id="八角-大料"><a href="#八角-大料" class="headerlink" title="八角(大料)"></a>八角(大料)</h3><p>也叫大茴香，因此无论<strong>卤、酱、烧、炖，</strong>都可以用到它，用以<strong>去腥添香。</strong>不论炒菜、炖肉、腌菜，八角都要提前放。一份菜一般放三瓣，分量多的可以放一整朵。</p>
+<h3 id="胡椒"><a href="#胡椒" class="headerlink" title="胡椒"></a>胡椒</h3><ul>
+<li>又分<strong>黑胡椒和白胡椒</strong>，常用于提鲜去腥，开胃、促进食欲。</li>
+<li>其中<strong>黑胡椒味道更浓，香中带辣</strong>，适用于炖、煎、烤肉类。</li>
+<li><strong>白胡椒胡椒香味稍淡，辣味更浓</strong>，能提出鲜味。</li>
+<li>需要注意的是，无论黑胡椒、白胡椒皆不能高温油炸，应在菜肴或汤羹即将出锅时加少许。</li>
+</ul>
+<h3 id="香叶"><a href="#香叶" class="headerlink" title="香叶"></a>香叶</h3><p>干燥后的月桂树叶，用以<strong>去腥添香</strong>，用于炖肉、卤味等。</p>
+<h3 id="桂皮"><a href="#桂皮" class="headerlink" title="桂皮"></a>桂皮</h3><p>干燥后的月桂树皮，用以去腥添香，也可以用于炖肉、卤味等。</p>
+<h3 id="小茴香"><a href="#小茴香" class="headerlink" title="小茴香"></a>小茴香</h3><p>用以<strong>去腥添香</strong>，用于炖肉等。其茎叶部分即茴香菜。</p>
+<h3 id="孜然"><a href="#孜然" class="headerlink" title="孜然"></a>孜然</h3><p>祛<strong>除腥膻异味</strong>的作用很强,！还能<strong>解除肉类的油腻</strong>,常用在烧烤牛羊肉中，令肉质更加鲜美芳香并且去除膻味异味。</p>
+<h3 id="五香粉"><a href="#五香粉" class="headerlink" title="五香粉"></a><strong>五香粉</strong></h3><p>花椒、大料、桂皮、丁香等芳香类调料混合研制而成，使用方便。尤其适合用于<strong>烘烤或快炒肉类，炖、焖、煨、蒸、煮菜肴</strong>作调味。</p>
+<h2 id="辣椒类"><a href="#辣椒类" class="headerlink" title="辣椒类"></a>辣椒类</h2><p><img alt="辣椒" data-src="https://pic2.zhimg.com/v2-471d6358a188a14ebf240fa500d0164f_b.jpg"></p>
+<h3 id="剁椒与糟辣椒"><a href="#剁椒与糟辣椒" class="headerlink" title="剁椒与糟辣椒"></a>剁椒与糟辣椒</h3><p>云贵地区称作糟辣椒、湖南地区叫做剁椒，<strong>口味和制作工艺稍有差别</strong>，但是总体来说外表色泽鲜红，具有香、辣、鲜、酸、嫩、咸、脆、的独特风味，有开胃消食、暖胃驱寒的功效。可以直接食用、当做蘸料，也可用于调料，比如制作剁椒鱼头、鱼香肉丝、鱼香茄子等菜肴，值得注意的是，由于<strong>剁椒和糟辣椒本身就有盐味</strong>，所以调味时就<strong>不用额外添加过多的食盐</strong>了！</p>
+<h3 id="红油辣椒"><a href="#红油辣椒" class="headerlink" title="红油辣椒"></a>红油辣椒</h3><p>是川菜中常见的调味料，油色红亮，味道香辣。常用于<strong>凉拌菜、拌面、蘸料等。</strong></p>
+<h3 id="泡椒"><a href="#泡椒" class="headerlink" title="泡椒"></a>泡椒</h3><p>四川特产，由新鲜辣椒腌制而成。香、酸、辣味十足，是制作泡椒类菜肴的必备调料（例如川味鱼香肉丝、泡椒牛肉等）。<br>常见的泡椒主要有两种：</p>
+<ul>
+<li>二荆条泡辣椒：这种辣椒相对较长，辣味适口，香气足，可以切碎了使用，制作传统川菜鱼香肉丝就离不开它</li>
+<li>子弹头泡辣椒：这种辣椒较短，呈鸡心状，其辣味足，因成形较好，在泡椒菜肴中常整个使用，很少加工成茸或切成小块。</li>
+</ul>
+<h2 id="食用油"><a href="#食用油" class="headerlink" title="食用油"></a>食用油</h2><h3 id="菜油-菜籽油"><a href="#菜油-菜籽油" class="headerlink" title="菜油(菜籽油)"></a>菜油(菜籽油)</h3><p>用油菜籽榨出来的一种食用油，有一种“青气味”。菜籽油具有一定的软化血管、延缓衰老的功效。常<strong>用于炒菜，也可以做红油辣椒。不适合凉拌菜。</strong></p>
+<h3 id="花生油"><a href="#花生油" class="headerlink" title="花生油"></a>花生油</h3><p>淡黄透明，气味芬芳，滋味可口，是一种比较容易消化的食用油。花生油的脂肪酸构成是比较好的，易于人体消化和吸收。常用于炒菜，<strong>炒蔬菜最好，比较香。</strong> </p>
+<h3 id="葵花籽油"><a href="#葵花籽油" class="headerlink" title="葵花籽油"></a>葵花籽油</h3><p>营养价值丰富，含有丰富的胡萝卜素。不适合油炸，常用于<strong>做汤、炒菜、凉拌。</strong></p>
+<h3 id="玉米油"><a href="#玉米油" class="headerlink" title="玉米油"></a>玉米油</h3><p>优质玉米油营养含量丰富。也常用于炒菜，清淡不油腻也可增加香味。</p>
+<h3 id="大豆油"><a href="#大豆油" class="headerlink" title="大豆油"></a>大豆油</h3><p>通常我们称之为“大豆色拉油”，是最常用的烹调油之一。做面点，但不适合炒菜。</p>
+<h3 id="橄榄油"><a href="#橄榄油" class="headerlink" title="橄榄油"></a>橄榄油</h3><p>非常营养健康的油。炒菜时油烟很少，但高温易破坏营养，所以要想营养最大化还是凉拌菜比较好，但是缺点是炒菜炒起来没那么“香”。</p>
+<h3 id="猪油"><a href="#猪油" class="headerlink" title="猪油"></a>猪油</h3><p>也称为荤油或猪大油。它是从猪的脂肪中提炼出，初始状态是略黄色半透明液体的食用油，常温下为白色或浅黄色固体，加热后会融化。<strong>猪油含胆固醇较多，对身体不利，建议少吃。</strong>但是炒菜做菜时能增香、添味。另外，由于常温时是固体，故不适合做凉拌食物。</p>
+<h3 id="芝麻油"><a href="#芝麻油" class="headerlink" title="芝麻油"></a>芝麻油</h3><p>具有特别的香味，所以也叫香油。凉拌菜、汤类及热菜首选，可以<strong>增香提味。</strong></p>
+<h3 id="牛油"><a href="#牛油" class="headerlink" title="牛油"></a>牛油</h3><p>从牛的脂肪组织里提炼出来的油脂，常温时也呈固体。风味浓郁，是做麻辣火锅底料必备调料。</p>
+
+    </div>
+
+    
+    
+    
+      
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/8f35743d/" title="【下厨房】酸甜麻辣咸">http://houmin.cc/posts/8f35743d/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E4%B8%8B%E5%8E%A8%E6%88%BF/" rel="tag"><i class="fa fa-tag"></i> 下厨房</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/4987aa35/" rel="next" title="再出发">
+                  <i class="fa fa-chevron-left"></i> 再出发
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/1f0eb2ff/" rel="prev" title="【Kubernetes解读】List/Watch机制和Informer模块详解">
+                  【Kubernetes解读】List/Watch机制和Informer模块详解 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#基本调料"><span class="nav-number">1.</span> <span class="nav-text">基本调料</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#食盐"><span class="nav-number">1.1.</span> <span class="nav-text">食盐</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#酱油"><span class="nav-number">1.2.</span> <span class="nav-text">酱油</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#鸡精和味精"><span class="nav-number">1.3.</span> <span class="nav-text">鸡精和味精</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#醋"><span class="nav-number">1.4.</span> <span class="nav-text">醋</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#糖"><span class="nav-number">1.5.</span> <span class="nav-text">糖</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#酒类"><span class="nav-number">2.</span> <span class="nav-text">酒类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#料酒"><span class="nav-number">2.1.</span> <span class="nav-text">料酒</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#啤酒"><span class="nav-number">2.2.</span> <span class="nav-text">啤酒</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#高度白酒"><span class="nav-number">2.3.</span> <span class="nav-text">高度白酒</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#酱类"><span class="nav-number">3.</span> <span class="nav-text">酱类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#豆瓣酱"><span class="nav-number">3.1.</span> <span class="nav-text">豆瓣酱</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#甜面酱"><span class="nav-number">3.2.</span> <span class="nav-text">甜面酱</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#番茄酱"><span class="nav-number">3.3.</span> <span class="nav-text">番茄酱</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#芝麻酱"><span class="nav-number">3.4.</span> <span class="nav-text">芝麻酱</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#蚝油"><span class="nav-number">3.5.</span> <span class="nav-text">蚝油</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#香料类"><span class="nav-number">4.</span> <span class="nav-text">香料类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#干辣椒："><span class="nav-number">4.1.</span> <span class="nav-text">干辣椒：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#花椒与麻椒"><span class="nav-number">4.2.</span> <span class="nav-text">花椒与麻椒</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#八角-大料"><span class="nav-number">4.3.</span> <span class="nav-text">八角(大料)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#胡椒"><span class="nav-number">4.4.</span> <span class="nav-text">胡椒</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#香叶"><span class="nav-number">4.5.</span> <span class="nav-text">香叶</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#桂皮"><span class="nav-number">4.6.</span> <span class="nav-text">桂皮</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#小茴香"><span class="nav-number">4.7.</span> <span class="nav-text">小茴香</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#孜然"><span class="nav-number">4.8.</span> <span class="nav-text">孜然</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#五香粉"><span class="nav-number">4.9.</span> <span class="nav-text">五香粉</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#辣椒类"><span class="nav-number">5.</span> <span class="nav-text">辣椒类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#剁椒与糟辣椒"><span class="nav-number">5.1.</span> <span class="nav-text">剁椒与糟辣椒</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#红油辣椒"><span class="nav-number">5.2.</span> <span class="nav-text">红油辣椒</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#泡椒"><span class="nav-number">5.3.</span> <span class="nav-text">泡椒</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#食用油"><span class="nav-number">6.</span> <span class="nav-text">食用油</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#菜油-菜籽油"><span class="nav-number">6.1.</span> <span class="nav-text">菜油(菜籽油)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#花生油"><span class="nav-number">6.2.</span> <span class="nav-text">花生油</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#葵花籽油"><span class="nav-number">6.3.</span> <span class="nav-text">葵花籽油</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#玉米油"><span class="nav-number">6.4.</span> <span class="nav-text">玉米油</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#大豆油"><span class="nav-number">6.5.</span> <span class="nav-text">大豆油</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#橄榄油"><span class="nav-number">6.6.</span> <span class="nav-text">橄榄油</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#猪油"><span class="nav-number">6.7.</span> <span class="nav-text">猪油</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#芝麻油"><span class="nav-number">6.8.</span> <span class="nav-text">芝麻油</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#牛油"><span class="nav-number">6.9.</span> <span class="nav-text">牛油</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">61</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">110</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">393k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">11:55</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>
