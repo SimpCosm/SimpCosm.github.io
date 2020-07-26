@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="千年以来人们一直梦想有一个世界级的图书馆，在这个图书馆里能够存放世界上所有出版过的印刷在纸上的知识。可以预见，如果是实体的图书馆这种想法将很难实现。但是，随着信息化时代的到来，全世界所有知识的电子化是可以实现的。Google在2002年就启动了一个「Project Ocean」计划，用以扫描所有的图书，建立一个统一的世界数字图书馆。 然而，经过十年的发展，这个计划却最终在一阵喧嚣中戛然而止。这里是">
+<meta name="keywords" content="google,图书">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Project Ocean">
+<meta property="og:url" content="http://houmin.cc/posts/f7bd8265/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="千年以来人们一直梦想有一个世界级的图书馆，在这个图书馆里能够存放世界上所有出版过的印刷在纸上的知识。可以预见，如果是实体的图书馆这种想法将很难实现。但是，随着信息化时代的到来，全世界所有知识的电子化是可以实现的。Google在2002年就启动了一个「Project Ocean」计划，用以扫描所有的图书，建立一个统一的世界数字图书馆。 然而，经过十年的发展，这个计划却最终在一阵喧嚣中戛然而止。这里是">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-07-26T14:58:00.014Z">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://houmin.cc/posts/f7bd8265/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Project Ocean | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/f7bd8265/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Project Ocean
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-26 21:10:19" itemprop="dateCreated datePublished" datetime="2020-07-26T21:10:19+08:00">2020-07-26</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%9D%E8%8A%B1%E5%A4%95%E6%8B%BE/" itemprop="url" rel="index">
+                    <span itemprop="name">朝花夕拾</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/f7bd8265/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/f7bd8265/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>千年以来人们一直梦想有一个世界级的图书馆，在这个图书馆里能够存放世界上所有出版过的印刷在纸上的知识。可以预见，如果是实体的图书馆这种想法将很难实现。但是，随着信息化时代的到来，全世界所有知识的电子化是可以实现的。Google在2002年就启动了一个「Project Ocean」计划，用以扫描所有的图书，建立一个统一的世界数字图书馆。</p>
+<p>然而，经过十年的发展，这个计划却最终在一阵喧嚣中戛然而止。这里是「朝花夕拾」第二十一期，本期话题来自于最近听的「Blow Your Mind」的一期播客。</p>
+<a id="more"></a>
+<h2 id="雄心勃勃的计划"><a href="#雄心勃勃的计划" class="headerlink" title="雄心勃勃的计划"></a>雄心勃勃的计划</h2><p>从工程师的角度来说，这个计划毋庸置疑是一个雄心勃勃的伟大的计划。如果这件事情做成了，这将是留给人类的一个伟大礼物。2000年后出版的图书是可以直接电子化的，问题在于将之前存在的纸质的图书电子化。人类的知识有几千年的历史，而书籍中承载的可能是其中质量最高的部分。</p>
+<p>然而，这么多的知识中，很大的一部分都深藏在世界上各大图书馆深深的房间中，很少有人能够访问。设想一下，如果这些积累了千年的知识电子化后，人们通过浏览器就可以搜索到对应的知识，这将有多么的大的裨益。</p>
+<h2 id="技术的问题"><a href="#技术的问题" class="headerlink" title="技术的问题"></a>技术的问题</h2><ul>
+<li>首先我们需要知道，有多少本书需要电子化。在2010年8月，也就是10年前，谷歌在博客中发了一条消息，说全世界总共有<code>129864880</code>册图书。这里主要是英文图书，如果算上其他文字的，还是在亿这个量级。</li>
+<li>第二个问题，如何电子化。Google给的方法是扫描，他们研发了一套专门的扫描系统，每台仪器一小时可以数字化1000页左右的图书。</li>
+</ul>
+<blockquote>
+<p>待扫描的书会被放在一个特别设计的自动支架上，支架可以适应不同的书脊，并且将图书固定。仪器上方有一排灯，还有价值至少1000美元的光学器材，包括四个摄像头，两个分别照着摊开的书的左右两半，还有一个负责确定扫描范围的光学雷达，它会在图书表面生成一层激光网格，从而捕捉到纸页的曲度。操作员负责手动翻页，因为也没有机器能比得上人手的快捷和轻柔了，然后脚踩踏板来触发相机进行拍照，一系列动作仿佛是在弹一架奇怪的钢琴。</p>
+</blockquote>
+<ul>
+<li>是的，这个系统还是需要人来翻页的，因为也没有机器能比得上人手的快捷和轻柔了。</li>
+<li>第三个问题，扫描后如何将这些扫描的照片转化为文字，识别书籍中的插图和图表、提取页码、把脚注转化为引用、将所有的书籍形成网络，形成一个知识库。这个就更多的是OCR和NLP等研究的领域。</li>
+</ul>
+<p>其实，Google并不是第一个产生这个想法，密歇根大学早就开始了其700万册图书馆藏数字化的计划。按照他们的计划，700万册图书需要1000年，而Google告诉他们，同样的事情，他们只需要六年。</p>
+<blockquote>
+<p>Google给密歇根大学图书馆提议：图书馆将所有的书借给谷歌，谷歌来替对方完成全部的扫描。最后你能得到你的全部馆藏的电子版，而谷歌将获得海量的还不曾被人问津的数据资源。布林如此描述谷歌对图书馆藏的渴望，“人类的知识有几千年的历史，而书籍中承载的可能是其中质量最高的部分。”试想如果所有被尘封在纸页间的知识能够进入搜索引擎？</p>
+<p>早在2004年之前，谷歌就开始了扫描工作。之后，谷歌和密歇根大学、哈佛、斯坦福、牛津、纽约公共图书馆和许多其他图书馆系统都订立了合约，并且以超过佩吉预言的速度，在十年多一点的时间里扫描了大约<strong>2500万册图书</strong>。图书扫描工作花掉了谷歌大约4亿美元。这项工作不仅仅依靠技术，还依靠强大的物流支持。</p>
+</blockquote>
+<ul>
+<li>因为有的图书比较古老，在扫描过程中可能会出现错误。谷歌提出了一个机智的<a href="https://en.wikipedia.org/wiki/ReCAPTCHA" target="_blank" rel="external nofollow noopener noreferrer">ReCAPTCHA</a>计划用于解决在扫描中发现的错误。其基本思路是，为了验证人类所输入的文字是正确的，而不是随意输入，有两个字会被显示出来；一个是光学文字识别软件无法辨别的字，另一个是一个已经知道正确答案的字。如果用户正确的回答出已知正确答案的字，那么就假设所输入的另一个光学识别软件无法识别的字是认真的查看后被输入而非随便输入。</li>
+</ul>
+<h2 id="人的问题"><a href="#人的问题" class="headerlink" title="人的问题"></a>人的问题</h2><p>经过10年的时间，Google已经扫描了2500万册的图书，这是他们之前预计的图书总量五分之一。然而，在这个过程中，逐渐出现了很多反对的声音，并最终导致了这个项目的终止。</p>
+<ul>
+<li><p>美国作家协会和出版商对Google提出了集体诉讼，<strong>指控谷歌大规模侵犯知识产权</strong>，毕竟他们才有图书的版权。</p>
+</li>
+<li><p>Google则认为他们的目标是为了让用户能够检索图书，对于那些有版权的书，谷歌只能显示图书的片段，搜索结果中只能显示你搜索到的条目前后的几句话。Google认为他们只是制作了图书的副本，属于对于图书的合理使用。</p>
+</li>
+<li><p>事实上，这种版权问题早就发生在唱片、广播、有线电视等传统出版商身上，并不是版权所有者想要打压新技术，相反他们是想从新技术中分一杯羹。</p>
+</li>
+<li><p>随着诉讼的进展，出版商发现，他们实际上并不想阻止Google扫描绝版图书，甚至鼓励这种行为。</p>
+</li>
+<li><p>于是在这个过程中，Google，作家，出版商，图书馆四方进行了妥协，形成了「谷歌图书搜索修正协议」</p>
+<ul>
+<li>协议要求谷歌支付1亿2500万美元，其中包括一次性支付给它已经扫描过的图书的版权方的4500万美元（大约按每本书60美元计算），分别向出版商和作者支付的1550万美元和3000万美元诉讼费，以及用来创立图书版权登记处的3450万美元。</li>
+<li>这项协议中也规定了到底应该如何展示和出售这些重获新生的绝版图书。按照协议，谷歌可以展示该书至多20%的部分来诱使用户购买，谷歌可以出售可下载的电子版，价格则由算法或者版权所有者来确定，由1.99美元到29.99美元不等。所有绝版书都会被打包存进一个“机构订阅数据库”，大学可以买下这个数据库，供全校师生免费搜索和阅读里面的全部书籍。</li>
+<li>这个解决方案像是一个三赢——图书馆可以得到成千上万的图书，谷歌在图书搜索服务上的投资没有白费，作者和出版商能够从已经毫无商业价值的书中获得一笔新的收入来源。</li>
+</ul>
+</li>
+<li><p>但是这个「谷歌图书搜索修正协议」引起了更大的争议</p>
+<ul>
+<li><p>学校的教授们担心发生在学术期刊市场的事情会在谷歌图书的数据库上重演，一旦图书馆和学校对订购谷歌的数据库产生依赖，订购价格将会像高利贷一样暴涨，最终涨的和各路学术期刊一样高</p>
+</li>
+<li><p>Google的竞争对手也觉得收到了这份协议的威胁。</p>
+<ul>
+<li><blockquote>
+<p>微软公司就不出所料地声称，如果谷歌是唯一一个可以合法地检索绝版图书的搜索引擎，这无疑会强化谷歌在全世界作为搜索引擎霸主的地位。如果谷歌利用这些绝版图书来满足用户的长尾需求，这将是一个对于其他公司来说很不公平的竞争优势。</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<pre><code>- &gt; 
+  &gt;
+  &gt; 亚马逊公司则担心这项协议会让谷歌建立一个无可匹敌的图书商店。亚马逊认为，任何想要出售绝版图书的人，都必须要一本一本地确认图书版权，这是最好的，但是集体诉讼的协议却让谷歌一次性获得了所有图书的授权。
+</code></pre><p>  随着一轮又一轮的诉讼与协议，现在的状态是，Google基本尘封了这个计划。之前扫描的这2500万册图书以50PB的大小的文件存在于硬盘上。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://www.thepaper.cn/newsDetail_forward_1679335" target="_blank" rel="external nofollow noopener noreferrer">https://www.thepaper.cn/newsDetail_forward_1679335</a></li>
+<li><a href="https://www.theatlantic.com/technology/archive/2017/04/the-tragedy-of-google-books/523320/" target="_blank" rel="external nofollow noopener noreferrer">Torching the Modern-Day Library of Alexandria</a></li>
+<li>Blow Your Mind</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/f7bd8265/" title="Project Ocean">http://houmin.cc/posts/f7bd8265/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/google/" rel="tag"><i class="fa fa-tag"></i> google</a>
+              <a href="/tags/%E5%9B%BE%E4%B9%A6/" rel="tag"><i class="fa fa-tag"></i> 图书</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/7f85cd98/" rel="next" title="【备忘录】Linux常见监控指标">
+                  <i class="fa fa-chevron-left"></i> 【备忘录】Linux常见监控指标
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/45418583/" rel="prev" title="【下厨房】电饭锅焖鸡腿">
+                  【下厨房】电饭锅焖鸡腿 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#雄心勃勃的计划"><span class="nav-number">1.</span> <span class="nav-text">雄心勃勃的计划</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#技术的问题"><span class="nav-number">2.</span> <span class="nav-text">技术的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#人的问题"><span class="nav-number">3.</span> <span class="nav-text">人的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">4.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">64</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">113</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">398k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">12:03</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>
