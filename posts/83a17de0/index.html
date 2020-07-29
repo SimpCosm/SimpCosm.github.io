@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Kubernetes Scheduling Framework 是在Kubernetes 1.15版本后新出现的一种调度框架。Scheduling Framework 在原有的调度流程中, 定义了丰富扩展点接口，开发者可以通过实现扩展点所定义的接口来实现插件，将插件注册到扩展点。Scheduling Framework 在执行调度流程时，运行到相应的扩展点时，会调用用户注册的插件，影响调度决策的结">
+<meta name="keywords" content="k8s,scheduler,framework">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Kubernetes解读】Scheduling Framework">
+<meta property="og:url" content="http://houmin.cc/posts/83a17de0/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="Kubernetes Scheduling Framework 是在Kubernetes 1.15版本后新出现的一种调度框架。Scheduling Framework 在原有的调度流程中, 定义了丰富扩展点接口，开发者可以通过实现扩展点所定义的接口来实现插件，将插件注册到扩展点。Scheduling Framework 在执行调度流程时，运行到相应的扩展点时，会调用用户注册的插件，影响调度决策的结">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-25_scheduling-framework-extensions.png">
+<meta property="og:image" content="https://github.com/kubernetes/enhancements/raw/master/keps/sig-scheduling/20180409-scheduling-framework-threads.png">
+<meta property="og:updated_time" content="2020-07-29T13:01:09.400Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-25_scheduling-framework-extensions.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/83a17de0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Kubernetes解读】Scheduling Framework | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/83a17de0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Kubernetes解读】Scheduling Framework
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-15 14:48:27" itemprop="dateCreated datePublished" datetime="2020-07-15T14:48:27+08:00">2020-07-15</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/83a17de0/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/83a17de0/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>30k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>54 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Kubernetes Scheduling Framework 是在Kubernetes 1.15版本后新出现的一种调度框架。Scheduling Framework 在原有的调度流程中, 定义了丰富扩展点接口，开发者可以通过实现扩展点所定义的接口来实现插件，将插件注册到扩展点。Scheduling Framework 在执行调度流程时，运行到相应的扩展点时，会调用用户注册的插件，影响调度决策的结果。通过这种方式来将用户的调度逻辑集成到 Scheduling Framework 中。</p>
+<a id="more"></a>
+<h1 id="Motivation"><a href="#Motivation" class="headerlink" title="Motivation"></a>Motivation</h1><p>随着越来越多的Feature被加入到Kubernetes调度器，整个调度器的代码量越来越大，逻辑越来越复杂，使得对其的维护和调试越来越困难。与此同时，对于那些自己定制调度器的研发人员来说，跟上社区的进展也越来越难。在Kubernetes 1.15版本前的调度器支持了Scheduler Extender的方式来基于HTTP的Webhook来对调度器支持的功能扩展。但是，他们明显存在以下几个问题：</p>
+<ul>
+<li>调度器功能扩展点的数目有限。Extender只有Filter、Prioritize、Preempt和Bind这几个扩展点，而没有起其他的扩展点，比如不能在运行Predicate函数前调用</li>
+<li>每一次调用调度器都需要Marshaling和Unmarshaling JSON数据，相比于直接调用原生函数而言Webhook的HTTP请求方式更慢</li>
+<li>难以通知Extender调度器已经放弃调度一个Pod</li>
+<li>因为Extender以独立进程形式运行，他们不能使用Scheduler Cache</li>
+</ul>
+<p>以上的问题影响了Scheduler的性能与扩展新的特性，基于此提出的Framework框架会将现有的功能转换为Plugin的形式，比如Predicate函数和Prioritize函数。这些Plugin将会被编译进调度器的二进制文件中。此外，对于那些自己定制调度器的研发人员可以基于未经修改的调度器代码和自己的插件代码编译自己的调度器。</p>
+<p>目标：</p>
+<ul>
+<li>让调度器更加可扩展</li>
+<li>通过移动调度器的代码到Plugin从而让其核心代码更加简单</li>
+<li>在Framework中提出扩展点</li>
+<li>提出一个机制来接收Plugin的结果，并且根结收到的结果来继续或者终止调度</li>
+<li>提出一个机制来处理问题并且和Plugin通信</li>
+</ul>
+<h1 id="Proposals"><a href="#Proposals" class="headerlink" title="Proposals"></a>Proposals</h1><p>Scheduling Framework定义了新的扩展点和Go API，这种方式称作Plugin。通过配置Scheduler的ComponentConfig可以开启、关闭或者重排序这些插件。</p>
+<h2 id="Scheduling-Cycle-amp-Binding-Cycle"><a href="#Scheduling-Cycle-amp-Binding-Cycle" class="headerlink" title="Scheduling Cycle &amp; Binding Cycle"></a>Scheduling Cycle &amp; Binding Cycle</h2><p>每次尝试调度一个Pod都会经历两个阶段：</p>
+<ul>
+<li>Scheduling Cycle：为Pod选择一个Node进行调度</li>
+<li>Binding Cycle：将Scheduling Cycle阶段的决定应用到集群</li>
+</ul>
+<p>这两个阶段一起被称作是 <code>Scheduling Context</code>，也就是调度上下文。</p>
+<p>不同的Scheduling Cycle间串行运行，同一个时间只有一个 scheduling cycle，是线程安全的。binding cycle 是异步执行的，同一个时间中可能会有多个 binding cycle 在运行，是线程不安全的。</p>
+<p>如果一个Pod被认为是Unschedulable，或者是发生了内存错误，那么一个Scheduling Cycle或者Binding Cycle会被终止。然后这个Pod可能被返回到调度队列中。如果一个Binding Cycle终止了，那么会触发 <code>Un-reserve</code>插件。</p>
+<h2 id="Extension-points"><a href="#Extension-points" class="headerlink" title="Extension points"></a>Extension points</h2><p>下图定义了Scheduling Framework中暴露的扩展点，其中Filter等同于原来的Predicate，Scoring等同于之前的Prioritize。对于一个插件，它可能在一个或者多个扩展点注册，从而满足业务的不同逻辑。</p>
+<p><img alt="Scheduling Framework" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-25_scheduling-framework-extensions.png"></p>
+<h3 id="Queue-Sort"><a href="#Queue-Sort" class="headerlink" title="Queue Sort"></a>Queue Sort</h3><p>这里的插件用来对调度队列中的Pod排序，同一时间只有一个Queue Sort可以被启用。</p>
+<h3 id="Pre-filter"><a href="#Pre-filter" class="headerlink" title="Pre-filter"></a>Pre-filter</h3><p>这里的插件用来预处理Pod信息，或者检查集群或Pod需满足的特定条件。</p>
+<h4 id="PreFilterExtensionAddPod"><a href="#PreFilterExtensionAddPod" class="headerlink" title="PreFilterExtensionAddPod"></a>PreFilterExtensionAddPod</h4><h4 id="PreFilterExtensionRemovePod"><a href="#PreFilterExtensionRemovePod" class="headerlink" title="PreFilterExtensionRemovePod"></a>PreFilterExtensionRemovePod</h4><h3 id="Filter"><a href="#Filter" class="headerlink" title="Filter"></a>Filter</h3><p>Filter用于过滤那些不能运行对应Pod的Node，调度器可能会同时评估这些Node，在一个Scheduling Cycle中Filter插件可能被运行多次。</p>
+<h3 id="Pre-Score"><a href="#Pre-Score" class="headerlink" title="Pre-Score"></a>Pre-Score</h3><p>在V1alpha2中，Pre-Score已经可用，之前被称作Post-Filter。</p>
+<p>这个插件会接收来自Filter阶段的Node列表，可以用这些数据来更新内部状态或者产生日志或Metrics。</p>
+<h3 id="Scoring"><a href="#Scoring" class="headerlink" title="Scoring"></a>Scoring</h3><p>Score插件会有两个阶段：</p>
+<ul>
+<li>Scoring：为Filter阶段的Node列表中的Node排序，调度器对于每个Node调用每个Score插件中的 <code>Score</code>方法</li>
+<li>Normalize Scoring：用于修改各个Score插件的分数，从而计算出最终的Node得分列表</li>
+</ul>
+<p>Score插件最终输出的数值必须在  <strong>[MinNodeScore, MaxNodeScore]</strong> 区间，如果不是，Scheduling Cycle将会被终止。</p>
+<h4 id="Score-Extensions"><a href="#Score-Extensions" class="headerlink" title="Score Extensions"></a>Score Extensions</h4><h3 id="Reserve"><a href="#Reserve" class="headerlink" title="Reserve"></a>Reserve</h3><p>Reserve插件是一个信息型的插件。当一个Node上的资源被保留给某个Pod的时候，那些需要维护runtime状态的插件，需要利用Reserve扩展点来接收来自Scheduler的通知。这发生在调度器实际上绑定Pod到Node的时候，用来避免在调度器等待Bind成功时候发生Race Condition。</p>
+<p>Reserve是Scheduling Cycle的最后一步，一点Pod进入Reserved状态，它之后要么在调度失败的时候触发Un-reserve插件，要么调度成功的时候触发Post-bind插件。</p>
+<blockquote>
+<p>Note：这个概念以前叫做 Assume</p>
+</blockquote>
+<h3 id="Permit"><a href="#Permit" class="headerlink" title="Permit"></a>Permit</h3><p>Permit插件用来阻止或者推迟对一个Pod的绑定，一个Permit可以做下面三件操作</p>
+<ul>
+<li>Allow；执行approve操作后，一个Pod将被送去Binding</li>
+<li>Reject：执行deny操作后，Pod被返回调度队列，同时触发Un-reserve插件</li>
+<li>Wait (with a timeout)：执行wait操作后，一个Pod保持在Permit阶段知道一个Plugin对它approve；如果timeout了，wait将会变为den y，之后Pod被返回调度队列，触发Un-reserve插件</li>
+</ul>
+<h4 id="WaitPod"><a href="#WaitPod" class="headerlink" title="WaitPod"></a>WaitPod</h4><p>在framework interface中定义了Permit阶段中处于等待的WaitingPod。</p>
+<figure class="highlight go"><figcaption><span>pkg/scheduler/framework/v1alpha1/interface.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// WaitingPod represents a pod currently waiting in the permit phase.</span></span><br><span class="line"><span class="keyword">type</span> WaitingPod <span class="keyword">interface</span> &#123;</span><br><span class="line">	<span class="comment">// GetPod returns a reference to the waiting pod.</span></span><br><span class="line">	GetPod() *v1.Pod</span><br><span class="line">	<span class="comment">// GetPendingPlugins returns a list of pending permit plugin's name.</span></span><br><span class="line">	GetPendingPlugins() []<span class="keyword">string</span></span><br><span class="line">	<span class="comment">// Allow declares the waiting pod is allowed to be scheduled by plugin pluginName.</span></span><br><span class="line">	<span class="comment">// If this is the last remaining plugin to allow, then a success signal is delivered</span></span><br><span class="line">	<span class="comment">// to unblock the pod.</span></span><br><span class="line">	Allow(pluginName <span class="keyword">string</span>)</span><br><span class="line">	<span class="comment">// Reject declares the waiting pod unschedulable.</span></span><br><span class="line">	Reject(msg <span class="keyword">string</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>waitingPod则是一个具体的pod的等待实例，其内部通过pendingPlugins保存插件定义的timer等待时间，对外通过<code>chan *status</code>来接受当前pod的状态，并通过读写锁来进行串行化。</p>
+<figure class="highlight go"><figcaption><span>pkg/scheduler/framework/v1alpha1/waiting_pods_map.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> waitingPod <span class="keyword">struct</span> &#123;</span><br><span class="line">    pod            *v1.Pod</span><br><span class="line">    pendingPlugins <span class="keyword">map</span>[<span class="keyword">string</span>]*time.Timer</span><br><span class="line">    s              <span class="keyword">chan</span> *Status</span><br><span class="line">    mu             sync.RWMutex</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>waitingPodsMap其内部通过pod的uid保存一个map映射，同时通过读写锁来进行数据保护</p>
+<figure class="highlight go"><figcaption><span>pkg/scheduler/framework/v1alpha1/waiting_pods_map.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> waitingPodsMap <span class="keyword">struct</span> &#123;</span><br><span class="line">    pods <span class="keyword">map</span>[types.UID]WaitingPod</span><br><span class="line">    mu   sync.RWMutex</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>会根据每个plugin的wait等待时间构建N个timer, 如果任一的timer到期，则就拒绝</p>
+<figure class="highlight go"><figcaption><span>pkg/scheduler/framework/v1alpha1/waiting_pods_map.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newWaitingPod</span><span class="params">(pod *v1.Pod, pluginsMaxWaitTime <span class="keyword">map</span>[<span class="keyword">string</span>]time.Duration)</span> *<span class="title">waitingPod</span></span> &#123;</span><br><span class="line">    wp := &amp;waitingPod&#123;</span><br><span class="line">        pod: pod,</span><br><span class="line">        s:   <span class="built_in">make</span>(<span class="keyword">chan</span> *Status, <span class="number">1</span>),</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    wp.pendingPlugins = <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]*time.Timer, <span class="built_in">len</span>(pluginsMaxWaitTime))</span><br><span class="line">    <span class="comment">// The time.AfterFunc calls wp.Reject which iterates through pendingPlugins map. Acquire the</span></span><br><span class="line">    <span class="comment">// lock here so that time.AfterFunc can only execute after newWaitingPod finishes.</span></span><br><span class="line">    wp.mu.Lock()</span><br><span class="line">    <span class="keyword">defer</span> wp.mu.Unlock()</span><br><span class="line">    <span class="comment">// 根据插件的等待时间来构建timer，如果有任一timer到期，还未曾有任何plugin Allow则会进行Reject</span></span><br><span class="line">    <span class="keyword">for</span> k, v := <span class="keyword">range</span> pluginsMaxWaitTime &#123;</span><br><span class="line">        plugin, waitTime := k, v</span><br><span class="line">        wp.pendingPlugins[plugin] = time.AfterFunc(waitTime, <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">            msg := fmt.Sprintf(<span class="string">"rejected due to timeout after waiting %v at plugin %v"</span>,</span><br><span class="line">                waitTime, plugin)</span><br><span class="line">            wp.Reject(msg)</span><br><span class="line">        &#125;)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> wp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="Allow"><a href="#Allow" class="headerlink" title="Allow"></a>Allow</h4><p>允许操作必须等待所有的plugin都Allow后，才能发送允许事件</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(w *waitingPod)</span> <span class="title">Allow</span><span class="params">(pluginName <span class="keyword">string</span>)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">    w.mu.Lock()</span><br><span class="line">    <span class="keyword">defer</span> w.mu.Unlock()</span><br><span class="line">    <span class="keyword">if</span> timer, exist := w.pendingPlugins[pluginName]; exist &#123;</span><br><span class="line">        <span class="comment">// 停止当前plugin的定时器</span></span><br><span class="line">        timer.Stop()</span><br><span class="line">        <span class="built_in">delete</span>(w.pendingPlugins, pluginName)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Only signal success status after all plugins have allowed</span></span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">len</span>(w.pendingPlugins) != <span class="number">0</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 只有当所有的plugin都允许，才会发生成功允许事件</span></span><br><span class="line">    <span class="keyword">select</span> &#123;</span><br><span class="line">    <span class="keyword">case</span> w.s &lt;- NewStatus(Success, <span class="string">""</span>): <span class="comment">// 发送事件</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="Reject"><a href="#Reject" class="headerlink" title="Reject"></a>Reject</h4><p>任一一个plugin的定时器到期，或者plugin主动发起reject操作，则都会暂停所有的定时器，并进行消息广播</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(w *waitingPod)</span> <span class="title">Reject</span><span class="params">(msg <span class="keyword">string</span>)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">    w.mu.RLock()</span><br><span class="line">    <span class="keyword">defer</span> w.mu.RUnlock()</span><br><span class="line">    <span class="comment">// 停止所有的timer</span></span><br><span class="line">    <span class="keyword">for</span> _, timer := <span class="keyword">range</span> w.pendingPlugins &#123;</span><br><span class="line">        timer.Stop()</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 通过管道发送拒绝事件</span></span><br><span class="line">    <span class="keyword">select</span> &#123;</span><br><span class="line">    <span class="keyword">case</span> w.s &lt;- NewStatus(Unschedulable, msg):</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="Premit-阶段-Wait-实现"><a href="#Premit-阶段-Wait-实现" class="headerlink" title="Premit 阶段 Wait 实现"></a>Premit 阶段 Wait 实现</h4><p>首先会遍历所有的插件，然后如果发现状态设置为Wait，则会根据插件的等待时间进行wait操作</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(f *framework)</span> <span class="title">RunPermitPlugins</span><span class="params">(ctx context.Context, state *CycleState, pod *v1.Pod, nodeName <span class="keyword">string</span>)</span> <span class="params">(status *Status)</span></span> &#123;</span><br><span class="line">	startTime := time.Now()</span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		metrics.FrameworkExtensionPointDuration.WithLabelValues(permit, status.Code().String()).Observe(metrics.SinceInSeconds(startTime))</span><br><span class="line">	&#125;()</span><br><span class="line">	pluginsWaitTime := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]time.Duration)</span><br><span class="line">	statusCode := Success</span><br><span class="line">	<span class="keyword">for</span> _, pl := <span class="keyword">range</span> f.permitPlugins &#123;</span><br><span class="line">		status, timeout := f.runPermitPlugin(ctx, pl, state, pod, nodeName)</span><br><span class="line">		<span class="keyword">if</span> !status.IsSuccess() &#123;</span><br><span class="line">			<span class="keyword">if</span> status.IsUnschedulable() &#123;</span><br><span class="line">				msg := fmt.Sprintf(<span class="string">"rejected pod %q by permit plugin %q: %v"</span>, pod.Name, pl.Name(), status.Message())</span><br><span class="line">				klog.V(<span class="number">4</span>).Infof(msg)</span><br><span class="line">				<span class="keyword">return</span> NewStatus(status.Code(), msg)</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> status.Code() == Wait &#123;</span><br><span class="line">				<span class="comment">// Not allowed to be greater than maxTimeout.</span></span><br><span class="line">				<span class="keyword">if</span> timeout &gt; maxTimeout &#123;</span><br><span class="line">					timeout = maxTimeout</span><br><span class="line">				&#125;</span><br><span class="line">				pluginsWaitTime[pl.Name()] = timeout</span><br><span class="line">				statusCode = Wait</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				msg := fmt.Sprintf(<span class="string">"error while running %q permit plugin for pod %q: %v"</span>, pl.Name(), pod.Name, status.Message())</span><br><span class="line">				klog.Error(msg)</span><br><span class="line">				<span class="keyword">return</span> NewStatus(Error, msg)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> statusCode == Wait &#123;</span><br><span class="line">		waitingPod := newWaitingPod(pod, pluginsWaitTime)</span><br><span class="line">		f.waitingPods.add(waitingPod)</span><br><span class="line">		msg := fmt.Sprintf(<span class="string">"one or more plugins asked to wait and no plugin rejected pod %q"</span>, pod.Name)</span><br><span class="line">		klog.V(<span class="number">4</span>).Infof(msg)</span><br><span class="line">		<span class="keyword">return</span> NewStatus(Wait, msg)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// WaitOnPermit will block, if the pod is a waiting pod, until the waiting pod is rejected or allowed.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(f *framework)</span> <span class="title">WaitOnPermit</span><span class="params">(ctx context.Context, pod *v1.Pod)</span> <span class="params">(status *Status)</span></span> &#123;</span><br><span class="line">	waitingPod := f.waitingPods.get(pod.UID)</span><br><span class="line">	<span class="keyword">if</span> waitingPod == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">defer</span> f.waitingPods.remove(pod.UID)</span><br><span class="line">	klog.V(<span class="number">4</span>).Infof(<span class="string">"pod %q waiting on permit"</span>, pod.Name)</span><br><span class="line"></span><br><span class="line">	startTime := time.Now()</span><br><span class="line">	s := &lt;-waitingPod.s</span><br><span class="line">	metrics.PermitWaitDuration.WithLabelValues(s.Code().String()).Observe(metrics.SinceInSeconds(startTime))</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> !s.IsSuccess() &#123;</span><br><span class="line">		<span class="keyword">if</span> s.IsUnschedulable() &#123;</span><br><span class="line">			msg := fmt.Sprintf(<span class="string">"pod %q rejected while waiting on permit: %v"</span>, pod.Name, s.Message())</span><br><span class="line">			klog.V(<span class="number">4</span>).Infof(msg)</span><br><span class="line">			<span class="keyword">return</span> NewStatus(s.Code(), msg)</span><br><span class="line">		&#125;</span><br><span class="line">		msg := fmt.Sprintf(<span class="string">"error received while waiting on permit for pod %q: %v"</span>, pod.Name, s.Message())</span><br><span class="line">		klog.Error(msg)</span><br><span class="line">		<span class="keyword">return</span> NewStatus(Error, msg)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Pre-Bind"><a href="#Pre-Bind" class="headerlink" title="Pre-Bind"></a>Pre-Bind</h3><p>执行Bind前的必要工作，比如在目标Node上设置一个网络磁盘并且mount上去。</p>
+<h3 id="Bind"><a href="#Bind" class="headerlink" title="Bind"></a>Bind</h3><p>当所有的Pre-Bind插件执行完毕后，才会执行Bind插件，每一个Bind插件都按照配置的顺序被调用。一个Bind插件可以选择是否处理对应的Pod，一旦一个Bind插件选择处理Pod，剩余的其他Bind插件都被跳过。</p>
+<h3 id="Post-Bind"><a href="#Post-Bind" class="headerlink" title="Post-Bind"></a>Post-Bind</h3><p>这是一个信息型的插件，当Bind成功后，可以用来清理一些关联的资源。</p>
+<h3 id="Un-reserve"><a href="#Un-reserve" class="headerlink" title="Un-reserve"></a>Un-reserve</h3><p>这是一个信息型的插件，当一个Pod被reserved了，然后在之后的阶段被reject，就会执行Un-reserve插件，主要用来清理一些reserved Pod的状态。</p>
+<h2 id="Plugin-API"><a href="#Plugin-API" class="headerlink" title="Plugin API"></a>Plugin API</h2><p>Plugin首先需要注册和配置，然后使用扩展点的接口，一般形式如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Plugin <span class="keyword">interface</span> &#123;</span><br><span class="line">   Name() <span class="keyword">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> QueueSortPlugin <span class="keyword">interface</span> &#123;</span><br><span class="line">   Plugin</span><br><span class="line">   Less(*PodInfo, *PodInfo) <span class="keyword">bool</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> PreFilterPlugin <span class="keyword">interface</span> &#123;</span><br><span class="line">   Plugin</span><br><span class="line">   PreFilter(CycleState, *v1.Pod) *Status</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ...</span></span><br></pre></td></tr></table></figure>
+<h3 id="CycleState"><a href="#CycleState" class="headerlink" title="CycleState"></a>CycleState</h3><p>很多插件函数会调用一个<code>CycleState</code>参数，它代表了当前的调度上下文，主要是负责调度流程中数据的保存和克隆，其对外暴露了读写锁接口，各扩展点插件可以根据需求独立进行加锁选择。</p>
+<blockquote>
+<p>The <code>CycleState</code> also provides an API similar to <a href="https://godoc.org/context#WithValue" target="_blank" rel="external nofollow noopener noreferrer"><code>context.WithValue</code></a> that can be used to pass data between plugins at different extension points. Multiple plugins can share the state or communicate via this mechanism. The state is preserved only during a single scheduling context. It is worth noting that plugins are assumed to be <strong>trusted</strong>. The scheduler does not prevent one plugin from accessing or modifying another plugin’s state.</p>
+<p>* <em>The only exception is for <a href="https://github.com/kubernetes/enhancements/blob/master/keps/sig-scheduling/20180409-scheduling-framework.md#queue-sort" target="_blank" rel="external nofollow noopener noreferrer">queue sort</a> plugins.</em></p>
+<p><strong>WARNING</strong>: The data available through a <code>CycleState</code> is not valid after a scheduling context ends, and plugins should not hold references to that data longer than necessary.</p>
+</blockquote>
+<p>CycleState主要保存StateData数据，只需要实现一个clone接口即可，CycleState里面的数据，可以被当前framework所有的插件进行数据增加和修改，里面会通过读写锁来保证线程安全，但并不会针对插件进行限制，即信任所有插件，可以任意进行增删。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> CycleState <span class="keyword">struct</span> &#123;</span><br><span class="line">    mx      sync.RWMutex</span><br><span class="line">    storage <span class="keyword">map</span>[StateKey]StateData</span><br><span class="line">    <span class="comment">// if recordPluginMetrics is true, PluginExecutionDuration will be recorded for this cycle.</span></span><br><span class="line">    recordPluginMetrics <span class="keyword">bool</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// StateData is a generic type for arbitrary data stored in CycleState.</span></span><br><span class="line"><span class="keyword">type</span> StateData <span class="keyword">interface</span> &#123;</span><br><span class="line">    <span class="comment">// Clone is an interface to make a copy of StateData. For performance reasons,</span></span><br><span class="line">    <span class="comment">// clone should make shallow copies for members (e.g., slices or maps) that are not</span></span><br><span class="line">    <span class="comment">// impacted by PreFilter's optional AddPod/RemovePod methods.</span></span><br><span class="line">    Clone() StateData</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对外接口的实现，需要对应的插件主动选择进行加读锁或者加写锁，然后进行相关数据的读取和修改</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *CycleState)</span> <span class="title">Read</span><span class="params">(key StateKey)</span> <span class="params">(StateData, error)</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> v, ok := c.storage[key]; ok &#123;</span><br><span class="line">        <span class="keyword">return</span> v, <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span>, errors.New(NotFound)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Write stores the given "val" in CycleState with the given "key".</span></span><br><span class="line"><span class="comment">// This function is not thread safe. In multi-threaded code, lock should be</span></span><br><span class="line"><span class="comment">// acquired first.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *CycleState)</span> <span class="title">Write</span><span class="params">(key StateKey, val StateData)</span></span> &#123;</span><br><span class="line">    c.storage[key] = val</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Delete deletes data with the given key from CycleState.</span></span><br><span class="line"><span class="comment">// This function is not thread safe. In multi-threaded code, lock should be</span></span><br><span class="line"><span class="comment">// acquired first.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *CycleState)</span> <span class="title">Delete</span><span class="params">(key StateKey)</span></span> &#123;</span><br><span class="line">    <span class="built_in">delete</span>(c.storage, key)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Lock acquires CycleState lock.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *CycleState)</span> <span class="title">Lock</span><span class="params">()</span></span> &#123;</span><br><span class="line">    c.mx.Lock()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Unlock releases CycleState lock.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *CycleState)</span> <span class="title">Unlock</span><span class="params">()</span></span> &#123;</span><br><span class="line">    c.mx.Unlock()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// RLock acquires CycleState read lock.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *CycleState)</span> <span class="title">RLock</span><span class="params">()</span></span> &#123;</span><br><span class="line">    c.mx.RLock()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// RUnlock releases CycleState read lock.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *CycleState)</span> <span class="title">RUnlock</span><span class="params">()</span></span> &#123;</span><br><span class="line">    c.mx.RUnlock()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="FrameworkHandle"><a href="#FrameworkHandle" class="headerlink" title="FrameworkHandle"></a>FrameworkHandle</h3><p>FrameworkHandle提供了对于ApiServer和SchedulerCache的访问。<code>FrameworkHandle</code>作为一个Interface，具体是通过framework结构体实现的。</p>
+<blockquote>
+<p>While the <code>CycleState</code> provides APIs relevant to a single scheduling context, the <code>FrameworkHandle</code> provides APIs relevant to the lifetime of a plugin. This is how plugins can get a client (<code>kubernetes.Interface</code>) and <code>SharedInformerFactory</code>, or read data from the scheduler’s cache of cluster state. The handle will also provide APIs to list and approve or reject <a href="https://github.com/kubernetes/enhancements/blob/master/keps/sig-scheduling/20180409-scheduling-framework.md#permit" target="_blank" rel="external nofollow noopener noreferrer">waiting pods</a>.</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> FrameworkHandle <span class="keyword">interface</span> &#123;</span><br><span class="line">	SnapshotSharedLister() schedulerlisters.SharedLister</span><br><span class="line"></span><br><span class="line">	<span class="comment">// IterateOverWaitingPods acquires a read lock and iterates over the WaitingPods map.</span></span><br><span class="line">	IterateOverWaitingPods(callback <span class="function"><span class="keyword">func</span><span class="params">(WaitingPod)</span>)</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// GetWaitingPod returns a waiting pod given its UID.</span></span><br><span class="line">	GetWaitingPod(uid types.UID) WaitingPod</span><br><span class="line"></span><br><span class="line">	<span class="comment">// RejectWaitingPod rejects a waiting pod given its UID.</span></span><br><span class="line">	RejectWaitingPod(uid types.UID)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// ClientSet returns a kubernetes clientSet.</span></span><br><span class="line">	ClientSet() clientset.Interface</span><br><span class="line"></span><br><span class="line">	SharedInformerFactory() informers.SharedInformerFactory</span><br><span class="line"></span><br><span class="line">	<span class="comment">// VolumeBinder returns the volume binder used by scheduler.</span></span><br><span class="line">	VolumeBinder() scheduling.SchedulerVolumeBinder</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Plugin-Registration"><a href="#Plugin-Registration" class="headerlink" title="Plugin Registration"></a>Plugin Registration</h3><p>对于每一个插件，都需要定义一个构造函数，并且把它加入到注册工厂中。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> PluginFactory = <span class="function"><span class="keyword">func</span><span class="params">(runtime.Unknown, FrameworkHandle)</span> <span class="params">(Plugin, error)</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Registry <span class="keyword">map</span>[<span class="keyword">string</span>]PluginFactory</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewRegistry</span><span class="params">()</span> <span class="title">Registry</span></span> &#123;</span><br><span class="line">   <span class="keyword">return</span> Registry&#123;</span><br><span class="line">      fooplugin.Name: fooplugin.New,</span><br><span class="line">      barplugin.Name: barplugin.New,</span><br><span class="line">      <span class="comment">// New plugins are registered here.</span></span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>以 <code>NodeAffinity</code>为例，在定义了<code>NodeAffinity</code>这个插件结构体后，需要有一个<code>New</code>函数，函数参数同上面的<code>PluginFactory</code>。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// NodeAffinity is a plugin that checks if a pod node selector matches the node label.</span></span><br><span class="line"><span class="keyword">type</span> NodeAffinity <span class="keyword">struct</span> &#123;</span><br><span class="line">	handle framework.FrameworkHandle</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// New initializes a new plugin and returns it.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">New</span><span class="params">(_ *runtime.Unknown, h framework.FrameworkHandle)</span> <span class="params">(framework.Plugin, error)</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;NodeAffinity&#123;handle: h&#125;, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>那么是在哪里将这些插件注册到Framework的呢？在 <code>NewFramework</code>函数中对Framework初始化时，会对registry中的每一个插件，如果是配置需要的插件，就调用<code>factory</code>工厂函数，对各个插件初始化构造，并注册到 <code>pluginsMap</code>中。</p>
+<figure class="highlight go"><figcaption><span>pkg/scheduler/framework/v1alpha1/framework.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">pluginsMap := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]Plugin)</span><br><span class="line"><span class="keyword">for</span> name, factory := <span class="keyword">range</span> r &#123;</span><br><span class="line">	<span class="comment">// initialize only needed plugins.</span></span><br><span class="line">	<span class="keyword">if</span> _, ok := pg[name]; !ok &#123;</span><br><span class="line">		<span class="keyword">continue</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	p, err := factory(pluginConfig[name], f)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, fmt.Errorf(<span class="string">"error initializing plugin %q: %v"</span>, name, err)</span><br><span class="line">	&#125;</span><br><span class="line">	pluginsMap[name] = p</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>这里的<code>pluginsMap</code>是一个临时的字典，真正注册到framework结构体中，是调用<code>updatePluginList</code>函数利用反射进行注册。</p>
+<figure class="highlight go"><figcaption><span>pkg/scheduler/framework/v1alpha1/framework.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">for</span> _, e := <span class="keyword">range</span> f.getExtensionPoints(plugins) &#123;</span><br><span class="line">	<span class="keyword">if</span> err := updatePluginList(e.slicePtr, e.plugins, pluginsMap); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里的<code>e</code>是framework的插件扩展点</p>
+<figure class="highlight go"><figcaption><span>pkg/scheduler/framework/v1alpha1/framework.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(f *framework)</span> <span class="title">getExtensionPoints</span><span class="params">(plugins *config.Plugins)</span> []<span class="title">extensionPoint</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> []extensionPoint&#123;</span><br><span class="line">		&#123;plugins.PreFilter, &amp;f.preFilterPlugins&#125;,</span><br><span class="line">		&#123;plugins.Filter, &amp;f.filterPlugins&#125;,</span><br><span class="line">		&#123;plugins.Reserve, &amp;f.reservePlugins&#125;,</span><br><span class="line">		&#123;plugins.PreScore, &amp;f.preScorePlugins&#125;,</span><br><span class="line">		&#123;plugins.Score, &amp;f.scorePlugins&#125;,</span><br><span class="line">		&#123;plugins.PreBind, &amp;f.preBindPlugins&#125;,</span><br><span class="line">		&#123;plugins.Bind, &amp;f.bindPlugins&#125;,</span><br><span class="line">		&#123;plugins.PostBind, &amp;f.postBindPlugins&#125;,</span><br><span class="line">		&#123;plugins.Unreserve, &amp;f.unreservePlugins&#125;,</span><br><span class="line">		&#123;plugins.Permit, &amp;f.permitPlugins&#125;,</span><br><span class="line">		&#123;plugins.QueueSort, &amp;f.queueSortPlugins&#125;,</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其中，slicePtr指向的是对于framework不同扩展点，存储的不同插件具体实现；而 plugins 这个 PluginSet这个配置，主要配置哪些插件开启，哪些插件关闭。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> extensionPoint <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// the set of plugins to be configured at this extension point.</span></span><br><span class="line">	plugins *config.PluginSet</span><br><span class="line">	<span class="comment">// a pointer to the slice storing plugins implementations that will run at this</span></span><br><span class="line">	<span class="comment">// extension point.</span></span><br><span class="line">	slicePtr <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>updatePluginList</code>函数其具体实现如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">updatePluginList</span><span class="params">(pluginList <span class="keyword">interface</span>&#123;&#125;, pluginSet *config.PluginSet, pluginsMap <span class="keyword">map</span>[<span class="keyword">string</span>]Plugin)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> pluginSet == <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 首先通过Elem获取当前数组的类型</span></span><br><span class="line">    plugins := reflect.ValueOf(pluginList).Elem()</span><br><span class="line">    <span class="comment">// 通过数组类型来获取数组内部元素的类型</span></span><br><span class="line">    pluginType := plugins.Type().Elem()</span><br><span class="line">    set := sets.NewString()</span><br><span class="line">    <span class="keyword">for</span> _, ep := <span class="keyword">range</span> pluginSet.Enabled &#123;</span><br><span class="line">        pg, ok := pluginsMap[ep.Name]</span><br><span class="line">        <span class="keyword">if</span> !ok &#123;</span><br><span class="line">            <span class="keyword">return</span> fmt.Errorf(<span class="string">"%s %q does not exist"</span>, pluginType.Name(), ep.Name)</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 合法性检查：如果发现当前插件未实现当前接口，则报错</span></span><br><span class="line">        <span class="keyword">if</span> !reflect.TypeOf(pg).Implements(pluginType) &#123;</span><br><span class="line">            <span class="keyword">return</span> fmt.Errorf(<span class="string">"plugin %q does not extend %s plugin"</span>, ep.Name, pluginType.Name())</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> set.Has(ep.Name) &#123;</span><br><span class="line">            <span class="keyword">return</span> fmt.Errorf(<span class="string">"plugin %q already registered as %q"</span>, ep.Name, pluginType.Name())</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        </span><br><span class="line">        set.Insert(ep.Name)</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 追加插件到slice中，并保存指针指向</span></span><br><span class="line">        newPlugins := reflect.Append(plugins, reflect.ValueOf(pg))</span><br><span class="line">        plugins.Set(newPlugins)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>那么问题来了，<code>Registry</code>中的插件是在哪里注册的呢？在 <code>pkg/scheduler/scheduler.go</code>中</p>
+<figure class="highlight go"><figcaption><span>pkg/scheduler/scheduler.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">registry := frameworkplugins.NewInTreeRegistry()</span><br><span class="line"><span class="keyword">if</span> err := registry.Merge(options.frameworkOutOfTreeRegistry); err != <span class="literal">nil</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个是在plugin目录下硬编码的，也就是Framework内置的插件。对于自己写的插件，需要通过 <code>frameworkOutOfTreeRegistry</code> 配置。</p>
+<figure class="highlight go"><figcaption><span>pkg/scheduler/framework/plugins/registry.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewInTreeRegistry</span><span class="params">()</span> <span class="title">framework</span>.<span class="title">Registry</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> framework.Registry&#123;</span><br><span class="line">		defaultpodtopologyspread.Name:              defaultpodtopologyspread.New,</span><br><span class="line">		imagelocality.Name:                         imagelocality.New,</span><br><span class="line">		tainttoleration.Name:                       tainttoleration.New,</span><br><span class="line">		nodename.Name:                              nodename.New,</span><br><span class="line">		nodeports.Name:                             nodeports.New,</span><br><span class="line">		nodepreferavoidpods.Name:                   nodepreferavoidpods.New,</span><br><span class="line">		nodeaffinity.Name:                          nodeaffinity.New,</span><br><span class="line">		podtopologyspread.Name:                     podtopologyspread.New,</span><br><span class="line">		nodeunschedulable.Name:                     nodeunschedulable.New,</span><br><span class="line">		noderesources.FitName:                      noderesources.NewFit,</span><br><span class="line">		noderesources.BalancedAllocationName:       noderesources.NewBalancedAllocation,</span><br><span class="line">		noderesources.MostAllocatedName:            noderesources.NewMostAllocated,</span><br><span class="line">		noderesources.LeastAllocatedName:           noderesources.NewLeastAllocated,</span><br><span class="line">		noderesources.RequestedToCapacityRatioName: noderesources.NewRequestedToCapacityRatio,</span><br><span class="line">		noderesources.ResourceLimitsName:           noderesources.NewResourceLimits,</span><br><span class="line">		volumebinding.Name:                         volumebinding.New,</span><br><span class="line">		volumerestrictions.Name:                    volumerestrictions.New,</span><br><span class="line">		volumezone.Name:                            volumezone.New,</span><br><span class="line">		nodevolumelimits.CSIName:                   nodevolumelimits.NewCSI,</span><br><span class="line">		nodevolumelimits.EBSName:                   nodevolumelimits.NewEBS,</span><br><span class="line">		nodevolumelimits.GCEPDName:                 nodevolumelimits.NewGCEPD,</span><br><span class="line">		nodevolumelimits.AzureDiskName:             nodevolumelimits.NewAzureDisk,</span><br><span class="line">		nodevolumelimits.CinderName:                nodevolumelimits.NewCinder,</span><br><span class="line">		interpodaffinity.Name:                      interpodaffinity.New,</span><br><span class="line">		nodelabel.Name:                             nodelabel.New,</span><br><span class="line">		serviceaffinity.Name:                       serviceaffinity.New,</span><br><span class="line">		queuesort.Name:                             queuesort.New,</span><br><span class="line">		defaultbinder.Name:                         defaultbinder.New,</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>最后一个问题，对于Plugins目录下的每个插件，是如何决定自己属于那个扩展点呢？</p>
+<h2 id="Plugin-Lifecycle"><a href="#Plugin-Lifecycle" class="headerlink" title="Plugin Lifecycle"></a>Plugin Lifecycle</h2><h3 id="Initialization"><a href="#Initialization" class="headerlink" title="Initialization"></a>Initialization</h3><blockquote>
+<p>There are two steps to plugin initialization. First, <a href="https://github.com/kubernetes/enhancements/blob/master/keps/sig-scheduling/20180409-scheduling-framework.md#plugin-registration" target="_blank" rel="external nofollow noopener noreferrer">plugins are registered</a>. Second, the scheduler uses its configuration to decide which plugins to instantiate. If a plugin registers for multiple extension points, <em>it is instantiated only once</em>.</p>
+<p>When a plugin is instantiated, it is passed <a href="https://github.com/kubernetes/enhancements/blob/master/keps/sig-scheduling/20180409-scheduling-framework.md#optional-args" target="_blank" rel="external nofollow noopener noreferrer">config args</a> and a <a href="https://github.com/kubernetes/enhancements/blob/master/keps/sig-scheduling/20180409-scheduling-framework.md#frameworkhandle" target="_blank" rel="external nofollow noopener noreferrer"><code>FrameworkHandle</code></a>.</p>
+</blockquote>
+<h3 id="Concurrency"><a href="#Concurrency" class="headerlink" title="Concurrency"></a>Concurrency</h3><blockquote>
+<p>There are two types of concurrency that plugin writers should consider. A plugin might be invoked several times concurrently when evaluating multiple nodes, and a plugin may be called concurrently from <em>different <a href="https://github.com/kubernetes/enhancements/blob/master/keps/sig-scheduling/20180409-scheduling-framework.md#scheduling-cycle--binding-cycle" target="_blank" rel="external nofollow noopener noreferrer">scheduling contexts</a></em>.</p>
+<p><em>Note: Within one scheduling context, each extension point is evaluated serially.</em></p>
+<p>In the main thread of the scheduler, only one scheduling cycle is processed at a time. Any extension point up to and including <a href="https://github.com/kubernetes/enhancements/blob/master/keps/sig-scheduling/20180409-scheduling-framework.md#reserve" target="_blank" rel="external nofollow noopener noreferrer">reserve</a> will be finished before the next scheduling cycle begins*. After the reserve phase, the binding cycle is executed asynchronously. This means that a plugin could be called concurrently from two different scheduling contexts, provided that at least one of the calls is to an extension point after reserve. Stateful plugins should take care to handle these situations.</p>
+<p>Finally, <a href="https://github.com/kubernetes/enhancements/blob/master/keps/sig-scheduling/20180409-scheduling-framework.md#un-reserve" target="_blank" rel="external nofollow noopener noreferrer">un-reserve</a> plugins may be called from either the Permit thread or the Bind thread, depending on how the pod was rejected.</p>
+<p>* <em>The queue sort extension point is a special case. It is not part of a scheduling context and may be called concurrently for many pod pairs.</em></p>
+<p><img alt="image" data-src="https://github.com/kubernetes/enhancements/raw/master/keps/sig-scheduling/20180409-scheduling-framework-threads.png"></p>
+</blockquote>
+<h2 id="Configuring-Plugins"><a href="#Configuring-Plugins" class="headerlink" title="Configuring Plugins"></a>Configuring Plugins</h2><h2 id="Interaction-with-Cluster-Autoscaler"><a href="#Interaction-with-Cluster-Autoscaler" class="headerlink" title="Interaction with Cluster Autoscaler"></a>Interaction with Cluster Autoscaler</h2><h1 id="调度器核心组件流程"><a href="#调度器核心组件流程" class="headerlink" title="调度器核心组件流程"></a>调度器核心组件流程</h1><h2 id="调度器初始化"><a href="#调度器初始化" class="headerlink" title="调度器初始化"></a>调度器初始化</h2><h3 id="调度器参数初始化"><a href="#调度器参数初始化" class="headerlink" title="调度器参数初始化"></a>调度器参数初始化</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> defaultSchedulerOptions = schedulerOptions&#123;</span><br><span class="line">	profiles: []schedulerapi.KubeSchedulerProfile&#123;</span><br><span class="line">		<span class="comment">// Profiles' default plugins are set from the algorithm provider.</span></span><br><span class="line">		&#123;SchedulerName: v1.DefaultSchedulerName&#125;,</span><br><span class="line">	&#125;,</span><br><span class="line">	schedulerAlgorithmSource: schedulerapi.SchedulerAlgorithmSource&#123;</span><br><span class="line">		Provider: defaultAlgorithmSourceProviderName(),</span><br><span class="line">	&#125;,</span><br><span class="line">	disablePreemption:        <span class="literal">false</span>,</span><br><span class="line">	percentageOfNodesToScore: schedulerapi.DefaultPercentageOfNodesToScore,</span><br><span class="line">	bindTimeoutSeconds:       BindTimeoutSeconds,</span><br><span class="line">	podInitialBackoffSeconds: <span class="keyword">int64</span>(internalqueue.DefaultPodInitialBackoffDuration.Seconds()),</span><br><span class="line">	podMaxBackoffSeconds:     <span class="keyword">int64</span>(internalqueue.DefaultPodMaxBackoffDuration.Seconds()),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="插件工厂注册表的初始化"><a href="#插件工厂注册表的初始化" class="headerlink" title="插件工厂注册表的初始化"></a>插件工厂注册表的初始化</h3><p>插件工厂注册表的初始化分为两个部分in tree和out of tree即当前版本自带的和用户自定义的两部分</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 首先进行当前版本的插件注册表的注册</span></span><br><span class="line">registry := frameworkplugins.NewInTreeRegistry()</span><br><span class="line"><span class="comment">// 加载用户自定义的插件注册表</span></span><br><span class="line"><span class="keyword">if</span> err := registry.Merge(options.frameworkOutOfTreeRegistry); err != <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="事件informer回调handler绑定"><a href="#事件informer回调handler绑定" class="headerlink" title="事件informer回调handler绑定"></a>事件informer回调handler绑定</h3><p>绑定事件回调主要是通过AddAllEventHandlers主要是将各种资源数据通过SchedulerCache放入本地缓存中，同时针对未调度的pod(!assignedPod即没有绑定Node的pod)加入到调度队列中</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">AddAllEventHandlers</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    sched *Scheduler,</span></span></span><br><span class="line"><span class="function"><span class="params">    schedulerName <span class="keyword">string</span>,</span></span></span><br><span class="line"><span class="function"><span class="params">    informerFactory informers.SharedInformerFactory,</span></span></span><br><span class="line"><span class="function"><span class="params">    podInformer coreinformers.PodInformer,</span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span> &#123;</span><br></pre></td></tr></table></figure>
+<h3 id="触发未调度队列中的pod转移"><a href="#触发未调度队列中的pod转移" class="headerlink" title="触发未调度队列中的pod转移"></a>触发未调度队列中的pod转移</h3><p>当资源发生变化的时候，比如service、volume等就会对unschedulableQ中的之前调度失败的pod进行重试，选择将其转移到activeQ或者backoffQ中</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p *PriorityQueue)</span> <span class="title">MoveAllToActiveOrBackoffQueue</span><span class="params">(event <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">    p.lock.Lock()</span><br><span class="line">    <span class="keyword">defer</span> p.lock.Unlock()</span><br><span class="line">    unschedulablePods := <span class="built_in">make</span>([]*framework.PodInfo, <span class="number">0</span>, <span class="built_in">len</span>(p.unschedulableQ.podInfoMap))</span><br><span class="line">    <span class="comment">// 获取所有unschedulable的pod</span></span><br><span class="line">    <span class="keyword">for</span> _, pInfo := <span class="keyword">range</span> p.unschedulableQ.podInfoMap &#123;</span><br><span class="line">        unschedulablePods = <span class="built_in">append</span>(unschedulablePods, pInfo)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 将unschedulable的pod转移到backoffQ队列或者activeQ队列中</span></span><br><span class="line">    p.movePodsToActiveOrBackoffQueue(unschedulablePods, event)</span><br><span class="line">    <span class="comment">// 修改迁移调度器请求周期, 在失败的时候会进行比较pod的moveRequestCycle是否&gt;=schedulingCycle</span></span><br><span class="line">    p.moveRequestCycle = p.schedulingCycle</span><br><span class="line">    p.cond.Broadcast()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="启动调度器"><a href="#启动调度器" class="headerlink" title="启动调度器"></a>启动调度器</h3><p>最后则会启动调度器，其核心流程是在scheduleOne中</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(sched *Scheduler)</span> <span class="title">Run</span><span class="params">(ctx context.Context)</span></span> &#123;</span><br><span class="line">    <span class="comment">// 首先会进行同步缓存</span></span><br><span class="line">    <span class="keyword">if</span> !cache.WaitForCacheSync(ctx.Done(), sched.scheduledPodsHasSynced) &#123;</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 启动调度队列的后台定时任务</span></span><br><span class="line">    sched.SchedulingQueue.Run()</span><br><span class="line">    <span class="comment">// 启动调度流程</span></span><br><span class="line">    wait.UntilWithContext(ctx, sched.scheduleOne, <span class="number">0</span>)</span><br><span class="line">    sched.SchedulingQueue.Close()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="构建调度器核心组件基础数据"><a href="#构建调度器核心组件基础数据" class="headerlink" title="构建调度器核心组件基础数据"></a>构建调度器核心组件基础数据</h2><h3 id="获取等待调度的pod"><a href="#获取等待调度的pod" class="headerlink" title="获取等待调度的pod"></a>获取等待调度的pod</h3><p>获取等待调度的pod则直接通过NextPod进行，其实内部就是对 <code>schedulingQueue.pop</code>的封装</p>
+<figure class="highlight go"><figcaption><span>pkg/scheduler/scheduler.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 从队列中获取等待调度的pod</span></span><br><span class="line">podInfo := sched.NextPod()</span><br><span class="line"><span class="comment">// pod could be nil when schedulerQueue is closed</span></span><br><span class="line"><span class="keyword">if</span> podInfo == <span class="literal">nil</span> || podInfo.Pod == <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里的 <code>NextPod</code> 方法是在Scheduler初始化时候指定的。</p>
+<figure class="highlight go"><figcaption><span>pkg/scheduler/factory.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">return</span> &amp;Scheduler&#123;</span><br><span class="line">	SchedulerCache:  c.schedulerCache,</span><br><span class="line">	Algorithm:       algo,</span><br><span class="line">	Profiles:        profiles,</span><br><span class="line">	NextPod:         internalqueue.MakeNextPodFunc(podQueue),</span><br><span class="line">	Error:           MakeDefaultErrorFunc(c.client, podQueue, c.schedulerCache),</span><br><span class="line">	StopEverything:  c.StopEverything,</span><br><span class="line">	VolumeBinder:    c.volumeBinder,</span><br><span class="line">	SchedulingQueue: podQueue,</span><br><span class="line">&#125;, <span class="literal">nil</span></span><br></pre></td></tr></table></figure>
+<p>具体实现方法如下：</p>
+<figure class="highlight go"><figcaption><span>pkg/scheduler/internal/queue/scheduling_queue.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">MakeNextPodFunc</span><span class="params">(queue SchedulingQueue)</span> <span class="title">func</span><span class="params">()</span> *<span class="title">framework</span>.<span class="title">PodInfo</span></span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">()</span> *<span class="title">framework</span>.<span class="title">PodInfo</span></span> &#123;</span><br><span class="line">        podInfo, err := queue.Pop()</span><br><span class="line">        <span class="keyword">if</span> err == <span class="literal">nil</span> &#123;</span><br><span class="line">            klog.V(<span class="number">4</span>).Infof(<span class="string">"About to try and schedule pod %v/%v"</span>, podInfo.Pod.Namespace, podInfo.Pod.Name)</span><br><span class="line">            <span class="keyword">return</span> podInfo</span><br><span class="line">        &#125;</span><br><span class="line">        klog.Errorf(<span class="string">"Error while retrieving next pod from scheduling queue: %v"</span>, err)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="获取调度器Profile"><a href="#获取调度器Profile" class="headerlink" title="获取调度器Profile"></a>获取调度器Profile</h3><figure class="highlight go"><figcaption><span>pkg/scheduler/scheduler.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">prof, err := sched.profileForPod(pod)</span><br></pre></td></tr></table></figure>
+<p>这里的Profile是根据每个Pod制定的Scheduler Name获得对应的调度器Profile</p>
+<figure class="highlight go"><figcaption><span>pkg/scheduler/scheduler.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(sched *Scheduler)</span> <span class="title">profileForPod</span><span class="params">(pod *v1.Pod)</span> <span class="params">(*profile.Profile, error)</span></span> &#123;</span><br><span class="line">	prof, ok := sched.Profiles[pod.Spec.SchedulerName]</span><br><span class="line">	<span class="keyword">if</span> !ok &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, fmt.Errorf(<span class="string">"profile not found for scheduler name %q"</span>, pod.Spec.SchedulerName)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> prof, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里的 <code>Profiles</code>是一个对于Framework的封装</p>
+<figure class="highlight go"><figcaption><span>pkg/scheduler/profile/profile.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Profile is a scheduling profile.</span></span><br><span class="line"><span class="keyword">type</span> Profile <span class="keyword">struct</span> &#123;</span><br><span class="line">	framework.Framework</span><br><span class="line">	Recorder events.EventRecorder</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// NewProfile builds a Profile for the given configuration.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewProfile</span><span class="params">(cfg config.KubeSchedulerProfile, frameworkFact FrameworkFactory, recorderFact RecorderFactory)</span> <span class="params">(*Profile, error)</span></span> &#123;</span><br><span class="line">	f, err := frameworkFact(cfg)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">	r := recorderFact(cfg.SchedulerName)</span><br><span class="line">	<span class="keyword">return</span> &amp;Profile&#123;</span><br><span class="line">		Framework: f,</span><br><span class="line">		Recorder:  r,</span><br><span class="line">	&#125;, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Map holds profiles indexed by scheduler name.</span></span><br><span class="line"><span class="keyword">type</span> Map <span class="keyword">map</span>[<span class="keyword">string</span>]*Profile</span><br></pre></td></tr></table></figure>
+<p>在创建scheduler的时候，建立profiles</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">profiles, err := profile.NewMap(c.profiles, c.buildFramework, c.recorderFactory)</span><br></pre></td></tr></table></figure>
+<p>关于Profile，可以参考 <a href="https://github.com/kubernetes/kubernetes/pull/88285" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/kubernetes/kubernetes/pull/88285</a></p>
+<h3 id="跳过提议Pod重调度"><a href="#跳过提议Pod重调度" class="headerlink" title="跳过提议Pod重调度"></a>跳过提议Pod重调度</h3><p>skipPodSchedule即检查当前 pod是否可以进行跳过</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> sched.skipPodSchedule(pod) &#123;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>下面两种情况下Pod就不需要进行重复的调度</p>
+<ul>
+<li>pod已经被删除</li>
+<li>pod已经被提议调度到某个节点，此时如果只是版本的更新，即除了ResourceVersion、Annotations、NodeName三个字段其余的都未曾变化</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// skipPodSchedule returns true if we could skip scheduling the pod for specified cases.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(sched *Scheduler)</span> <span class="title">skipPodSchedule</span><span class="params">(prof *profile.Profile, pod *v1.Pod)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	<span class="comment">// Case 1: pod is being deleted.</span></span><br><span class="line">	<span class="keyword">if</span> pod.DeletionTimestamp != <span class="literal">nil</span> &#123;</span><br><span class="line">		prof.Recorder.Eventf(pod, <span class="literal">nil</span>, v1.EventTypeWarning, <span class="string">"FailedScheduling"</span>, <span class="string">"Scheduling"</span>, <span class="string">"skip schedule deleting pod: %v/%v"</span>, pod.Namespace, pod.Name)</span><br><span class="line">		klog.V(<span class="number">3</span>).Infof(<span class="string">"Skip schedule deleting pod: %v/%v"</span>, pod.Namespace, pod.Name)</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Case 2: pod has been assumed and pod updates could be skipped.</span></span><br><span class="line">	<span class="comment">// An assumed pod can be added again to the scheduling queue if it got an update event</span></span><br><span class="line">	<span class="comment">// during its previous scheduling cycle but before getting assumed.</span></span><br><span class="line">	<span class="keyword">if</span> sched.skipPodUpdate(pod) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>具体的判断规则是</p>
+<figure class="highlight go"><figcaption><span>pkg/scheduler/eventhandler.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// skipPodUpdate checks whether the specified pod update should be ignored.</span></span><br><span class="line"><span class="comment">// This function will return true if</span></span><br><span class="line"><span class="comment">//   - The pod has already been assumed, AND</span></span><br><span class="line"><span class="comment">//   - The pod has only its ResourceVersion, Spec.NodeName, Annotations,</span></span><br><span class="line"><span class="comment">//     ManagedFields, Finalizers and/or Conditions updated.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(sched *Scheduler)</span> <span class="title">skipPodUpdate</span><span class="params">(pod *v1.Pod)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	<span class="comment">// Non-assumed pods should never be skipped.</span></span><br><span class="line">	isAssumed, err := sched.SchedulerCache.IsAssumedPod(pod)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		utilruntime.HandleError(fmt.Errorf(<span class="string">"failed to check whether pod %s/%s is assumed: %v"</span>, pod.Namespace, pod.Name, err))</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> !isAssumed &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Gets the assumed pod from the cache.</span></span><br><span class="line">	assumedPod, err := sched.SchedulerCache.GetPod(pod)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		utilruntime.HandleError(fmt.Errorf(<span class="string">"failed to get assumed pod %s/%s from cache: %v"</span>, pod.Namespace, pod.Name, err))</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Compares the assumed pod in the cache with the pod update. If they are</span></span><br><span class="line">	<span class="comment">// equal (with certain fields excluded), this pod update will be skipped.</span></span><br><span class="line">	f := <span class="function"><span class="keyword">func</span><span class="params">(pod *v1.Pod)</span> *<span class="title">v1</span>.<span class="title">Pod</span></span> &#123;</span><br><span class="line">		p := pod.DeepCopy()</span><br><span class="line">		<span class="comment">// ResourceVersion must be excluded because each object update will</span></span><br><span class="line">		<span class="comment">// have a new resource version.</span></span><br><span class="line">		p.ResourceVersion = <span class="string">""</span></span><br><span class="line">		<span class="comment">// Spec.NodeName must be excluded because the pod assumed in the cache</span></span><br><span class="line">		<span class="comment">// is expected to have a node assigned while the pod update may nor may</span></span><br><span class="line">		<span class="comment">// not have this field set.</span></span><br><span class="line">		p.Spec.NodeName = <span class="string">""</span></span><br><span class="line">		<span class="comment">// Annotations must be excluded for the reasons described in</span></span><br><span class="line">		<span class="comment">// https://github.com/kubernetes/kubernetes/issues/52914.</span></span><br><span class="line">		p.Annotations = <span class="literal">nil</span></span><br><span class="line">		<span class="comment">// Same as above, when annotations are modified with ServerSideApply,</span></span><br><span class="line">		<span class="comment">// ManagedFields may also change and must be excluded</span></span><br><span class="line">		p.ManagedFields = <span class="literal">nil</span></span><br><span class="line">		<span class="comment">// The following might be changed by external controllers, but they don't</span></span><br><span class="line">		<span class="comment">// affect scheduling decisions.</span></span><br><span class="line">		p.Finalizers = <span class="literal">nil</span></span><br><span class="line">		p.Status.Conditions = <span class="literal">nil</span></span><br><span class="line">		<span class="keyword">return</span> p</span><br><span class="line">	&#125;</span><br><span class="line">	assumedPodCopy, podCopy := f(assumedPod), f(pod)</span><br><span class="line">	<span class="keyword">if</span> !reflect.DeepEqual(assumedPodCopy, podCopy) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line">	klog.V(<span class="number">3</span>).Infof(<span class="string">"Skipping pod %s/%s update"</span>, pod.Namespace, pod.Name)</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="构建调度上下文"><a href="#构建调度上下文" class="headerlink" title="构建调度上下文"></a>构建调度上下文</h3><p>生成CycleState和context, 其中CycleState用于进行调度器周期上线文数据传递共享，而context则负责统一的退出协调管理</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 构建CycleState和context</span></span><br><span class="line">state := framework.NewCycleState()</span><br><span class="line">state.SetRecordPluginMetrics(rand.Intn(<span class="number">100</span>) &lt; pluginMetricsSamplePercent)</span><br><span class="line">schedulingCycleCtx, cancel := context.WithCancel(ctx)</span><br><span class="line"><span class="keyword">defer</span> cancel()</span><br></pre></td></tr></table></figure>
+<h2 id="正常调度流程"><a href="#正常调度流程" class="headerlink" title="正常调度流程"></a>正常调度流程</h2><h3 id="调度算法执行"><a href="#调度算法执行" class="headerlink" title="调度算法执行"></a>调度算法执行</h3><p>正常调度只需要调度ScheduleAlgorithm来进行调度，具体实现细节可以看之前的文章</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scheduleResult, err := sched.Algorithm.Schedule(schedulingCycleCtx, state, pod)</span><br></pre></td></tr></table></figure>
+<h3 id="Assume-Pod"><a href="#Assume-Pod" class="headerlink" title="Assume Pod"></a>Assume Pod</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">err = sched.assume(assumedPod, scheduleResult.SuggestedHost)</span><br></pre></td></tr></table></figure>
+<p>如果一个Pod被提议存储到某个节点，则会先将其加入到SchedulerCache中，同时从SchedulingQueue中移除，避免重复调度</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(sched *Scheduler)</span> <span class="title">assume</span><span class="params">(assumed *v1.Pod, host <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    assumed.Spec.NodeName = host</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 存储到SchedulerCache中这样下个调度周期中，pod会占用对应node的资源</span></span><br><span class="line">    <span class="keyword">if</span> err := sched.SchedulerCache.AssumePod(assumed); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        klog.Errorf(<span class="string">"scheduler cache AssumePod failed: %v"</span>, err)</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// if "assumed" is a nominated pod, we should remove it from internal cache</span></span><br><span class="line">    <span class="comment">// 从调度队列中移除pod</span></span><br><span class="line">    <span class="keyword">if</span> sched.SchedulingQueue != <span class="literal">nil</span> &#123;</span><br><span class="line">        sched.SchedulingQueue.DeleteNominatedPodIfExists(assumed)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="绑定调度流程"><a href="#绑定调度流程" class="headerlink" title="绑定调度流程"></a>绑定调度流程</h2><p>首先会遍历所有的插件，然后如果发现状态设置为Wait，则会根据插件的等待时间进行wait操作。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Run "permit" plugins.</span></span><br><span class="line">runPermitStatus := prof.RunPermitPlugins(schedulingCycleCtx, state, assumedPod, scheduleResult.SuggestedHost)</span><br></pre></td></tr></table></figure>
+<p>运行Permit插件之后，Bind阶段可以异步运行，依次绑定Volumes，运行Prebind插件，执行bind操作。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// bind the pod to its host asynchronously (we can do this b/c of the assumption step above).</span></span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">	bindingCycleCtx, cancel := context.WithCancel(ctx)</span><br><span class="line">	<span class="keyword">defer</span> cancel()</span><br><span class="line"></span><br><span class="line">	waitOnPermitStatus := prof.WaitOnPermit(bindingCycleCtx, assumedPod)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Bind volumes first before Pod</span></span><br><span class="line">	<span class="keyword">if</span> !allBound &#123;</span><br><span class="line">		err := sched.bindVolumes(assumedPod)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Run "prebind" plugins.</span></span><br><span class="line">	preBindStatus := prof.RunPreBindPlugins(bindingCycleCtx, state, assumedPod, scheduleResult.SuggestedHost)</span><br><span class="line"></span><br><span class="line">	err := sched.bind(bindingCycleCtx, prof, assumedPod, scheduleResult.SuggestedHost, state)</span><br><span class="line"></span><br><span class="line">   <span class="comment">// Run "postbind" plugins.</span></span><br><span class="line">		prof.RunPostBindPlugins(bindingCycleCtx, state, assumedPod, scheduleResult.SuggestedHost)</span><br><span class="line">&#125;()</span><br></pre></td></tr></table></figure>
+<h2 id="抢占流程"><a href="#抢占流程" class="headerlink" title="抢占流程"></a>抢占流程</h2><p>如果是预选失败的，并且当前调度器允许抢占功能，则会进行抢占调度处理即sched.preempt</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> fitError, ok := err.(*core.FitError); ok &#123;</span><br><span class="line">    <span class="comment">// 如果是预选失败则进行</span></span><br><span class="line">    <span class="keyword">if</span> sched.DisablePreemption &#123;</span><br><span class="line">        klog.V(<span class="number">3</span>).Infof(<span class="string">"Pod priority feature is not enabled or preemption is disabled by scheduler configuration."</span> +</span><br><span class="line">            <span class="string">" No preemption is performed."</span>)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        preemptionStartTime := time.Now()</span><br><span class="line">        <span class="comment">// 抢占调度</span></span><br><span class="line">        sched.preempt(schedulingCycleCtx, state, fwk, pod, fitError)</span><br><span class="line">        metrics.PreemptionAttempts.Inc()</span><br><span class="line">        metrics.SchedulingAlgorithmPreemptionEvaluationDuration.Observe(metrics.SinceInSeconds(preemptionStartTime))</span><br><span class="line">        metrics.DeprecatedSchedulingDuration.WithLabelValues(metrics.PreemptionEvaluation).Observe(metrics.SinceInSeconds(preemptionStartTime))</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="获取抢占者"><a href="#获取抢占者" class="headerlink" title="获取抢占者"></a>获取抢占者</h3><p>首先通过apiserver获取当前需要执行抢占的pod的最新Pod信息</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">preemptor, err := sched.podPreemptor.getUpdatedPod(preemptor)</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    klog.Errorf(<span class="string">"Error getting the updated preemptor pod object: %v"</span>, err)</span><br><span class="line">    <span class="keyword">return</span> <span class="string">""</span>, err</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="通过抢占算法筛选"><a href="#通过抢占算法筛选" class="headerlink" title="通过抢占算法筛选"></a>通过抢占算法筛选</h3><p>通过Preempt筛选要进行抢占操作的node节点、待驱逐的pod、待驱逐的提议的pod</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">node, victims, nominatedPodsToClear, err := sched.Algorithm.Preempt(ctx, state, preemptor, scheduleErr)</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    klog.Errorf(<span class="string">"Error preempting victims to make room for %v/%v: %v"</span>, preemptor.Namespace, preemptor.Name, err)</span><br><span class="line">    <span class="keyword">return</span> <span class="string">""</span>, err</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="更新调度队列中的Pod信息"><a href="#更新调度队列中的Pod信息" class="headerlink" title="更新调度队列中的Pod信息"></a>更新调度队列中的Pod信息</h3><p>如果节点抢占一个pod成功，则会更新队列中的抢占节点的提议节点信息，这样在下个调度周期中，就可以使用该信息</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sched.SchedulingQueue.<span class="constructor">UpdateNominatedPodForNode(<span class="params">preemptor</span>, <span class="params">nodeName</span>)</span></span><br></pre></td></tr></table></figure>
+<h3 id="更新Pod的提议节点信息"><a href="#更新Pod的提议节点信息" class="headerlink" title="更新Pod的提议节点信息"></a>更新Pod的提议节点信息</h3><p>这里会直接调用apiserver中节点的提议节点信息，为什么要这样做呢？因为当前pod已经抢占了node上部分的节点信息，但是在被抢占的pod完全从节点上删除之前的这段时间，该pod调度依然会失败，但是此时不能继续调用抢占流程了，因为你已经执行了抢占，此时只需要等待对应节点上的node都删除，则再次继续尝试调度</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">err = sched.podPreemptor.setNominatedNodeName(preemptor, nodeName)</span><br></pre></td></tr></table></figure>
+<h3 id="删除被驱逐节点"><a href="#删除被驱逐节点" class="headerlink" title="删除被驱逐节点"></a>删除被驱逐节点</h3><p>删除被驱逐节点直接调用apiserver进行操作，如果此时发现当前pod还在等待插件的Allow操作，则直接进行Reject</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> _, victim := <span class="keyword">range</span> victims &#123;</span><br><span class="line">        <span class="comment">// 调用apiserver进行删除pod</span></span><br><span class="line">        <span class="keyword">if</span> err := sched.podPreemptor.deletePod(victim); err != <span class="literal">nil</span> &#123;</span><br><span class="line">            klog.Errorf(<span class="string">"Error preempting pod %v/%v: %v"</span>, victim.Namespace, victim.Name, err)</span><br><span class="line">            <span class="keyword">return</span> <span class="string">""</span>, err</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// If the victim is a WaitingPod, send a reject message to the PermitPlugin</span></span><br><span class="line">        <span class="keyword">if</span> waitingPod := fwk.GetWaitingPod(victim.UID); waitingPod != <span class="literal">nil</span> &#123;</span><br><span class="line">            waitingPod.Reject(<span class="string">"preempted"</span>)</span><br><span class="line">        &#125;</span><br><span class="line">        sched.Recorder.Eventf(victim, preemptor, v1.EventTypeNormal, <span class="string">"Preempted"</span>, <span class="string">"Preempting"</span>, <span class="string">"Preempted by %v/%v on node %v"</span>, preemptor.Namespace, preemptor.Name, nodeName)</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="更新被抢占的提议节点"><a href="#更新被抢占的提议节点" class="headerlink" title="更新被抢占的提议节点"></a>更新被抢占的提议节点</h3><p>针对那些已经被提议调度到当前node的pod，会将其node设置为空，重新进行调度选择</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> _, p := <span class="keyword">range</span> nominatedPodsToClear &#123;</span><br><span class="line">    <span class="comment">// 清理这些提议的pod</span></span><br><span class="line">    rErr := sched.podPreemptor.removeNominatedNodeName(p)</span><br><span class="line">    <span class="keyword">if</span> rErr != <span class="literal">nil</span> &#123;</span><br><span class="line">        klog.Errorf(<span class="string">"Cannot remove 'NominatedPod' field of pod: %v"</span>, rErr)</span><br><span class="line">        <span class="comment">// We do not return as this error is not critical.</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d3e0e7a2/" rel="bookmark">【Kubernetes解读】Scheduler</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes解读】开篇</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/1f0eb2ff/" rel="bookmark">【Kubernetes解读】List/Watch机制和Informer模块详解</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/83a17de0/" title="【Kubernetes解读】Scheduling Framework">http://houmin.cc/posts/83a17de0/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
+              <a href="/tags/scheduler/" rel="tag"><i class="fa fa-tag"></i> scheduler</a>
+              <a href="/tags/framework/" rel="tag"><i class="fa fa-tag"></i> framework</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/8f35743d/" rel="next" title="【下厨房】酸甜麻辣咸">
+                  <i class="fa fa-chevron-left"></i> 【下厨房】酸甜麻辣咸
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/c2f57f16/" rel="prev" title="得意忘形">
+                  得意忘形 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Motivation"><span class="nav-number">1.</span> <span class="nav-text">Motivation</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Proposals"><span class="nav-number">2.</span> <span class="nav-text">Proposals</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Scheduling-Cycle-amp-Binding-Cycle"><span class="nav-number">2.1.</span> <span class="nav-text">Scheduling Cycle &amp; Binding Cycle</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Extension-points"><span class="nav-number">2.2.</span> <span class="nav-text">Extension points</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Queue-Sort"><span class="nav-number">2.2.1.</span> <span class="nav-text">Queue Sort</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Pre-filter"><span class="nav-number">2.2.2.</span> <span class="nav-text">Pre-filter</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#PreFilterExtensionAddPod"><span class="nav-number">2.2.2.1.</span> <span class="nav-text">PreFilterExtensionAddPod</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#PreFilterExtensionRemovePod"><span class="nav-number">2.2.2.2.</span> <span class="nav-text">PreFilterExtensionRemovePod</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Filter"><span class="nav-number">2.2.3.</span> <span class="nav-text">Filter</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Pre-Score"><span class="nav-number">2.2.4.</span> <span class="nav-text">Pre-Score</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Scoring"><span class="nav-number">2.2.5.</span> <span class="nav-text">Scoring</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Score-Extensions"><span class="nav-number">2.2.5.1.</span> <span class="nav-text">Score Extensions</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reserve"><span class="nav-number">2.2.6.</span> <span class="nav-text">Reserve</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Permit"><span class="nav-number">2.2.7.</span> <span class="nav-text">Permit</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#WaitPod"><span class="nav-number">2.2.7.1.</span> <span class="nav-text">WaitPod</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Allow"><span class="nav-number">2.2.7.2.</span> <span class="nav-text">Allow</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Reject"><span class="nav-number">2.2.7.3.</span> <span class="nav-text">Reject</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Premit-阶段-Wait-实现"><span class="nav-number">2.2.7.4.</span> <span class="nav-text">Premit 阶段 Wait 实现</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Pre-Bind"><span class="nav-number">2.2.8.</span> <span class="nav-text">Pre-Bind</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Bind"><span class="nav-number">2.2.9.</span> <span class="nav-text">Bind</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Post-Bind"><span class="nav-number">2.2.10.</span> <span class="nav-text">Post-Bind</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Un-reserve"><span class="nav-number">2.2.11.</span> <span class="nav-text">Un-reserve</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Plugin-API"><span class="nav-number">2.3.</span> <span class="nav-text">Plugin API</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CycleState"><span class="nav-number">2.3.1.</span> <span class="nav-text">CycleState</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#FrameworkHandle"><span class="nav-number">2.3.2.</span> <span class="nav-text">FrameworkHandle</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Plugin-Registration"><span class="nav-number">2.3.3.</span> <span class="nav-text">Plugin Registration</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Plugin-Lifecycle"><span class="nav-number">2.4.</span> <span class="nav-text">Plugin Lifecycle</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Initialization"><span class="nav-number">2.4.1.</span> <span class="nav-text">Initialization</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Concurrency"><span class="nav-number">2.4.2.</span> <span class="nav-text">Concurrency</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Configuring-Plugins"><span class="nav-number">2.5.</span> <span class="nav-text">Configuring Plugins</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Interaction-with-Cluster-Autoscaler"><span class="nav-number">2.6.</span> <span class="nav-text">Interaction with Cluster Autoscaler</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#调度器核心组件流程"><span class="nav-number">3.</span> <span class="nav-text">调度器核心组件流程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#调度器初始化"><span class="nav-number">3.1.</span> <span class="nav-text">调度器初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#调度器参数初始化"><span class="nav-number">3.1.1.</span> <span class="nav-text">调度器参数初始化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#插件工厂注册表的初始化"><span class="nav-number">3.1.2.</span> <span class="nav-text">插件工厂注册表的初始化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#事件informer回调handler绑定"><span class="nav-number">3.1.3.</span> <span class="nav-text">事件informer回调handler绑定</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#触发未调度队列中的pod转移"><span class="nav-number">3.1.4.</span> <span class="nav-text">触发未调度队列中的pod转移</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#启动调度器"><span class="nav-number">3.1.5.</span> <span class="nav-text">启动调度器</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#构建调度器核心组件基础数据"><span class="nav-number">3.2.</span> <span class="nav-text">构建调度器核心组件基础数据</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#获取等待调度的pod"><span class="nav-number">3.2.1.</span> <span class="nav-text">获取等待调度的pod</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#获取调度器Profile"><span class="nav-number">3.2.2.</span> <span class="nav-text">获取调度器Profile</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#跳过提议Pod重调度"><span class="nav-number">3.2.3.</span> <span class="nav-text">跳过提议Pod重调度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#构建调度上下文"><span class="nav-number">3.2.4.</span> <span class="nav-text">构建调度上下文</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#正常调度流程"><span class="nav-number">3.3.</span> <span class="nav-text">正常调度流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#调度算法执行"><span class="nav-number">3.3.1.</span> <span class="nav-text">调度算法执行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Assume-Pod"><span class="nav-number">3.3.2.</span> <span class="nav-text">Assume Pod</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#绑定调度流程"><span class="nav-number">3.4.</span> <span class="nav-text">绑定调度流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#抢占流程"><span class="nav-number">3.5.</span> <span class="nav-text">抢占流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#获取抢占者"><span class="nav-number">3.5.1.</span> <span class="nav-text">获取抢占者</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#通过抢占算法筛选"><span class="nav-number">3.5.2.</span> <span class="nav-text">通过抢占算法筛选</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#更新调度队列中的Pod信息"><span class="nav-number">3.5.3.</span> <span class="nav-text">更新调度队列中的Pod信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#更新Pod的提议节点信息"><span class="nav-number">3.5.4.</span> <span class="nav-text">更新Pod的提议节点信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#删除被驱逐节点"><span class="nav-number">3.5.5.</span> <span class="nav-text">删除被驱逐节点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#更新被抢占的提议节点"><span class="nav-number">3.5.6.</span> <span class="nav-text">更新被抢占的提议节点</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">66</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">115</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">453k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">13:44</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>
