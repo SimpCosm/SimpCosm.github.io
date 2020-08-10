@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="一个公用的 git 远程仓库可以让开发者之间高效协作，每个人都有权利访问远程仓库，并且可以从那里推送和拉取资料。一个远程仓库通常只是一个裸仓库（bare repository）——即一个没有当前工作目录的仓库。 因为该仓库仅仅作为合作媒介，不需要从磁盘检查快照；存放的只有 Git 的资料。 简单的说，裸仓库就是你工程目录内的 .git 子目录内容，不包含其他资料。Git 支持四种不同的传输协议：本">
+<meta name="keywords" content="git,ssh,https">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Git 服务器">
+<meta property="og:url" content="http://houmin.cc/posts/8fc468f1/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="一个公用的 git 远程仓库可以让开发者之间高效协作，每个人都有权利访问远程仓库，并且可以从那里推送和拉取资料。一个远程仓库通常只是一个裸仓库（bare repository）——即一个没有当前工作目录的仓库。 因为该仓库仅仅作为合作媒介，不需要从磁盘检查快照；存放的只有 Git 的资料。 简单的说，裸仓库就是你工程目录内的 .git 子目录内容，不包含其他资料。Git 支持四种不同的传输协议：本">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://www.aneasystone.com/usr/uploads/2018/11/1985996525.jpg">
+<meta property="og:updated_time" content="2020-08-10T14:04:55.278Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.aneasystone.com/usr/uploads/2018/11/1985996525.jpg">
+
+<link rel="canonical" href="http://houmin.cc/posts/8fc468f1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Git 服务器 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/8fc468f1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Git 服务器
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-03-24 11:38:54" itemprop="dateCreated datePublished" datetime="2018-03-24T11:38:54+08:00">2018-03-24</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/8fc468f1/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/8fc468f1/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>13k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>24 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>一个公用的 git 远程仓库可以让开发者之间高效协作，每个人都有权利访问远程仓库，并且可以从那里推送和拉取资料。一个远程仓库通常只是一个裸仓库（bare repository）——即一个没有当前工作目录的仓库。 因为该仓库仅仅作为合作媒介，不需要从磁盘检查快照；存放的只有 Git 的资料。 简单的说，裸仓库就是你工程目录内的 <code>.git</code> 子目录内容，不包含其他资料。Git 支持四种不同的传输协议：本地协议（Local）、HTTP(S) 协议、SSH（Secure Shell）协议以及 Git 协议，这四种协议在不同的场合有不同的用途，并且各有利弊，可以根据实际情况来选择。</p>
+<a id="more"></a>
+<h2 id="本地协议"><a href="#本地协议" class="headerlink" title="本地协议"></a>本地协议</h2><p>本地协议是 Git 最基本的协议，当我们想在本地做一些 Git 实验时，这将非常有用。我们首先建立两个目录：<code>/git/repo</code> 和 <code>~/working</code>，前者作为远程版本库，后者作为本地工作目录。</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">aneasystone<span class="meta">@little</span>-<span class="string">stone:</span>~$ sudo mkdir -p <span class="regexp">/git/</span>repo``aneasystone<span class="meta">@little</span>-<span class="string">stone:</span>~$ sudo git init --bare <span class="regexp">/git/</span>repo<span class="regexp">/test.git``已初始化空的 Git 仓库于 /</span>git<span class="regexp">/repo/</span>test.git/</span><br></pre></td></tr></table></figure>
+<p>我们在 <code>/git/repo</code> 目录通过 <code>git init --bare</code> 命令创建一个裸仓库（bare repository，即一个不包含当前工作目录的仓库），只要这一步，我们就可以开始使用了。接着我们在工作目录 <code>clone</code> 这个版本库：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">aneasystone@little-<span class="symbol">stone:</span>~$ cd ~<span class="regexp">/working/</span><span class="string">``</span>aneasystone@little-<span class="symbol">stone:</span>~<span class="regexp">/working$ git clone /git</span><span class="regexp">/repo/test</span>.git<span class="string">``</span>正克隆到 <span class="string">'test'</span>...<span class="string">``</span><span class="symbol">warning:</span> 您似乎克隆了一个空仓库。<span class="string">``</span>完成。</span><br></pre></td></tr></table></figure>
+<p>然后我们可以使用 <code>pull</code>、<code>push</code> 就像操作其他的版本库一样。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">aneasystone@little-stone:~/working$ cd test/``aneasystone@little-stone:~/working/test$ touch 1``aneasystone@little-stone:~/working/test$ touch 2``aneasystone@little-stone:~/working/test$ git add .``aneasystone@little-stone:~/working/test$ git <span class="keyword">commit</span> -m <span class="string">'first commit'</span><span class="string">``</span>[<span class="keyword">master</span> （根提交） <span class="number">4983</span>f84] <span class="keyword">first</span> <span class="keyword">commit</span><span class="string">``</span> <span class="string">``</span><span class="number">2</span> files <span class="keyword">changed</span>, <span class="number">0</span> insertions(+), <span class="number">0</span> deletions(-)<span class="string">``</span> <span class="string">``</span><span class="keyword">create</span> <span class="keyword">mode</span> <span class="number">100644</span> <span class="number">1</span><span class="string">``</span> <span class="string">``</span><span class="keyword">create</span> <span class="keyword">mode</span> <span class="number">100644</span> <span class="number">2</span><span class="string">``</span>aneasystone@<span class="keyword">little</span>-stone:~/working/<span class="keyword">test</span>$ sudo git push<span class="string">``</span>[sudo] aneasystone 的密码： <span class="string">``</span>对象计数中: <span class="number">3</span>, 完成.<span class="string">``</span>Delta compression <span class="keyword">using</span> up <span class="keyword">to</span> <span class="number">8</span> threads.<span class="string">``</span>压缩对象中: <span class="number">100</span>% (<span class="number">2</span>/<span class="number">2</span>), 完成.<span class="string">``</span>写入对象中: <span class="number">100</span>% (<span class="number">3</span>/<span class="number">3</span>), <span class="number">205</span> <span class="keyword">bytes</span> | <span class="number">205.00</span> KiB/s, 完成.<span class="string">``</span>Total <span class="number">3</span> (delta <span class="number">0</span>), reused <span class="number">0</span> (delta <span class="number">0</span>)<span class="string">``</span><span class="keyword">To</span> /git/repo/test.git<span class="string">``</span> <span class="string">``</span>* [<span class="keyword">new</span> branch]   <span class="keyword">master</span> -&gt; <span class="keyword">master</span></span><br></pre></td></tr></table></figure>
+<p>本地协议不仅在做 Git 实验时很有用，如果你的团队有一个共享文件系统，可以在这个共享文件系统上创建一个远程版本库，团队成员把这个共享文件系统挂在本地，就可以直接使用本地协议进行协作开发，完全不需要搭建一台专门的 Git 服务器。</p>
+<h2 id="SSH-协议"><a href="#SSH-协议" class="headerlink" title="SSH 协议"></a>SSH 协议</h2><p>本地协议虽然简单，但是一般来说并不适用，因为你无法控制用户对共享文件系统的操作，用户拥有 push 权限也就意味着用户对远程目录拥有完整的 Shell 权限，他们有可能会无意甚至有意的修改或删除 Git 内部文件，损坏 Git 仓库。</p>
+<p>更安全的做法是使用专门的 Git 服务器，如果你有一台可以使用 SSH 连接的服务器，搭建 Git 服务将会非常简单。首先我们要确保服务器上运行着 SSH 服务（<code>sshd</code>），大多数 Linux 服务器版本都默认包含了该服务，如果没有，可以先安装 <code>openssh-server</code>。然后在服务器上创建 Git 远程版本库：</p>
+<figure class="highlight d"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root<span class="keyword">@myserver</span>:~# mkdir -p /git/repo<span class="string">``</span>root<span class="keyword">@myserver</span>:~# git init --bare /git/repo/test.git<span class="string">``</span>已初始化空的 Git 仓库于 /git/repo/test.git/</span><br></pre></td></tr></table></figure>
+<p>然后在本地 <code>clone</code> 这个版本库：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">aneasystone@little-<span class="symbol">stone:</span>~<span class="regexp">/working$ git clone ssh:/</span><span class="regexp">/root@myserver/git</span><span class="regexp">/repo/test</span>.git<span class="string">``</span>正克隆到 <span class="string">'test'</span>...<span class="string">``</span>root@myserver<span class="string">'s password: ``warning: 您似乎克隆了一个空仓库。</span></span><br></pre></td></tr></table></figure>
+<p>可以看到和使用本地协议几乎一样，不同的地方在于，在 clone 的时候需要在 URL 前面加上 <code>ssh://root@myserver</code>，你也可以使用 scp 式的写法：</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$ </span>git clone root<span class="variable">@myserver</span><span class="symbol">:/git/repo/test</span>.git</span><br></pre></td></tr></table></figure>
+<p>另外一点不同的地方是，每次 <code>pull</code>、<code>push</code> 的时候都需要输入远程服务器的 root 密码。很显然，让每个 Git 用户都使用 root 来访问服务器是一种很不安全的做法，有几种方法可以解决这个问题：</p>
+<ul>
+<li>最显而易见的方法是为每个 Git 用户创建一个独立的账号，并分别为他们分配对仓库的读写权限，这种方法行的通，但是对账号的管理非常麻烦，在团队人员不是很多的时候可以尝试，但是并不推荐；</li>
+<li>另一种方法是配置 SSH 服务器使用某个已有的认证系统来管理用户，比如 <a href="https://zh.wikipedia.org/wiki/轻型目录访问协议" target="_blank" rel="external nofollow noopener noreferrer">LDAP</a>，这在很多企业中是很常见的，这样可以省去用 <code>adduser</code> 手工管理服务器账号的麻烦；</li>
+<li>还有一种方法是只创建一个账号，比如叫做 git，他对仓库具有读写权限，大家都使用这个账号来访问仓库。这种方法的好处是用户管理起来比较简单，而且可以使用后面介绍的 <code>authorized_keys</code> 文件对用户的公钥进行管理；</li>
+</ul>
+<p>下面我们尝试下第三种方法。首先在服务器上创建一个名叫 git 的账号：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root@myserver:~# adduser git``Adding<span class="built_in"> user </span>`git<span class="string">' ...``Adding new group `git'</span> (1000) <span class="built_in">..</span>.``Adding new<span class="built_in"> user </span>`git<span class="string">' (1000) with group `git'</span> <span class="built_in">..</span>.``Creating home directory `/home/git<span class="string">' ...``Copying files from `/etc/skel'</span> <span class="built_in">..</span>.``Enter new UNIX password: ``Retype new UNIX password: ``passwd: password updated successfully``Changing the<span class="built_in"> user </span>information <span class="keyword">for</span> git``Enter the new value, <span class="keyword">or</span> press ENTER <span class="keyword">for</span> the default``  ``Full Name []: git``  ``Room Number []:  ``  ``Work Phone []: ``  ``Home Phone []: ``  ``Other []: ``Is the information correct? [Y/n] Y</span><br></pre></td></tr></table></figure>
+<p>再设置一下 git 仓库的权限（默认情况下，git 仓库的权限为 <code>rwxr-xr-x</code>，只有创建者 root 有写的权限，也就意味着使用 git 账号只能 <code>clone</code> <code>pull</code>，不能 <code>push</code>）：</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># chmod a+w -R /git/repo/test.git</span></span><br></pre></td></tr></table></figure>
+<p>我们这里非常粗暴的使用 <code>chmod a+w</code> 将 git 仓库设置为对所有人可写，这里可以想一想，如果我们希望设置某些用户对仓库具有只读的权限，该怎么做呢？</p>
+<p>然后就可以在本地愉快的进行 git 操作了：</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$ </span>git clone git<span class="variable">@myserver</span><span class="symbol">:/git/repo/test</span>.git</span><br></pre></td></tr></table></figure>
+<p>到这里似乎一切都很正常，但是几次实操之后你就会发现，每次 git 操作都要输入一次密码，这也太麻烦了，能不能“免密提交代码”呢？首先我们要知道，只要能通过 SSH 登陆到服务器，我们就能操作 git，所以如果 SSH 能支持免密登陆，我们就可以“免密提交代码”。还好，SSH 支持公钥认证，这种认证方式无需密码登陆。在 Linux 操作系统中，每个用户都可以拥有自己的一个或多个密钥对（公钥和私钥成对出现），这些密钥一般情况会保存在 <code>~/.ssh</code> 目录下，在开始之前，我们先确认下自己是否已经生成过公钥了，可以看下这个目录下是否有 <code>id_dsa.pub</code> 或 <code>id_rsa.pub</code> 这样的文件，如果没有，我们通过 <code>ssh-keygen</code> 来生成：</p>
+<figure class="highlight julia"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">aneasystone<span class="meta">@little</span>-stone:~/.ssh$ ssh-keygen<span class="string">``</span>Generating public/private rsa key pair.<span class="string">``</span>Enter file <span class="keyword">in</span> which to save the key (/home/aneasystone/.ssh/id_rsa): <span class="string">``</span>Enter passphrase (empty <span class="keyword">for</span> no passphrase): <span class="string">``</span>Enter same passphrase again: <span class="string">``</span>Your identification has been saved <span class="keyword">in</span> /home/aneasystone/.ssh/id_rsa.<span class="string">``</span>Your public key has been saved <span class="keyword">in</span> /home/aneasystone/.ssh/id_rsa.pub.<span class="string">``</span>The key fingerprint is:<span class="string">``</span>SHA256:<span class="number">4</span>Ulpufuhs/AgDMb0VXnqMUTw6bD/HrAOI2z9c1cod9I aneasystone<span class="meta">@little</span>-stone<span class="string">``</span>The key's randomart image is:<span class="string">``</span>+---[RSA <span class="number">2048</span>]----+<span class="string">``</span>|   .oo.    |<span class="string">``</span>|    oo+.   |<span class="string">``</span>| .  o.Oo    |<span class="string">``</span>| o . . B++    |<span class="string">``</span>| + . ..So  o  |<span class="string">``</span>| . + . ..+. + E |<span class="string">``</span>|  * * + oo +  |<span class="string">``</span>|  . o Oo+.o.  |<span class="string">``</span>|    **+.   |<span class="string">``</span>+----[SHA256]-----+</span><br></pre></td></tr></table></figure>
+<p>这样我们在 <code>~/.ssh</code> 目录生成了两个文件，<code>id_rsa</code> 是你的私钥，<code>id_rsa.pub</code> 是你的公钥。关于私钥和公钥的原理以及 RSA 加密算法等内容可以参考我之前写过的一篇介绍 <a href="https://www.aneasystone.com/archives/2016/04/java-and-https.html" target="_blank" rel="external nofollow noopener noreferrer">HTTPS 和证书</a> 的文章。</p>
+<p>我们假设你的 Git 服务器是由专门的服务器管理员负责维护和管理，当你生成你的公钥之后，就可以给服务器管理员发送一封申请 Git 服务的邮件，并附上你的公钥。服务器管理员在收到你的申请之后，如果同意了，就可以进行下面的操作：</p>
+<p>首先将公钥文件拷贝到服务器上：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># scp id_rsa.pub root<span class="doctag">@myserver</span>:/home/git</span></span><br></pre></td></tr></table></figure>
+<p>将公钥文件的内容追加到 git 账户的 authorized_keys 文件中（要注意的是，如果是第一次操作，/home/git 目录下是没有 .ssh 目录的，需要手工创建 .ssh 目录和 authorized_keys 文件）：</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root<span class="variable">@myserver</span><span class="symbol">:/home/git</span><span class="comment"># cat id_rsa.pub &gt;&gt; /home/git/.ssh/authorized_keys</span></span><br></pre></td></tr></table></figure>
+<p>后续如果有其他的用户申请 Git 服务，都可以按照这个步骤操作。一旦完成这个操作，服务器管理员将会回复你的邮件，通知你 Git 服务已经开通，这个时候你再进行 git 操作就可以不用输入密码了。关于 SSH 的使用，更详细的步骤可以参考 Github 上的这篇指南：<a href="https://help.github.com/articles/connecting-to-github-with-ssh/" target="_blank" rel="external nofollow noopener noreferrer">Connecting to GitHub with SSH</a>。</p>
+<p>作为服务器管理员，关于 SSH 还有一点需要考虑，那就是 SSH 的安全问题。在上面介绍本地协议时，我们说这种方式无法控制用户对 Git 仓库的操作，无法防止用户有意或无意的损坏 Git 仓库，使用 SSH 协议一样存在这样的问题，用户能通过 SSH 拉取和提交代码，也就意味着用户可以通过 SSH 连接到服务器，对 Git 仓库进行任何操作，这是一件很让人担心的事情。</p>
+<p>因此，我们还需要对 git 账号做一些限制。默认情况下，我们新建账号的登陆 shell 是 <code>/bin/bash</code>，这个配置在 <code>/etc/passwd</code> 文件中：</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">git:</span><span class="symbol">x:</span><span class="number">1000:1000</span><span class="symbol">:git</span>,,,<span class="symbol">:/home/git</span><span class="symbol">:/bin/bash</span></span><br></pre></td></tr></table></figure>
+<p>可以使用 <code>chsh</code> 命令修改用户的登陆 shell，让他不能通过 SSH 访问服务器，怎么修改呢？我们可以看一下 <code>/etc/shells</code> 文件，这里定义了所有可以使用的登陆 shell，你可以将 <code>/bin/bash</code> 改成这里的任何一个：</p>
+<figure class="highlight d"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root<span class="keyword">@myserver</span>:~# cat /etc/shells <span class="string">``</span># /etc/shells: valid login shells<span class="string">``</span>/bin/sh<span class="string">``</span>/bin/dash<span class="string">``</span>/bin/bash<span class="string">``</span>/bin/rbash</span><br></pre></td></tr></table></figure>
+<p>很显然，这些 shell 并不是我们想要的，有没有一个 shell 只允许用户进行 git 操作，而不允许其他操作呢？还好，Git 的软件包提供了一个名叫 <a href="https://git-scm.com/docs/git-shell" target="_blank" rel="external nofollow noopener noreferrer"><code>git-shell</code> 的登陆 shell</a>，我们可以把他加进去，一般情况下位于 <code>/usr/bin/git-shell</code>。我们使用 <code>chsh</code> 修改 git 的登陆 shell：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root<span class="meta">@myserver</span>:~# chsh git<span class="string">``</span>Changing the login shell <span class="keyword">for</span> git<span class="string">``</span>Enter the <span class="keyword">new</span> value, or press ENTER <span class="keyword">for</span> the <span class="keyword">default</span><span class="string">``</span>  <span class="string">``</span>Login Shell [<span class="regexp">/bin/</span>bash]: <span class="regexp">/usr/</span>bin/git-shell</span><br></pre></td></tr></table></figure>
+<p>这样当用户 git 通过 SSH 连接服务器时，就会直接被拒绝了。</p>
+<h2 id="Git-协议"><a href="#Git-协议" class="headerlink" title="Git 协议"></a>Git 协议</h2><p>SSH 协议解决了用户直接操作 Git 仓库的权限问题，但是如果我们希望对除仓库维护者之外的所有人都开放 Git 仓库的只读权限，这在开源项目中和企业内部往往是很常见的，任何人都可以去查看仓库的代码，这时管理员需要给每一个用户配置 SSH 密钥是非常麻烦的。虽然也可以使用变通的方法来达到这个效果，但是很繁琐，下面是具体的步骤：</p>
+<ul>
+<li>使用 <code>g+w</code> 设置 Git 仓库的权限，让仓库创建者所在的用户组具有写权限，而不是所有人都有写权限（这一步通常也可以在 <code>git init</code> 的时候加上 <code>--shared</code> 参数）；</li>
+<li>然后将 git 账号加到仓库创建者的用户组；</li>
+<li>再创建一个 git_ro 账户，这个账户对仓库只有只读权限；</li>
+<li>最后为 git_ro 账户创建一个密钥对，把 git_ro 的私钥公开出来供所有人使用。</li>
+</ul>
+<p>可以看到使用 SSH 协议最终都逃不过授权这一步，而且公开私钥的做法也不是很优雅。实际上，Git 提供了另一种方式来让这个操作更简单，那就是 Git 协议。使用 Git 协议必须要在服务器上运行 Git 守护进程，git 命令自带了一个 <code>daemon</code> 参数：</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root<span class="variable">@myserver</span><span class="symbol">:~</span><span class="comment"># git daemon --reuseaddr --base-path=/git/repo/ /git/repo/</span></span><br></pre></td></tr></table></figure>
+<p>上面的各个参数可以 <a href="https://git-scm.com/docs/git-daemon" target="_blank" rel="external nofollow noopener noreferrer">参考 git-daemon 的文档</a>。git-daemon 会监听 9418 端口，如果你的服务器有防火墙，需要将该端口添加到白名单，如果你使用的是阿里云服务器，需要像下面这样添加一个安全组规则：</p>
+<p><img alt="security-group.jpg" data-src="https://www.aneasystone.com/usr/uploads/2018/11/1985996525.jpg"></p>
+<p>为了让所有的用户都可以访问我们的仓库，还需要在仓库目录下创建一个名为 <code>git-daemon-export-ok</code> 的文件：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root<span class="meta">@myserver</span>:~# cd /git/repo/test.git/<span class="string">``</span>root<span class="meta">@myserver</span>:<span class="regexp">/git/</span>repo/test.git/# touch git-daemon-<span class="keyword">export</span>-ok</span><br></pre></td></tr></table></figure>
+<p>至此，所有人都可以通过 Git 协议来克隆或拉取项目源码了（注意上面指定了 <code>base-path</code> 参数为 <code>/git/repo/</code>，所以 URL 可以直接写 <code>git://myserver/test.git</code>）：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">aneasystone<span class="meta">@little</span>-<span class="string">stone:</span><span class="regexp">~/working$ git clone git:/</span><span class="regexp">/myserver/</span>test.git</span><br></pre></td></tr></table></figure>
+<p>一般情况下，服务器管理员还会做一些其他的配置，譬如在服务器重启时让 Git 守护进程自动启动，这有很多种方式可以实现，可以参考《Pro Git》 <a href="https://git-scm.com/book/zh/v2/服务器上的-Git-Git-守护进程" target="_blank" rel="external nofollow noopener noreferrer">Git 守护进程</a> 这一节的内容。</p>
+<h2 id="HTTP-S-协议"><a href="#HTTP-S-协议" class="headerlink" title="HTTP(S) 协议"></a>HTTP(S) 协议</h2><p>我们一般通过 Git 协议进行无授权访问，通过 SSH 协议进行授权访问，如果你的项目是内部项目，只针对部分授权用户，那使用 SSH 协议就足够了，但是如果既需要授权访问也需要无授权访问，可能需要 SSH 协议和 Git 协议搭配使用，这在维护上成本很高。这时就到了我们的压轴戏 —— HTTP 协议出场的时候了，它同时支持上面两种访问方式。</p>
+<p>通过 HTTP 协议访问 Git 服务是目前使用最广泛的方式，它支持两种模式：旧版本的 <code>Dumb HTTP</code> 和 新版本的 <code>Smart HTTP</code>，Dumb HTTP 一般很少使用，下面除非特殊说明，所说的 HTTP 协议都是 Smart HTTP。使用 HTTP 协议的好处是可以使用各种 HTTP 认证机制，比如用户名/密码，这比配置 SSH 密钥要简单的多，对普通用户来说也更能接受。如果担心数据传输安全，也可以配置 HTTPS 协议，这和普通的 Web 服务是一样的。</p>
+<p>下面我们就来尝试搭建一个基于 HTTP 协议的 Git 服务器。《Pro Git》上提供了一个<a href="https://git-scm.com/book/zh/v2/服务器上的-Git-Smart-HTTP" target="_blank" rel="external nofollow noopener noreferrer">基于 Apache 的配置示例</a>，如果你是使用 Apache 作为 Web 服务器，可以参考之，我们这里使用 Nginx 来作为 Web 服务器，其原理本质上是一样的，都是通过 Web 服务器接受 HTTP 请求，并将请求转发到 Git 自带的一个名为 <a href="https://git-scm.com/docs/git-http-backend/" target="_blank" rel="external nofollow noopener noreferrer"><code>git-http-backend</code> 的 CGI 脚本</a>。</p>
+<p>首先我们安装所需的软件：</p>
+<figure class="highlight vala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"># apt-get install -y git-core nginx fcgiwrap apache2-utils</span></span><br></pre></td></tr></table></figure>
+<p>其中，Nginx 作为 Web 服务器，本身是不能执行外部 CGI 脚本的，需要通过 <a href="https://github.com/gnosek/fcgiwrap" target="_blank" rel="external nofollow noopener noreferrer">fcgiwrap</a> 来中转，就像使用 php-fpm 来执行 PHP 脚本一样。apache2-utils 是 Apache 提供的一个 Web 服务器的工具集，包含了一些有用的小工具，譬如下面我们会用到的 htpasswd 可以生成 Basic 认证文件。</p>
+<p>启动 nginx 和 fcgiwrap，并访问 <code>http://myserver</code> 测试 Web 服务器是否能正常访问：</p>
+<figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># service nginx start``# service fcgiwrap start</span><br></pre></td></tr></table></figure>
+<p>然后我们打开并编辑 Nginx 的配置文件（<code>/etc/nginx/sites-available/default</code>）:</p>
+<figure class="highlight arcade"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">location / &#123;<span class="string">``</span>    <span class="string">``</span>include fastcgi_params;<span class="string">``</span>    <span class="string">``</span>fastcgi_param SCRIPT_FILENAME /usr/lib/git-core/git-http-backend;<span class="string">``</span>    <span class="string">``</span>fastcgi_param GIT_HTTP_EXPORT_ALL <span class="string">""</span>;<span class="string">``</span>    <span class="string">``</span>fastcgi_param GIT_PROJECT_ROOT /git/repo;<span class="string">``</span>    <span class="string">``</span>fastcgi_param PATH_INFO <span class="symbol">$uri</span>;<span class="string">``</span>    <span class="string">``</span>fastcgi_param REMOTE_USER <span class="symbol">$remote</span>_user;<span class="string">``</span>    <span class="string">``</span>fastcgi_pass unix:<span class="regexp">/var/</span>run/fcgiwrap.socket;<span class="string">``</span>&#125;</span><br></pre></td></tr></table></figure>
+<p>这里通过 <code>fastcgi_param</code> 设置了一堆的 FastCGI 参数，如下：</p>
+<ul>
+<li>SCRIPT_FILENAME：指定 CGI 脚本 <code>git-http-backend</code> 的位置，表示每次 HTTP 请求会被转发到该 CGI 脚本；</li>
+<li>GIT_HTTP_EXPORT_ALL：<code>git-http-backend</code> 默认只能访问目录下有 <code>git-daemon-export-ok</code> 文件的 Git 仓库，和上面介绍的 Git 协议是一样的，如果指定了 GIT_HTTP_EXPORT_ALL，表示允许访问所有仓库；</li>
+<li>GIT_PROJECT_ROOT：Git 仓库的根目录；</li>
+<li>REMOTE_USER：如果有认证，将认证的用户信息传到 CGI 脚本；</li>
+</ul>
+<p>改完之后我们重启 Nginx，并通过 HTTP 协议 <code>clone</code> 仓库：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">aneasystone<span class="meta">@little</span>-<span class="string">stone:</span><span class="regexp">~/working$ git clone http:/</span><span class="regexp">/myserver/</span>test.git</span><br></pre></td></tr></table></figure>
+<h3 id="开启身份认证"><a href="#开启身份认证" class="headerlink" title="开启身份认证"></a>开启身份认证</h3><p>到这里一切 OK，但是当我们 <code>push</code> 代码的时候，却会报下面的 403 错误：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">aneasystone<span class="meta">@little</span>-<span class="string">stone:</span><span class="regexp">~/working/</span>test$ git push origin master``<span class="string">fatal:</span> unable to access <span class="string">'http://myserver/test.git/'</span>: The requested URL returned <span class="string">error:</span> <span class="number">403</span></span><br></pre></td></tr></table></figure>
+<p>为了解决这个错误，我们可以在 <a href="https://git-scm.com/docs/git-http-backend/" target="_blank" rel="external nofollow noopener noreferrer">git-http-backend 的官网文档</a> 上找到这样的一段描述：</p>
+<blockquote>
+<p>By default, only the <code>upload-pack</code> service is enabled, which serves <em>git fetch-pack</em> and <em>git ls-remote</em> clients, which are invoked from <em>git fetch</em>, <em>git pull</em>, and <em>git clone</em>. If the client is authenticated, the <code>receive-pack</code> service is enabled, which serves <em>git send-pack</em> clients, which is invoked from <em>git push</em>.</p>
+</blockquote>
+<p>第一次读这段话可能会有些不知所云，这是因为我们对这里提到的 <code>upload-pack</code>、<code>fetch-pack</code>、<code>receive-pack</code>、<code>send-pack</code> 这几个概念还没有什么认识。但是我们大抵可以猜出来，默认情况下，只有认证的用户才可以 push 代码，如果某个 Git 仓库希望所有用户都有权限 push 代码，可以为相应的仓库设置 <code>http.receivepack</code>：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root@myserver:/# cd /git/repo/test.git/``root@myserver:/git/repo/test.git# git<span class="built_in"> config </span>http.receivepack <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+<p>当然最好的做法还是对 push 操作开启认证，官网文档上有一个 <a href="https://git-scm.com/docs/git-http-backend/#git-http-backend-Lighttpd" target="_blank" rel="external nofollow noopener noreferrer">lighttpd 的配置</a> 我们可以借鉴：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$HTTP[<span class="string">"querystring"</span>] =~ <span class="string">"service=git-receive-pack"</span> &#123;<span class="string">``</span>  <span class="string">``</span><span class="keyword">include</span> <span class="string">"git-auth.conf"</span><span class="string">``</span>&#125;<span class="string">``</span>$HTTP[<span class="string">"url"</span>] =~ <span class="string">"^/git/.*/git-receive-pack$"</span> &#123;<span class="string">``</span>  <span class="string">``</span><span class="keyword">include</span> <span class="string">"git-auth.conf"</span><span class="string">``</span>&#125;</span><br></pre></td></tr></table></figure>
+<p>这个配置看上去非常简单，但是想要理解为什么这样配置，就必须去了解下 Git 的内部原理。正如上面 git-http-backend 文档上的那段描述，当 Git 客户端执行 <em>git fetch</em>, <em>git pull</em>, and <em>git clone</em> 时，会调用 <code>upload-pack</code> 服务，当执行 <em>git push</em> 时，会调用 <code>receive-pack</code> 服务，为了更清楚的说明这一点，我们来看看 Nginx 的访问日志。</p>
+<p>执行 <code>git clone</code>：</p>
+<figure class="highlight accesslog"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">[27/Nov/2018:22:18:00]</span> <span class="string">"<span class="keyword">GET</span> /test.git/info/refs?service=git-upload-pack HTTP/1.1"</span> <span class="number">200</span> <span class="number">363</span> <span class="string">"-"</span> <span class="string">"git/1.9.1"</span>``<span class="string">[27/Nov/2018:22:18:00]</span> <span class="string">"<span class="keyword">POST</span> /test.git/git-upload-pack HTTP/1.1"</span> <span class="number">200</span> <span class="number">306</span> <span class="string">"-"</span> <span class="string">"git/1.9.1"</span></span><br></pre></td></tr></table></figure>
+<p>执行 <code>git pull</code>：</p>
+<figure class="highlight accesslog"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">[27/Nov/2018:22:20:25]</span> <span class="string">"<span class="keyword">GET</span> /test.git/info/refs?service=git-upload-pack HTTP/1.1"</span> <span class="number">200</span> <span class="number">363</span> <span class="string">"-"</span> <span class="string">"git/1.9.1"</span>``<span class="string">[27/Nov/2018:22:20:25]</span> <span class="string">"<span class="keyword">POST</span> /test.git/git-upload-pack HTTP/1.1"</span> <span class="number">200</span> <span class="number">551</span> <span class="string">"-"</span> <span class="string">"git/1.9.1"</span></span><br></pre></td></tr></table></figure>
+<p>执行 <code>git push</code>：</p>
+<figure class="highlight accesslog"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">[27/Nov/2018:22:19:33]</span> <span class="string">"<span class="keyword">GET</span> /test.git/info/refs?service=git-receive-pack HTTP/1.1"</span> <span class="number">401</span> <span class="number">204</span> <span class="string">"-"</span> <span class="string">"git/1.9.1"</span>``admin <span class="string">[27/Nov/2018:22:19:33]</span> <span class="string">"<span class="keyword">GET</span> /test.git/info/refs?service=git-receive-pack HTTP/1.1"</span> <span class="number">200</span> <span class="number">193</span> <span class="string">"-"</span> <span class="string">"git/1.9.1"</span>``admin <span class="string">[27/Nov/2018:22:19:33]</span> <span class="string">"<span class="keyword">POST</span> /test.git/git-receive-pack HTTP/1.1"</span> <span class="number">200</span> <span class="number">63</span> <span class="string">"-"</span> <span class="string">"git/1.9.1"</span></span><br></pre></td></tr></table></figure>
+<p>可以看到执行 clone 和 pull 请求的接口是一样的，先请求 <code>/info/refs?service=git-upload-pack</code>，然后再请求 <code>/git-upload-pack</code>；而 push 是先请求 <code>/info/refs?service=git-receive-pack</code>，然后再请求 <code>/git-receive-pack</code>，所以在上面的 lighttpd 的配置中我们看到了两条记录，如果要对 push 做访问控制，那么对这两个请求都要限制。关于 Git 传输的原理可以参考 《Pro Git》的 <a href="https://git-scm.com/book/zh/v2/Git-内部原理-传输协议" target="_blank" rel="external nofollow noopener noreferrer">Git 内部原理 - 传输协议</a> 这一节。</p>
+<p>我们依葫芦画瓢，Nginx 配置文件如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">location @auth &#123;<span class="string">``</span>    <span class="string">``</span>auth_basic <span class="string">"Git Server"</span>;<span class="string">``</span>    <span class="string">``</span>auth_basic_user_file /etc/nginx/passwd;<span class="string">` `</span>    <span class="string">``</span><span class="keyword">include</span> fastcgi_params;<span class="string">``</span>    <span class="string">``</span>fastcgi_param SCRIPT_FILENAME /usr/lib/git-core/git-http-backend;<span class="string">``</span>    <span class="string">``</span>fastcgi_param GIT_HTTP_EXPORT_ALL <span class="string">""</span>;<span class="string">``</span>    <span class="string">``</span>fastcgi_param GIT_PROJECT_ROOT /git/repo;<span class="string">``</span>    <span class="string">``</span>fastcgi_param PATH_INFO $uri;<span class="string">``</span>    <span class="string">``</span>fastcgi_param REMOTE_USER $remote_user;<span class="string">``</span>    <span class="string">``</span>fastcgi_pass <span class="symbol">unix:</span>/var/run/fcgiwrap.socket;<span class="string">``</span>&#125;<span class="string">` `</span>location / &#123;<span class="string">``</span>    <span class="string">``</span>error_page <span class="number">418</span> = @auth;<span class="string">``</span>    <span class="string">``</span><span class="keyword">if</span> ( $query_string = <span class="string">"service=git-receive-pack"</span> ) &#123; <span class="keyword">return</span> <span class="number">418</span>; &#125;<span class="string">``</span>    <span class="string">``</span><span class="keyword">if</span> ( $uri ~ <span class="string">"git-receive-pack$"</span> ) &#123; <span class="keyword">return</span> <span class="number">418</span>; &#125;<span class="string">` `</span>    <span class="string">``</span><span class="keyword">include</span> fastcgi_params;<span class="string">``</span>    <span class="string">``</span>fastcgi_param SCRIPT_FILENAME /usr/lib/git-core/git-http-backend;<span class="string">``</span>    <span class="string">``</span>fastcgi_param GIT_HTTP_EXPORT_ALL <span class="string">""</span>;<span class="string">``</span>    <span class="string">``</span>fastcgi_param GIT_PROJECT_ROOT /git/repo;<span class="string">``</span>    <span class="string">``</span>fastcgi_param PATH_INFO $uri;<span class="string">``</span>    <span class="string">``</span>fastcgi_param REMOTE_USER $remote_user;<span class="string">``</span>    <span class="string">``</span>fastcgi_pass <span class="symbol">unix:</span>/var/run/fcgiwrap.socket;<span class="string">``</span>&#125;</span><br></pre></td></tr></table></figure>
+<p>其中相同的配置我们也可以用 <code>include</code> 指令放在一个共用的配置文件里，这样我们就实现了在 push 的时候需要填写用户名和密码了。我们通过 Nginx 的 <code>auth_basic_user_file</code> 指令来做身份认证，用户名和密码保存在 <code>/etc/nginx/passwd</code> 文件中，这个文件可以使用上面提到的 apache2-utils 包里的 htpasswd 来生成：</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root<span class="variable">@myserver</span><span class="symbol">:/</span><span class="comment"># htpasswd -cb /etc/nginx/passwd admin 123456</span></span><br></pre></td></tr></table></figure>
+<p>另外，在 push 的时候，有时候可能会遇到 <code>unpack failed: unable to create temporary object directory</code> 这样的提示错误：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">aneasystone@little-stone:~/working/test$ git push origin master``Counting objects: 3, done.``Writing objects: 100% (3/3), 193 bytes | 0 bytes/s, done.``Total 3 (delta 0), reused 0 (delta 0)``error: unpack failed: unable to <span class="keyword">create</span> <span class="keyword">temporary</span> <span class="keyword">object</span> <span class="keyword">directory</span><span class="string">``</span><span class="keyword">To</span> <span class="keyword">http</span>://myserver/test.git<span class="string">``</span> <span class="string">``</span>! [remote rejected] <span class="keyword">master</span> -&gt; <span class="keyword">master</span> (unpacker <span class="keyword">error</span>)<span class="string">``</span><span class="keyword">error</span>: <span class="keyword">failed</span> <span class="keyword">to</span> push <span class="keyword">some</span> refs <span class="keyword">to</span> <span class="string">'http://myserver/test.git'</span></span><br></pre></td></tr></table></figure>
+<p>这一般情况下都是由于 Git 仓库目录的权限问题导致的，在这里 Git 仓库的根目录 <code>/git/repo</code> 是 root 创建的，而运行 nginx 和 fcgiwrap 的用户都是 www-data，我们可以把 Git 仓库目录设置成对所有人可读可写，也可以像下面这样将它的拥有者设置成 www-data 用户：</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root<span class="variable">@myserver</span><span class="symbol">:/</span><span class="comment"># chown -R www-data:www-data /git/repo</span></span><br></pre></td></tr></table></figure>
+<h3 id="凭证管理"><a href="#凭证管理" class="headerlink" title="凭证管理"></a>凭证管理</h3><p>上面我们站在管理员的角度解决了用户身份认证的问题，但是站在用户的角度，每次提交代码都要输入用户名和密码是一件很痛苦的事情。在上面介绍 SSH 协议时，我们可以使用 SSH 协议自带的公钥认证机制来省去输入密码的麻烦，那么在 HTTP 协议中是否存在类似的方法呢？答案是肯定的，那就是 Git 的凭证存储工具：<code>credential.helper</code>。</p>
+<p>譬如像下面这样，将用户名和密码信息保存在缓存中：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ git<span class="built_in"> config </span>--global credential.helper cache</span><br></pre></td></tr></table></figure>
+<p>这种方式默认只保留 15 分钟，如果要改变保留的时间，可以通过 <code>--timeout</code> 参数设置，或者像下面这样，将密码保存在文件中：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ git<span class="built_in"> config </span>--global credential.helper store</span><br></pre></td></tr></table></figure>
+<p>这种方式虽然可以保证密码不过期，但是要记住的是，这种方式密码是以明文的方式保存在你的 home 目录下的。可以借鉴操作系统自带的凭证管理工具来解决这个问题， 比如 OSX Keychain 或者 <a href="https://github.com/Microsoft/Git-Credential-Manager-for-Windows" target="_blank" rel="external nofollow noopener noreferrer">Git Credential Manager for Windows</a>。更多的内容可以参考<a href="https://git-scm.com/book/zh/v2/Git-工具-凭证存储" target="_blank" rel="external nofollow noopener noreferrer">《Pro Git》凭证存储</a> 这一节。</p>
+<p>除此之外，还有一种更简单粗暴的方式：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">aneasystone<span class="meta">@little</span>-<span class="string">stone:</span><span class="regexp">~/working$ git clone http:/</span><span class="regexp">/admin:123456@myserver/</span>test.git</span><br></pre></td></tr></table></figure>
+<h2 id="综合对比"><a href="#综合对比" class="headerlink" title="综合对比"></a>综合对比</h2><p>这一节对 Git 的四大协议做一个综合对比。</p>
+<ul>
+<li>本地协议<ul>
+<li>优点：架设简单，不依赖外部服务，直接使用现有文件和网络权限，常用于共享文件系统</li>
+<li>缺点：共享文件系统的配置和使用不方便，且无法保护仓库被意外损坏，传输性能较低</li>
+</ul>
+</li>
+<li>SSH 协议<ul>
+<li>优点：架设简单，所有数据经过授权加密，数据传输很安全，传输性能很高</li>
+<li>缺点：不支持匿名访问，配置 SSH 的密钥对小白用户有一定的门槛</li>
+</ul>
+</li>
+<li>Git 协议<ul>
+<li>优点：对开放的项目很适用，无需授权，传输性能最高</li>
+<li>缺点：缺乏授权机制，架设较麻烦，企业一般不会默认开放 9418 端口需要另行添加</li>
+</ul>
+</li>
+<li>HTTP/S 协议<ul>
+<li>优点：同时支持授权访问和无授权访问，传输性能较高，配合 HTTPS 也可以实现数据安全</li>
+<li>缺点：架设 HTTP 服务较麻烦，认证凭证不好管理</li>
+</ul>
+</li>
+</ul>
+<h2 id="更高级的工具"><a href="#更高级的工具" class="headerlink" title="更高级的工具"></a>更高级的工具</h2><p>上面介绍的是搭建 Git 服务器最基本的方法，如果你只是希望能找一个版本控制系统来替代现有的 SVN，这也许就足够了。但如果你希望你的版本控制系统能拥有一个更友好的 UI 界面，能更好的管理你的用户和权限，能支持更现代的 Pull Request 功能以及能和 CI/CD 系统更紧密的联系起来，你就需要一个更高级的工具，你可以试试 <a href="https://git-scm.com/book/zh/v2/服务器上的-Git-GitWeb" target="_blank" rel="external nofollow noopener noreferrer">GitWeb</a>、<a href="http://gitolite.com/gitolite/" target="_blank" rel="external nofollow noopener noreferrer">Gitolite</a>、<a href="https://about.gitlab.com/" target="_blank" rel="external nofollow noopener noreferrer">Gitlab</a>、<a href="https://gogs.io/" target="_blank" rel="external nofollow noopener noreferrer">Gogs</a>、<a href="https://gitea.io/zh-cn/" target="_blank" rel="external nofollow noopener noreferrer">Gitea</a>，当然，如果你愿意，你也可以把代码放在那些流行的代码托管平台上，比如 <a href="https://github.com/" target="_blank" rel="external nofollow noopener noreferrer">Github</a>、<a href="https://bitbucket.org/" target="_blank" rel="external nofollow noopener noreferrer">Bitbucket</a> 等等。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://www.aneasystone.com/archives/2018/12/build-your-own-git-server.html" target="_blank" rel="external nofollow noopener noreferrer">https://www.aneasystone.com/archives/2018/12/build-your-own-git-server.html</a></li>
+<li><a href="https://git-scm.com/book/zh/v2/服务器上的-Git-协议" target="_blank" rel="external nofollow noopener noreferrer">https://git-scm.com/book/zh/v2/服务器上的-Git-协议</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/5bd9b965/" rel="bookmark">图解 Git</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/f5d73ad0/" rel="bookmark">Hexo 博客容器化</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/8fc468f1/" title="Git 服务器">http://houmin.cc/posts/8fc468f1/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/git/" rel="tag"><i class="fa fa-tag"></i> git</a>
+              <a href="/tags/ssh/" rel="tag"><i class="fa fa-tag"></i> ssh</a>
+              <a href="/tags/https/" rel="tag"><i class="fa fa-tag"></i> https</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/5bd9b965/" rel="next" title="图解 Git">
+                  <i class="fa fa-chevron-left"></i> 图解 Git
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/6a1bd212/" rel="prev" title="端午">
+                  端午 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#本地协议"><span class="nav-number">1.</span> <span class="nav-text">本地协议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SSH-协议"><span class="nav-number">2.</span> <span class="nav-text">SSH 协议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Git-协议"><span class="nav-number">3.</span> <span class="nav-text">Git 协议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTP-S-协议"><span class="nav-number">4.</span> <span class="nav-text">HTTP(S) 协议</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#开启身份认证"><span class="nav-number">4.1.</span> <span class="nav-text">开启身份认证</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#凭证管理"><span class="nav-number">4.2.</span> <span class="nav-text">凭证管理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#综合对比"><span class="nav-number">5.</span> <span class="nav-text">综合对比</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#更高级的工具"><span class="nav-number">6.</span> <span class="nav-text">更高级的工具</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">7.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">70</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">120</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">649k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">19:39</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>
