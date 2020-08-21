@@ -64,18 +64,18 @@
 <meta property="og:description" content="LaTeX是基于TeX的文档排版系统。TeX是当初Knuth教授为了写作TAOCP而开发的个人排版软件，而LaTeX是Lamport博士为了编写自己的书籍而设计的。LaTeX实际上就是用TeX语言编写的一套宏代码，拥有比原来TeX格式(plain TeX)更为规范的命令和一整套预定义的格式，隐藏了不少排版上的细节。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://houmin.cc/images/2017-03-05-latex-sample-slide.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-chinese.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-chinese-sample.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-greek-symbols.jpg">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-relation-symbols.jpg">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-binary-operators.jpg">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-variable-sized-symbols.jpg">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-arrow-symbols.jpg">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-delimiters.jpg">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-miscellaneous-symbols.jpg">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-non-text-symbols.jpg">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-functions.jpg">
-<meta property="og:updated_time" content="2020-07-14T08:24:44.096Z">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-chinese.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-chinese-sample.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-greek-symbols.jpg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-relation-symbols.jpg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-binary-operators.jpg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-variable-sized-symbols.jpg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-arrow-symbols.jpg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-delimiters.jpg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-miscellaneous-symbols.jpg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-non-text-symbols.jpg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-functions.jpg">
+<meta property="og:updated_time" content="2020-08-21T08:11:30.174Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http://houmin.cc/images/2017-03-05-latex-sample-slide.png">
 
@@ -368,9 +368,9 @@
 <p><img alt="LaTeX-Sample-Slide" data-src="/images/2017-03-05-latex-sample-slide.png"></p>
 <p>这个时候测试中文是否可行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">\documentclass[UTF8]&#123;ctexart&#125;</span><br><span class="line">\begin&#123;document&#125;</span><br><span class="line">我爱中国！</span><br><span class="line">\end&#123;document&#125;</span><br></pre></td></tr></table></figure></p>
 <p>编译可以看到输出</p>
-<p><img alt="LaTeX-Chinese" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-chinese.png"></p>
+<p><img alt="LaTeX-Chinese" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-chinese.png"></p>
 <p>不过编译的时候会出现warning<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">*************************************************</span><br><span class="line">* fontspec warning: "script-not-exist"</span><br><span class="line">*</span><br><span class="line">* Font 'FandolSong-Regular' does not contain script 'CJK'.</span><br><span class="line">*************************************************</span><br><span class="line">)) (/usr/local/texlive/2016/texmf-dist/tex/latex/ctex/config/ctex.cfg)</span><br><span class="line">No file hello.aux.</span><br><span class="line">(/usr/local/texlive/2016/texmf-dist/tex/latex/tipa/t3cmr.fd)</span><br><span class="line">ABD: EverySelectfont initializing macros [1] (./hello.aux) )</span><br><span class="line">Output written on hello.pdf (1 page).</span><br><span class="line">Transcript written on hello.log.</span><br></pre></td></tr></table></figure></p>
-<p>其实貌似这个时候的中文字体已经好了？<br>编写test.tex<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">\documentclass&#123;article&#125;</span><br><span class="line">\usepackage&#123;CJKutf8&#125;</span><br><span class="line">\begin&#123;document&#125;</span><br><span class="line">\begin&#123;CJK&#125;&#123;UTF8&#125;&#123;gkai&#125;</span><br><span class="line">这是一个楷体中文测试，处理简体字。</span><br><span class="line">\end&#123;CJK&#125;</span><br><span class="line">\begin&#123;CJK&#125;&#123;UTF8&#125;&#123;gbsn&#125;</span><br><span class="line">这是一个宋体中文测试，处理简体字。</span><br><span class="line">\end&#123;CJK&#125;</span><br><span class="line">\begin&#123;CJK&#125;&#123;UTF8&#125;&#123;bkai&#125;</span><br><span class="line">這是一個big5編碼的楷體中文測試，處理繁體文字。</span><br><span class="line">\end&#123;CJK&#125;</span><br><span class="line">\begin&#123;CJK&#125;&#123;UTF8&#125;&#123;bsmi&#125;</span><br><span class="line">這是一個个big5編碼的明體中文測試，處理繁體文字。</span><br><span class="line">\end&#123;CJK&#125;</span><br><span class="line">\end&#123;document&#125;</span><br></pre></td></tr></table></figure><br>使用命令pdflatex，不知道为什么用xelatex不行<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> pdflatex test.tex</span></span><br></pre></td></tr></table></figure><br>生成pdf文件<br><img alt="LaTeX-Chinese-Sample" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-chinese-sample.png"></p>
+<p>其实貌似这个时候的中文字体已经好了？<br>编写test.tex<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">\documentclass&#123;article&#125;</span><br><span class="line">\usepackage&#123;CJKutf8&#125;</span><br><span class="line">\begin&#123;document&#125;</span><br><span class="line">\begin&#123;CJK&#125;&#123;UTF8&#125;&#123;gkai&#125;</span><br><span class="line">这是一个楷体中文测试，处理简体字。</span><br><span class="line">\end&#123;CJK&#125;</span><br><span class="line">\begin&#123;CJK&#125;&#123;UTF8&#125;&#123;gbsn&#125;</span><br><span class="line">这是一个宋体中文测试，处理简体字。</span><br><span class="line">\end&#123;CJK&#125;</span><br><span class="line">\begin&#123;CJK&#125;&#123;UTF8&#125;&#123;bkai&#125;</span><br><span class="line">這是一個big5編碼的楷體中文測試，處理繁體文字。</span><br><span class="line">\end&#123;CJK&#125;</span><br><span class="line">\begin&#123;CJK&#125;&#123;UTF8&#125;&#123;bsmi&#125;</span><br><span class="line">這是一個个big5編碼的明體中文測試，處理繁體文字。</span><br><span class="line">\end&#123;CJK&#125;</span><br><span class="line">\end&#123;document&#125;</span><br></pre></td></tr></table></figure><br>使用命令pdflatex，不知道为什么用xelatex不行<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> pdflatex test.tex</span></span><br></pre></td></tr></table></figure><br>生成pdf文件<br><img alt="LaTeX-Chinese-Sample" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-chinese-sample.png"></p>
 <h3 id="编辑器"><a href="#编辑器" class="headerlink" title="编辑器"></a>编辑器</h3><h4 id="Atom编辑器"><a href="#Atom编辑器" class="headerlink" title="Atom编辑器"></a>Atom编辑器</h4><p>参考</p>
 <ul>
 <li><a href="https://zhuanlan.zhihu.com/p/24548752" target="_blank" rel="external nofollow noopener noreferrer">Atom编译器关于LaTex的简单编译配置</a></li>
@@ -483,15 +483,15 @@
 </tbody>
 </table>
 </div>
-<h3 id="常用符号"><a href="#常用符号" class="headerlink" title="常用符号"></a>常用符号</h3><p><img alt="Greek-Symbols" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-greek-symbols.jpg"></p>
-<p><img alt="Relation-Symbols" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-relation-symbols.jpg"></p>
-<p><img alt="Binary-Symbols" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-binary-operators.jpg"></p>
-<p><img alt="Variable-Sized-Symbols" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-variable-sized-symbols.jpg"></p>
-<p><img alt="Arrow-Symbols" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-arrow-symbols.jpg"></p>
-<p><img alt="Delimiters" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-delimiters.jpg"></p>
-<p><img alt="Miscellaneous-Symbols" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-miscellaneous-symbols.jpg"></p>
-<p><img alt="Non-Text-Symbols" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-non-text-symbols.jpg"></p>
-<h3 id="常用函数"><a href="#常用函数" class="headerlink" title="常用函数"></a>常用函数</h3><p><img alt="Functions" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-03-05-latex-functions.jpg"></p>
+<h3 id="常用符号"><a href="#常用符号" class="headerlink" title="常用符号"></a>常用符号</h3><p><img alt="Greek-Symbols" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-greek-symbols.jpg"></p>
+<p><img alt="Relation-Symbols" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-relation-symbols.jpg"></p>
+<p><img alt="Binary-Symbols" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-binary-operators.jpg"></p>
+<p><img alt="Variable-Sized-Symbols" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-variable-sized-symbols.jpg"></p>
+<p><img alt="Arrow-Symbols" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-arrow-symbols.jpg"></p>
+<p><img alt="Delimiters" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-delimiters.jpg"></p>
+<p><img alt="Miscellaneous-Symbols" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-miscellaneous-symbols.jpg"></p>
+<p><img alt="Non-Text-Symbols" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-non-text-symbols.jpg"></p>
+<h3 id="常用函数"><a href="#常用函数" class="headerlink" title="常用函数"></a>常用函数</h3><p><img alt="Functions" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-03-05-latex-functions.jpg"></p>
 <h3 id="矩阵"><a href="#矩阵" class="headerlink" title="矩阵"></a>矩阵</h3><h4 id="不同分隔符"><a href="#不同分隔符" class="headerlink" title="不同分隔符"></a>不同分隔符</h4><p><code>amsmath</code>的<code>pmatrix</code>,<code>bmatrix</code>,<code>Bmatrix</code>,<code>vmatrix</code>, <code>Vmatrix</code>可以在矩阵两边加上各种分隔符。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">\[ \begin&#123;pmatrix&#125; a&amp;b\\c&amp;d \end&#123;pmatrix&#125; \quad</span><br><span class="line">\begin&#123;bmatrix&#125; a&amp;b\\c&amp;d \end&#123;bmatrix&#125; \quad</span><br><span class="line">\begin&#123;Bmatrix&#125; a&amp;b\\c&amp;d \end&#123;Bmatrix&#125; \quad</span><br><span class="line">\begin&#123;vmatrix&#125; a&amp;b\\c&amp;d \end&#123;vmatrix&#125; \quad</span><br><span class="line">\begin&#123;Vmatrix&#125; a&amp;b\\c&amp;d \end&#123;Vmatrix&#125; \]</span><br></pre></td></tr></table></figure><br>显示效果如下：</p>
 <script type="math/tex; mode=display">\begin{pmatrix} a&b\\c&d \end{pmatrix} \quad
 \begin{bmatrix} a&b\\c&d \end{bmatrix} \quad
@@ -664,19 +664,19 @@ x,\quad x>0
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">74</span>
+          <span class="site-state-item-count">96</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">125</span>
+        <span class="site-state-item-count">146</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -744,13 +744,13 @@ x,\quad x>0
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">586k</span>
+    <span title="站点总字数">775k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">17:46</span>
+    <span title="站点阅读时长">23:28</span>
 </div>
 
         

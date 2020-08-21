@@ -56,7 +56,7 @@
 </script>
 
   <meta name="description" content="字符串是 Go 语言中最常用的基础数据类型之一，虽然字符串往往被看做一个整体，但是实际上字符串是一片连续的内存空间，我们也可以将它理解成一个由字符组成的数组，在这一节中就会详细介绍字符串的实现原理、相关转换过程以及常见操作的实现。">
-<meta name="keywords" content="Go,源码解读,数据结构,String">
+<meta name="keywords" content="Go,数据结构,源码解读,String">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Go语言设计与实现】String">
 <meta property="og:url" content="http://houmin.cc/posts/e87a4e07/index.html">
@@ -66,7 +66,7 @@
 <meta property="og:image" content="https://img.draveness.me/2019-12-31-15777265631608-in-memory-string.png">
 <meta property="og:image" content="https://img.draveness.me/2019-12-31-15777265631620-string-concat-and-copy.png">
 <meta property="og:image" content="https://img.draveness.me/2019-12-31-15777265631625-string-bytes-conversion.png">
-<meta property="og:updated_time" content="2020-07-23T13:36:00.755Z">
+<meta property="og:updated_time" content="2020-08-16T15:03:05.103Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://img.draveness.me/2019-12-31-15777265631608-in-memory-string.png">
 
@@ -443,16 +443,16 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/4744ce1d/" rel="bookmark">【Go语言设计与实现】Context</a></div>
+      <div class="popular-posts-title"><a href="/posts/c3c43baa/" rel="bookmark">【Go语言设计与实现】Hash Table</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/c3c43baa/" rel="bookmark">【Go语言设计与实现】Hash Table</a></div>
+      <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
+      <div class="popular-posts-title"><a href="/posts/44c65087/" rel="bookmark">【Go语言设计与实现】循环</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/4dea1165/" rel="bookmark">【Go语言设计与实现】Test</a></div>
@@ -502,8 +502,8 @@
           
           <div class="post-tags">
               <a href="/tags/Go/" rel="tag"><i class="fa fa-tag"></i> Go</a>
-              <a href="/tags/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码解读</a>
               <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag"><i class="fa fa-tag"></i> 数据结构</a>
+              <a href="/tags/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码解读</a>
               <a href="/tags/String/" rel="tag"><i class="fa fa-tag"></i> String</a>
           </div>
 
@@ -576,19 +576,19 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">74</span>
+          <span class="site-state-item-count">96</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">125</span>
+        <span class="site-state-item-count">146</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -656,13 +656,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">586k</span>
+    <span title="站点总字数">775k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">17:46</span>
+    <span title="站点阅读时长">23:28</span>
 </div>
 
         

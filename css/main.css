@@ -1265,7 +1265,7 @@ pre .javascript .function {
 }
 .links-of-author a::before,
 .links-of-author span.exturl::before {
-  background: #7588ff;
+  background: #988bbe;
   border-radius: 50%;
   content: ' ';
   display: inline-block;
@@ -2778,12 +2778,12 @@ hr {
   display: inline-block;
 }
 .header {
-  background: url("https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/header-bk.jpg");
+  background: url("https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/header-bk.jpg");
 }
 .sidebar {
   display: block;
   width: 320px;
-  background-image: url("https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/bk.jpg");
+  background-image: url("https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/bk.jpg");
   background-size: 320px, 659px;
   background-position: center;
   background-repeat: no-repeat;
@@ -2801,7 +2801,7 @@ hr {
   top: -900px;
   bottom: unset;
   transition: all 0.5s ease-in-out;
-  background: url("https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/scroll.png");
+  background: url("https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/scroll.png");
 }
 .back-to-top > i {
   display: none;
@@ -2811,13 +2811,13 @@ hr {
   top: calc(100vh - 900px - 200px);
 }
 .footer {
-  background: url("https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/header-bk.jpg");
+  background: url("https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/header-bk.jpg");
 }
 .footer-inner {
   text-align: center;
 }
 body {
-  background: url("https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/field.jpg");
+  background: url("https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/field.jpg");
   background-size: cover;
   background-repeat: no-repeat;
   background-attachment: fixed;

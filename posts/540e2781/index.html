@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="很多现代的编程语言中都有 defer 关键字，Go 语言的 defer 会在当前函数或者方法返回之前执行传入的函数。它会经常被用于关闭文件描述符、关闭数据库连接以及解锁资源。在这一节中我们就会深入 Go 语言的源代码介绍 defer 关键字的实现原理，相信读者读完这一节会对 defer 的数据结构、实现以及调用过程有着更清晰的理解。">
+<meta name="keywords" content="Go,源码阅读,defer">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Go语言设计与实现】Defer">
+<meta property="og:url" content="http://houmin.cc/posts/540e2781/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="很多现代的编程语言中都有 defer 关键字，Go 语言的 defer 会在当前函数或者方法返回之前执行传入的函数。它会经常被用于关闭文件描述符、关闭数据库连接以及解锁资源。在这一节中我们就会深入 Go 语言的源代码介绍 defer 关键字的实现原理，相信读者读完这一节会对 defer 的数据结构、实现以及调用过程有着更清晰的理解。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://img.draveness.me/2020-01-19-15794017184603-golang-defer-link.png">
+<meta property="og:image" content="https://img.draveness.me/2020-01-19-15794017184614-golang-new-defer.png">
+<meta property="og:updated_time" content="2020-08-21T08:11:30.173Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img.draveness.me/2020-01-19-15794017184603-golang-defer-link.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/540e2781/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Go语言设计与实现】Defer | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/540e2781/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Go语言设计与实现】Defer
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-08-01 12:15:45" itemprop="dateCreated datePublished" datetime="2020-08-01T12:15:45+08:00">2020-08-01</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/540e2781/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/540e2781/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>6.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>13 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>很多现代的编程语言中都有 <code>defer</code> 关键字，Go 语言的 <code>defer</code> 会在当前函数或者方法返回之前执行传入的函数。它会经常被用于关闭文件描述符、关闭数据库连接以及解锁资源。在这一节中我们就会深入 Go 语言的源代码介绍 <code>defer</code> 关键字的实现原理，相信读者读完这一节会对 <code>defer</code> 的数据结构、实现以及调用过程有着更清晰的理解。</p>
+<a id="more"></a>
+<p>作为一个编程语言中的关键字，<code>defer</code> 的实现一定是由编译器和运行时共同完成的，不过在深入源码分析它的实现之前我们还是需要了解 <code>defer</code> 关键字的常见使用场景以及使用时的注意事项。</p>
+<p>使用 <code>defer</code> 的最常见场景就是在函数调用结束后完成一些收尾工作，例如在 <code>defer</code> 中回滚数据库的事务：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">createPost</span><span class="params">(db *gorm.DB)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    tx := db.Begin()</span><br><span class="line">    <span class="keyword">defer</span> tx.Rollback()</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> err := tx.Create(&amp;Post&#123;Author: <span class="string">"Draveness"</span>&#125;).Error; err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> tx.Commit().Error</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在使用数据库事务时，我们可以使用如上所示的代码在创建事务之后就立刻调用 <code>Rollback</code> 保证事务一定会回滚。哪怕事务真的执行成功了，那么调用 <code>tx.Commit()</code> 之后再执行 <code>tx.Rollback()</code> 也不会影响已经提交的事务。</p>
+<h2 id="现象"><a href="#现象" class="headerlink" title="现象"></a>现象</h2><p>我们在 Go 语言中使用 <code>defer</code> 时会遇到两个比较常见的问题，这里会介绍具体的场景并分析这两个现象背后的设计原理：</p>
+<ul>
+<li><code>defer</code> 关键字的调用时机以及多次调用 <code>defer</code> 时执行顺序是如何确定的；</li>
+<li><code>defer</code> 关键字使用传值的方式传递参数时会进行预计算，导致不符合预期的结果；</li>
+</ul>
+<h3 id="作用域"><a href="#作用域" class="headerlink" title="作用域"></a>作用域</h3><p>向 <code>defer</code> 关键字传入的函数会在函数返回之前运行。假设我们在 <code>for</code> 循环中多次调用 <code>defer</code> 关键字：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">5</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">defer</span> fmt.Println(i)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">$ <span class="keyword">go</span> run main.<span class="keyword">go</span></span><br><span class="line"><span class="number">4</span></span><br><span class="line"><span class="number">3</span></span><br><span class="line"><span class="number">2</span></span><br><span class="line"><span class="number">1</span></span><br><span class="line"><span class="number">0</span></span><br></pre></td></tr></table></figure>
+<p>运行上述代码会倒序执行所有向 <code>defer</code> 关键字中传入的表达式，最后一次 <code>defer</code> 调用传入了 <code>fmt.Println(4)</code>，所以会这段代码会优先打印 4。我们可以通过下面这个简单例子强化对 <code>defer</code> 执行时机的理解：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">defer</span> fmt.Println(<span class="string">"defer runs"</span>)</span><br><span class="line">        fmt.Println(<span class="string">"block ends"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    fmt.Println(<span class="string">"main ends"</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">$ <span class="keyword">go</span> run main.<span class="keyword">go</span></span><br><span class="line">block ends</span><br><span class="line">main ends</span><br><span class="line"><span class="keyword">defer</span> runs</span><br></pre></td></tr></table></figure>
+<p>从上述代码的输出我们会发现，<code>defer</code> 传入的函数不是在退出代码块的作用域时执行的，它只会在当前函数和方法返回之前被调用。</p>
+<h3 id="预计算参数"><a href="#预计算参数" class="headerlink" title="预计算参数"></a>预计算参数</h3><p>Go 语言中所有的函数调用都是传值的，<code>defer</code> 虽然是关键字，但是也继承了这个特性。假设我们想要计算 <code>main</code> 函数运行的时间，可能会写出以下的代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	startedAt := time.Now()</span><br><span class="line">	<span class="keyword">defer</span> fmt.Println(time.Since(startedAt))</span><br><span class="line">	</span><br><span class="line">	time.Sleep(time.Second)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">$ <span class="keyword">go</span> run main.<span class="keyword">go</span></span><br><span class="line"><span class="number">0</span>s</span><br></pre></td></tr></table></figure>
+<p>然而上述代码的运行结果并不符合我们的预期，这个现象背后的原因是什么呢？经过分析，我们会发现调用 <code>defer</code> 关键字会立刻对函数中引用的外部参数进行拷贝，所以 <code>time.Since(startedAt)</code> 的结果不是在 <code>main</code> 函数退出之前计算的，而是在 <code>defer</code> 关键字调用时计算的，最终导致上述代码输出 0s。</p>
+<p>想要解决这个问题的方法非常简单，我们只需要向 <code>defer</code> 关键字传入匿名函数：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	startedAt := time.Now()</span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123; fmt.Println(time.Since(startedAt)) &#125;()</span><br><span class="line">	</span><br><span class="line">	time.Sleep(time.Second)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">$ <span class="keyword">go</span> run main.<span class="keyword">go</span></span><br><span class="line"><span class="number">1</span>s</span><br></pre></td></tr></table></figure>
+<p>虽然调用 <code>defer</code> 关键字时也使用值传递，但是因为拷贝的是函数指针，所以 <code>time.Since(startedAt)</code> 会在 <code>main</code> 函数返回前被调用并打印出符合预期的结果。</p>
+<h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><p>在介绍 <code>defer</code> 函数的执行过程与实现原理之前，我们首先来了解一下 <code>defer</code> 关键字在 Go 语言源代码中对应的数据结构：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> _defer <span class="keyword">struct</span> &#123;</span><br><span class="line">	siz     <span class="keyword">int32</span></span><br><span class="line">	started <span class="keyword">bool</span></span><br><span class="line">	sp      <span class="keyword">uintptr</span></span><br><span class="line">	pc      <span class="keyword">uintptr</span></span><br><span class="line">	fn      *funcval</span><br><span class="line">	_panic  *_panic</span><br><span class="line">	link    *_defer</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/golang/go/blob/cfe3cd903f018dec3cb5997d53b1744df4e53909/src/runtime/runtime2.go#L853-L878" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime._defer</code></a> 结构体是延迟调用链表上的一个元素，所有的结构体都会通过 <code>link</code> 字段串联成链表。</p>
+<p><img alt="golang-defer-link" data-src="https://img.draveness.me/2020-01-19-15794017184603-golang-defer-link.png"></p>
+<p><strong>图 5-10 延迟调用链表</strong></p>
+<p>我们简单介绍一下 <a href="https://github.com/golang/go/blob/cfe3cd903f018dec3cb5997d53b1744df4e53909/src/runtime/runtime2.go#L853-L878" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime._defer</code></a> 结构体中的几个字段：</p>
+<ul>
+<li><code>siz</code> 是参数和结果的内存大小；</li>
+<li><code>sp</code> 和 <code>pc</code> 分别代表栈指针和调用方的程序计数器；</li>
+<li><code>fn</code> 是 <code>defer</code> 关键字中传入的函数；</li>
+<li><code>_panic</code> 是触发延迟调用的结构体，可能为空；</li>
+</ul>
+<p>除了上述的这些字段之外，<a href="https://github.com/golang/go/blob/cfe3cd903f018dec3cb5997d53b1744df4e53909/src/runtime/runtime2.go#L853-L878" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime._defer</code></a> 中还包含一些垃圾回收机制使用的字段，这里为了减少理解的成本就都省去了。</p>
+<h2 id="编译过程"><a href="#编译过程" class="headerlink" title="编译过程"></a>编译过程</h2><p>中间代码生成阶段执行的被 <a href="https://github.com/golang/go/blob/4d5bb9c60905b162da8b767a8a133f6b4edcaa65/src/cmd/compile/internal/gc/ssa.go#L1023-L1502" target="_blank" rel="external nofollow noopener noreferrer"><code>cmd/compile/internal/gc.state.stmt</code></a> 函数会处理 <code>defer</code> 关键字。从下面截取的这段代码中，我们会发现编译器调用了 <a href="https://github.com/golang/go/blob/4d5bb9c60905b162da8b767a8a133f6b4edcaa65/src/cmd/compile/internal/gc/ssa.go#L4324-L4517" target="_blank" rel="external nofollow noopener noreferrer"><code>cmd/compile/internal/gc.state.call</code></a> 函数，这表示 <code>defer</code> 在编译器看来也是函数调用：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *state)</span> <span class="title">stmt</span><span class="params">(n *Node)</span></span> &#123;</span><br><span class="line">	<span class="keyword">switch</span> n.Op &#123;</span><br><span class="line">	<span class="keyword">case</span> ODEFER:</span><br><span class="line">		s.call(n.Left, callDefer)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/golang/go/blob/4d5bb9c60905b162da8b767a8a133f6b4edcaa65/src/cmd/compile/internal/gc/ssa.go#L4324-L4517" target="_blank" rel="external nofollow noopener noreferrer"><code>cmd/compile/internal/gc.state.call</code></a> 函数会负责了为所有函数和方法调用生成中间代码，它的工作包括以下内容：</p>
+<ol>
+<li>获取需要执行的函数名、闭包指针、代码指针和函数调用的接收方；</li>
+<li>获取栈地址并将函数或者方法的参数写入栈中；</li>
+<li>使用 <a href="https://github.com/golang/go/blob/4d5bb9c60905b162da8b767a8a133f6b4edcaa65/src/cmd/compile/internal/gc/ssa.go#L764-L766" target="_blank" rel="external nofollow noopener noreferrer"><code>cmd/compile/internal/gc.state.newValue1A</code></a> 以及相关函数生成函数调用的中间代码；</li>
+<li>如果当前调用的函数是 <code>defer</code>，那么就会单独生成相关的结束代码块；</li>
+<li>获取函数的返回值地址并结束当前调用；</li>
+</ol>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *state)</span> <span class="title">call</span><span class="params">(n *Node, k callKind)</span> *<span class="title">ssa</span>.<span class="title">Value</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">var</span> call *ssa.Value</span><br><span class="line">	<span class="keyword">switch</span> &#123;</span><br><span class="line">	<span class="keyword">case</span> k == callDefer:</span><br><span class="line">		call = s.newValue1A(ssa.OpStaticCall, types.TypeMem, deferproc, s.mem())</span><br><span class="line">	...</span><br><span class="line">	&#125;</span><br><span class="line">	call.AuxInt = stksize</span><br><span class="line">	s.vars[&amp;memVar] = call</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从上述代码中我们能看到，<code>defer</code> 关键字在运行期间会调用 <a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L218-L258" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deferproc</code></a> 函数，这个函数接收了参数的大小和闭包所在的地址两个参数。</p>
+<p>编译器不仅将 <code>defer</code> 关键字都转换成 <a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L218-L258" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deferproc</code></a> 函数，它还会通过以下三个步骤为所有调用 <code>defer</code> 的函数末尾插入 <a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L526-L571" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deferreturn</code></a> 的函数调用：</p>
+<ol>
+<li><a href="https://github.com/golang/go/blob/316fd8cc4a7fab2e1bb45848bc30ea8b8a0b231a/src/cmd/compile/internal/gc/walk.go#L115-L351" target="_blank" rel="external nofollow noopener noreferrer"><code>cmd/compile/internal/gc.walkstmt</code></a> 在遇到 <code>ODEFER</code> 节点时会执行 <code>Curfn.Func.SetHasDefer(true)</code> 设置当前函数的 <code>hasdefer</code>；</li>
+<li><a href="https://github.com/golang/go/blob/98d2717499575afe13d9f815d46fcd6e384efb0c/src/cmd/compile/internal/gc/ssa.go#L281-L451" target="_blank" rel="external nofollow noopener noreferrer"><code>cmd/compile/internal/gc.buildssa</code></a> 会执行 <code>s.hasdefer = fn.Func.HasDefer()</code> 更新 <code>state</code> 的 <code>hasdefer</code>；</li>
+<li><a href="https://github.com/golang/go/blob/98d2717499575afe13d9f815d46fcd6e384efb0c/src/cmd/compile/internal/gc/ssa.go#L1511-L1552" target="_blank" rel="external nofollow noopener noreferrer"><code>cmd/compile/internal/gc.state.exit</code></a> 会根据 <code>state</code> 的 <code>hasdefer</code> 在函数返回之前插入 <a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L526-L571" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deferreturn</code></a> 的函数调用；</li>
+</ol>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *state)</span> <span class="title">exit</span><span class="params">()</span> *<span class="title">ssa</span>.<span class="title">Block</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> s.hasdefer &#123;</span><br><span class="line">		s.rtcall(Deferreturn, <span class="literal">true</span>, <span class="literal">nil</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Go 语言的编译器不仅将 <code>defer</code> 转换成了 <a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L218-L258" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deferproc</code></a> 的函数调用，还在所有调用 <code>defer</code> 的函数结尾插入了 <a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L526-L571" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deferreturn</code></a>，接下来我们就需要了解这两个运行时方法的实现原理了。</p>
+<h2 id="运行过程"><a href="#运行过程" class="headerlink" title="运行过程"></a>运行过程</h2><p><code>defer</code> 关键字的运行时实现分成两个部分：</p>
+<ul>
+<li><a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L218-L258" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deferproc</code></a> 函数负责创建新的延迟调用；</li>
+<li><a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L526-L571" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deferreturn</code></a> 函数负责在函数调用结束时执行所有的延迟调用；</li>
+</ul>
+<p>这两个函数是 <code>defer</code> 关键字运行时机制的入口，我们从它们开始分别介绍这两个函数的执行过程。</p>
+<h3 id="创建延迟调用"><a href="#创建延迟调用" class="headerlink" title="创建延迟调用"></a>创建延迟调用</h3><p><a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L218-L258" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deferproc</code></a> 会为 <code>defer</code> 创建一个新的 <a href="https://github.com/golang/go/blob/cfe3cd903f018dec3cb5997d53b1744df4e53909/src/runtime/runtime2.go#L853-L878" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime._defer</code></a> 结构体、设置它的函数指针 <code>fn</code>、程序计数器 <code>pc</code> 和栈指针 <code>sp</code> 并将相关的参数拷贝到相邻的内存空间中：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">deferproc</span><span class="params">(siz <span class="keyword">int32</span>, fn *funcval)</span></span> &#123;</span><br><span class="line">	sp := getcallersp()</span><br><span class="line">	argp := <span class="keyword">uintptr</span>(unsafe.Pointer(&amp;fn)) + unsafe.Sizeof(fn)</span><br><span class="line">	callerpc := getcallerpc()</span><br><span class="line"></span><br><span class="line">	d := newdefer(siz)</span><br><span class="line">	<span class="keyword">if</span> d._panic != <span class="literal">nil</span> &#123;</span><br><span class="line">		throw(<span class="string">"deferproc: d.panic != nil after newdefer"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	d.fn = fn</span><br><span class="line">	d.pc = callerpc</span><br><span class="line">	d.sp = sp</span><br><span class="line">	<span class="keyword">switch</span> siz &#123;</span><br><span class="line">	<span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line">	<span class="keyword">case</span> sys.PtrSize:</span><br><span class="line">		*(*<span class="keyword">uintptr</span>)(deferArgs(d)) = *(*<span class="keyword">uintptr</span>)(unsafe.Pointer(argp))</span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">		memmove(deferArgs(d), unsafe.Pointer(argp), <span class="keyword">uintptr</span>(siz))</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	return0()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>最后调用的 <a href="https://github.com/golang/go/blob/a38a917aee626a9b9d5ce2b93964f586bf759ea0/src/runtime/asm_386.s#L1320-L1322" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.return0</code></a> 函数的作用是避免无限递归调用 <a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L526-L571" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deferreturn</code></a>，它是唯一一个不会触发由延迟调用的函数了。</p>
+<p><a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L218-L258" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deferproc</code></a> 中 <a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L383-L430" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.newdefer</code></a> 的作用就是想尽办法获得一个 <a href="https://github.com/golang/go/blob/cfe3cd903f018dec3cb5997d53b1744df4e53909/src/runtime/runtime2.go#L853-L878" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime._defer</code></a> 结构体，办法总共有三个：</p>
+<ol>
+<li>从调度器的延迟调用缓存池 <code>sched.deferpool</code> 中取出结构体并将该结构体追加到当前 Goroutine 的缓存池中；</li>
+<li>从 Goroutine 的延迟调用缓存池 <code>pp.deferpool</code> 中取出结构体；</li>
+<li>通过 <a href="https://github.com/golang/go/blob/5042317d6919d4c84557e04be35130430e8d1dd4/src/runtime/malloc.go#L889-L1132" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mallocgc</code></a> 创建一个新的结构体；</li>
+</ol>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newdefer</span><span class="params">(siz <span class="keyword">int32</span>)</span> *_<span class="title">defer</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> d *_defer</span><br><span class="line">	sc := deferclass(<span class="keyword">uintptr</span>(siz))</span><br><span class="line">	gp := getg()</span><br><span class="line">	<span class="keyword">if</span> sc &lt; <span class="keyword">uintptr</span>(<span class="built_in">len</span>(p&#123;&#125;.deferpool)) &#123;</span><br><span class="line">		pp := gp.m.p.ptr()</span><br><span class="line">		<span class="keyword">if</span> <span class="built_in">len</span>(pp.deferpool[sc]) == <span class="number">0</span> &amp;&amp; sched.deferpool[sc] != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">for</span> <span class="built_in">len</span>(pp.deferpool[sc]) &lt; <span class="built_in">cap</span>(pp.deferpool[sc])/<span class="number">2</span> &amp;&amp; sched.deferpool[sc] != <span class="literal">nil</span> &#123;</span><br><span class="line">				d := sched.deferpool[sc]</span><br><span class="line">				sched.deferpool[sc] = d.link</span><br><span class="line">				pp.deferpool[sc] = <span class="built_in">append</span>(pp.deferpool[sc], d)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> n := <span class="built_in">len</span>(pp.deferpool[sc]); n &gt; <span class="number">0</span> &#123;</span><br><span class="line">			d = pp.deferpool[sc][n<span class="number">-1</span>]</span><br><span class="line">			pp.deferpool[sc][n<span class="number">-1</span>] = <span class="literal">nil</span></span><br><span class="line">			pp.deferpool[sc] = pp.deferpool[sc][:n<span class="number">-1</span>]</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> d == <span class="literal">nil</span> &#123;</span><br><span class="line">		total := roundupsize(totaldefersize(<span class="keyword">uintptr</span>(siz)))</span><br><span class="line">		d = (*_defer)(mallocgc(total, deferType, <span class="literal">true</span>))</span><br><span class="line">	&#125;</span><br><span class="line">	d.siz = siz</span><br><span class="line">	d.link = gp._defer</span><br><span class="line">	gp._defer = d</span><br><span class="line">	<span class="keyword">return</span> d</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>无论使用哪种方式获取 <a href="https://github.com/golang/go/blob/cfe3cd903f018dec3cb5997d53b1744df4e53909/src/runtime/runtime2.go#L853-L878" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime._defer</code></a>，它都会被追加到所在的 Goroutine <code>_defer</code> 链表的最前面。</p>
+<p><img alt="golang-new-defe" data-src="https://img.draveness.me/2020-01-19-15794017184614-golang-new-defer.png"></p>
+<p><strong>图 5-11 追加新的延迟调用</strong></p>
+<p><code>defer</code> 关键字插入时是从后向前的，而 <code>defer</code> 关键字执行是从前向后的，而这就是后调用的 <code>defer</code> 会优先执行的原因。</p>
+<h3 id="执行延迟调用"><a href="#执行延迟调用" class="headerlink" title="执行延迟调用"></a>执行延迟调用</h3><p><a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L526-L571" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deferreturn</code></a> 会从 Goroutine 的 <code>_defer</code> 链表中取出最前面的 <a href="https://github.com/golang/go/blob/cfe3cd903f018dec3cb5997d53b1744df4e53909/src/runtime/runtime2.go#L853-L878" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime._defer</code></a> 结构体并调用 <a href="https://github.com/golang/go/blob/a38a917aee626a9b9d5ce2b93964f586bf759ea0/src/runtime/asm_386.s#L614-L624" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.jmpdefer</code></a> 函数传入需要执行的函数和参数：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">deferreturn</span><span class="params">(arg0 <span class="keyword">uintptr</span>)</span></span> &#123;</span><br><span class="line">	gp := getg()</span><br><span class="line">	d := gp._defer</span><br><span class="line">	<span class="keyword">if</span> d == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	sp := getcallersp()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">switch</span> d.siz &#123;</span><br><span class="line">	<span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line">	<span class="keyword">case</span> sys.PtrSize:</span><br><span class="line">		*(*<span class="keyword">uintptr</span>)(unsafe.Pointer(&amp;arg0)) = *(*<span class="keyword">uintptr</span>)(deferArgs(d))</span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">		memmove(unsafe.Pointer(&amp;arg0), deferArgs(d), <span class="keyword">uintptr</span>(d.siz))</span><br><span class="line">	&#125;</span><br><span class="line">	fn := d.fn</span><br><span class="line">	gp._defer = d.link</span><br><span class="line">	freedefer(d)</span><br><span class="line">	jmpdefer(fn, <span class="keyword">uintptr</span>(unsafe.Pointer(&amp;arg0)))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/golang/go/blob/a38a917aee626a9b9d5ce2b93964f586bf759ea0/src/runtime/asm_386.s#L614-L624" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.jmpdefer</code></a> 是一个用汇编语言实现的运行时函数，它的工作就是跳转 <code>defer</code> 所在的代码段并在执行结束之后跳转回 <a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L526-L571" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deferreturn</code></a>。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">TEXT runtime·jmpdefer(SB), NOSPLIT, $<span class="number">0</span><span class="number">-8</span></span><br><span class="line">	MOVL	fv+<span class="number">0</span>(FP), DX	<span class="comment">// fn</span></span><br><span class="line">	MOVL	argp+<span class="number">4</span>(FP), BX	<span class="comment">// caller sp</span></span><br><span class="line">	LEAL	<span class="number">-4</span>(BX), SP	<span class="comment">// caller sp after CALL</span></span><br><span class="line">#ifdef GOBUILDMODE_shared</span><br><span class="line">	SUBL	$<span class="number">16</span>, (SP)	<span class="comment">// return to CALL again</span></span><br><span class="line">#<span class="keyword">else</span></span><br><span class="line">	SUBL	$<span class="number">5</span>, (SP)	<span class="comment">// return to CALL again</span></span><br><span class="line">#endif</span><br><span class="line">	MOVL	<span class="number">0</span>(DX), BX</span><br><span class="line">	JMP	BX	<span class="comment">// but first run the deferred function</span></span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L526-L571" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deferreturn</code></a> 函数会多次判断当前 Goroutine 的 <code>_defer</code> 链表中是否有未执行的剩余结构，在所有的延迟函数调用都执行完成之后，该函数才会返回。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p><code>defer</code> 关键字的实现主要依靠编译器和运行时的协作，我们总结一下本节提到的内容：</p>
+<ul>
+<li>编译期；<ul>
+<li>将 <code>defer</code> 关键字被转换 <a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L218-L258" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deferproc</code></a>；</li>
+<li>在调用 <code>defer</code> 关键字的函数返回之前插入 <a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L526-L571" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deferreturn</code></a>；</li>
+</ul>
+</li>
+<li>运行时：<ul>
+<li><a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L218-L258" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deferproc</code></a> 会将一个新的 <a href="https://github.com/golang/go/blob/cfe3cd903f018dec3cb5997d53b1744df4e53909/src/runtime/runtime2.go#L853-L878" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime._defer</code></a> 结构体追加到当前 Goroutine 的链表头；</li>
+<li><a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L526-L571" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deferreturn</code></a> 会从 Goroutine 的链表中取出 <a href="https://github.com/golang/go/blob/cfe3cd903f018dec3cb5997d53b1744df4e53909/src/runtime/runtime2.go#L853-L878" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime._defer</code></a> 结构并依次执行；</li>
+</ul>
+</li>
+</ul>
+<p>我们在本节前面提到的两个现象在这里也可以解释清楚了：</p>
+<ul>
+<li>后调用的</li>
+</ul>
+  <figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">defer</span></span><br></pre></td></tr></table></figure>
+<p>  函数会先执行：</p>
+<ul>
+<li>后调用的 <code>defer</code> 函数会被追加到 Goroutine <code>_defer</code> 链表的最前面；</li>
+<li>运行 <a href="https://github.com/golang/go/blob/cfe3cd903f018dec3cb5997d53b1744df4e53909/src/runtime/runtime2.go#L853-L878" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime._defer</code></a> 时是从前到后依次执行；</li>
+</ul>
+<ul>
+<li><p>函数的参数会被预先计算；</p>
+<ul>
+<li>调用 <a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L218-L258" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deferproc</code></a> 函数创建新的延迟调用时就会立刻拷贝函数的参数，函数的参数不会等到真正执行时计算；</li>
+</ul>
+</li>
+</ul>
+<h2 id="延伸阅读"><a href="#延伸阅读" class="headerlink" title="延伸阅读"></a>延伸阅读</h2><ul>
+<li><a href="https://blog.learngoprogramming.com/gotchas-of-defer-in-go-1-8d070894cb01" target="_blank" rel="external nofollow noopener noreferrer">5 Gotchas of Defer in Go — Part I</a></li>
+<li><a href="https://stackoverflow.com/questions/28893586/golang-defer-clarification" target="_blank" rel="external nofollow noopener noreferrer">Golang defer clarification</a></li>
+<li><a href="http://hustcat.github.io/dive-into-stack-defer-panic-recover-in-go/" target="_blank" rel="external nofollow noopener noreferrer">Dive into stack and defer/panic/recover in go</a></li>
+<li><a href="https://blog.golang.org/defer-panic-and-recover" target="_blank" rel="external nofollow noopener noreferrer">Defer, Panic, and Recover</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/c3c43baa/" rel="bookmark">【Go语言设计与实现】Hash Table</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/bf9c845a/" rel="bookmark">【Go语言设计与实现】Reflect</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/c31234d9/" rel="bookmark">【Go语言设计与实现】Interface</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/540e2781/" title="【Go语言设计与实现】Defer">http://houmin.cc/posts/540e2781/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Go/" rel="tag"><i class="fa fa-tag"></i> Go</a>
+              <a href="/tags/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码阅读</a>
+              <a href="/tags/defer/" rel="tag"><i class="fa fa-tag"></i> defer</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/3d36166e/" rel="next" title="【Go语言设计与实现】Select">
+                  <i class="fa fa-chevron-left"></i> 【Go语言设计与实现】Select
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/ecc392db/" rel="prev" title="【Go语言设计与实现】Panic/Recover">
+                  【Go语言设计与实现】Panic/Recover <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#现象"><span class="nav-number">1.</span> <span class="nav-text">现象</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#作用域"><span class="nav-number">1.1.</span> <span class="nav-text">作用域</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#预计算参数"><span class="nav-number">1.2.</span> <span class="nav-text">预计算参数</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据结构"><span class="nav-number">2.</span> <span class="nav-text">数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编译过程"><span class="nav-number">3.</span> <span class="nav-text">编译过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#运行过程"><span class="nav-number">4.</span> <span class="nav-text">运行过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#创建延迟调用"><span class="nav-number">4.1.</span> <span class="nav-text">创建延迟调用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#执行延迟调用"><span class="nav-number">4.2.</span> <span class="nav-text">执行延迟调用</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">5.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#延伸阅读"><span class="nav-number">6.</span> <span class="nav-text">延伸阅读</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">96</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">146</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">775k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">23:28</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

@@ -56,18 +56,18 @@
 </script>
 
   <meta name="description" content="容器化技术已经越来越成为互联网应用的潮流，本文记录了我的 Hexo 博客容器化的过程。">
-<meta name="keywords" content="https,Hexo,container,docker">
+<meta name="keywords" content="Hexo,container,https,docker">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Hexo 博客容器化">
 <meta property="og:url" content="http://houmin.cc/posts/f5d73ad0/index.html">
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="容器化技术已经越来越成为互联网应用的潮流，本文记录了我的 Hexo 博客容器化的过程。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-15_ssl-handshake.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-01-15_ssl-handshake.png">
 <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/PublicKeyCertificateDiagram_It.svg/1024px-PublicKeyCertificateDiagram_It.svg.png">
-<meta property="og:updated_time" content="2020-07-14T08:24:44.100Z">
+<meta property="og:updated_time" content="2020-08-21T08:11:30.120Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-15_ssl-handshake.png">
+<meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-01-15_ssl-handshake.png">
 
 <link rel="canonical" href="http://houmin.cc/posts/f5d73ad0/">
 
@@ -390,7 +390,7 @@
           </div>
 <h2 id="扩展功能"><a href="#扩展功能" class="headerlink" title="扩展功能"></a>扩展功能</h2><h3 id="支持-HTTPS"><a href="#支持-HTTPS" class="headerlink" title="支持 HTTPS"></a>支持 HTTPS</h3><p>众所周知，HTTPS 是一件特别繁琐的事情，关于 HTTPS 可以看一看 <a href="https://www.aneasystone.com/archives/2016/04/java-and-https.html" target="_blank" rel="external nofollow noopener noreferrer">这篇文章</a> 。</p>
 <p>简单来说，为了避免中间人攻击，网站服务器需要用证书 certificate 证明自己的身份，下面是用户和网站交互流程图。</p>
-<p><img alt="SSL Handshake" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-15_ssl-handshake.png"></p>
+<p><img alt="SSL Handshake" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-01-15_ssl-handshake.png"></p>
 <p>证书需要从 <code>CA（Certificate Authority）</code> 申请。CA是权威的证书颁发机构，比如GeoTrust、GlobalSign，也有像  <a href="https://letsencrypt.org/" target="_blank" rel="external nofollow noopener noreferrer">Let’s Encrypt</a>  这样的免费证书颁发机构，下面是从 CA 申请证书的示意图。</p>
 <p><img alt="从CA申请证书" data-src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/PublicKeyCertificateDiagram_It.svg/1024px-PublicKeyCertificateDiagram_It.svg.png"></p>
 <p>对于 Nginx，我们通过下面的配置文件来配置证书：</p>
@@ -435,9 +435,6 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/8fc468f1/" rel="bookmark">Git 服务器</a></div>
-    </li>
-    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/a63a603e/" rel="bookmark">Hexo NexT 深度定制</a></div>
     </li>
     <li class="popular-posts-item">
@@ -448,6 +445,9 @@
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/d823886b/" rel="bookmark">Hexo 插入 ECharts 动态图表</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/8fc468f1/" rel="bookmark">Git 服务器</a></div>
     </li>
   </ul>
 
@@ -493,9 +493,9 @@
       <footer class="post-footer">
           
           <div class="post-tags">
-              <a href="/tags/https/" rel="tag"><i class="fa fa-tag"></i> https</a>
               <a href="/tags/Hexo/" rel="tag"><i class="fa fa-tag"></i> Hexo</a>
               <a href="/tags/container/" rel="tag"><i class="fa fa-tag"></i> container</a>
+              <a href="/tags/https/" rel="tag"><i class="fa fa-tag"></i> https</a>
               <a href="/tags/docker/" rel="tag"><i class="fa fa-tag"></i> docker</a>
           </div>
 
@@ -568,19 +568,19 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">74</span>
+          <span class="site-state-item-count">96</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">125</span>
+        <span class="site-state-item-count">146</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -648,13 +648,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">586k</span>
+    <span title="站点总字数">775k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">17:46</span>
+    <span title="站点阅读时长">23:28</span>
 </div>
 
         

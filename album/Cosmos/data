@@ -5,7 +5,7 @@
         "description": "宇宙、秩序、和谐",
         "created": "2019-12-10 19:24:05",
         "updated": "2019-12-31 19:30:52",
-        "imageBed": "https://images-cosmos.s3-ap-southeast-1.amazonaws.com/album",
+        "imageBed": "https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/album",
         "number": 4
     },
     "data": [

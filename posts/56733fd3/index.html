@@ -63,10 +63,10 @@
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="Base64是一种基于64个可打印字符来表示二进制数据的方法。  当我们用文本编辑器打开jpg、pdf、exe这些文件格式的时候，会看到一大堆的乱码，这是因为二进制文件包含很多无法显示和打印的字符。所以，如果想要让记事本这样的文本编辑器处理二进制数据，就需要一个从二进制到字符串的转换方法。Base64就是一种最常见的二进制编码方法。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-12-12-base64.png">
-<meta property="og:updated_time" content="2020-07-14T08:24:44.096Z">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-12-12-base64.png">
+<meta property="og:updated_time" content="2020-08-21T08:11:30.180Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-12-12-base64.png">
+<meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-12-12-base64.png">
 
 <link rel="canonical" href="http://houmin.cc/posts/56733fd3/">
 
@@ -334,7 +334,7 @@
 <h3 id="Base64的转换"><a href="#Base64的转换" class="headerlink" title="Base64的转换"></a>Base64的转换</h3><p>Base64编码选择的64个可打印字符为字母A-Z，a-z、数字0-9，这样共有62个字符，此外还有两个字符在不同的系统中而不同。比如对于MIME格式，其采用的为</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="keyword">static</span> <span class="keyword">char</span> table[] = <span class="string">"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"</span>;</span><br></pre></td></tr></table></figure>
 <p>然后，而二进制数据进行处理，每3个字节一组，一共是 $ 3 × 8 = 24 $ bit，划分为4组，每组正好6个bit。</p>
-<p><img alt="base64" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2017-12-12-base64.png"></p>
+<p><img alt="base64" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2017-12-12-base64.png"></p>
 <p>这样，我们得到4个数字作为索引，然后查表，获得相应的4个字符，就得到编码后的字符串。所以，Base64编码会把3字节的二进制数据编码为4字节的文本数据，长度增加33%，好处是编码后的文本数据可以在邮件正文、网页等直接显示。</p>
 <p>如果要编码的二进制数据不是3的倍数，Base64就会在后面补0，每补1个0就在编码出来的字符串后加上1个<code>=</code>，解码的时候会自动将<code>=</code>去掉。</p>
 <p>Python中内置的<code>base64</code>可以直接进行base64的编解码</p>
@@ -482,19 +482,19 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">74</span>
+          <span class="site-state-item-count">96</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">125</span>
+        <span class="site-state-item-count">146</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -562,13 +562,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">586k</span>
+    <span title="站点总字数">775k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">17:46</span>
+    <span title="站点阅读时长">23:28</span>
 </div>
 
         

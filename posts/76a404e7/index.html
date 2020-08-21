@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Controller Manager作为集群的管理控制中心，维护集群中的所有控制器，对维持集群的稳定和自我修复，实现高可用，副本控制等起关键作用。">
+<meta name="keywords" content="k8s,go,源码解读,controller">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Kubernetes解读】Controller Manager">
+<meta property="og:url" content="http://houmin.cc/posts/76a404e7/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="Controller Manager作为集群的管理控制中心，维护集群中的所有控制器，对维持集群的稳定和自我修复，实现高可用，副本控制等起关键作用。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://www.pianshen.com/images/715/6480752a76065ff8de202236459f36bb.png">
+<meta property="og:image" content="https://www.pianshen.com/images/592/394742076228162f618ca01a59ee1170.png">
+<meta property="og:updated_time" content="2020-08-21T08:11:30.117Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.pianshen.com/images/715/6480752a76065ff8de202236459f36bb.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/76a404e7/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Kubernetes解读】Controller Manager | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/76a404e7/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Kubernetes解读】Controller Manager
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-08-11 20:46:45" itemprop="dateCreated datePublished" datetime="2020-08-11T20:46:45+08:00">2020-08-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/76a404e7/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/76a404e7/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>26k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>47 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><code>Controller Manager</code>作为集群的管理控制中心，维护集群中的所有控制器，对维持集群的稳定和自我修复，实现高可用，副本控制等起关键作用。</p>
+<a id="more"></a>
+<h2 id="内部结构图"><a href="#内部结构图" class="headerlink" title="内部结构图"></a>内部结构图</h2><p><img alt="12039474-1e134c69dc68c410.png" data-src="https://www.pianshen.com/images/715/6480752a76065ff8de202236459f36bb.png"></p>
+<h2 id="关键性调用链"><a href="#关键性调用链" class="headerlink" title="关键性调用链"></a>关键性调用链</h2><p><img alt="12039474-6d0b6a2aabc46a28.png" data-src="https://www.pianshen.com/images/592/394742076228162f618ca01a59ee1170.png"></p>
+<h2 id="源码分析过程"><a href="#源码分析过程" class="headerlink" title="源码分析过程"></a>源码分析过程</h2><h3 id="组件启动的入口"><a href="#组件启动的入口" class="headerlink" title="组件启动的入口"></a>组件启动的入口</h3><figure class="highlight go"><figcaption><span>cmd/kube-controller-manager/controller-manager.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	rand.Seed(time.Now().UnixNano())</span><br><span class="line"></span><br><span class="line">	command := app.NewControllerManagerCommand()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// <span class="doctag">TODO:</span> once we switch everything over to Cobra commands, we can go back to calling</span></span><br><span class="line">	<span class="comment">// utilflag.InitFlags() (by removing its pflag.Parse() call). For now, we have to set the</span></span><br><span class="line">	<span class="comment">// normalize func and add the go flag set by hand.</span></span><br><span class="line">	<span class="comment">// utilflag.InitFlags()</span></span><br><span class="line">	logs.InitLogs()</span><br><span class="line">	<span class="keyword">defer</span> logs.FlushLogs()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> err := command.Execute(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		os.Exit(<span class="number">1</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="读取配置文件，进行配置读取和初始化默认配置"><a href="#读取配置文件，进行配置读取和初始化默认配置" class="headerlink" title="读取配置文件，进行配置读取和初始化默认配置"></a>读取配置文件，进行配置读取和初始化默认配置</h3><p><strong>位置：</strong> k8s.io/kubernetes/cmd/kube-controller-manager/app/controllermanager.go -&gt;NewControllerManagerCommand</p>
+<ul>
+<li>初始化Controller-manager的配置选项结构:<strong>NewKubeControllerManagerOptions()</strong></li>
+<li>创建执行命令结构包括Use,Long,和Run:<strong>cmd := &amp;cobra.Command{</strong></li>
+<li>解析配置文件: <strong>s.AddFlags</strong><br>1.KnownControllers()获取所有controller<br>2.将配置文件中的配置选项注入到配置对象中<br>3.同时将controller需要的参数写入.</li>
+</ul>
+<figure class="highlight go"><figcaption><span>cmd/kube-controller-manager/app/controllermanager.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// NewControllerManagerCommand creates a *cobra.Command object with default parameters</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewControllerManagerCommand</span><span class="params">()</span> *<span class="title">cobra</span>.<span class="title">Command</span></span> &#123;</span><br><span class="line">	s, err := options.NewKubeControllerManagerOptions()</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		klog.Fatalf(<span class="string">"unable to initialize command options: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	cmd := &amp;cobra.Command&#123;</span><br><span class="line">		Use: <span class="string">"kube-controller-manager"</span>,</span><br><span class="line">		Long: <span class="string">`The Kubernetes controller manager is a daemon that embeds</span></span><br><span class="line"><span class="string">the core control loops shipped with Kubernetes. In applications of robotics and</span></span><br><span class="line"><span class="string">automation, a control loop is a non-terminating loop that regulates the state of</span></span><br><span class="line"><span class="string">the system. In Kubernetes, a controller is a control loop that watches the shared</span></span><br><span class="line"><span class="string">state of the cluster through the apiserver and makes changes attempting to move the</span></span><br><span class="line"><span class="string">current state towards the desired state. Examples of controllers that ship with</span></span><br><span class="line"><span class="string">Kubernetes today are the replication controller, endpoints controller, namespace</span></span><br><span class="line"><span class="string">controller, and serviceaccounts controller.`</span>,</span><br><span class="line">		Run: <span class="function"><span class="keyword">func</span><span class="params">(cmd *cobra.Command, args []<span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">			verflag.PrintAndExitIfRequested()</span><br><span class="line">			utilflag.PrintFlags(cmd.Flags())</span><br><span class="line"></span><br><span class="line">			c, err := s.Config(KnownControllers(), ControllersDisabledByDefault.List())</span><br><span class="line">			<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">				fmt.Fprintf(os.Stderr, <span class="string">"%v\n"</span>, err)</span><br><span class="line">				os.Exit(<span class="number">1</span>)</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">if</span> err := Run(c.Complete(), wait.NeverStop); err != <span class="literal">nil</span> &#123;</span><br><span class="line">				fmt.Fprintf(os.Stderr, <span class="string">"%v\n"</span>, err)</span><br><span class="line">				os.Exit(<span class="number">1</span>)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;,</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	fs := cmd.Flags()</span><br><span class="line">	namedFlagSets := s.Flags(KnownControllers(), ControllersDisabledByDefault.List())</span><br><span class="line">	verflag.AddFlags(namedFlagSets.FlagSet(<span class="string">"global"</span>))</span><br><span class="line">	globalflag.AddGlobalFlags(namedFlagSets.FlagSet(<span class="string">"global"</span>), cmd.Name())</span><br><span class="line">	registerLegacyGlobalFlags(namedFlagSets)</span><br><span class="line">	<span class="keyword">for</span> _, f := <span class="keyword">range</span> namedFlagSets.FlagSets &#123;</span><br><span class="line">		fs.AddFlagSet(f)</span><br><span class="line">	&#125;</span><br><span class="line">	usageFmt := <span class="string">"Usage:\n  %s\n"</span></span><br><span class="line">	cols, _, _ := term.TerminalSize(cmd.OutOrStdout())</span><br><span class="line">	cmd.SetUsageFunc(<span class="function"><span class="keyword">func</span><span class="params">(cmd *cobra.Command)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">		fmt.Fprintf(cmd.OutOrStderr(), usageFmt, cmd.UseLine())</span><br><span class="line">		cliflag.PrintSections(cmd.OutOrStderr(), namedFlagSets, cols)</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;)</span><br><span class="line">	cmd.SetHelpFunc(<span class="function"><span class="keyword">func</span><span class="params">(cmd *cobra.Command, args []<span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">		fmt.Fprintf(cmd.OutOrStdout(), <span class="string">"%s\n\n"</span>+usageFmt, cmd.Long, cmd.UseLine())</span><br><span class="line">		cliflag.PrintSections(cmd.OutOrStdout(), namedFlagSets, cols)</span><br><span class="line">	&#125;)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> cmd</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="组件启动执行"><a href="#组件启动执行" class="headerlink" title="组件启动执行"></a>组件启动执行</h3><p>从main中的command.Execute()到4.2中构造的Run<br><strong>位置：</strong> k8s.io/kubernetes/cmd/kube-controller-manager/app/controllermanager.go<br>//加载所有控制器，并将对应参数注入到控制器中</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">c, err := s.Config(KnownControllers(), ControllersDisabledByDefault.List())</span><br></pre></td></tr></table></figure>
+<p><strong>位置：</strong> k8s.io/kubernetes/cmd/kube-controller-manager/app/controllermanager.go<br>KnownControllers()中的NewControllerInitializers初始化所有的控制器</p>
+<figure class="highlight go"><figcaption><span>cmd/kube-controller-manager/app/controllermanager.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// NewControllerInitializers is a public map of named controller groups (you can start more than one in an init func)</span></span><br><span class="line"><span class="comment">// paired to their InitFunc.  This allows for structured downstream composition and subdivision.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewControllerInitializers</span><span class="params">(loopMode ControllerLoopMode)</span> <span class="title">map</span>[<span class="title">string</span>]<span class="title">InitFunc</span></span> &#123;</span><br><span class="line">	controllers := <span class="keyword">map</span>[<span class="keyword">string</span>]InitFunc&#123;&#125;</span><br><span class="line">	controllers[<span class="string">"endpoint"</span>] = startEndpointController</span><br><span class="line">	controllers[<span class="string">"endpointslice"</span>] = startEndpointSliceController</span><br><span class="line">	controllers[<span class="string">"replicationcontroller"</span>] = startReplicationController</span><br><span class="line">	controllers[<span class="string">"podgc"</span>] = startPodGCController</span><br><span class="line">	controllers[<span class="string">"resourcequota"</span>] = startResourceQuotaController</span><br><span class="line">	controllers[<span class="string">"namespace"</span>] = startNamespaceController</span><br><span class="line">	controllers[<span class="string">"serviceaccount"</span>] = startServiceAccountController</span><br><span class="line">	controllers[<span class="string">"garbagecollector"</span>] = startGarbageCollectorController</span><br><span class="line">	controllers[<span class="string">"daemonset"</span>] = startDaemonSetController</span><br><span class="line">	controllers[<span class="string">"job"</span>] = startJobController</span><br><span class="line">	controllers[<span class="string">"deployment"</span>] = startDeploymentController</span><br><span class="line">	controllers[<span class="string">"replicaset"</span>] = startReplicaSetController</span><br><span class="line">	controllers[<span class="string">"horizontalpodautoscaling"</span>] = startHPAController</span><br><span class="line">	controllers[<span class="string">"disruption"</span>] = startDisruptionController</span><br><span class="line">	controllers[<span class="string">"statefulset"</span>] = startStatefulSetController</span><br><span class="line">	controllers[<span class="string">"cronjob"</span>] = startCronJobController</span><br><span class="line">	controllers[<span class="string">"csrsigning"</span>] = startCSRSigningController</span><br><span class="line">	controllers[<span class="string">"csrapproving"</span>] = startCSRApprovingController</span><br><span class="line">	controllers[<span class="string">"csrcleaner"</span>] = startCSRCleanerController</span><br><span class="line">	controllers[<span class="string">"ttl"</span>] = startTTLController</span><br><span class="line">	controllers[<span class="string">"bootstrapsigner"</span>] = startBootstrapSignerController</span><br><span class="line">	controllers[<span class="string">"tokencleaner"</span>] = startTokenCleanerController</span><br><span class="line">	controllers[<span class="string">"nodeipam"</span>] = startNodeIpamController</span><br><span class="line">	controllers[<span class="string">"nodelifecycle"</span>] = startNodeLifecycleController</span><br><span class="line">	<span class="keyword">if</span> loopMode == IncludeCloudLoops &#123;</span><br><span class="line">		controllers[<span class="string">"service"</span>] = startServiceController</span><br><span class="line">		controllers[<span class="string">"route"</span>] = startRouteController</span><br><span class="line">		controllers[<span class="string">"cloud-node-lifecycle"</span>] = startCloudNodeLifecycleController</span><br><span class="line">		<span class="comment">// <span class="doctag">TODO:</span> volume controller into the IncludeCloudLoops only set.</span></span><br><span class="line">	&#125;</span><br><span class="line">	controllers[<span class="string">"persistentvolume-binder"</span>] = startPersistentVolumeBinderController</span><br><span class="line">	controllers[<span class="string">"attachdetach"</span>] = startAttachDetachController</span><br><span class="line">	controllers[<span class="string">"persistentvolume-expander"</span>] = startVolumeExpandController</span><br><span class="line">	controllers[<span class="string">"clusterrole-aggregation"</span>] = startClusterRoleAggregrationController</span><br><span class="line">	controllers[<span class="string">"pvc-protection"</span>] = startPVCProtectionController</span><br><span class="line">	controllers[<span class="string">"pv-protection"</span>] = startPVProtectionController</span><br><span class="line">	controllers[<span class="string">"ttl-after-finished"</span>] = startTTLAfterFinishedController</span><br><span class="line">	controllers[<span class="string">"root-ca-cert-publisher"</span>] = startRootCACertPublisher</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> controllers</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>位置：</strong> k8s.io/kubernetes/cmd/kube-controller-manager/app/controllermanager.go<br>真正进入执行</p>
+<ul>
+<li>启动controller-manager的http服务和对应处理器，包括安全和非安全：<strong>BuildHandlerChain</strong></li>
+<li>构造run的执行体</li>
+<li>需要选主的情况，选主完执行run;不需要选主的直接执行run，然后panic</li>
+</ul>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br><span class="line">309</span><br><span class="line">310</span><br><span class="line">311</span><br><span class="line">312</span><br><span class="line">313</span><br><span class="line">314</span><br><span class="line">315</span><br><span class="line">316</span><br><span class="line">317</span><br><span class="line">318</span><br><span class="line">319</span><br><span class="line">320</span><br><span class="line">321</span><br><span class="line">322</span><br><span class="line">323</span><br><span class="line">324</span><br><span class="line">325</span><br><span class="line">326</span><br><span class="line">327</span><br><span class="line">328</span><br><span class="line">329</span><br><span class="line">330</span><br><span class="line">331</span><br><span class="line">332</span><br><span class="line">333</span><br><span class="line">334</span><br><span class="line">335</span><br><span class="line">336</span><br><span class="line">337</span><br><span class="line">338</span><br><span class="line">339</span><br><span class="line">340</span><br><span class="line">341</span><br><span class="line">342</span><br><span class="line">343</span><br><span class="line">344</span><br><span class="line">345</span><br><span class="line">346</span><br><span class="line">347</span><br><span class="line">348</span><br><span class="line">349</span><br><span class="line">350</span><br><span class="line">351</span><br><span class="line">352</span><br><span class="line">353</span><br><span class="line">354</span><br><span class="line">355</span><br><span class="line">356</span><br><span class="line">357</span><br><span class="line">358</span><br><span class="line">359</span><br><span class="line">360</span><br><span class="line">361</span><br><span class="line">362</span><br><span class="line">363</span><br><span class="line">364</span><br><span class="line">365</span><br><span class="line">366</span><br><span class="line">367</span><br><span class="line">368</span><br><span class="line">369</span><br><span class="line">370</span><br><span class="line">371</span><br><span class="line">372</span><br><span class="line">373</span><br><span class="line">374</span><br><span class="line">375</span><br><span class="line">376</span><br><span class="line">377</span><br><span class="line">378</span><br><span class="line">379</span><br><span class="line">380</span><br><span class="line">381</span><br><span class="line">382</span><br><span class="line">383</span><br><span class="line">384</span><br><span class="line">385</span><br><span class="line">386</span><br><span class="line">387</span><br><span class="line">388</span><br><span class="line">389</span><br><span class="line">390</span><br><span class="line">391</span><br><span class="line">392</span><br><span class="line">393</span><br><span class="line">394</span><br><span class="line">395</span><br><span class="line">396</span><br><span class="line">397</span><br><span class="line">398</span><br><span class="line">399</span><br><span class="line">400</span><br><span class="line">401</span><br><span class="line">402</span><br><span class="line">403</span><br><span class="line">404</span><br><span class="line">405</span><br><span class="line">406</span><br><span class="line">407</span><br><span class="line">408</span><br><span class="line">409</span><br><span class="line">410</span><br><span class="line">411</span><br><span class="line">412</span><br><span class="line">413</span><br><span class="line">414</span><br><span class="line">415</span><br><span class="line">416</span><br><span class="line">417</span><br><span class="line">418</span><br><span class="line">419</span><br><span class="line">420</span><br><span class="line">421</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Run runs the KubeControllerManagerOptions.  This should never exit.</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Run</span><span class="params">(<span class="built_in">c</span> *config.CompletedConfig)</span></span> error &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// To help debugging, immediately log version</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    glog.<span class="type">Infof</span>(<span class="string">"Version: %+v"</span>, version.<span class="type">Get</span>())</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> </span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> cfgz, err := configz.<span class="type">New</span>(<span class="string">"componentconfig"</span>); err == <span class="literal">nil</span> &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        cfgz.<span class="type">Set</span>(<span class="built_in">c</span>.<span class="type">ComponentConfig</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">        glog.<span class="type">Errorf</span>(<span class="string">"unable to register configz: %c"</span>, err)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> </span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// Start the controller manager HTTP server</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    stopCh := make(chan <span class="class"><span class="keyword">struct</span></span>&#123;&#125;)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">c</span>.<span class="type">SecureServing</span> != <span class="literal">nil</span> &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        handler := genericcontrollermanager.<span class="type">NewBaseHandler</span>(&amp;<span class="built_in">c</span>.<span class="type">ComponentConfig</span>.<span class="type">Debugging</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        handler = genericcontrollermanager.<span class="type">BuildHandlerChain</span>(handler, &amp;<span class="built_in">c</span>.<span class="type">Authorization</span>, &amp;<span class="built_in">c</span>.<span class="type">Authentication</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> err := <span class="built_in">c</span>.<span class="type">SecureServing</span>.<span class="type">Serve</span>(handler, <span class="number">0</span>, stopCh); err != <span class="literal">nil</span> &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> err</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">c</span>.<span class="type">InsecureServing</span> != <span class="literal">nil</span> &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        handler := genericcontrollermanager.<span class="type">NewBaseHandler</span>(&amp;<span class="built_in">c</span>.<span class="type">ComponentConfig</span>.<span class="type">Debugging</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        handler = genericcontrollermanager.<span class="type">BuildHandlerChain</span>(handler, &amp;<span class="built_in">c</span>.<span class="type">Authorization</span>, &amp;<span class="built_in">c</span>.<span class="type">Authentication</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> err := <span class="built_in">c</span>.<span class="type">InsecureServing</span>.<span class="type">Serve</span>(handler, <span class="number">0</span>, stopCh); err != <span class="literal">nil</span> &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> err</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> </span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    run := <span class="function"><span class="keyword">func</span><span class="params">(stop &lt;-chan <span class="keyword">struct</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        rootClientBuilder := controller.<span class="type">SimpleControllerClientBuilder</span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">            <span class="type">ClientConfig</span>: <span class="built_in">c</span>.<span class="type">Kubeconfig</span>,</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="keyword">var</span> clientBuilder controller.<span class="type">ControllerClientBuilder</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">c</span>.<span class="type">ComponentConfig</span>.<span class="type">KubeCloudShared</span>.<span class="type">UseServiceAccountCredentials</span> &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> len(<span class="built_in">c</span>.<span class="type">ComponentConfig</span>.<span class="type">SAController</span>.<span class="type">ServiceAccountKeyFile</span>) == <span class="number">0</span> &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">                <span class="comment">// It'c possible another controller process is creating the tokens for us.</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">                <span class="comment">// If one isn't, we'll timeout and exit when our client builder is unable to create the tokens.</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">                glog.<span class="type">Warningf</span>(<span class="string">"--use-service-account-credentials was specified without providing a --service-account-private-key-file"</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">            clientBuilder = controller.<span class="type">SAControllerClientBuilder</span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">                <span class="type">ClientConfig</span>:         restclient.<span class="type">AnonymousClientConfig</span>(<span class="built_in">c</span>.<span class="type">Kubeconfig</span>),</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">                <span class="type">CoreClient</span>:           <span class="built_in">c</span>.<span class="type">Client</span>.<span class="type">CoreV1</span>(),</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">                <span class="type">AuthenticationClient</span>: <span class="built_in">c</span>.<span class="type">Client</span>.<span class="type">AuthenticationV1</span>(),</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">                <span class="type">Namespace</span>:            <span class="string">"kube-system"</span>,</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">            clientBuilder = rootClientBuilder</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        ctx, err := <span class="type">CreateControllerContext</span>(<span class="built_in">c</span>, rootClientBuilder, clientBuilder, stop)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">            glog.<span class="type">Fatalf</span>(<span class="string">"error building controller context: %v"</span>, err)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        saTokenControllerInitFunc := serviceAccountTokenControllerStarter&#123;rootClientBuilder: rootClientBuilder&#125;.startServiceAccountTokenController</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> </span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="comment">//启动控制器</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> err := <span class="type">StartControllers</span>(ctx, saTokenControllerInitFunc, <span class="type">NewControllerInitializers</span>(ctx.<span class="type">LoopMode</span>)); err != <span class="literal">nil</span> &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">            glog.<span class="type">Fatalf</span>(<span class="string">"error starting controllers: %v"</span>, err)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> </span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        ctx.<span class="type">InformerFactory</span>.<span class="type">Start</span>(ctx.<span class="type">Stop</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        close(ctx.<span class="type">InformersStarted</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> </span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        select &#123;&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> </span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">//note 如果未启用选主（只是单节点），直接启动，并且panic，不在往下走，因为run内部有select挂起</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> !<span class="built_in">c</span>.<span class="type">ComponentConfig</span>.<span class="type">GenericComponent</span>.<span class="type">LeaderElection</span>.<span class="type">LeaderElect</span> &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        run(wait.<span class="type">NeverStop</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        panic(<span class="string">"unreachable"</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> </span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    id, err := os.<span class="type">Hostname</span>()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> </span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// add a uniquifier so that two processes on the same host don't accidentally both become active</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">//生成唯一ID,相当于进程锁</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    id = id + <span class="string">"_"</span> + string(uuid.<span class="type">NewUUID</span>())</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    rl, err := resourcelock.<span class="type">New</span>(<span class="built_in">c</span>.<span class="type">ComponentConfig</span>.<span class="type">GenericComponent</span>.<span class="type">LeaderElection</span>.<span class="type">ResourceLock</span>,</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="string">"kube-system"</span>,</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="string">"kube-controller-manager"</span>,</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="built_in">c</span>.<span class="type">LeaderElectionClient</span>.<span class="type">CoreV1</span>(),</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        resourcelock.<span class="type">ResourceLockConfig</span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">            <span class="type">Identity</span>:      id,</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">            <span class="type">EventRecorder</span>: <span class="built_in">c</span>.<span class="type">EventRecorder</span>,</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        &#125;)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        glog.<span class="type">Fatalf</span>(<span class="string">"error creating lock: %v"</span>, err)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> </span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">//进行选主，并在选为主节点后执行run</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    leaderelection.<span class="type">RunOrDie</span>(leaderelection.<span class="type">LeaderElectionConfig</span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="type">Lock</span>:          rl,</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="type">LeaseDuration</span>: <span class="built_in">c</span>.<span class="type">ComponentConfig</span>.<span class="type">GenericComponent</span>.<span class="type">LeaderElection</span>.<span class="type">LeaseDuration</span>.<span class="type">Duration</span>,</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="type">RenewDeadline</span>: <span class="built_in">c</span>.<span class="type">ComponentConfig</span>.<span class="type">GenericComponent</span>.<span class="type">LeaderElection</span>.<span class="type">RenewDeadline</span>.<span class="type">Duration</span>,</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="type">RetryPeriod</span>:   <span class="built_in">c</span>.<span class="type">ComponentConfig</span>.<span class="type">GenericComponent</span>.<span class="type">LeaderElection</span>.<span class="type">RetryPeriod</span>.<span class="type">Duration</span>,</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="type">Callbacks</span>: leaderelection.<span class="type">LeaderCallbacks</span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">            <span class="comment">//选主完成后执行</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">            <span class="type">OnStartedLeading</span>: run,</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">            <span class="type">OnStoppedLeading</span>: <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">                glog.<span class="type">Fatalf</span>(<span class="string">"leaderelection lost"</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">            &#125;,</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        &#125;,</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    panic(<span class="string">"unreachable"</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>转到run内部核心的三个动作</strong> ：CreateControllerContext 、 StartControllers和ctx.InformerFactory.Start</p>
+<h4 id="CreateControllerContext"><a href="#CreateControllerContext" class="headerlink" title="CreateControllerContext"></a>CreateControllerContext</h4><p><strong>位置：</strong> k8s.io/kubernetes/cmd/kube-controller-manager/app/controllermanager.go</p>
+<ul>
+<li>拿到对kube-APIserver中资源的操作句柄</li>
+<li>确认Kube-APIServer的健康（最多等待10s），然后拿获取连接</li>
+<li>创建控制器上下文</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// CreateControllerContext creates a context struct containing references to resources needed by the</span></span><br><span class="line"><span class="comment">// controllers such as the cloud provider and clientBuilder. rootClientBuilder is only used for</span></span><br><span class="line"><span class="comment">// the shared-informers client and token controller.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">CreateControllerContext</span><span class="params">(s *config.CompletedConfig, rootClientBuilder, clientBuilder controller.ControllerClientBuilder, stop &lt;-<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span> <span class="params">(ControllerContext, error)</span></span> &#123;</span><br><span class="line">	versionedClient := rootClientBuilder.ClientOrDie(<span class="string">"shared-informers"</span>)</span><br><span class="line">	sharedInformers := informers.NewSharedInformerFactory(versionedClient, ResyncPeriod(s)())</span><br><span class="line"></span><br><span class="line">	metadataClient := metadata.NewForConfigOrDie(rootClientBuilder.ConfigOrDie(<span class="string">"metadata-informers"</span>))</span><br><span class="line">	metadataInformers := metadatainformer.NewSharedInformerFactory(metadataClient, ResyncPeriod(s)())</span><br><span class="line"></span><br><span class="line">	<span class="comment">// If apiserver is not running we should wait for some time and fail only then. This is particularly</span></span><br><span class="line">	<span class="comment">// important when we start apiserver and controller manager at the same time.</span></span><br><span class="line">	<span class="keyword">if</span> err := genericcontrollermanager.WaitForAPIServer(versionedClient, <span class="number">10</span>*time.Second); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> ControllerContext&#123;&#125;, fmt.Errorf(<span class="string">"failed to wait for apiserver being healthy: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Use a discovery client capable of being refreshed.</span></span><br><span class="line">	discoveryClient := rootClientBuilder.ClientOrDie(<span class="string">"controller-discovery"</span>)</span><br><span class="line">	cachedClient := cacheddiscovery.NewMemCacheClient(discoveryClient.Discovery())</span><br><span class="line">	restMapper := restmapper.NewDeferredDiscoveryRESTMapper(cachedClient)</span><br><span class="line">	<span class="keyword">go</span> wait.Until(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		restMapper.Reset()</span><br><span class="line">	&#125;, <span class="number">30</span>*time.Second, stop)</span><br><span class="line"></span><br><span class="line">	availableResources, err := GetAvailableResources(rootClientBuilder)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> ControllerContext&#123;&#125;, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	cloud, loopMode, err := createCloudProvider(s.ComponentConfig.KubeCloudShared.CloudProvider.Name, s.ComponentConfig.KubeCloudShared.ExternalCloudVolumePlugin,</span><br><span class="line">		s.ComponentConfig.KubeCloudShared.CloudProvider.CloudConfigFile, s.ComponentConfig.KubeCloudShared.AllowUntaggedCloud, sharedInformers)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> ControllerContext&#123;&#125;, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	ctx := ControllerContext&#123;</span><br><span class="line">		ClientBuilder:                   clientBuilder,</span><br><span class="line">		InformerFactory:                 sharedInformers,</span><br><span class="line">		ObjectOrMetadataInformerFactory: controller.NewInformerFactory(sharedInformers, metadataInformers),</span><br><span class="line">		ComponentConfig:                 s.ComponentConfig,</span><br><span class="line">		RESTMapper:                      restMapper,</span><br><span class="line">		AvailableResources:              availableResources,</span><br><span class="line">		Cloud:                           cloud,</span><br><span class="line">		LoopMode:                        loopMode,</span><br><span class="line">		Stop:                            stop,</span><br><span class="line">		InformersStarted:                <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;),</span><br><span class="line">		ResyncPeriod:                    ResyncPeriod(s),</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> ctx, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="StartControllers"><a href="#StartControllers" class="headerlink" title="StartControllers"></a>StartControllers</h4><p><strong>位置：</strong> k8s.io/kubernetes/cmd/kube-controller-manager/app/controllermanager.go<br>启动初始化的所有控制器</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// StartControllers starts a set of controllers with a specified ControllerContext</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">StartControllers</span><span class="params">(ctx ControllerContext, startSATokenController InitFunc, controllers <span class="keyword">map</span>[<span class="keyword">string</span>]InitFunc, unsecuredMux *mux.PathRecorderMux)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	<span class="comment">// Always start the SA token controller first using a full-power client, since it needs to mint tokens for the rest</span></span><br><span class="line">	<span class="comment">// If this fails, just return here and fail since other controllers won't be able to get credentials.</span></span><br><span class="line">	<span class="keyword">if</span> _, _, err := startSATokenController(ctx); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Initialize the cloud provider with a reference to the clientBuilder only after token controller</span></span><br><span class="line">	<span class="comment">// has started in case the cloud provider uses the client builder.</span></span><br><span class="line">	<span class="keyword">if</span> ctx.Cloud != <span class="literal">nil</span> &#123;</span><br><span class="line">		ctx.Cloud.Initialize(ctx.ClientBuilder, ctx.Stop)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> controllerName, initFn := <span class="keyword">range</span> controllers &#123;</span><br><span class="line">		<span class="keyword">if</span> !ctx.IsControllerEnabled(controllerName) &#123;</span><br><span class="line">			klog.Warningf(<span class="string">"%q is disabled"</span>, controllerName)</span><br><span class="line">			<span class="keyword">continue</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		time.Sleep(wait.Jitter(ctx.ComponentConfig.Generic.ControllerStartInterval.Duration, ControllerStartJitter))</span><br><span class="line"></span><br><span class="line">		klog.V(<span class="number">1</span>).Infof(<span class="string">"Starting %q"</span>, controllerName)</span><br><span class="line">		debugHandler, started, err := initFn(ctx)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			klog.Errorf(<span class="string">"Error starting %q"</span>, controllerName)</span><br><span class="line">			<span class="keyword">return</span> err</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> !started &#123;</span><br><span class="line">			klog.Warningf(<span class="string">"Skipping %q"</span>, controllerName)</span><br><span class="line">			<span class="keyword">continue</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> debugHandler != <span class="literal">nil</span> &amp;&amp; unsecuredMux != <span class="literal">nil</span> &#123;</span><br><span class="line">			basePath := <span class="string">"/debug/controllers/"</span> + controllerName</span><br><span class="line">			unsecuredMux.UnlistedHandle(basePath, http.StripPrefix(basePath, debugHandler))</span><br><span class="line">			unsecuredMux.UnlistedHandlePrefix(basePath+<span class="string">"/"</span>, http.StripPrefix(basePath, debugHandler))</span><br><span class="line">		&#125;</span><br><span class="line">		klog.Infof(<span class="string">"Started %q"</span>, controllerName)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="ctx-InformerFactory-Start"><a href="#ctx-InformerFactory-Start" class="headerlink" title="ctx.InformerFactory.Start"></a>ctx.InformerFactory.Start</h4><p>controller-manager中的informer开始启动监听资源的事件，将事件放到自己的队列中（具有限流特性）。处理进程从队列总获取事件开始进行任务处理。</p>
+<blockquote>
+<p>将新建的ReplicaSet，放入队列</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// obj could be an *apps.ReplicaSet, or a DeletionFinalStateUnknown marker item.</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(rsc *ReplicaSetController)</span> <span class="title">enqueueReplicaSet</span><span class="params">(obj <span class="keyword">interface</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    key, err := controller.KeyFunc(obj)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        utilruntime.HandleError(fmt.Errorf(<span class="string">"couldn't get key for object %+v: %v"</span>, obj, err))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    rsc.queue.Add(key)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>从队列中获取对象进行处理（具体过程见下方）</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(rsc *ReplicaSetController)</span> <span class="title">processNextWorkItem</span><span class="params">()</span> <span class="title">bool</span></span> &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    key, quit := rsc.queue.Get()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> quit &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">defer</span> rsc.queue.Done(key)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> </span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    err := rsc.syncHandler(key.(<span class="keyword">string</span>))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> err == <span class="literal">nil</span> &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        rsc.queue.Forget(key)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> </span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    utilruntime.HandleError(fmt.Errorf(<span class="string">"Sync %q failed with %v"</span>, key, err))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    rsc.queue.AddRateLimited(key)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> </span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="以startReplicaSetController为例"><a href="#以startReplicaSetController为例" class="headerlink" title="以startReplicaSetController为例"></a>以startReplicaSetController为例</h2><p>在StartControllers中initFn方法是NewControllerInitializers中初始化Controller是定义，以下主要看下startReplicaSetController。<br><strong>位置：</strong> k8s.io/kubernetes/cmd/kube-controller-manager/app/apps.go<br>其中NewReplicaSetController主要是初始化ReplicaSetController的结构，包括apiserver的客户端，informer的回调函数等等。NewReplicaSetController-&gt;NewBaseController</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">startReplicaSetController</span><span class="params">(ctx ControllerContext)</span> <span class="params">(http.Handler, <span class="keyword">bool</span>, error)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> !ctx.AvailableResources[schema.GroupVersionResource&#123;Group: <span class="string">"apps"</span>, Version: <span class="string">"v1"</span>, Resource: <span class="string">"replicasets"</span>&#125;] &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, <span class="literal">false</span>, <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">go</span> replicaset.NewReplicaSetController(</span><br><span class="line">		ctx.InformerFactory.Apps().V1().ReplicaSets(),</span><br><span class="line">		ctx.InformerFactory.Core().V1().Pods(),</span><br><span class="line">		ctx.ClientBuilder.ClientOrDie(<span class="string">"replicaset-controller"</span>),</span><br><span class="line">		replicaset.BurstReplicas,</span><br><span class="line">	).Run(<span class="keyword">int</span>(ctx.ComponentConfig.ReplicaSetController.ConcurrentRSSyncs), ctx.Stop)</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span>, <span class="literal">true</span>, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>关键函数run：</strong>k8s.io/kubernetes/pkg/controller/replicaset/replica_set.go<br>run中执行rsc.worker。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Run begins watching and syncing.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(rsc *ReplicaSetController)</span> <span class="title">Run</span><span class="params">(workers <span class="keyword">int</span>, stopCh &lt;-<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	<span class="keyword">defer</span> utilruntime.HandleCrash()</span><br><span class="line">	<span class="keyword">defer</span> rsc.queue.ShutDown()</span><br><span class="line"></span><br><span class="line">	controllerName := strings.ToLower(rsc.Kind)</span><br><span class="line">	klog.Infof(<span class="string">"Starting %v controller"</span>, controllerName)</span><br><span class="line">	<span class="keyword">defer</span> klog.Infof(<span class="string">"Shutting down %v controller"</span>, controllerName)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> !cache.WaitForNamedCacheSync(rsc.Kind, stopCh, rsc.podListerSynced, rsc.rsListerSynced) &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; workers; i++ &#123;</span><br><span class="line">		<span class="keyword">go</span> wait.Until(rsc.worker, time.Second, stopCh)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	&lt;-stopCh</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>rsc.worker即为rsc.syncHandler，而syncHandler在创建时来源于rsc.syncReplicaSet（见NewBaseController方法）<br><strong>那么我们转到syncReplicaSet</strong><br><strong>位置：</strong>k8s.io/kubernetes/pkg/controller/replicaset/replica_set.go<br><strong>updateReplicaSetStatus：</strong>在pod死亡或者新建时更新</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// syncReplicaSet will sync the ReplicaSet with the given key if it has had its expectations fulfilled,</span></span><br><span class="line"><span class="comment">// meaning it did not expect to see any more of its pods created or deleted. This function is not meant to be</span></span><br><span class="line"><span class="comment">// invoked concurrently with the same key.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(rsc *ReplicaSetController)</span> <span class="title">syncReplicaSet</span><span class="params">(key <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	startTime := time.Now()</span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		klog.V(<span class="number">4</span>).Infof(<span class="string">"Finished syncing %v %q (%v)"</span>, rsc.Kind, key, time.Since(startTime))</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	namespace, name, err := cache.SplitMetaNamespaceKey(key)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	rs, err := rsc.rsLister.ReplicaSets(namespace).Get(name)</span><br><span class="line">	<span class="keyword">if</span> errors.IsNotFound(err) &#123;</span><br><span class="line">		klog.V(<span class="number">4</span>).Infof(<span class="string">"%v %v has been deleted"</span>, rsc.Kind, key)</span><br><span class="line">		rsc.expectations.DeleteExpectations(key)</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	rsNeedsSync := rsc.expectations.SatisfiedExpectations(key)</span><br><span class="line">	selector, err := metav1.LabelSelectorAsSelector(rs.Spec.Selector)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		utilruntime.HandleError(fmt.Errorf(<span class="string">"error converting pod selector to selector: %v"</span>, err))</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// list all pods to include the pods that don't match the rs`s selector</span></span><br><span class="line">	<span class="comment">// anymore but has the stale controller ref.</span></span><br><span class="line">	<span class="comment">// <span class="doctag">TODO:</span> Do the List and Filter in a single pass, or use an index.</span></span><br><span class="line">	allPods, err := rsc.podLister.Pods(rs.Namespace).List(labels.Everything())</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// Ignore inactive pods.</span></span><br><span class="line">	filteredPods := controller.FilterActivePods(allPods)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// <span class="doctag">NOTE:</span> filteredPods are pointing to objects from cache - if you need to</span></span><br><span class="line">	<span class="comment">// modify them, you need to copy it first.</span></span><br><span class="line">	filteredPods, err = rsc.claimPods(rs, selector, filteredPods)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> manageReplicasErr error</span><br><span class="line">	<span class="keyword">if</span> rsNeedsSync &amp;&amp; rs.DeletionTimestamp == <span class="literal">nil</span> &#123;</span><br><span class="line">		manageReplicasErr = rsc.manageReplicas(filteredPods, rs)</span><br><span class="line">	&#125;</span><br><span class="line">	rs = rs.DeepCopy()</span><br><span class="line">	newStatus := calculateStatus(rs, filteredPods, manageReplicasErr)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Always updates status as pods come up or die.</span></span><br><span class="line">	updatedRS, err := updateReplicaSetStatus(rsc.kubeClient.AppsV1().ReplicaSets(rs.Namespace), rs, newStatus)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="comment">// Multiple things could lead to this update failing. Requeuing the replica set ensures</span></span><br><span class="line">		<span class="comment">// Returning an error causes a requeue without forcing a hotloop</span></span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// Resync the ReplicaSet after MinReadySeconds as a last line of defense to guard against clock-skew.</span></span><br><span class="line">	<span class="keyword">if</span> manageReplicasErr == <span class="literal">nil</span> &amp;&amp; updatedRS.Spec.MinReadySeconds &gt; <span class="number">0</span> &amp;&amp;</span><br><span class="line">		updatedRS.Status.ReadyReplicas == *(updatedRS.Spec.Replicas) &amp;&amp;</span><br><span class="line">		updatedRS.Status.AvailableReplicas != *(updatedRS.Spec.Replicas) &#123;</span><br><span class="line">		rsc.queue.AddAfter(key, time.Duration(updatedRS.Spec.MinReadySeconds)*time.Second)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> manageReplicasErr</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>转到updateReplicaSetStatus：</strong>k8s.io/kubernetes/pkg/controller/replicaset/replica_set_utils.go<br>调用UpdateStatus，通过apiserver更新</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// updateReplicaSetStatus attempts to update the Status.Replicas of the given ReplicaSet, with a single GET/PUT retry.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">updateReplicaSetStatus</span><span class="params">(c appsclient.ReplicaSetInterface, rs *apps.ReplicaSet, newStatus apps.ReplicaSetStatus)</span> <span class="params">(*apps.ReplicaSet, error)</span></span> &#123;</span><br><span class="line">	<span class="comment">// This is the steady state. It happens when the ReplicaSet doesn't have any expectations, since</span></span><br><span class="line">	<span class="comment">// we do a periodic relist every 30s. If the generations differ but the replicas are</span></span><br><span class="line">	<span class="comment">// the same, a caller might've resized to the same replica count.</span></span><br><span class="line">	<span class="keyword">if</span> rs.Status.Replicas == newStatus.Replicas &amp;&amp;</span><br><span class="line">		rs.Status.FullyLabeledReplicas == newStatus.FullyLabeledReplicas &amp;&amp;</span><br><span class="line">		rs.Status.ReadyReplicas == newStatus.ReadyReplicas &amp;&amp;</span><br><span class="line">		rs.Status.AvailableReplicas == newStatus.AvailableReplicas &amp;&amp;</span><br><span class="line">		rs.Generation == rs.Status.ObservedGeneration &amp;&amp;</span><br><span class="line">		reflect.DeepEqual(rs.Status.Conditions, newStatus.Conditions) &#123;</span><br><span class="line">		<span class="keyword">return</span> rs, <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Save the generation number we acted on, otherwise we might wrongfully indicate</span></span><br><span class="line">	<span class="comment">// that we've seen a spec update when we retry.</span></span><br><span class="line">	<span class="comment">// <span class="doctag">TODO:</span> This can clobber an update if we allow multiple agents to write to the</span></span><br><span class="line">	<span class="comment">// same status.</span></span><br><span class="line">	newStatus.ObservedGeneration = rs.Generation</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> getErr, updateErr error</span><br><span class="line">	<span class="keyword">var</span> updatedRS *apps.ReplicaSet</span><br><span class="line">	<span class="keyword">for</span> i, rs := <span class="number">0</span>, rs; ; i++ &#123;</span><br><span class="line">		klog.V(<span class="number">4</span>).Infof(fmt.Sprintf(<span class="string">"Updating status for %v: %s/%s, "</span>, rs.Kind, rs.Namespace, rs.Name) +</span><br><span class="line">			fmt.Sprintf(<span class="string">"replicas %d-&gt;%d (need %d), "</span>, rs.Status.Replicas, newStatus.Replicas, *(rs.Spec.Replicas)) +</span><br><span class="line">			fmt.Sprintf(<span class="string">"fullyLabeledReplicas %d-&gt;%d, "</span>, rs.Status.FullyLabeledReplicas, newStatus.FullyLabeledReplicas) +</span><br><span class="line">			fmt.Sprintf(<span class="string">"readyReplicas %d-&gt;%d, "</span>, rs.Status.ReadyReplicas, newStatus.ReadyReplicas) +</span><br><span class="line">			fmt.Sprintf(<span class="string">"availableReplicas %d-&gt;%d, "</span>, rs.Status.AvailableReplicas, newStatus.AvailableReplicas) +</span><br><span class="line">			fmt.Sprintf(<span class="string">"sequence No: %v-&gt;%v"</span>, rs.Status.ObservedGeneration, newStatus.ObservedGeneration))</span><br><span class="line"></span><br><span class="line">		rs.Status = newStatus</span><br><span class="line">		updatedRS, updateErr = c.UpdateStatus(context.TODO(), rs, metav1.UpdateOptions&#123;&#125;)</span><br><span class="line">		<span class="keyword">if</span> updateErr == <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> updatedRS, <span class="literal">nil</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// Stop retrying if we exceed statusUpdateRetries - the replicaSet will be requeued with a rate limit.</span></span><br><span class="line">		<span class="keyword">if</span> i &gt;= statusUpdateRetries &#123;</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// Update the ReplicaSet with the latest resource version for the next poll</span></span><br><span class="line">		<span class="keyword">if</span> rs, getErr = c.Get(context.TODO(), rs.Name, metav1.GetOptions&#123;&#125;); getErr != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="comment">// If the GET fails we can't trust status.Replicas anymore. This error</span></span><br><span class="line">			<span class="comment">// is bound to be more interesting than the update failure.</span></span><br><span class="line">			<span class="keyword">return</span> <span class="literal">nil</span>, getErr</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span>, updateErr</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="PodGCController"><a href="#PodGCController" class="headerlink" title="PodGCController"></a>PodGCController</h2><blockquote>
+<p>1.gc掉超过阈值限制的pod，按时间排序gc</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(gcc *PodGCController)</span> <span class="title">gcTerminated</span><span class="params">(pods []*v1.Pod)</span></span> &#123;</span><br><span class="line">	terminatedPods := []*v1.Pod&#123;&#125;</span><br><span class="line">	<span class="keyword">for</span> _, pod := <span class="keyword">range</span> pods &#123;</span><br><span class="line">		<span class="keyword">if</span> isPodTerminated(pod) &#123;</span><br><span class="line">			terminatedPods = <span class="built_in">append</span>(terminatedPods, pod)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	terminatedPodCount := <span class="built_in">len</span>(terminatedPods)</span><br><span class="line">	deleteCount := terminatedPodCount - gcc.terminatedPodThreshold</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> deleteCount &gt; terminatedPodCount &#123;</span><br><span class="line">		deleteCount = terminatedPodCount</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> deleteCount &lt;= <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	klog.Infof(<span class="string">"garbage collecting %v pods"</span>, deleteCount)</span><br><span class="line">	<span class="comment">// sort only when necessary</span></span><br><span class="line">	sort.Sort(byCreationTimestamp(terminatedPods))</span><br><span class="line">	<span class="keyword">var</span> wait sync.WaitGroup</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; deleteCount; i++ &#123;</span><br><span class="line">		wait.Add(<span class="number">1</span>)</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(namespace <span class="keyword">string</span>, name <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">			<span class="keyword">defer</span> wait.Done()</span><br><span class="line">			<span class="keyword">if</span> err := gcc.deletePod(namespace, name); err != <span class="literal">nil</span> &#123;</span><br><span class="line">				<span class="comment">// ignore not founds</span></span><br><span class="line">				<span class="keyword">defer</span> utilruntime.HandleError(err)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;(terminatedPods[i].Namespace, terminatedPods[i].Name)</span><br><span class="line">	&#125;</span><br><span class="line">	wait.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>2.gc掉孤儿pod：pod上的node信息不在当前可调度的节点上，即没有和有效node绑定</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// gcOrphaned deletes pods that are bound to nodes that don't exist.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(gcc *PodGCController)</span> <span class="title">gcOrphaned</span><span class="params">(pods []*v1.Pod, nodes []*v1.Node)</span></span> &#123;</span><br><span class="line">	klog.V(<span class="number">4</span>).Infof(<span class="string">"GC'ing orphaned"</span>)</span><br><span class="line">	existingNodeNames := sets.NewString()</span><br><span class="line">	<span class="keyword">for</span> _, node := <span class="keyword">range</span> nodes &#123;</span><br><span class="line">		existingNodeNames.Insert(node.Name)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// Add newly found unknown nodes to quarantine</span></span><br><span class="line">	<span class="keyword">for</span> _, pod := <span class="keyword">range</span> pods &#123;</span><br><span class="line">		<span class="keyword">if</span> pod.Spec.NodeName != <span class="string">""</span> &amp;&amp; !existingNodeNames.Has(pod.Spec.NodeName) &#123;</span><br><span class="line">			gcc.nodeQueue.AddAfter(pod.Spec.NodeName, quarantineTime)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// Check if nodes are still missing after quarantine period</span></span><br><span class="line">	deletedNodesNames, quit := gcc.discoverDeletedNodes(existingNodeNames)</span><br><span class="line">	<span class="keyword">if</span> quit &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// Delete orphaned pods</span></span><br><span class="line">	<span class="keyword">for</span> _, pod := <span class="keyword">range</span> pods &#123;</span><br><span class="line">		<span class="keyword">if</span> !deletedNodesNames.Has(pod.Spec.NodeName) &#123;</span><br><span class="line">			<span class="keyword">continue</span></span><br><span class="line">		&#125;</span><br><span class="line">		klog.V(<span class="number">2</span>).Infof(<span class="string">"Found orphaned Pod %v/%v assigned to the Node %v. Deleting."</span>, pod.Namespace, pod.Name, pod.Spec.NodeName)</span><br><span class="line">		<span class="keyword">if</span> err := gcc.deletePod(pod.Namespace, pod.Name); err != <span class="literal">nil</span> &#123;</span><br><span class="line">			utilruntime.HandleError(err)</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			klog.V(<span class="number">0</span>).Infof(<span class="string">"Forced deletion of orphaned Pod %v/%v succeeded"</span>, pod.Namespace, pod.Name)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>3.gc掉没有调度成功的pod：表现在pod的NodeName为空,主要由于资源等条件不满足</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// gcUnscheduledTerminating deletes pods that are terminating and haven't been scheduled to a particular node.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(gcc *PodGCController)</span> <span class="title">gcUnscheduledTerminating</span><span class="params">(pods []*v1.Pod)</span></span> &#123;</span><br><span class="line">	klog.V(<span class="number">4</span>).Infof(<span class="string">"GC'ing unscheduled pods which are terminating."</span>)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> _, pod := <span class="keyword">range</span> pods &#123;</span><br><span class="line">		<span class="keyword">if</span> pod.DeletionTimestamp == <span class="literal">nil</span> || <span class="built_in">len</span>(pod.Spec.NodeName) &gt; <span class="number">0</span> &#123;</span><br><span class="line">			<span class="keyword">continue</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		klog.V(<span class="number">2</span>).Infof(<span class="string">"Found unscheduled terminating Pod %v/%v not assigned to any Node. Deleting."</span>, pod.Namespace, pod.Name)</span><br><span class="line">		<span class="keyword">if</span> err := gcc.deletePod(pod.Namespace, pod.Name); err != <span class="literal">nil</span> &#123;</span><br><span class="line">			utilruntime.HandleError(err)</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			klog.V(<span class="number">0</span>).Infof(<span class="string">"Forced deletion of unscheduled terminating Pod %v/%v succeeded"</span>, pod.Namespace, pod.Name)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// byCreationTimestamp sorts a list by creation timestamp, using their names as a tie breaker.</span></span><br><span class="line"><span class="keyword">type</span> byCreationTimestamp []*v1.Pod</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(o byCreationTimestamp)</span> <span class="title">Len</span><span class="params">()</span> <span class="title">int</span></span>      &#123; <span class="keyword">return</span> <span class="built_in">len</span>(o) &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(o byCreationTimestamp)</span> <span class="title">Swap</span><span class="params">(i, j <span class="keyword">int</span>)</span></span> &#123; o[i], o[j] = o[j], o[i] &#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(o byCreationTimestamp)</span> <span class="title">Less</span><span class="params">(i, j <span class="keyword">int</span>)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> o[i].CreationTimestamp.Equal(&amp;o[j].CreationTimestamp) &#123;</span><br><span class="line">		<span class="keyword">return</span> o[i].Name &lt; o[j].Name</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> o[i].CreationTimestamp.Before(&amp;o[j].CreationTimestamp)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes解读】ApiServer之初识API</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d3e0e7a2/" rel="bookmark">【Kubernetes解读】Scheduler</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes解读】开篇</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/83a17de0/" rel="bookmark">【Kubernetes解读】Scheduling Framework</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes解读】调度策略</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/76a404e7/" title="【Kubernetes解读】Controller Manager">http://houmin.cc/posts/76a404e7/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
+              <a href="/tags/go/" rel="tag"><i class="fa fa-tag"></i> go</a>
+              <a href="/tags/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码解读</a>
+              <a href="/tags/controller/" rel="tag"><i class="fa fa-tag"></i> controller</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/3bc1a603/" rel="next" title="【Kubernetes解读】ApiServer之初识API">
+                  <i class="fa fa-chevron-left"></i> 【Kubernetes解读】ApiServer之初识API
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/87e9f747/" rel="prev" title="【Kubernetes解读】Kube-Proxy">
+                  【Kubernetes解读】Kube-Proxy <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#内部结构图"><span class="nav-number">1.</span> <span class="nav-text">内部结构图</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关键性调用链"><span class="nav-number">2.</span> <span class="nav-text">关键性调用链</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#源码分析过程"><span class="nav-number">3.</span> <span class="nav-text">源码分析过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#组件启动的入口"><span class="nav-number">3.1.</span> <span class="nav-text">组件启动的入口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#读取配置文件，进行配置读取和初始化默认配置"><span class="nav-number">3.2.</span> <span class="nav-text">读取配置文件，进行配置读取和初始化默认配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#组件启动执行"><span class="nav-number">3.3.</span> <span class="nav-text">组件启动执行</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#CreateControllerContext"><span class="nav-number">3.3.1.</span> <span class="nav-text">CreateControllerContext</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#StartControllers"><span class="nav-number">3.3.2.</span> <span class="nav-text">StartControllers</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ctx-InformerFactory-Start"><span class="nav-number">3.3.3.</span> <span class="nav-text">ctx.InformerFactory.Start</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#以startReplicaSetController为例"><span class="nav-number">4.</span> <span class="nav-text">以startReplicaSetController为例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PodGCController"><span class="nav-number">5.</span> <span class="nav-text">PodGCController</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">96</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">146</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">775k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">23:28</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

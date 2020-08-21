@@ -82,13 +82,13 @@
 <meta property="og:image" content="https://ring0.me/images/2014/12/bd0b38dbee5e3dd50e89367a440fc6bf.png">
 <meta property="og:image" content="https://platform9.com/wp-content/uploads/2019/05/kubernetes-constructs-concepts-architecture.jpg">
 <meta property="og:image" content="https://images2018.cnblogs.com/blog/431521/201712/431521-20171203180443851-1606756853.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-04-07_shadow-page-table.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-04-07_ept.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-04-07_shadow-page-table.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-04-07_ept.png">
 <meta property="og:image" content="https://ring0.me/images/2014/12/a45258f97f500142bfcff56770ba2106.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-04-07_interaction-with-io-devices.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-04-07_interaction-with-io-devices.png">
 <meta property="og:image" content="https://www.ibm.com/developerworks/library/l-pci-passthrough/figure1.gif">
 <meta property="og:image" content="https://developer.ibm.com/developer/tutorials/l-pci-passthrough/images/figure2.gif">
-<meta property="og:updated_time" content="2020-07-14T08:24:44.104Z">
+<meta property="og:updated_time" content="2020-08-21T08:11:30.159Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://upload.wikimedia.org/wikipedia/en/thumb/b/bb/Turing_machine_1.JPG/1024px-Turing_machine_1.JPG">
 
@@ -551,7 +551,7 @@
 <h3 id="Shadow-Page-Table"><a href="#Shadow-Page-Table" class="headerlink" title="Shadow Page Table"></a>Shadow Page Table</h3><p>内存软件虚拟化的目标就是要将虚拟机的虚拟地址（Guest Virtual Address, GVA）转化为 Host 的物理地址（Host Physical Address, HPA），中间要经过虚拟机的物理地址（Guest Physical Address, GPA）和 Host 虚拟地址（Host Virtual Address）的转化，即：</p>
 <figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GVA -&gt; GPA -&gt; HVA -&gt; HPA</span><br></pre></td></tr></table></figure>
 <p>其中前两步由虚拟机的系统页表完成，中间两步由 VMM 定义的映射表（由数据结构 kvm_memory_slot 记录）完成，它可以将连续的虚拟机物理地址映射成非连续的 Host 机虚拟地址，后面两步则由 Host 机的系统页表完成。如下图所示。</p>
-<p><img alt="Shadow Page Table" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-04-07_shadow-page-table.png"></p>
+<p><img alt="Shadow Page Table" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-04-07_shadow-page-table.png"></p>
 <p>这样做得目的有两个：</p>
 <ol>
 <li>提供给虚拟机一个从零开始的连续的物理内存空间。</li>
@@ -564,14 +564,14 @@
 <p>我们也看到，这种方式虽然减少了地址转换的次数，但本质上还是纯软件实现的，效率还是不高，而且 VMM 承担了太多影子页表的维护工作，设计不好。</p>
 <p>为了改善这个问题，就提出了基于硬件的内存虚拟化方式，将这些繁琐的工作都交给硬件来完成，从而大大提高了效率。</p>
 <h3 id="Extended-Page-Table"><a href="#Extended-Page-Table" class="headerlink" title="Extended Page Table"></a>Extended Page Table</h3><p>下图是 EPT 的基本原理图示，EPT 在原有 CR3 页表地址映射的基础上，引入了 EPT 页表来实现另一层映射，这样，GVA-&gt;GPA-&gt;HPA 的两次地址转换都由硬件来完成。</p>
-<p><img alt="Extended Page Table" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-04-07_ept.png"></p>
+<p><img alt="Extended Page Table" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-04-07_ept.png"></p>
 <p>这里举一个小例子来说明整个地址转换的过程。假设现在 Guest 中某个进程需要访问内存，CPU 首先会访问 Guest 中的 CR3 页表来完成 GVA 到 GPA 的转换，如果 GPA 不为空，则 CPU 接着通过 EPT 页表来实现 GPA 到 HPA 的转换（实际上，CPU 会首先查看硬件 EPT TLB 或者缓存，如果没有对应的转换，才会进一步查看 EPT 页表），如果 HPA 为空呢，则 CPU 会抛出 EPT Violation 异常由 VMM 来处理。</p>
 <p>如果 GPA 地址为空，即缺页，则 CPU 产生缺页异常，注意，这里，如果是软件实现的方式，则会产生 VM-exit，但是硬件实现方式，并不会发生 VM-exit，而是按照一般的缺页中断处理，这种情况下，也就是交给 Guest 内核的中断处理程序处理。</p>
 <p>在中断处理程序中会产生 EXIT_REASON_EPT_VIOLATION，Guest 退出，VMM 截获到该异常后，分配物理地址并建立 GVA 到 HPA 的映射，并保存到 EPT 中，这样在下次访问的时候就可以完成从 GVA 到 HPA 的转换了。</p>
 <p>有人也许会担心增加的一级映射关系会减慢内存访问速度，事实上不论是否启用二级内存翻译（SLAT），页表高速缓存（Translation Lookaside Buffer，TLB）都会存储虚拟地址（VA）到机器地址（MA）的映射。如果 TLB 的命中率较高，则增加的一级内存翻译不会显著影响内存访问性能。</p>
 <p><img alt data-src="https://ring0.me/images/2014/12/a45258f97f500142bfcff56770ba2106.png"></p>
 <h2 id="I-O-虚拟化"><a href="#I-O-虚拟化" class="headerlink" title="I/O 虚拟化"></a>I/O 虚拟化</h2><p>首先我们来回顾一下 I/O 模型：</p>
-<p><img alt="Interactions With I/O Devices" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-04-07_interaction-with-io-devices.png"> </p>
+<p><img alt="Interactions With I/O Devices" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-04-07_interaction-with-io-devices.png"> </p>
 <h3 id="Emulation"><a href="#Emulation" class="headerlink" title="Emulation"></a>Emulation</h3><p>模拟模型是使用最为广泛的I/O设备虚拟化模型，该模型采用软件的方式模拟设备行为，为虚拟机模拟出与底层硬件完全一致的虚拟化环境，保证虚拟机操作系统的行为与非虚拟化环境下完全一致。</p>
 <p>在模拟模型中，虚拟设备必须以某种方式让虚拟机可以发现，导致虚拟机被“欺骗”。当 VM 访问虚拟设备时，访问请求被 VMM 截获，然后VMM 将I/O请求交由domain0 来模拟完成，最后将结果返回给虚拟机。</p>
 <p>模拟模型分为以下两类：</p>
@@ -719,19 +719,19 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">74</span>
+          <span class="site-state-item-count">96</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">125</span>
+        <span class="site-state-item-count">146</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -799,13 +799,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">586k</span>
+    <span title="站点总字数">775k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">17:46</span>
+    <span title="站点阅读时长">23:28</span>
 </div>
 
         

@@ -63,10 +63,10 @@
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="Test 测试单元测试单元测试一般是用来测试我们的代码逻辑有没有问题，有没有按照我们期望的运行，以保证代码质量。大多数的单元测试，都是对某一个函数方法进行测试，以尽可能的保证没有问题或者问题可被我们预知。为了达到这个目的，我们可以使用各种手段、逻辑，模拟不同的场景进行测试。1234&#x2F;&#x2F; add.gofunc Add(a, b int) int &amp;#123;	return a + b&amp;#125;">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2018-09-16-golang-test-cover.png">
-<meta property="og:updated_time" content="2020-07-23T04:04:59.291Z">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2018-09-16-golang-test-cover.png">
+<meta property="og:updated_time" content="2020-08-21T08:11:30.094Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2018-09-16-golang-test-cover.png">
+<meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2018-09-16-golang-test-cover.png">
 
 <link rel="canonical" href="http://houmin.cc/posts/4dea1165/">
 
@@ -342,7 +342,7 @@
 <p>现在我们使用<code>go test</code>工具运行单元测试，和前几次不一样的是，我们要显示测试覆盖率，所以要多加一个参数<code>-coverprofile</code>,所以完整的命令为：<code>go test -v -coverprofile=c.out</code>，<code>-coverprofile</code>是指定生成的覆盖率文件，例子中是<code>c.out</code>，这个文件一会我们会用到。现在我们看终端输出，已经有了一个覆盖率。</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ go <span class="built_in">test</span> -v -coverprofile=c.out</span><br><span class="line">=== RUN   TestTag</span><br><span class="line">Android</span><br><span class="line">Go</span><br><span class="line">--- PASS: TestTag (0.00s)</span><br><span class="line">PASS</span><br><span class="line">coverage: 50.0% of statements</span><br><span class="line">ok  	<span class="built_in">test</span>	0.001s</span><br></pre></td></tr></table></figure>
 <p><code>coverage: 50.0% of statements</code>，50%的测试覆盖率，还没有到100%，那么我们看看还有那些代码没有被测试到。这就需要我们刚刚生成的测试覆盖率文件<code>c.out</code>生成测试覆盖率报告了。生成报告有go为我们提供的工具，使用<code>go tool cover -html=c.out -o=tag.html</code>，即可生成一个名字为<code>tag.html</code>的HTML格式的测试覆盖率报告，这里有详细的信息告诉我们哪一行代码测试到了，哪一行代码没有测试到。</p>
-<p><img alt data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2018-09-16-golang-test-cover.png"></p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2018-09-16-golang-test-cover.png"></p>
 <p>从上图中可以看到，标记为绿色的代码行已经被测试了；标记为红色的还没有测试到，有2行的，现在我们根据没有测试到的代码逻辑，完善我的单元测试代码即可。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TestTag</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line">	Tag(<span class="number">1</span>)</span><br><span class="line">	Tag(<span class="number">2</span>)</span><br><span class="line">	Tag(<span class="number">3</span>)</span><br><span class="line">    Tag(<span class="number">4</span>)</span><br><span class="line">	Tag(<span class="number">6</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h2 id="Benchmark测试"><a href="#Benchmark测试" class="headerlink" title="Benchmark测试"></a>Benchmark测试</h2><p>基准测试，是一种测试代码性能的方法，比如你有多种不同的方案，都可以解决问题，那么到底是那种方案性能更好呢？这时候基准测试就派上用场了。</p>
@@ -383,19 +383,19 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/4744ce1d/" rel="bookmark">【Go语言设计与实现】Context</a></div>
-    </li>
-    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/cb5a5d4d/" rel="bookmark">【Go语言设计与实现】代码即文档</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/c3c43baa/" rel="bookmark">【Go语言设计与实现】Hash Table</a></div>
     </li>
     <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
+    </li>
+    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/bf9c845a/" rel="bookmark">【Go语言设计与实现】Reflect</a></div>
     </li>
   </ul>
 
@@ -449,8 +449,8 @@
 
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
-                <a href="/posts/4744ce1d/" rel="next" title="【Go语言设计与实现】Context">
-                  <i class="fa fa-chevron-left"></i> 【Go语言设计与实现】Context
+                <a href="/posts/6a1bd212/" rel="next" title="端午">
+                  <i class="fa fa-chevron-left"></i> 端午
                 </a>
             </div>
 
@@ -514,19 +514,19 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">74</span>
+          <span class="site-state-item-count">96</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">125</span>
+        <span class="site-state-item-count">146</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -594,13 +594,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">586k</span>
+    <span title="站点总字数">775k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">17:46</span>
+    <span title="站点阅读时长">23:28</span>
 </div>
 
         

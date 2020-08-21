@@ -64,7 +64,7 @@
 <meta property="og:description" content="Informer模块是Kubernetes中的基础组件，负责各组件与Apiserver的资源与事件同步。List&#x2F;Watch机制是Kubernetes中实现集群控制模块最核心的设计之一，它采用统一的异步消息处理机制，保证了消息的实时性、可靠性、顺序性和性能等，为声明式风格的API奠定了良好的基础。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://res.cloudinary.com/dqxtn0ick/image/upload/v1555472372/article/code-analysis/informer/client-go.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-20_client-go-controller-interaction.jpeg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-20_client-go-controller-interaction.jpeg">
 <meta property="og:image" content="https://baxiaoshi.cdn.bcebos.com/blog/kubernetes/clientgo/1583737350162-8e7c6121-2b0a-49fa-8ad8-a7b714de3445.png">
 <meta property="og:image" content="https://baxiaoshi.cdn.bcebos.com/blog/kubernetes/clientgo/1583737386982-feae09ae-ac6d-4090-8ca2-d2f3f5120d61.png">
 <meta property="og:image" content="https://baxiaoshi.cdn.bcebos.com/blog/kubernetes/clientgo/1583737435884-518fce5a-0118-4935-be61-0716e2c3ba0c.png">
@@ -76,7 +76,7 @@
 <meta property="og:image" content="https://baxiaoshi.cdn.bcebos.com/blog/kubernetes/clientgo/1583738078512-ade28ada-2824-46d3-af63-45873a8a37a4.png">
 <meta property="og:image" content="https://baxiaoshi.cdn.bcebos.com/blog/kubernetes/clientgo/1583738429252-bd646701-8543-47cd-a638-552ac419f5c9.png">
 <meta property="og:image" content="https://static001.geekbang.org/wechat/images/a1/a1a5745f0c0309c9d05c484905887fb8.jpeg">
-<meta property="og:updated_time" content="2020-07-21T02:16:52.478Z">
+<meta property="og:updated_time" content="2020-08-21T08:11:30.177Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://res.cloudinary.com/dqxtn0ick/image/upload/v1555472372/article/code-analysis/informer/client-go.png">
 
@@ -336,7 +336,7 @@
 <a id="more"></a>
 <h1 id="使用入门"><a href="#使用入门" class="headerlink" title="使用入门"></a>使用入门</h1><p>Kubernetes中的组件，如果要访问Kubernetes中的Object，绝大部分情况下会使用Informer中的Lister()方法，而非直接请求Kubernetes API。</p>
 <h1 id="原理示意"><a href="#原理示意" class="headerlink" title="原理示意"></a>原理示意</h1><p><img alt="img" data-src="https://res.cloudinary.com/dqxtn0ick/image/upload/v1555472372/article/code-analysis/informer/client-go.png"></p>
-<p><img alt="Client-go Controller Interaction" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-20_client-go-controller-interaction.jpeg"></p>
+<p><img alt="Client-go Controller Interaction" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-20_client-go-controller-interaction.jpeg"></p>
 <h2 id="client-go组件"><a href="#client-go组件" class="headerlink" title="client-go组件"></a>client-go组件</h2><ul>
 <li><code>Reflector</code>：reflector用来watch特定的k8s API资源。具体的实现是通过<code>ListAndWatch</code>的方法，watch可以是k8s内建的资源或者是自定义的资源。当reflector通过watch API接收到有关新资源实例存在的通知时，它使用相应的列表API获取新创建的对象，并将其放入watchHandler函数内的Delta Fifo队列中。</li>
 <li><code>Informer</code>：informer从Delta Fifo队列中弹出对象。执行此操作的功能是processLoop。base controller的作用是保存对象以供以后检索，并调用我们的控制器将对象传递给它。</li>
@@ -653,13 +653,13 @@
       <div class="popular-posts-title"><a href="/posts/83a17de0/" rel="bookmark">【Kubernetes解读】Scheduling Framework</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes解读】ApiServer之初识API</a></div>
-    </li>
-    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes解读】调度策略</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/d3e0e7a2/" rel="bookmark">【Kubernetes解读】Scheduler</a></div>
+      <div class="popular-posts-title"><a href="/posts/87e9f747/" rel="bookmark">【Kubernetes解读】Kube-Proxy</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes解读】ApiServer之初识API</a></div>
     </li>
   </ul>
 
@@ -781,19 +781,19 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">74</span>
+          <span class="site-state-item-count">96</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">125</span>
+        <span class="site-state-item-count">146</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -861,13 +861,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">586k</span>
+    <span title="站点总字数">775k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">17:46</span>
+    <span title="站点阅读时长">23:28</span>
 </div>
 
         

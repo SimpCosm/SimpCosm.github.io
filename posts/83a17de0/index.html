@@ -63,11 +63,11 @@
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="Kubernetes Scheduling Framework 是在Kubernetes 1.15版本后新出现的一种调度框架。Scheduling Framework 在原有的调度流程中, 定义了丰富扩展点接口，开发者可以通过实现扩展点所定义的接口来实现插件，将插件注册到扩展点。Scheduling Framework 在执行调度流程时，运行到相应的扩展点时，会调用用户注册的插件，影响调度决策的结">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-25_scheduling-framework-extensions.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-01-25_scheduling-framework-extensions.png">
 <meta property="og:image" content="https://github.com/kubernetes/enhancements/raw/master/keps/sig-scheduling/20180409-scheduling-framework-threads.png">
-<meta property="og:updated_time" content="2020-08-04T02:39:56.728Z">
+<meta property="og:updated_time" content="2020-08-21T08:11:30.084Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-25_scheduling-framework-extensions.png">
+<meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-01-25_scheduling-framework-extensions.png">
 
 <link rel="canonical" href="http://houmin.cc/posts/83a17de0/">
 
@@ -349,7 +349,7 @@
 <p>不同的Scheduling Cycle间串行运行，同一个时间只有一个 scheduling cycle，是线程安全的。binding cycle 是异步执行的，同一个时间中可能会有多个 binding cycle 在运行，是线程不安全的。</p>
 <p>如果一个Pod被认为是Unschedulable，或者是发生了内存错误，那么一个Scheduling Cycle或者Binding Cycle会被终止。然后这个Pod可能被返回到调度队列中。如果一个Binding Cycle终止了，那么会触发 <code>Un-reserve</code>插件。</p>
 <h2 id="Extension-points"><a href="#Extension-points" class="headerlink" title="Extension points"></a>Extension points</h2><p>下图定义了Scheduling Framework中暴露的扩展点，其中Filter等同于原来的Predicate，Scoring等同于之前的Prioritize。对于一个插件，它可能在一个或者多个扩展点注册，从而满足业务的不同逻辑。</p>
-<p><img alt="Scheduling Framework" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-25_scheduling-framework-extensions.png"></p>
+<p><img alt="Scheduling Framework" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-01-25_scheduling-framework-extensions.png"></p>
 <h3 id="Queue-Sort"><a href="#Queue-Sort" class="headerlink" title="Queue Sort"></a>Queue Sort</h3><p>这里的插件用来对调度队列中的Pod排序，同一时间只有一个Queue Sort可以被启用。</p>
 <h3 id="Pre-filter"><a href="#Pre-filter" class="headerlink" title="Pre-filter"></a>Pre-filter</h3><p>这里的插件用来预处理Pod信息，或者检查集群或Pod需满足的特定条件。</p>
 <h3 id="Filter"><a href="#Filter" class="headerlink" title="Filter"></a>Filter</h3><p>Filter用于过滤那些不能运行对应Pod的Node，调度器可能会同时评估这些Node，在一个Scheduling Cycle中Filter插件可能被运行多次。</p>
@@ -517,13 +517,13 @@
       <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes解读】开篇</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes解读】ApiServer之初识API</a></div>
-    </li>
-    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes解读】调度策略</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/1f0eb2ff/" rel="bookmark">【Kubernetes解读】List/Watch机制和Informer模块详解</a></div>
+      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes解读】ApiServer之初识API</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/76a404e7/" rel="bookmark">【Kubernetes解读】Controller Manager</a></div>
     </li>
   </ul>
 
@@ -644,19 +644,19 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">74</span>
+          <span class="site-state-item-count">96</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">125</span>
+        <span class="site-state-item-count">146</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -724,13 +724,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">586k</span>
+    <span title="站点总字数">775k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">17:46</span>
+    <span title="站点阅读时长">23:28</span>
 </div>
 
         

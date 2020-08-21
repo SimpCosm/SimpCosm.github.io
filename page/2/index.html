@@ -233,7 +233,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/1f0eb2ff/">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/3bc1a603/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
@@ -247,7 +247,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/posts/1f0eb2ff/" class="post-title-link" itemprop="url">【Kubernetes解读】List/Watch机制和Informer模块详解</a>
+            <a href="/posts/3bc1a603/" class="post-title-link" itemprop="url">【Kubernetes解读】ApiServer之初识API</a>
         </h2>
 
         <div class="post-meta">
@@ -257,7 +257,7 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2020-07-20 15:46:29" itemprop="dateCreated datePublished" datetime="2020-07-20T15:46:29+08:00">2020-07-20</time>
+              <time title="创建时间：2020-08-10 20:46:14" itemprop="dateCreated datePublished" datetime="2020-08-10T20:46:14+08:00">2020-08-10</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -279,14 +279,14 @@
                 <i class="fa fa-file-word-o"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>48k</span>
+              <span>12k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1:26</span>
+              <span>22 分钟</span>
             </span>
 
         </div>
@@ -298,17 +298,24 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>Informer模块是Kubernetes中的基础组件，负责各组件与Apiserver的资源与事件同步。List/Watch机制是Kubernetes中实现集群控制模块最核心的设计之一，它采用统一的异步消息处理机制，保证了消息的实时性、可靠性、顺序性和性能等，为声明式风格的API奠定了良好的基础。</p>
+          <p><code>ApiServer</code>作为 Kubernetes 的核心组件，让集群中所有资源可被描述和配置，即包括了pod、ingress、pvc这些基础资源，也包括deployment、rc、hpa等管理对象；ApiServer就像是一个包含一定逻辑的对象数据库代理；提供了RESTful API接口，其他组件或客户端可以通过该接口获取集群中资源对象的配置和状态，以实现各种逻辑处理；ApiServer本身是无状态的，集群所有的数据都会存储在ETCD中，各个组件对于资源对象的List-Watch机制都要通过 ApiServer 的验证授权和准入。</p>
+<p>kube-apiserver 是 kubernetes 中与 etcd 直接交互的一个组件，其控制着 kubernetes 中核心资源的变化。它主要提供了以下几个功能：</p>
+<ul>
+<li>提供 <a href="https://kubernetes.io/docs/concepts/overview/kubernetes-api/" target="_blank" rel="external nofollow noopener noreferrer">Kubernetes API</a>，包括认证授权、数据校验以及集群状态变更等，供客户端及其他组件调用</li>
+<li>代理集群中的一些附加组件组件，如 Kubernetes UI、metrics-server、npd 等；</li>
+<li>允许对于对象状态的操作，比如Pod和Service的状态的改变，实现对象的持久化到Etcd</li>
+<li>资源在不同版本之间的转换</li>
+</ul>
 
           
           <div class="out-img-topic">
-            <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-20_client-go-controller-interaction.jpeg" class="image-topic">
+            <img src="https://raw.githubusercontent.com/TroyYing/image/master/k8s_code_apiserver/apiserver_diagram.png" class="image-topic">
           </div>
           
 
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/posts/1f0eb2ff/#more" rel="contents">
+              <a class="btn" href="/posts/3bc1a603/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -332,7 +339,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/c2f57f16/">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/47d0d3b/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
@@ -346,7 +353,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/posts/c2f57f16/" class="post-title-link" itemprop="url">得意忘形</a>
+            <a href="/posts/47d0d3b/" class="post-title-link" itemprop="url">所谓生活</a>
         </h2>
 
         <div class="post-meta">
@@ -356,7 +363,7 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2020-07-18 17:19:12" itemprop="dateCreated datePublished" datetime="2020-07-18T17:19:12+08:00">2020-07-18</time>
+              <time title="创建时间：2020-08-09 22:20:20" itemprop="dateCreated datePublished" datetime="2020-08-09T22:20:20+08:00">2020-08-09</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -378,710 +385,7 @@
                 <i class="fa fa-file-word-o"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>1.3k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>2 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Podcast 在我最近的生活中占据了很大的部分，每天走在上下班的路上，带着耳机，听播客中主播与嘉宾的聊天，会觉得是难得自在和舒适的时间。有时候聊到有意思的地方，自己也不禁乐了起来；有时候听到一些新的观点或者事情，自己也好像恍然大悟；或者有时候自己一直以来的感受被主播们说了出来，感同身受豁然开朗。</p>
-<p>「得意忘形」是最近听的比较多的一个播客，他的风格偏务虚，更新也并不太频繁，拖更的现象也常有。但是翻看「得意忘形」两年前录的播客，现在听来很多还是觉得会有启发性。毕竟，他关注的是自我与世界这个主题：我到底是一个什么样的人，我作为人整个系统是如何运作的，我与外界是如何产生交互，到底是什么影响了我对这个世界的看法。</p>
-<blockquote>
-<p>「得意忘形」是一个主张追求个体自由与探寻真理的媒体计划。我们见证了第一次工业革命以来科技对人类社会的极大推动与助益，但也意识到资本主义与市场经济不可避免地催生了消费文化、剥夺了个人价值、并窃取了大众时间。带着对生命的有限性与无目的性的敬畏，我们试图为读者与听众提供更全面的<strong>觉察自我与认知世界</strong>的工具，以不断重建当下的方式穿越时间、抵达生活的本质。</p>
-</blockquote>
-<p>这里是「朝花夕拾」第二十期，选题来自于最近听「得意忘形」两年前的一期：「快乐」到底是什么东西？选择「得意忘形」作为这期的题目，是因为我非常喜欢得意忘形这个词本来描述的那种 <code>in the zone</code>的状态。这一次，我们再聊聊关于「快乐」的问题。</p>
-<blockquote>
-<p>嗜酒能啸，善弹琴。当其得意，忽忘形骸。                                —— 《晋书·阮籍传》</p>
-</blockquote>
-<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="1500" height="80" src="//music.163.com/outchain/player?type=3&id=904186633&auto=0&height=66"></iframe>
-
-          
-          <div class="out-img-topic">
-            <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-06-23_cat.jpg" class="image-topic">
-          </div>
-          
-
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/posts/c2f57f16/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/83a17de0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
-      <meta itemprop="name" content="Houmin">
-      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Houmin">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/posts/83a17de0/" class="post-title-link" itemprop="url">【Kubernetes解读】Scheduling Framework</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-07-15 14:48:27" itemprop="dateCreated datePublished" datetime="2020-07-15T14:48:27+08:00">2020-07-15</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
-                    <span itemprop="name">术业专攻</span>
-                  </a>
-                </span>
-            </span>
-
-          
-  
-  
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>30k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>54 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Kubernetes Scheduling Framework 是在Kubernetes 1.15版本后新出现的一种调度框架。Scheduling Framework 在原有的调度流程中, 定义了丰富扩展点接口，开发者可以通过实现扩展点所定义的接口来实现插件，将插件注册到扩展点。Scheduling Framework 在执行调度流程时，运行到相应的扩展点时，会调用用户注册的插件，影响调度决策的结果。通过这种方式来将用户的调度逻辑集成到 Scheduling Framework 中。</p>
-
-          
-          <div class="out-img-topic">
-            <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-25_scheduling-framework-extensions.png" class="image-topic">
-          </div>
-          
-
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/posts/83a17de0/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/8f35743d/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
-      <meta itemprop="name" content="Houmin">
-      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Houmin">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/posts/8f35743d/" class="post-title-link" itemprop="url">【下厨房】酸甜麻辣咸</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-07-13 21:21:43" itemprop="dateCreated datePublished" datetime="2020-07-13T21:21:43+08:00">2020-07-13</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%90%83%E9%A1%BF%E5%A5%BD%E7%9A%84/" itemprop="url" rel="index">
-                    <span itemprop="name">吃顿好的</span>
-                  </a>
-                </span>
-            </span>
-
-          
-  
-  
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>3.1k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>6 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>当我们学习一门新的编程语言时，你需要设置好编程环境，然后打印出<code>Hello World</code>，接下来就可以学习各种语法规则了。与编程一样，搬进出租屋后，我也很快配置好了各种厨具和基本的柴米油盐，具备了条件一道最简单饭菜的条件。但是，学习编程并不仅仅只是为了打印<code>Hello World</code>，你还需要学习各种语法规则，编程技巧，甚至一些「语法糖」，让你的编程更加自然流畅。对于下厨而言，我们的菜谱就像语法规则，而那些调味料就是我们的语法糖。用好调料可以为我们制作出酸甜麻辣咸等各种美味的口感，还可以为饭菜增色增香。本期是「吃顿好的」第一篇，用于介绍生活中常见的各种调料的功能与用法，内容转自「美食作家王刚」。</p>
-
-          
-          <div class="out-img-topic">
-            <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-13_condiment.jpg" class="image-topic">
-          </div>
-          
-
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/posts/8f35743d/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/d3e0e7a2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
-      <meta itemprop="name" content="Houmin">
-      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Houmin">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/posts/d3e0e7a2/" class="post-title-link" itemprop="url">【Kubernetes解读】Scheduler</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-07-13 20:46:33" itemprop="dateCreated datePublished" datetime="2020-07-13T20:46:33+08:00">2020-07-13</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
-                    <span itemprop="name">术业专攻</span>
-                  </a>
-                </span>
-            </span>
-
-          
-  
-  
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>58k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1:46</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>调度器（Scheduler）是 Kubernetes 的核心组件，它的主要功能是为待运行的工作负载 Pod 绑定运行的节点 Node。从最早基于谓词和优先级（Predicates and Priorities）的调度器，到 V1.15基于调度框架（Scheduling Framework）的调度器，Kubernetes的调度器正在快速演进，以满足不同场景对于资源调度的需求。</p>
-<p>本文是「Kubernetes解读」的第二篇，本篇将首先介绍Kubernetes Scheduler的背景和它的演进过程，然后会通过 Kubernetes 1.16 版本分析基于谓词与优先级的调度器原理。在「Kubernetes解读」的第三篇 <a href="../83a17de0/">Scheduling Framework</a> 中，我将通过 Kubernetes 1.18 版本分析基于Framwork的调度器原理。</p>
-
-          
-          <div class="out-img-topic">
-            <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-27_k8s-scheduler.png" class="image-topic">
-          </div>
-          
-
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/posts/d3e0e7a2/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/4987aa35/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
-      <meta itemprop="name" content="Houmin">
-      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Houmin">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/posts/4987aa35/" class="post-title-link" itemprop="url">再出发</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-07-12 22:59:21" itemprop="dateCreated datePublished" datetime="2020-07-12T22:59:21+08:00">2020-07-12</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%9C%9D%E8%8A%B1%E5%A4%95%E6%8B%BE/" itemprop="url" rel="index">
-                    <span itemprop="name">朝花夕拾</span>
-                  </a>
-                </span>
-            </span>
-
-          
-  
-  
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>2.8k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>5 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>这里是「朝花夕拾」第十九期，在过去的一周里，我正式入职腾讯。告别学校，步入职场，不管怎么说，这都算得上一次新的起点。与此同时，一年过半，翻翻2020的年初计划，正好可以梳理往者期待未来，再出发，让我们开始传奇2020的下半年。</p>
-
-          
-          <div class="out-img-topic">
-            <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-06_sunset.jpg" class="image-topic">
-          </div>
-          
-
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/posts/4987aa35/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/d8b96fe4/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
-      <meta itemprop="name" content="Houmin">
-      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Houmin">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/posts/d8b96fe4/" class="post-title-link" itemprop="url">【Kubernetes解读】开篇</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-07-07 20:47:00" itemprop="dateCreated datePublished" datetime="2020-07-07T20:47:00+08:00">2020-07-07</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
-                    <span itemprop="name">术业专攻</span>
-                  </a>
-                </span>
-            </span>
-
-          
-  
-  
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>13k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>24 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Kubernetes是一个开源的工业级自动化容器编排平台，广泛用于应用的部署、弹性扩充和管理。本文是「Kubernetes解读」系列开篇，主要介绍 Kubernetes 的整体概念。在以后的日子里，我会对 Kubernetes 涉及到的方方面面进行学习与解读。</p>
-
-          
-          <div class="out-img-topic">
-            <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-07_kubernetes.png" class="image-topic">
-          </div>
-          
-
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/posts/d8b96fe4/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/959c2cfa/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
-      <meta itemprop="name" content="Houmin">
-      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Houmin">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/posts/959c2cfa/" class="post-title-link" itemprop="url">毕业快乐</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-07-05 22:58:46" itemprop="dateCreated datePublished" datetime="2020-07-05T22:58:46+08:00">2020-07-05</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%9C%9D%E8%8A%B1%E5%A4%95%E6%8B%BE/" itemprop="url" rel="index">
-                    <span itemprop="name">朝花夕拾</span>
-                  </a>
-                </span>
-            </span>
-
-          
-  
-  
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>1k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>2 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>这里是「朝花夕拾」第十八期，这一期的主题是毕业🎓。什么才算做毕业的节点，自然不是学院那仓促的毕业典礼，或许学校隆重的在线毕业典礼可以算是，又或者是你搬到出租房的那一天。对我来说，我的毕业节点是我拍上封面图的那一刻。不能进入学校，我穿上学位服，戴着口罩来到西门外，拍下了这张可以留存一辈子的毕业照。我郑重的告诉自己，七年的燕园时光到此结束，毕业快乐。</p>
-
-          
-          <div class="out-img-topic">
-            <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-02_graduation.jpg" class="image-topic">
-          </div>
-          
-
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/posts/959c2cfa/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/2f653e3b/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
-      <meta itemprop="name" content="Houmin">
-      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Houmin">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/posts/2f653e3b/" class="post-title-link" itemprop="url">西湖印象</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-06-20 15:05:47" itemprop="dateCreated datePublished" datetime="2020-06-20T15:05:47+08:00">2020-06-20</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%9C%9D%E8%8A%B1%E5%A4%95%E6%8B%BE/" itemprop="url" rel="index">
-                    <span itemprop="name">朝花夕拾</span>
-                  </a>
-                </span>
-            </span>
-
-          
-  
-  
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>245</span>
+              <span>767</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
@@ -1100,18 +404,17 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>这里是「朝花夕拾」第十七期，距离上一期又过去了一个月，最近有些拖更，是时候好好调整状态了。距离上一期，这段时间里也发生了很多的事情，毕业设计答辩顺利通过，预期清零的疫情在返校前又生波折，北京突发疫情防控转严。我将原来 6.16 返回学校的计划推迟，本想着出去走走，没想到其他地方也渐有零星案例，于是推迟了黄山之行，只能在杭州转转。</p>
-<p>这段时间，杭州阴雨连绵，我宅在老姐家里，把过去一段时间拍的片子整理了出来，以下是我的西湖印象。</p>
+          <p>很久没有出去走走了，趁着夏天还没有结束，在封闭培训前去什刹海走了走，看到了生活的另一种可能。这里是「朝花夕拾」第二十二期，今天我们聊一聊生活。</p>
 
           
           <div class="out-img-topic">
-            <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-06-12_pavilion.jpg" class="image-topic">
+            <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-08-08_forbidden-city.png" class="image-topic">
           </div>
           
 
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/posts/2f653e3b/#more" rel="contents">
+              <a class="btn" href="/posts/47d0d3b/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1135,7 +438,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/ab5f63d0/">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/55d129f1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
@@ -1149,7 +452,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/posts/ab5f63d0/" class="post-title-link" itemprop="url">【普鲁斯特问卷】2020</a>
+            <a href="/posts/55d129f1/" class="post-title-link" itemprop="url">【Go语言设计与实现】Go Module</a>
         </h2>
 
         <div class="post-meta">
@@ -1159,7 +462,7 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2020-05-25 20:23:33" itemprop="dateCreated datePublished" datetime="2020-05-25T20:23:33+08:00">2020-05-25</time>
+              <time title="创建时间：2020-08-07 22:07:31" itemprop="dateCreated datePublished" datetime="2020-08-07T22:07:31+08:00">2020-08-07</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1167,8 +470,8 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%9C%9D%E8%8A%B1%E5%A4%95%E6%8B%BE/" itemprop="url" rel="index">
-                    <span itemprop="name">朝花夕拾</span>
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
                   </a>
                 </span>
             </span>
@@ -1181,14 +484,14 @@
                 <i class="fa fa-file-word-o"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>2.4k</span>
+              <span>17k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>4 分钟</span>
+              <span>31 分钟</span>
             </span>
 
         </div>
@@ -1200,18 +503,719 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>转眼间，距离上期「朝花夕拾」过去已经整整一月，昨天刚把毕业论文送审，心情稍微放松了些。在过去的一个月里，我从武汉来到了杭州，在老姐家里改完了论文，全国的疫情也即将清零。可以预见的是，在今年上半年的最后一个月，我将完成毕业论文线上答辩、返回学校办理毕业手续、在北京租房并开始职场生活。不能预见的是，毕业旅行是否还能成行？毕业典礼是否仍将举办? </p>
-<p>作为短暂的休息，「朝花夕拾」第十六期完成了自己的第一版普鲁斯特问卷。普鲁斯特问卷源于《追忆逝水年华》的作者马塞尔•普鲁斯特（Marcel Proust），其中包含一系列涉及到被提问者的生活、思想、价值观及人生经验的 28 个问题，可以较为全面地展示答卷者的价值观、兴趣爱好及特质。正值从学校向职场转变的时期，可以预见在未来几年自己对于这一系列问题的回答仍然会动态变化。这里是 2020 版，接下来日子里我每年都会给自己做一次普鲁斯特问卷，以此见证自己的变化与成长。也许未来再看，会是另一番感觉，最大的可能就是留下一堆黑历史吧：）</p>
+          <h2 id="包管理机制"><a href="#包管理机制" class="headerlink" title="包管理机制"></a>包管理机制</h2><p>Go 的包管理方式是逐渐演进的， 最初是 monorepo 模式，所有的包都放在 GOPATH 里面，使用类似命名空间的包路径区分包，不过这种包管理显然是有问题，由于包依赖可能会引入破坏性更新，生产环境和测试环境会出现运行不一致的问题。</p><p>从 v1.5 开始开始引入 vendor 包模式，如果项目目录下有 vendor 目录，那么 go 工具链会优先使用 vendor 内的包进行编译、测试等，这之后第三方的包管理思路都是通过这种方式来实现，比如说由社区维护准官方包管理工具 dep。</p>
 
           
           <div class="out-img-topic">
-            <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-05-25_proustquestionnaire.jpg" class="image-topic">
+            <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2019-10-18_city.jpg" class="image-topic">
           </div>
           
 
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/posts/ab5f63d0/#more" rel="contents">
+              <a class="btn" href="/posts/55d129f1/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/77ffac6b/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/posts/77ffac6b/" class="post-title-link" itemprop="url">【Go语言设计与实现】同步原语</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-08-05 12:18:30" itemprop="dateCreated datePublished" datetime="2020-08-05T12:18:30+08:00">2020-08-05</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>25k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>46 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Go 语言作为一个原生支持用户态进程（Goroutine）的语言，当提到并发编程、多线程编程时，往往都离不开锁这一概念。锁是一种并发编程中的同步原语（Synchronization Primitives），它能保证多个 Goroutine 在访问同一片内存时不会出现竞争条件（Race condition）等问题。</p>
+<p>本节会介绍 Go 语言中常见的同步原语 <a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/mutex.go#L25-L28" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.Mutex</code></a>、<a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/rwmutex.go#L28-L34" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.RWMutex</code></a>、<a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/waitgroup.go#L20-L29" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.WaitGroup</code></a>、<a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/once.go#L12-L20" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.Once</code></a> 和 <a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/cond.go#L21-L29" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.Cond</code></a> 以及扩展原语 <a href="https://github.com/golang/sync/blob/cd5d95a43a6e21273425c7ae415d3df9ea832eeb/errgroup/errgroup.go#L18-L25" target="_blank" rel="external nofollow noopener noreferrer"><code>errgroup.Group</code></a>、<a href="https://github.com/golang/sync/blob/cd5d95a43a6e21273425c7ae415d3df9ea832eeb/semaphore/semaphore.go#L28-L33" target="_blank" rel="external nofollow noopener noreferrer"><code>semaphore.Weighted</code></a> 和 <a href="https://github.com/golang/sync/blob/cd5d95a43a6e21273425c7ae415d3df9ea832eeb/singleflight/singleflight.go#L33-L36" target="_blank" rel="external nofollow noopener noreferrer"><code>singleflight.Group</code></a> 的实现原理，同时也会涉及互斥锁、信号量等并发编程中的常见概念。</p>
+
+          
+          <div class="out-img-topic">
+            <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2019-10-18_city.jpg" class="image-topic">
+          </div>
+          
+
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/posts/77ffac6b/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/b130e91a/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/posts/b130e91a/" class="post-title-link" itemprop="url">【Kubernetes解读】调度策略</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-08-03 14:39:15" itemprop="dateCreated datePublished" datetime="2020-08-03T14:39:15+08:00">2020-08-03</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>38k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1:09</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>本文分析了Kubernetes内置的各种调度策略。</p>
+
+          
+          <div class="out-img-topic">
+            <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2019-10-18_city.jpg" class="image-topic">
+          </div>
+          
+
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/posts/b130e91a/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/9e0b725c/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/posts/9e0b725c/" class="post-title-link" itemprop="url">【Go语言设计与实现】Make 与 New</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-08-03 12:16:08" itemprop="dateCreated datePublished" datetime="2020-08-03T12:16:08+08:00">2020-08-03</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>当我们想要在 Go 语言中初始化一个结构时，可能会用到两个不同的关键字 — <code>make</code> 和 <code>new</code>。因为它们的功能相似，所以初学者可能会对这两个关键字的作用感到困惑<a href="https://draveness.me/golang/docs/part2-foundation/ch05-keyword/golang-make-and-new/#fn:1" target="_blank" rel="external nofollow noopener noreferrer">1</a>，但是它们两者能够初始化的却有较大的不同。</p>
+<ul>
+<li><code>make</code> 的作用是初始化内置的数据结构，也就是我们在前面提到的切片、哈希表和 Channel<a href="https://draveness.me/golang/docs/part2-foundation/ch05-keyword/golang-make-and-new/#fn:2" target="_blank" rel="external nofollow noopener noreferrer">2</a>；</li>
+<li><code>new</code> 的作用是根据传入的类型分配一片内存空间并返回指向这片内存空间的指针<a href="https://draveness.me/golang/docs/part2-foundation/ch05-keyword/golang-make-and-new/#fn:3" target="_blank" rel="external nofollow noopener noreferrer">3</a>；</li>
+</ul>
+
+          
+          <div class="out-img-topic">
+            <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2019-10-18_city.jpg" class="image-topic">
+          </div>
+          
+
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/posts/9e0b725c/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/ecc392db/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/posts/ecc392db/" class="post-title-link" itemprop="url">【Go语言设计与实现】Panic/Recover</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-08-02 12:15:58" itemprop="dateCreated datePublished" datetime="2020-08-02T12:15:58+08:00">2020-08-02</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>6.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>11 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>本节将分析两个经常成对出现的关键字 <code>panic</code> 和 <code>recover</code>。这两个关键字都与 <code>defer</code> 有千丝万缕的联系，也都是 Go 语言中的内置函数，但是提供的功能却是互补的：</p>
+<ul>
+<li><code>panic</code> 能够改变程序的控制流，函数调用<code>panic</code> 时会立刻停止执行函数的其他代码，并在执行结束后在当前 Goroutine 中递归执行调用方的延迟函数调用 <code>defer</code>；</li>
+<li><code>recover</code> 可以中止 <code>panic</code> 造成的程序崩溃。它是一个只能在 <code>defer</code> 中发挥作用的函数，在其他作用域中调用不会发挥任何作用；</li>
+</ul>
+
+          
+          <div class="out-img-topic">
+            <img src="https://img.draveness.me/2020-01-19-15794253208982-golang-panic.png" class="image-topic">
+          </div>
+          
+
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/posts/ecc392db/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/540e2781/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/posts/540e2781/" class="post-title-link" itemprop="url">【Go语言设计与实现】Defer</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-08-01 12:15:45" itemprop="dateCreated datePublished" datetime="2020-08-01T12:15:45+08:00">2020-08-01</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>6.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>13 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>很多现代的编程语言中都有 <code>defer</code> 关键字，Go 语言的 <code>defer</code> 会在当前函数或者方法返回之前执行传入的函数。它会经常被用于关闭文件描述符、关闭数据库连接以及解锁资源。在这一节中我们就会深入 Go 语言的源代码介绍 <code>defer</code> 关键字的实现原理，相信读者读完这一节会对 <code>defer</code> 的数据结构、实现以及调用过程有着更清晰的理解。</p>
+
+          
+          <div class="out-img-topic">
+            <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2019-10-18_city.jpg" class="image-topic">
+          </div>
+          
+
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/posts/540e2781/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/3d36166e/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/posts/3d36166e/" class="post-title-link" itemprop="url">【Go语言设计与实现】Select</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-31 12:15:34" itemprop="dateCreated datePublished" datetime="2020-07-31T12:15:34+08:00">2020-07-31</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>12k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>22 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>很多 C 语言或者 Unix 开发者听到 <code>select</code> 想到的都是系统调用，而谈到 I/O 模型时最终大都会提到基于 <code>select</code>、<code>poll</code> 和 <code>epoll</code> 等函数构建的 IO 多路复用模型。Go 语言的 <code>select</code> 与 C 语言中的 <code>select</code> 有着比较相似的功能。本节会介绍 Go 语言 <code>select</code> 常见的现象、数据结构以及四种不同情况下的实现原理。</p>
+
+          
+          <div class="out-img-topic">
+            <img src="https://img.draveness.me/2020-01-19-15794018429532-Golang-Select-Channels.png" class="image-topic">
+          </div>
+          
+
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/posts/3d36166e/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/44c65087/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/posts/44c65087/" class="post-title-link" itemprop="url">【Go语言设计与实现】循环</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-30 12:15:23" itemprop="dateCreated datePublished" datetime="2020-07-30T12:15:23+08:00">2020-07-30</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>10k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>19 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>循环是所有编程语言都有的控制结构，除了使用经典的「三段式」循环之外，Go 语言还引入了另一个关键字 range 帮助我们快速遍历<a href="https://draveness.me/golang/docs/part2-foundation/ch03-datastructure/golang-array/" target="_blank" rel="external nofollow noopener noreferrer">数组</a>、<a href="https://draveness.me/golang/docs/part2-foundation/ch03-datastructure/golang-array-and-slice/" target="_blank" rel="external nofollow noopener noreferrer">切片</a>、<a href="https://draveness.me/golang/docs/part2-foundation/ch03-datastructure/golang-hashmap/" target="_blank" rel="external nofollow noopener noreferrer">哈希表</a> 以及 <a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-channel/" target="_blank" rel="external nofollow noopener noreferrer">Channel</a> 等集合类型。本节将深入分析 Go 语言的两种不同循环，也就是经典的 for 循环和 for/range 循环，我们会分析这两种循环的运行时结构以及它们的实现原理，</p>
+
+          
+          <div class="out-img-topic">
+            <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2019-10-18_city.jpg" class="image-topic">
+          </div>
+          
+
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/posts/44c65087/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1235,7 +1239,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/10/">10</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1280,19 +1284,19 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">74</span>
+          <span class="site-state-item-count">96</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">125</span>
+        <span class="site-state-item-count">146</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -1360,13 +1364,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">586k</span>
+    <span title="站点总字数">775k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">17:46</span>
+    <span title="站点阅读时长">23:28</span>
 </div>
 
         

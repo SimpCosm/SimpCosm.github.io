@@ -56,7 +56,7 @@
 </script>
 
   <meta name="description" content="Hash Table（哈希表，也叫散列表） 是在计算机科学中除了 Array 外应用最为广泛的数据结构，它通过 Hash 函数以 Key 为参数，计算出一个在Buckets Array中的 Index，用于将 Key 映射到表中的 Value。在平均情况下，哈希表具有 O(1) 的读写性能，实际证明它比搜索树等其他数据结构查找效率更高，所以也应用最为广泛。理想条件下，Hash 函数会将每个Key分">
-<meta name="keywords" content="Go,源码阅读,数据结构,HashTable">
+<meta name="keywords" content="Go,源码阅读,HashTable,数据结构">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Go语言设计与实现】Hash Table">
 <meta property="og:url" content="http://houmin.cc/posts/c3c43baa/index.html">
@@ -65,8 +65,8 @@
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://img.draveness.me/2019-12-30-15777168478768-perfect-hash-function.png">
 <meta property="og:image" content="https://img.draveness.me/2019-12-30-15777168478778-bad-hash-function.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-25_hash-open-addressing.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-25_hash-seperate-chaining.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-25_hash-open-addressing.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-25_hash-seperate-chaining.png">
 <meta property="og:image" content="https://img.draveness.me/2019-12-30-15777168478811-hmap-and-buckets.png">
 <meta property="og:image" content="https://img.draveness.me/2019-12-30-15777168478817-hashtable-mapaccess.png">
 <meta property="og:image" content="https://img.draveness.me/2019-12-30-15777168478823-hashtable-overflow-bucket.png">
@@ -74,7 +74,7 @@
 <meta property="og:image" content="https://img.draveness.me/2019-12-30-15777168478836-hashtable-evacuate-destination.png">
 <meta property="og:image" content="https://img.draveness.me/2019-12-30-15777168478845-hashtable-bucket-evacuate.png">
 <meta property="og:image" content="https://img.draveness.me/2019-12-30-15777168478853-hashtable-delete.png">
-<meta property="og:updated_time" content="2020-08-16T14:49:56.528Z">
+<meta property="og:updated_time" content="2020-08-21T08:11:30.165Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://img.draveness.me/2019-12-30-15777168478768-perfect-hash-function.png">
 
@@ -349,7 +349,7 @@
 <p>对于这里定义的 counter 变量，Read操作和Write操作如下：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Read Operation</span></span><br><span class="line">counter.RLock()</span><br><span class="line">n := counter.m[<span class="string">"some_key"</span>]</span><br><span class="line">counter.RUnlock()</span><br><span class="line">fmt.Println(<span class="string">"some_key:"</span>, n)</span><br><span class="line"></span><br><span class="line"><span class="comment">// Write Operation</span></span><br><span class="line">counter.Lock()</span><br><span class="line">counter.m[<span class="string">"some_key"</span>]++</span><br><span class="line">counter.Unlock()</span><br></pre></td></tr></table></figure>
 <h2 id="设计原理"><a href="#设计原理" class="headerlink" title="设计原理"></a>设计原理</h2><p>根据上面的介绍，哈希表的设计总体可以表示如下：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">func HashTable(key) value &#123;</span><br><span class="line">  hash := HashFunc(key)</span><br><span class="line">	index := hash % array_size</span><br><span class="line">  value = GetValueFromBucketArray(index)</span><br><span class="line">  <span class="keyword">return</span> value</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">func HashTable(key) value &#123;</span><br><span class="line">  hash := HashFunc(key)</span><br><span class="line">  index := hash % array_size</span><br><span class="line">  value = GetValueFromBucketArray(index)</span><br><span class="line">  <span class="keyword">return</span> value</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>想要实现一个性能优异的哈希表，关键点在于哈希函数和冲突解决方法的设计。</p>
 <h3 id="哈希函数"><a href="#哈希函数" class="headerlink" title="哈希函数"></a>哈希函数</h3><p>哈希函数负责将不同的Key映射到不同的Index上，哈希函数的选择在很大程度上能够决定哈希表的读写性能。在理想情况下，哈希函数应该能够将每个Key映射到一个唯一的的Index上，这要求<strong>哈希函数Value的范围大于Key的范围</strong>，但是由于实际情况下Key的数量会远远大于映射的范围，所以在实际使用时，这个理想的结果是不可能实现的。</p>
 <p><img alt="perfect-hash-function" data-src="https://img.draveness.me/2019-12-30-15777168478768-perfect-hash-function.png"></p>
@@ -361,26 +361,14 @@
 <script type="math/tex; mode=display">
 Hash_i = (Hash(key) + D_i)\ \ mod\ \ m,\ i = 1,2,...,k(k<=m-1)</script><p>根据 $D_i$ 的不同取法，我们有不同的探测方法：</p>
 <ul>
-<li>线性探测（Linear Probing）：$ D_i = i$</li>
+<li>线性探测（Linear Probing）：$D_i = i$</li>
 <li>平方探测（Quadratic Probing）：$D_i = 1^2, 2^2, …, k^2$</li>
 <li>伪随机探测：$D_i$ 为伪随机序列。</li>
 </ul>
-<p><img alt="Open Addressing" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-25_hash-open-addressing.png"></p>
+<p><img alt="Open Addressing" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-25_hash-open-addressing.png"></p>
 <h4 id="拉链法"><a href="#拉链法" class="headerlink" title="拉链法"></a>拉链法</h4><p>与开放地址法相比，拉链法是哈希表中最常见的实现方法，大多数的编程语言都用拉链法实现哈希表，它的实现比较开放地址法稍微复杂一些，但是平均查找的长度也比较短，各个用于存储节点的内存都是动态申请的，可以节省比较多的存储空间。</p>
 <p>实现拉链法一般会使用数组加上链表，不过有一些语言会在拉链法的哈希中引入红黑树以优化性能，拉链法会使用链表数组作为哈希底层的数据结构，我们可以将它看成一个可以扩展的「二维数组」：</p>
-<p><img alt="Seperate Chaining" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-25_hash-seperate-chaining.png"></p>
-<p>如上图所示，当我们需要将一个键值对 <code>(Key6, Value6)</code> 写入哈希表时，键值对中的键 <code>Key6</code> 都会先经过一个哈希函数，哈希函数返回的哈希会帮助我们选择一个桶，和开放地址法一样，选择桶的方式就是直接对哈希返回的结果取模：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">index := hash(<span class="string">"Key6"</span>) % array.<span class="built_in">len</span></span><br></pre></td></tr></table></figure>
-<p>选择了 2 号桶之后就可以遍历当前桶中的链表了，在遍历链表的过程中会遇到以下两种情况：</p>
-<ol>
-<li>找到键相同的键值对 —— 更新键对应的值；</li>
-<li>没有找到键相同的键值对 —— 在链表的末尾追加新键值对；</li>
-</ol>
-<p>将键值对写入哈希之后，要通过某个键在其中获取映射的值，就会经历如下的过程：</p>
-<p>Key11 展示了一个键在哈希表中不存在的例子，当哈希表发现它命中 4 号桶时，它会依次遍历桶中的链表，然而遍历到链表的末尾也没有找到期望的键，所以哈希表中没有该键对应的值。</p>
-<h3 id="关键指标"><a href="#关键指标" class="headerlink" title="关键指标"></a>关键指标</h3><p>在一个性能比较好的哈希表中，每一个桶中都应该有 0~1 个元素，有时会有 2~3 个，很少会超过这个数量，计算哈希、定位桶和遍历链表三个过程是哈希表读写操作的主要开销，使用拉链法实现的哈希也有装载因子这一概念：</p>
-<figure class="highlight fix"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">装载因子 :</span>=<span class="string"> 元素数量 / 桶数量</span></span><br></pre></td></tr></table></figure>
-<p>与开放地址法一样，拉链法的装载因子越大，哈希的读写性能就越差，在一般情况下使用拉链法的哈希表装载因子都不会超过 1，当哈希表的装载因子较大时就会触发哈希的扩容，创建更多的桶来存储哈希中的元素，保证性能不会出现严重的下降。如果有 1000 个桶的哈希表存储了 10000 个键值对，它的性能是保存 1000 个键值对的 1/10，但是仍然比在链表中直接读写好 1000 倍。</p>
+<p><img alt="Seperate Chaining" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-25_hash-seperate-chaining.png"></p>
 <h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><p>Go 语言运行时同时使用了多个数据结构组合表示哈希表，其中使用 <a href="https://github.com/golang/go/blob/ed15e82413c7b16e21a493f5a647f68b46e965ee/src/runtime/map.go#L115-L129" target="_blank" rel="external nofollow noopener noreferrer"><code>hmap</code></a> 结构体来表示哈希，我们先来看一下这个结构体内部的字段：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> hmap <span class="keyword">struct</span> &#123;</span><br><span class="line">	count     <span class="keyword">int</span></span><br><span class="line">	flags     <span class="keyword">uint8</span></span><br><span class="line">	B         <span class="keyword">uint8</span></span><br><span class="line">	noverflow <span class="keyword">uint16</span></span><br><span class="line">	hash0     <span class="keyword">uint32</span></span><br><span class="line"></span><br><span class="line">	buckets    unsafe.Pointer</span><br><span class="line">	oldbuckets unsafe.Pointer</span><br><span class="line">	nevacuate  <span class="keyword">uintptr</span></span><br><span class="line"></span><br><span class="line">	extra *mapextra</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <ol>
@@ -390,7 +378,6 @@ Hash_i = (Hash(key) + D_i)\ \ mod\ \ m,\ i = 1,2,...,k(k<=m-1)</script><p>根据
 <li><code>oldbuckets</code> 是哈希在扩容时用于保存之前 <code>buckets</code> 的字段，它的大小是当前 <code>buckets</code> 的一半；</li>
 </ol>
 <p><img alt="hmap-and-buckets" data-src="https://img.draveness.me/2019-12-30-15777168478811-hmap-and-buckets.png"></p>
-<p><strong>图 3-12 哈希表的数据结构</strong></p>
 <p>如上图所示哈希表 <code>hmap</code> 的桶就是 <code>bmap</code>，每一个 <code>bmap</code> 都能存储 8 个键值对，当哈希表中存储的数据过多，单个桶无法装满时就会使用 <code>extra.overflow</code> 中桶存储溢出的数据。上述两种不同的桶在内存中是连续存储的，我们在这里将它们分别称为正常桶和溢出桶，上图中黄色的 <code>bmap</code> 就是正常桶，绿色的 <code>bmap</code> 是溢出桶，溢出桶是在 Go 语言还使用 C 语言实现时就使用的设计<a href="https://draveness.me/golang/docs/part2-foundation/ch03-datastructure/golang-hashmap/#fn:3" target="_blank" rel="external nofollow noopener noreferrer">3</a>，由于它能够减少扩容的频率所以一直使用至今。</p>
 <p>这个桶的结构体 <code>bmap</code> 在 Go 语言源代码中的定义只包含一个简单的 <code>tophash</code> 字段，<code>tophash</code> 存储了键的哈希的高 8 位，通过比较不同键的哈希的高 8 位可以减少访问键值对次数以提高性能：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> bmap <span class="keyword">struct</span> &#123;</span><br><span class="line">	tophash [bucketCnt]<span class="keyword">uint8</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -502,17 +489,6 @@ Hash_i = (Hash(key) + D_i)\ \ mod\ \ m,\ i = 1,2,...,k(k<=m-1)</script><p>根据
 <h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>Go 语言使用拉链法来解决哈希碰撞的问题实现了哈希表，它的访问、写入和删除等操作都在编译期间转换成了运行时的函数或者方法。</p>
 <p>哈希在每一个桶中存储键对应哈希的前 8 位，当对哈希进行操作时，这些 <code>tophash</code> 就成为了一级缓存帮助哈希快速遍历桶中元素，每一个桶都只能存储 8 个键值对，一旦当前哈希的某个桶超出 8 个，新的键值对就会被存储到哈希的溢出桶中。</p>
 <p>随着键值对数量的增加，溢出桶的数量和哈希的装载因子也会逐渐升高，超过一定范围就会触发扩容，扩容会将桶的数量翻倍，元素再分配的过程也是在调用写操作时增量进行的，不会造成性能的瞬时巨大抖动。</p>
-<h2 id="延伸阅读"><a href="#延伸阅读" class="headerlink" title="延伸阅读"></a>延伸阅读</h2><ul>
-<li><a href="https://study.com/academy/lesson/separate-chaining-concept-advantages-disadvantages.html" target="_blank" rel="external nofollow noopener noreferrer">Separate Chaining: Concept, Advantages &amp; Disadvantages</a></li>
-</ul>
-<hr>
-<ol>
-<li>Hash table <a href="https://en.wikipedia.org/wiki/Hash_table" target="_blank" rel="external nofollow noopener noreferrer">https://en.wikipedia.org/wiki/Hash_table</a> <a href="https://draveness.me/golang/docs/part2-foundation/ch03-datastructure/golang-hashmap/#fnref:1" target="_blank" rel="external nofollow noopener noreferrer">↩︎</a></li>
-<li>Open addressing 开放寻址法 <a href="https://en.wikipedia.org/wiki/Open_addressing" target="_blank" rel="external nofollow noopener noreferrer">https://en.wikipedia.org/wiki/Open_addressing</a> <a href="https://draveness.me/golang/docs/part2-foundation/ch03-datastructure/golang-hashmap/#fnref:2" target="_blank" rel="external nofollow noopener noreferrer">↩︎</a></li>
-<li>runtime: convert map implementation to Go. <a href="https://github.com/golang/go/commit/0c6b55e76ba6d59f57c81ca1160d833c79270753" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/golang/go/commit/0c6b55e76ba6d59f57c81ca1160d833c79270753</a> <a href="https://draveness.me/golang/docs/part2-foundation/ch03-datastructure/golang-hashmap/#fnref:3" target="_blank" rel="external nofollow noopener noreferrer">↩︎</a></li>
-<li>runtime: map memory usage grows as it changes even though number of entries does not grow <a href="https://github.com/golang/go/issues/16070" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/golang/go/issues/16070</a> <a href="https://github.com/golang/go/issues/16070" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/golang/go/issues/16070</a> <a href="https://draveness.me/golang/docs/part2-foundation/ch03-datastructure/golang-hashmap/#fnref:4" target="_blank" rel="external nofollow noopener noreferrer">↩︎</a></li>
-<li>runtime: limit the number of map overflow buckets <a href="https://github.com/golang/go/commit/9980b70cb460f27907a003674ab1b9bea24a847c" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/golang/go/commit/9980b70cb460f27907a003674ab1b9bea24a847c</a> <a href="https://draveness.me/golang/docs/part2-foundation/ch03-datastructure/golang-hashmap/#fnref:5" target="_blank" rel="external nofollow noopener noreferrer">↩︎</a></li>
-</ol>
 
     </div>
 
@@ -529,13 +505,13 @@ Hash_i = (Hash(key) + D_i)\ \ mod\ \ m,\ i = 1,2,...,k(k<=m-1)</script><p>根据
       <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
     </li>
     <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/bf9c845a/" rel="bookmark">【Go语言设计与实现】Reflect</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/c31234d9/" rel="bookmark">【Go语言设计与实现】Interface</a></div>
+    </li>
+    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/e87a4e07/" rel="bookmark">【Go语言设计与实现】String</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/4744ce1d/" rel="bookmark">【Go语言设计与实现】Context</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/4dea1165/" rel="bookmark">【Go语言设计与实现】Test</a></div>
     </li>
   </ul>
 
@@ -583,8 +559,8 @@ Hash_i = (Hash(key) + D_i)\ \ mod\ \ m,\ i = 1,2,...,k(k<=m-1)</script><p>根据
           <div class="post-tags">
               <a href="/tags/Go/" rel="tag"><i class="fa fa-tag"></i> Go</a>
               <a href="/tags/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码阅读</a>
-              <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag"><i class="fa fa-tag"></i> 数据结构</a>
               <a href="/tags/HashTable/" rel="tag"><i class="fa fa-tag"></i> HashTable</a>
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag"><i class="fa fa-tag"></i> 数据结构</a>
           </div>
 
         
@@ -641,7 +617,7 @@ Hash_i = (Hash(key) + D_i)\ \ mod\ \ m,\ i = 1,2,...,k(k<=m-1)</script><p>根据
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用介绍"><span class="nav-number">1.</span> <span class="nav-text">使用介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#基本使用"><span class="nav-number">1.1.</span> <span class="nav-text">基本使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#并发访问"><span class="nav-number">1.2.</span> <span class="nav-text">并发访问</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计原理"><span class="nav-number">2.</span> <span class="nav-text">设计原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#哈希函数"><span class="nav-number">2.1.</span> <span class="nav-text">哈希函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#冲突解决"><span class="nav-number">2.2.</span> <span class="nav-text">冲突解决</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#开放寻址法"><span class="nav-number">2.2.1.</span> <span class="nav-text">开放寻址法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#拉链法"><span class="nav-number">2.2.2.</span> <span class="nav-text">拉链法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#关键指标"><span class="nav-number">2.3.</span> <span class="nav-text">关键指标</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据结构"><span class="nav-number">3.</span> <span class="nav-text">数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#初始化"><span class="nav-number">4.</span> <span class="nav-text">初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#字面量"><span class="nav-number">4.1.</span> <span class="nav-text">字面量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#运行时"><span class="nav-number">4.2.</span> <span class="nav-text">运行时</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#读写操作"><span class="nav-number">5.</span> <span class="nav-text">读写操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#访问"><span class="nav-number">5.1.</span> <span class="nav-text">访问</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#写入"><span class="nav-number">5.2.</span> <span class="nav-text">写入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#扩容"><span class="nav-number">5.3.</span> <span class="nav-text">扩容</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#删除"><span class="nav-number">5.4.</span> <span class="nav-text">删除</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">6.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#延伸阅读"><span class="nav-number">7.</span> <span class="nav-text">延伸阅读</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用介绍"><span class="nav-number">1.</span> <span class="nav-text">使用介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#基本使用"><span class="nav-number">1.1.</span> <span class="nav-text">基本使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#并发访问"><span class="nav-number">1.2.</span> <span class="nav-text">并发访问</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计原理"><span class="nav-number">2.</span> <span class="nav-text">设计原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#哈希函数"><span class="nav-number">2.1.</span> <span class="nav-text">哈希函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#冲突解决"><span class="nav-number">2.2.</span> <span class="nav-text">冲突解决</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#开放寻址法"><span class="nav-number">2.2.1.</span> <span class="nav-text">开放寻址法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#拉链法"><span class="nav-number">2.2.2.</span> <span class="nav-text">拉链法</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据结构"><span class="nav-number">3.</span> <span class="nav-text">数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#初始化"><span class="nav-number">4.</span> <span class="nav-text">初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#字面量"><span class="nav-number">4.1.</span> <span class="nav-text">字面量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#运行时"><span class="nav-number">4.2.</span> <span class="nav-text">运行时</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#读写操作"><span class="nav-number">5.</span> <span class="nav-text">读写操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#访问"><span class="nav-number">5.1.</span> <span class="nav-text">访问</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#写入"><span class="nav-number">5.2.</span> <span class="nav-text">写入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#扩容"><span class="nav-number">5.3.</span> <span class="nav-text">扩容</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#删除"><span class="nav-number">5.4.</span> <span class="nav-text">删除</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">6.</span> <span class="nav-text">小结</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -656,19 +632,19 @@ Hash_i = (Hash(key) + D_i)\ \ mod\ \ m,\ i = 1,2,...,k(k<=m-1)</script><p>根据
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">74</span>
+          <span class="site-state-item-count">96</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">125</span>
+        <span class="site-state-item-count">146</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -736,13 +712,13 @@ Hash_i = (Hash(key) + D_i)\ \ mod\ \ m,\ i = 1,2,...,k(k<=m-1)</script><p>根据
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">586k</span>
+    <span title="站点总字数">775k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">17:46</span>
+    <span title="站点阅读时长">23:28</span>
 </div>
 
         

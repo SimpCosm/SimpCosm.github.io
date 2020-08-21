@@ -56,7 +56,7 @@
 </script>
 
   <meta name="description" content="Kubernetes是一个开源的工业级自动化容器编排平台，广泛用于应用的部署、弹性扩充和管理。本文是「Kubernetes解读」系列开篇，主要介绍 Kubernetes 的整体概念。在以后的日子里，我会对 Kubernetes 涉及到的方方面面进行学习与解读。">
-<meta name="keywords" content="k8s,go,CNCF,源码阅读,系统设计">
+<meta name="keywords" content="源码阅读,k8s,go,CNCF,系统设计">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Kubernetes解读】开篇">
 <meta property="og:url" content="http://houmin.cc/posts/d8b96fe4/index.html">
@@ -64,10 +64,10 @@
 <meta property="og:description" content="Kubernetes是一个开源的工业级自动化容器编排平台，广泛用于应用的部署、弹性扩充和管理。本文是「Kubernetes解读」系列开篇，主要介绍 Kubernetes 的整体概念。在以后的日子里，我会对 Kubernetes 涉及到的方方面面进行学习与解读。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://static001.infoq.cn/resource/image/1f/a7/1f5c9e99df79ea86ca5062fef22e21a7.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-07_container-evolution.svg">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-07_components-of-kubernetes.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-07_container-evolution.svg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-07_components-of-kubernetes.png">
 <meta property="og:image" content="https://platform9.com/wp-content/uploads/2019/05/kubernetes-constructs-concepts-architecture.jpg">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-07_kube-apiserver.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-07_kube-apiserver.png">
 <meta property="og:image" content="http://res.cloudinary.com/dqxtn0ick/image/upload/v1510579017/article/kubernetes/core/controller-manager.png">
 <meta property="og:image" content="https://res.cloudinary.com/dqxtn0ick/image/upload/v1510579017/article/kubernetes/core/scheduler.png">
 <meta property="og:image" content="https://static001.infoq.cn/resource/image/5c/f8/5c9fe50067821e9e86a74cae4cbdd9f8.png">
@@ -78,7 +78,7 @@
 <meta property="og:image" content="https://static001.infoq.cn/resource/image/4e/e2/4ea8feaad09e871bbca804e7f61738e2.png">
 <meta property="og:image" content="https://static001.infoq.cn/resource/image/bb/4a/bbcd5a617d228099f69ddc987ca18f4a.png">
 <meta property="og:image" content="https://static001.infoq.cn/resource/image/a0/4d/a00719f494ae94a40be0be6012e5134d.png">
-<meta property="og:updated_time" content="2020-07-15T06:39:42.828Z">
+<meta property="og:updated_time" content="2020-08-21T08:11:30.091Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://static001.infoq.cn/resource/image/1f/a7/1f5c9e99df79ea86ca5062fef22e21a7.png">
 
@@ -368,7 +368,7 @@
 </ul>
 </li>
 </ul>
-<p><img alt="Container Evolution" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-07_container-evolution.svg"></p>
+<p><img alt="Container Evolution" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-07_container-evolution.svg"></p>
 <p>沿着虚拟化的路径，容器流行后需要有容器编排管理的服务，于是诞生了kubernetes。</p>
 <h3 id="核心功能"><a href="#核心功能" class="headerlink" title="核心功能"></a>核心功能</h3><ul>
 <li><p><strong>服务发现与负载均衡</strong></p>
@@ -385,7 +385,7 @@
 </li>
 </ul>
 <h2 id="Kubernetes-Components"><a href="#Kubernetes-Components" class="headerlink" title="Kubernetes Components"></a>Kubernetes Components</h2><p>Kubernetes集群是由众多的Node组成，遵循主从架构，整个Kubernetes集群可以被划分为控制面和控制面管理的众多Node。</p>
-<p><img alt="Kubernetes Components" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-07_components-of-kubernetes.png"></p>
+<p><img alt="Kubernetes Components" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-07_components-of-kubernetes.png"></p>
 <h3 id="Control-Plane-Components"><a href="#Control-Plane-Components" class="headerlink" title="Control Plane Components"></a>Control Plane Components</h3><p>Kubernetes 的控制面负责对集群作出全局决策（比如调度），以及检测和响应集群事件（例如，当不满足部署的 <code>replicas</code> 字段时，启动新的Pod）。控制面的组建可以在集群中的任意节点中运行，但是通常会在同一个节点上启动所有控制面的组建，并且这个节点不再运行用户容器，此即称作Master节点。控制面的每一个组件都既可以运行在单master节点，也可以运行在多master节点以实现高可用。</p>
 <p>Master节点包含四个主要的组件：API Server、Controller Manager、Scheduler 以及 Etcd，如下图所示。</p>
 <p><img alt="Control Plane" data-src="https://platform9.com/wp-content/uploads/2019/05/kubernetes-constructs-concepts-architecture.jpg"></p>
@@ -394,7 +394,7 @@
 <li>提供集群管理的 REST API 接口，实现了认证、授权、准入控制等安全校验功能，同时也负责集群状态的存储操作（通过 etcd）。</li>
 <li>提供其他模块之间的数据交互和通信的枢纽（其他模块通过 API Server 查询或修改数据，只有 API Server 才直接操作 etcd）</li>
 </ul>
-<p><img alt="Kube Api Server" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-07_kube-apiserver.png"></p>
+<p><img alt="Kube Api Server" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-07_kube-apiserver.png"></p>
 <p>在实际使用中，通常通过 <a href="https://kubernetes.io/docs/user-guide/kubectl-overview/" target="_blank" rel="external nofollow noopener noreferrer">kubectl</a> 来访问 apiserver，也可以通过 Kubernetes 各个语言的 client 库来访问 apiserver。在使用 kubectl 时，打开调试日志也可以看到每个 API 调用的格式，比如</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl --v=8 get pods</span><br></pre></td></tr></table></figure>
 <p>可通过 <code>kubectl api-versions</code> 和 <code>kubectl api-resources</code> 查询 Kubernetes API 支持的 API 版本以及资源对象。</p>
@@ -543,19 +543,19 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/b88b921f/" rel="bookmark">【Kubernetes解读】Pod</a></div>
+    </li>
+    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/83a17de0/" rel="bookmark">【Kubernetes解读】Scheduling Framework</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes解读】ApiServer之初识API</a></div>
     </li>
     <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/76a404e7/" rel="bookmark">【Kubernetes解读】Controller Manager</a></div>
+    </li>
+    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/d3e0e7a2/" rel="bookmark">【Kubernetes解读】Scheduler</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes解读】调度策略</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/1f0eb2ff/" rel="bookmark">【Kubernetes解读】List/Watch机制和Informer模块详解</a></div>
     </li>
   </ul>
 
@@ -601,10 +601,10 @@
       <footer class="post-footer">
           
           <div class="post-tags">
+              <a href="/tags/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码阅读</a>
               <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
               <a href="/tags/go/" rel="tag"><i class="fa fa-tag"></i> go</a>
               <a href="/tags/CNCF/" rel="tag"><i class="fa fa-tag"></i> CNCF</a>
-              <a href="/tags/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码阅读</a>
               <a href="/tags/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/" rel="tag"><i class="fa fa-tag"></i> 系统设计</a>
           </div>
 
@@ -620,8 +620,8 @@
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
-                <a href="/posts/4987aa35/" rel="prev" title="再出发">
-                  再出发 <i class="fa fa-chevron-right"></i>
+                <a href="/posts/fb705539/" rel="prev" title="【Kubernetes解读】Kubelet">
+                  【Kubernetes解读】Kubelet <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>
@@ -677,19 +677,19 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">74</span>
+          <span class="site-state-item-count">96</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">125</span>
+        <span class="site-state-item-count">146</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -757,13 +757,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">586k</span>
+    <span title="站点总字数">775k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">17:46</span>
+    <span title="站点阅读时长">23:28</span>
 </div>
 
         

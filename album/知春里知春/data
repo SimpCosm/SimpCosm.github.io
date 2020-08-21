@@ -5,7 +5,7 @@
         "description": "记录知春里1号楼外的光影",
         "created": "2020-07-19 22:22:20",
         "updated": "2020-07-19 22:50:27",
-        "imageBed": "https://images-cosmos.s3-ap-southeast-1.amazonaws.com/album",
+        "imageBed": "https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/album",
         "number": 3
     },
     "data": [

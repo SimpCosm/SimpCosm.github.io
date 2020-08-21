@@ -56,18 +56,18 @@
 </script>
 
   <meta name="description" content="调度器（Scheduler）是 Kubernetes 的核心组件，它的主要功能是为待运行的工作负载 Pod 绑定运行的节点 Node。从最早基于谓词和优先级（Predicates and Priorities）的调度器，到 V1.15基于调度框架（Scheduling Framework）的调度器，Kubernetes的调度器正在快速演进，以满足不同场景对于资源调度的需求。 本文是「Kuberne">
-<meta name="keywords" content="源码解读,k8s,go,scheduler">
+<meta name="keywords" content="k8s,go,scheduler,源码解读">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Kubernetes解读】Scheduler">
 <meta property="og:url" content="http://houmin.cc/posts/d3e0e7a2/index.html">
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="调度器（Scheduler）是 Kubernetes 的核心组件，它的主要功能是为待运行的工作负载 Pod 绑定运行的节点 Node。从最早基于谓词和优先级（Predicates and Priorities）的调度器，到 V1.15基于调度框架（Scheduling Framework）的调度器，Kubernetes的调度器正在快速演进，以满足不同场景对于资源调度的需求。 本文是「Kuberne">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-27_k8s-scheduler.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-30_scheduler-timeline.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-27_k8s-scheduler.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-30_scheduler-timeline.png">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/97498/1578882056126-49b2a324-86dd-455e-b97b-bb9ba54fff5c.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-13_k8s-scheduler-cache.jpg">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-13_node-tree.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-13_k8s-scheduler-cache.jpg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-13_node-tree.png">
 <meta property="og:image" content="https://pic1.zhimg.com/80/v2-047108dba71d6806c7fed091c15080e8_1440w.jpg">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/97498/1579167028012-6daee5fe-ee2d-4821-8650-5eb25a390626.png">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/97498/1579246857471-0d97105c-2a26-4237-bd7d-996e755f0fa1.png">
@@ -75,9 +75,9 @@
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/97498/1579429125998-3ddcaf40-b47c-4234-81bc-fce652fe6f46.png">
 <meta property="og:image" content="https://static001.infoq.cn/resource/image/ba/71/ba41b64474d1afffa4fa44fe7130c071.jpg">
 <meta property="og:image" content="https://static001.infoq.cn/resource/image/98/de/982345178a76967d014yy05300ca59de.jpg">
-<meta property="og:updated_time" content="2020-08-04T06:41:06.963Z">
+<meta property="og:updated_time" content="2020-08-21T08:11:30.148Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-27_k8s-scheduler.png">
+<meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-27_k8s-scheduler.png">
 
 <link rel="canonical" href="http://houmin.cc/posts/d3e0e7a2/">
 
@@ -384,7 +384,7 @@
 <li>Scheduler通过调度算法算出分配给Pod的Node，并将Node信息和Pod进行绑定，结果存储在Etcd</li>
 <li>Node上的Kubelet感知到调度结果，拉取镜像并运行Pod</li>
 </ul>
-<p><img alt="Kubernetes Pod LifeCycle" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-27_k8s-scheduler.png"></p>
+<p><img alt="Kubernetes Pod LifeCycle" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-27_k8s-scheduler.png"></p>
 <p>可以看到，Scheduler作为Kubernetes集群中核心模块，可以被视作一个黑盒：</p>
 <ul>
 <li>黑盒的输入为待调度的 Pod 和全部计算节点（Node）的信息</li>
@@ -404,7 +404,7 @@
 <li>v1.18 将所有策略全部组件化，默认调度流程切换为Scheduling Framework</li>
 <li>v1.19 将抢占过程也组件化，同时支持multi scheduling profile</li>
 </ul>
-<p><img alt="Scheduler Evolution Timeline" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-30_scheduler-timeline.png"></p>
+<p><img alt="Scheduler Evolution Timeline" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-30_scheduler-timeline.png"></p>
 <p>随着容器化技术普及，Kubernetes已经成为容器管理领域的事实标准，除了传统的互联网场景的应用，像AI、大数据、边缘计算等场景也开始迁移到 k8s 平台。与此同时，不同场景对于k8s调度器提出的要求也越来越高，k8s调度器正在快速演进中。</p>
 <p>在本篇后续的分析中，将基于Kubernetes 1.16版本对其设计实现的原理和思路进行分析。</p>
 <h2 id="Scheduler-初始化"><a href="#Scheduler-初始化" class="headerlink" title="Scheduler 初始化"></a>Scheduler 初始化</h2><h3 id="调度器结构体初识"><a href="#调度器结构体初识" class="headerlink" title="调度器结构体初识"></a>调度器结构体初识</h3><p>首先看一下调度器这个结构体的实现，其中比较关键的成员是 <code>SchedulerCache</code>、    <code>SchedulingQueue</code> 和 <code>Algorithm</code>。</p>
@@ -559,7 +559,7 @@
 <li>Remove：removes a pod. The pod’s information would be subtracted from assigned node.</li>
 </ul>
 <p>与此同时还对应有Pod的几种状态，其中 <code>Initial</code>、<code>Expired</code>、<code>Deleted</code>这三种状态的Pod在Cache中实际上是不存在的，这里只是为了状态机的表示方便。关于这几个状态的改变，有一个具体的实现结构体，主要是通过 <code>podState</code> 和 <code>assumedPods</code> 这两个map的状态来实现的。</p>
-<p><img alt="Scheduler Pod Cache State Machine" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-13_k8s-scheduler-cache.jpg"></p>
+<p><img alt="Scheduler Pod Cache State Machine" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-13_k8s-scheduler-cache.jpg"></p>
 <p>在Cache的调度过程中，我们有以下几个假设</p>
 <ul>
 <li>Pod是不会被Assume两次的</li>
@@ -585,7 +585,7 @@
 <p><code>NodeTree</code>的结构如下所示，NodeTree的tree是一个字典，key是zone的名字，value是一个nodeArray，通过这样可以把不同zone的Node分隔开。nodeArray负责存储一个zone下面的所有node节点，并且通过lastIndex记录当前zone分配的节点索引。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> NodeTree <span class="keyword">struct</span> &#123;</span><br><span class="line">	tree      <span class="keyword">map</span>[<span class="keyword">string</span>]*nodeArray <span class="comment">// a map from zone (region-zone) to an array of nodes in the zone.</span></span><br><span class="line">	zones     []<span class="keyword">string</span>              <span class="comment">// a list of all the zones in the tree (keys)</span></span><br><span class="line">	zoneIndex <span class="keyword">int</span></span><br><span class="line">	numNodes  <span class="keyword">int</span></span><br><span class="line">	mu        sync.RWMutex</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> nodeArray <span class="keyword">struct</span> &#123;</span><br><span class="line">	nodes     []<span class="keyword">string</span></span><br><span class="line">	lastIndex <span class="keyword">int</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>我们可以把整个集群的Node看成二维数组，分别是<code>zoneIndex</code>和<code>nodeIndex</code></p>
-<p><img alt="Scheduler Cache State Machine" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-07-13_node-tree.png"></p>
+<p><img alt="Scheduler Cache State Machine" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-13_node-tree.png"></p>
 <p>每一次在 <code>findNodesThatFit</code> 函数中，通过调用 <code>nodeName := g.cache.NodeTree().Next()</code> 来获得下一个检查的Node，其具体实现如下：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(nt *NodeTree)</span> <span class="title">Next</span><span class="params">()</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	nt.mu.Lock()</span><br><span class="line">	<span class="keyword">defer</span> nt.mu.Unlock()</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(nt.zones) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="string">""</span></span><br><span class="line">	&#125;</span><br><span class="line">	numExhaustedZones := <span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> nt.zoneIndex &gt;= <span class="built_in">len</span>(nt.zones) &#123;</span><br><span class="line">			nt.zoneIndex = <span class="number">0</span></span><br><span class="line">		&#125;</span><br><span class="line">		zone := nt.zones[nt.zoneIndex]</span><br><span class="line">		nt.zoneIndex++</span><br><span class="line">		<span class="comment">// We do not check the exhausted zones before calling next() on the zone. This ensures</span></span><br><span class="line">		<span class="comment">// that if more nodes are added to a zone after it is exhausted, we iterate over the new nodes.</span></span><br><span class="line">		nodeName, exhausted := nt.tree[zone].next()</span><br><span class="line">		<span class="keyword">if</span> exhausted &#123;</span><br><span class="line">			numExhaustedZones++</span><br><span class="line">			<span class="keyword">if</span> numExhaustedZones &gt;= <span class="built_in">len</span>(nt.zones) &#123; <span class="comment">// all zones are exhausted. we should reset.</span></span><br><span class="line">				nt.resetExhausted()</span><br><span class="line">			&#125;</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> nodeName</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>每次先从当前 <code>zoneIndex</code> 获取新的zone，然后更新 <code>zoneIndex</code>。在对应zone的 <code>NodeArray</code>中，调用其 <code>next</code> 方法，获得对应的Node，同时更新 <code>nodeIndex</code>。</p>
@@ -716,19 +716,19 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/83a17de0/" rel="bookmark">【Kubernetes解读】Scheduling Framework</a></div>
+    </li>
+    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes解读】ApiServer之初识API</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/83a17de0/" rel="bookmark">【Kubernetes解读】Scheduling Framework</a></div>
+      <div class="popular-posts-title"><a href="/posts/76a404e7/" rel="bookmark">【Kubernetes解读】Controller Manager</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes解读】开篇</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes解读】调度策略</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/4744ce1d/" rel="bookmark">【Go语言设计与实现】Context</a></div>
     </li>
   </ul>
 
@@ -774,10 +774,10 @@
       <footer class="post-footer">
           
           <div class="post-tags">
-              <a href="/tags/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码解读</a>
               <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
               <a href="/tags/go/" rel="tag"><i class="fa fa-tag"></i> go</a>
               <a href="/tags/scheduler/" rel="tag"><i class="fa fa-tag"></i> scheduler</a>
+              <a href="/tags/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码解读</a>
           </div>
 
         
@@ -849,19 +849,19 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">74</span>
+          <span class="site-state-item-count">96</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">125</span>
+        <span class="site-state-item-count">146</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -929,13 +929,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">586k</span>
+    <span title="站点总字数">775k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">17:46</span>
+    <span title="站点阅读时长">23:28</span>
 </div>
 
         

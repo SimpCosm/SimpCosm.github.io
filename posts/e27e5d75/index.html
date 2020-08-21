@@ -63,17 +63,17 @@
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="本文介绍了 Linux 启动的整个过程。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-24_linux-startup-process.svg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-24_linux-startup-process.svg">
 <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Elitegroup_761GX-M754_-_AMIBIOS_%28American_Megatrends%29_in_a_Winbond_W39V040APZ-5491.jpg/1600px-Elitegroup_761GX-M754_-_AMIBIOS_%28American_Megatrends%29_in_a_Winbond_W39V040APZ-5491.jpg">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-24_bios-boot-process.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-24_bios-post.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-24_bios-boot-order.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-24_bios-mbr.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-24_uefi-platform-overview.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-24_uefi-pi-boot-process.jpg">
-<meta property="og:updated_time" content="2020-07-14T08:24:44.103Z">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-24_bios-boot-process.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-24_bios-post.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-24_bios-boot-order.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-24_bios-mbr.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-24_uefi-platform-overview.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-24_uefi-pi-boot-process.jpg">
+<meta property="og:updated_time" content="2020-08-21T08:11:30.126Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-24_linux-startup-process.svg">
+<meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-24_linux-startup-process.svg">
 
 <link rel="canonical" href="http://houmin.cc/posts/e27e5d75/">
 
@@ -328,7 +328,7 @@
 
       
         <p>本文介绍了 Linux 启动的整个过程。</p>
-<p><img alt="Linux Startup Process" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-24_linux-startup-process.svg"></p>
+<p><img alt="Linux Startup Process" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-24_linux-startup-process.svg"></p>
 <a id="more"></a>
 <h2 id="Overview"><a href="#Overview" class="headerlink" title="Overview"></a>Overview</h2><p>总的来说我们可以把 Linux 系统启动的过程分为下面几个阶段：</p>
 <ul>
@@ -356,9 +356,9 @@
 <p>BIOS 是一组固化在计算机主板ROM里的程序代码，其主要功能是在计算机上电时对硬件进行初始化配置，并将硬件操作封装为BIOS中断服务。这样，各种硬件间的差异便由BIOS负责维护，程序直接调用BIOS中断服务即可实现对硬件的控制。</p>
 <p><img alt data-src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Elitegroup_761GX-M754_-_AMIBIOS_%28American_Megatrends%29_in_a_Winbond_W39V040APZ-5491.jpg/1600px-Elitegroup_761GX-M754_-_AMIBIOS_%28American_Megatrends%29_in_a_Winbond_W39V040APZ-5491.jpg"></p>
 <p>在系统上电后，CPU运行于<strong>实模式</strong>工作环境中，数据位宽为16位，最大物理地址寻址范围是0~1MB，其中的物理地址0x0C0000~0x0FFFFF保留给BIOS使用。开机后，CPU硬件逻辑设计为在加电瞬间强行将CS值置为0XF000，IP为0XFFF0，这样CS:IP就指向<strong>0XFFFF0</strong>这个位置，这个位置正是BIOS程序的入口地址。一般情况下，这里是一条跳转指令，CPU通过执行此处的跳转指令跳转到真正的BIOS入口地址处执行，以下是BIOS的启动流程：</p>
-<p><img alt="BIOS Boot Process" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-24_bios-boot-process.png"></p>
+<p><img alt="BIOS Boot Process" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-24_bios-boot-process.png"></p>
 <h4 id="加电自检"><a href="#加电自检" class="headerlink" title="加电自检"></a>加电自检</h4><p>BIOS代码首先做的是<strong>POST</strong>（Power On Self Test，<strong>加电自检</strong>）操作，主要是检测关键设备是否正常工作，设备设置是否与CMOS中的设置一致。如果发现硬件错误，则通过喇叭报警；如果没有问题，屏幕就会显示出CPU、内存等信息。</p>
-<p><img alt="BIOS POST" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-24_bios-post.png"></p>
+<p><img alt="BIOS POST" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-24_bios-post.png"></p>
 <h4 id="初始化设备"><a href="#初始化设备" class="headerlink" title="初始化设备"></a>初始化设备</h4><p>BIOS的第二步动作就是<strong>枚举本地设备并初始化</strong>。</p>
 <p>有一项对启动操作系统至关重要的工作，那就是<strong>BIOS在内存中建立中断向量表和中断服务程序</strong>。</p>
 <p>BIOS程序在内存最开始的位置（0x00000）用1KB的内存空间（0x00000~0x003FF）构建中断向量表，在紧挨着它的位置用256KB的内存空间构建BIOS数据区（0x00400~0x004FF），并在大约57KB以后得位置（0x0e05b）加载了8KB左右的与中断向量表相应的若干中断服务程序。</p>
@@ -366,14 +366,14 @@
 <h4 id="MBR"><a href="#MBR" class="headerlink" title="MBR"></a>MBR</h4><p>硬件自检完成后，BIOS把控制权转交给下一阶段的启动程序。</p>
 <p>这时，BIOS需要知道「下一阶段的启动程序」具体存放在哪一个设备。也就是说，BIOS需要有一个外部储存设备的排序，排在前面的设备就是优先转交控制权的设备。这种排序叫做”启动顺序”（Boot Sequence）。</p>
 <p>打开BIOS的操作界面，里面有一项就是<code>设定启动顺序</code>。</p>
-<p><img alt="BIOS Boot Sequence" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-24_bios-boot-order.png"></p>
+<p><img alt="BIOS Boot Sequence" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-24_bios-boot-order.png"></p>
 <p>BIOS按照”启动顺序”，把控制权转交给排在第一位的储存设备。</p>
 <div class="note info">
             <p>CMOS又被称作互补金属氧化物半导体，电压控制的一种放大器件，是组成CMOS数字集成电路的基本单元。在计算机领域，CMOS常指保存计算机基本启动信息（如日期、时间、启动设置等）的位于微机主板上的一块<strong>可读写RAM芯片</strong>。在今日，CMOS制造工艺也被应用于制作数码影像器材的感光元件，尤其是片幅规格较大的单反数码相机。</p><p>CMOS主要用来保存当前系统的硬件配置和操作人员对某些参数的设定，CMOS RAM芯片由系统通过<strong>后备电池</strong>供电，在关机状态中，还是遇到系统掉电，<strong>CMOS信息不会丢失</strong>。</p>
           </div>
 <p>这时，计算机读取该设备的第一个扇区，也就是读取最前面的512个字节。如果这512个字节的最后两个字节是0x55和0xAA，表明这个设备可以用于启动；如果不是，表明设备不能用于启动，控制权于是被转交给”启动顺序”中的下一个设备。</p>
 <p>这最前面的512个字节，就叫做<a href="http://en.wikipedia.org/wiki/Master_boot_record" target="_blank" rel="external nofollow noopener noreferrer">“主引导记录”</a>（Master boot record，缩写为<code>MBR</code>）。</p>
-<p><img alt="MBR Structure" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-24_bios-mbr.png"></p>
+<p><img alt="MBR Structure" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-24_bios-mbr.png"></p>
 <p>MBR 只有 512 字节，由以下三个部分组成：</p>
 <ul>
 <li>Bootstrap Code Area，前 446 字节，它里面就包含有可执行代码以及错误消息文本。</li>
@@ -394,9 +394,9 @@
 </ul>
 <p>UEFI 不仅能读取分区表，还能自动支持文件系统。所以它不像 BIOS，已经没有仅仅 440 字节可执行代码即 MBR 的限制了，它完全用不到 MBR。</p>
 <p>不管第一块上有没有 MBR，UEFI 都不会执行它。相反，它依赖分区表上的一个特殊分区，叫 EFI 系统分区，里面有 UEFI 所要用到的一些文件。计算机供应商可以在 <code>/EFI//</code> 文件夹里放官方指定的文件，还能用固件或它的 shell，即 UEFI shell，来启动引导程序。EFI 系统分区一般被格式化成 FAT32，或比较非主流的 FAT16。</p>
-<p><img alt data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-24_uefi-platform-overview.png"></p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-24_uefi-platform-overview.png"></p>
 <figure class="highlight asciidoc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">- </span>系统开机 - 上电自检（Power On Self Test 或 POST）。</span><br><span class="line"><span class="bullet">- </span>UEFI 固件被加载，并由它初始化启动要用的硬件。</span><br><span class="line"><span class="bullet">- </span>固件读取其引导管理器以确定从何处（比如，从哪个硬盘及分区）加载哪个 UEFI 应用。</span><br><span class="line"><span class="bullet">- </span>固件按照引导管理器中的启动项目，加载UEFI 应用。</span><br><span class="line"><span class="bullet">- </span>已启动的 UEFI 应用还可以启动其他应用（对应于 UEFI shell 或 rEFInd 之类的引导管理器的情况）或者启动内核及initramfs（对应于GRUB之类引导器的情况），这取决于 UEFI 应用的配置。</span><br></pre></td></tr></table></figure>
-<p><img alt="UEFI Platform Initilization Boot Process" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-24_uefi-pi-boot-process.jpg"></p>
+<p><img alt="UEFI Platform Initilization Boot Process" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-24_uefi-pi-boot-process.jpg"></p>
 <h4 id="Security-Phase"><a href="#Security-Phase" class="headerlink" title="Security Phase"></a>Security Phase</h4><p>验证阶段 （Security，SEC）</p>
 <p>系统上电后，CPU开始执行第一条指令，此时系统就进入SEC阶段。这个阶段的内存尚未被初始化，不可使用。所以，SEC阶段最主要的工作是建立一些临时内存并将CPU切换到保护模式，这里提到的临时内存可以是处理器的缓存，亦或者系统的物理内存。</p>
 <h4 id="Pre-EFI-Initailization-Phase"><a href="#Pre-EFI-Initailization-Phase" class="headerlink" title="Pre-EFI Initailization Phase"></a>Pre-EFI Initailization Phase</h4><p>EFI环境预初始化阶段（Pre-EFI Initialization Environment，PEI）</p>
@@ -583,10 +583,10 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/f2195e8a/" rel="bookmark">GDB笔记</a></div>
+      <div class="popular-posts-title"><a href="/posts/f8586b35/" rel="bookmark">Shell笔记</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/f8586b35/" rel="bookmark">Shell笔记</a></div>
+      <div class="popular-posts-title"><a href="/posts/f2195e8a/" rel="bookmark">GDB笔记</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/7c0e6000/" rel="bookmark">理解 initramfs</a></div>
@@ -718,19 +718,19 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">74</span>
+          <span class="site-state-item-count">96</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">125</span>
+        <span class="site-state-item-count">146</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -798,13 +798,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">586k</span>
+    <span title="站点总字数">775k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">17:46</span>
+    <span title="站点阅读时长">23:28</span>
 </div>
 
         

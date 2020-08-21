@@ -64,11 +64,11 @@
 <meta property="og:description" content="本博文是我对计算机系统中的NUMA 架构做的备忘笔记，参考资料来自于互联网。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://oliveryang.net/media/images/2018/numa-fsb-3.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-09_numa-imc-iio-smb.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-09-Intel-Processor-Roadmap.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-09_pcie-root-complex.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-01-09_numa-imc-iio-smb.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-01-09-Intel-Processor-Roadmap.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-01-09_pcie-root-complex.png">
 <meta property="og:image" content="http://oliveryang.net/media/images/2018/numa-imc-iio-qpi-switch-3.png">
-<meta property="og:updated_time" content="2020-07-14T08:24:44.099Z">
+<meta property="og:updated_time" content="2020-08-21T08:11:30.104Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http://oliveryang.net/media/images/2018/numa-fsb-3.png">
 
@@ -353,9 +353,9 @@
 </blockquote>
 <p>在 UMA 架构下，CPU 和内存控制器之间的前端总线 (FSB) 在系统 CPU 数量不断增加的前提下， 成为了系统性能的瓶颈。因此，AMD 在引入 64 位 x86 架构时，实现了 NUMA 架构。之后， Intel 也推出了 x64 的 Nehalem 架构，x86 终于全面进入到 NUMA 时代。x86 NUMA 目前的实现属于 ccNUMA。</p>
 <p>从 Nehalem 架构开始，x86 开始转向 NUMA 架构，内存控制器芯片被集成到处理器内部，多个处理器通过 QPI 链路相连，从此 DRAM 有了远近之分。 而 Sandybridge 架构则更近一步，将片外的 IOH 芯片也集成到了处理器内部，至此，内存控制器和 PCIe Root Complex 全部在处理器内部了。 下图就是一个典型的 x86 的 NUMA 架构：</p>
-<p><img alt="x86 典型 NUMA 架构" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-09_numa-imc-iio-smb.png"></p>
+<p><img alt="x86 典型 NUMA 架构" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-01-09_numa-imc-iio-smb.png"></p>
 <div class="note info">
-            <p><img alt="Intel 处理器微架构路线" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-09-Intel-Processor-Roadmap.png"></p>
+            <p><img alt="Intel 处理器微架构路线" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-01-09-Intel-Processor-Roadmap.png"></p>
           </div>
 <h2 id="NUMA-Hierarchy"><a href="#NUMA-Hierarchy" class="headerlink" title="NUMA Hierarchy"></a>NUMA Hierarchy</h2><h3 id="NUMA-Node-内部"><a href="#NUMA-Node-内部" class="headerlink" title="NUMA Node 内部"></a>NUMA Node 内部</h3><p>一个NUMA Node内部是由一个<strong>物理CPU</strong>和它所有的<strong>本地内存(Local Memory)</strong>组成的。广义得讲， 一个NUMA Node内部还包含<strong>本地IO资源</strong>，对大多数Intel x86 NUMA平台来说，主要是PCIe总线资源。 ACPI规范就是这么抽象一个NUMA Node的。</p>
 <h4 id="物理-CPU"><a href="#物理-CPU" class="headerlink" title="物理 CPU"></a>物理 CPU</h4><p>一个CPU Socket里可以由多个CPU Core和一个Uncore部分组成。每个CPU Core内部又可以由两个CPU Thread组成。 每个CPU thread都是一个操作系统可见的逻辑CPU。对大多数操作系统来说，一个八核HT打开的CPU会被识别为16个CPU。 下面就说一说这里面相关的概念，</p>
@@ -382,7 +382,7 @@
 <p>与本地内存一样，所谓本地IO资源，就是CPU可以经过Uncore部件里的PCIe Root Complex直接访问到的IO资源。 如果是非本地IO资源，则需要经过QPI链路到该IO资源所属的CPU，再通过该CPU PCIe Root Complex访问。 如果同一个NUMA Node内的CPU和内存和另外一个NUMA Node的IO资源发生互操作，因为要跨越QPI链路， 会存在额外的访问延迟问题。</p>
 <p>其它体系结构里，为降低外设访问延迟，也有将IB(Infiniband)总线集成到CPU里的。 这样IB设备也属于NUMA Node的一部分了。</p>
 <p>可以假设，操作系统如果是NUMA Aware的话，应该会尽量针对本地IO资源低延迟的优点进行优化。</p>
-<p><img alt="PCIe Root Complex Location" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-01-09_pcie-root-complex.png"></p>
+<p><img alt="PCIe Root Complex Location" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-01-09_pcie-root-complex.png"></p>
 <h3 id="NUMA-Node-互联"><a href="#NUMA-Node-互联" class="headerlink" title="NUMA Node 互联"></a>NUMA Node 互联</h3><p>在Intel x86上，NUMA Node之间的互联是通过 <a href="https://en.wikipedia.org/wiki/Intel_QuickPath_Interconnect" target="_blank" rel="external nofollow noopener noreferrer">QPI((QuickPath Interconnect) Link</a>的。 CPU的Uncore部分有QPI的控制器来控制CPU到QPI的数据访问。</p>
 <p>下图就是一个利用 QPI Switch 互联的 8 NUMA Node 的 x86 系统，</p>
 <p><img alt="img" data-src="http://oliveryang.net/media/images/2018/numa-imc-iio-qpi-switch-3.png"></p>
@@ -557,19 +557,19 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">74</span>
+          <span class="site-state-item-count">96</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">125</span>
+        <span class="site-state-item-count">146</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -637,13 +637,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">586k</span>
+    <span title="站点总字数">775k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">17:46</span>
+    <span title="站点阅读时长">23:28</span>
 </div>
 
         

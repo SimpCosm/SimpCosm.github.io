@@ -63,13 +63,13 @@
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="两周前我在 YouTube 上看到一个好玩的视频，讲的是一个斜杠中年 Damien Riehl 用计算机程序 6 天暴力跑完 C 调所有音乐旋律的事情。Damien Riehl 是一个特别有意思的老哥，他从 2002 年以来一直是一名律师，从 1985 年开始从事编码工作；与此同时，他还是一个音乐家。天…这不是我一直想要成为的样子吗，So Cool ！ 在这个视频中，包括他做的一个 TED 演讲，">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-07_midi-file-format.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-07_midi-channel-voice-messages.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-07_midi-program-change.png">
-<meta property="og:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-07_composer-tech-tree.jpg">
-<meta property="og:updated_time" content="2020-07-14T08:24:44.102Z">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-07_midi-file-format.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-07_midi-channel-voice-messages.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-07_midi-program-change.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-07_composer-tech-tree.jpg">
+<meta property="og:updated_time" content="2020-08-21T08:11:30.181Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-07_midi-file-format.png">
+<meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-07_midi-file-format.png">
 
 <link rel="canonical" href="http://houmin.cc/posts/987306d8/">
 
@@ -410,7 +410,7 @@
 <li>Sysex event：指系统控制信息，参见<a href="http://www.personal.kent.edu/~sbirch/Music_Production/MP-II/MIDI/midi_file_format.htm#sysex_event" target="_blank" rel="external nofollow noopener noreferrer">这里</a></li>
 <li>Meta event：主要记录一些元信息，包括版权信息、歌词、乐器名等，参见<a href="http://www.personal.kent.edu/~sbirch/Music_Production/MP-II/MIDI/midi_file_format.htm#meta_event" target="_blank" rel="external nofollow noopener noreferrer">这里</a></li>
 </ul>
-<h4 id="Put-Things-Together"><a href="#Put-Things-Together" class="headerlink" title="Put Things Together"></a>Put Things Together</h4><p><img alt="MIDI文件格式" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-07_midi-file-format.png"></p>
+<h4 id="Put-Things-Together"><a href="#Put-Things-Together" class="headerlink" title="Put Things Together"></a>Put Things Together</h4><p><img alt="MIDI文件格式" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-07_midi-file-format.png"></p>
 <h3 id="MIDI-Messages"><a href="#MIDI-Messages" class="headerlink" title="MIDI Messages"></a>MIDI Messages</h3><p><code>MIDI Messages</code>可以分为两大类，专门用于某个特定 MIDI 通道的消息称为<strong>Channel Messages</strong>，而有些消息会影响到整个MIDI 系统（或者至少整个 MIDI 设备），称作 <strong>System Messages</strong>，系统消息不会和某个特定通道有关系。更加详细的可以分为以下几类：</p>
 <ul>
 <li><strong><a href="http://www.personal.kent.edu/~sbirch/Music_Production/MP-II/MIDI/midi_channel_voice_messages.htm" target="_blank" rel="external nofollow noopener noreferrer">Channel Voice Messages</a></strong>：开始、改变或者停止声音的消息</li>
@@ -426,7 +426,7 @@
 </ul>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// MIDI channel voice message</span></span><br><span class="line"><span class="comment">///</span></span><br><span class="line"><span class="comment">/// MIDI supports two main types of messages: Channel and System.</span></span><br><span class="line"><span class="comment">/// Channel messages are tied to a specific MIDI channel, whereas</span></span><br><span class="line"><span class="comment">/// System messages are not (and thus don't contain a channel number).</span></span><br><span class="line"><span class="comment">/// This library only supports channel messages, and more specifically</span></span><br><span class="line"><span class="comment">/// the `NoteOn` and `NoteOff` channel _voice_ messages,</span></span><br><span class="line"><span class="comment">/// which actually produce sounds.  For a detailed explanation of</span></span><br><span class="line"><span class="comment">/// MIDI messages, see appendix 1.1 of the document here:</span></span><br><span class="line"><span class="comment">/// &lt;https://www.cs.cmu.edu/~music/cmsip/readings/Standard-MIDI-file-format-updated.pdf&gt;.</span></span><br><span class="line"><span class="meta">#[derive(Clone, Copy, Debug, PartialEq)]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">MIDIChannelVoiceMessage</span></span> &#123;</span><br><span class="line">    <span class="keyword">pub</span> delta_time: <span class="built_in">u8</span>,</span><br><span class="line">    <span class="keyword">pub</span> status: <span class="built_in">u8</span>,</span><br><span class="line">    <span class="keyword">pub</span> note: <span class="built_in">u8</span>,</span><br><span class="line">    <span class="keyword">pub</span> velocity: <span class="built_in">u8</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>下图是典型的 <code>Channel Voice Message</code>的例子，更多内容可以参考<a href="http://www.personal.kent.edu/~sbirch/Music_Production/MP-II/MIDI/midi_channel_voice_messages.htm#note1" target="_blank" rel="external nofollow noopener noreferrer">这里</a>。</p>
-<p><img alt="MIDI Channel Voice Messages" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-07_midi-channel-voice-messages.png"></p>
+<p><img alt="MIDI Channel Voice Messages" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-07_midi-channel-voice-messages.png"></p>
 <p>根据代码，我们可以一一对应起来，比如这里的 <code>NoteOn</code>就是 <code>0b1001</code>(0b 是二进制表示)</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// MIDI message status</span></span><br><span class="line"><span class="comment">///</span></span><br><span class="line"><span class="comment">/// Each MIDI event (message) has a status, which sets the message type and thus the meaning</span></span><br><span class="line"><span class="comment">/// of the associated message data.  Technically the status bits also include the channel number,</span></span><br><span class="line"><span class="comment">/// but this library currently only supports single track, single channel MIDI files (and thus</span></span><br><span class="line"><span class="comment">/// defaults to channel 0).  For a detailed description of each status type, see Appendix 1.1 of the document here:</span></span><br><span class="line"><span class="comment">/// &lt;https://www.cs.cmu.edu/~music/cmsip/readings/Standard-MIDI-file-format-updated.pdf&gt;.</span></span><br><span class="line"><span class="meta">#[derive(Clone, Copy, Debug)]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">enum</span> <span class="title">MIDIStatus</span></span> &#123;</span><br><span class="line">    <span class="comment">/// Assume status bytes of previous MIDI channel message</span></span><br><span class="line">    RunningStatus = <span class="number">0b0000</span>,</span><br><span class="line">    <span class="comment">/// Note released</span></span><br><span class="line">    NoteOff = <span class="number">0b1000</span>,</span><br><span class="line">    <span class="comment">/// Note pressed</span></span><br><span class="line">    NoteOn = <span class="number">0b1001</span>,</span><br><span class="line">    <span class="comment">/// Pressure on key after pressed down</span></span><br><span class="line">    PolyphonicAftertouch = <span class="number">0b1010</span>,</span><br><span class="line">    <span class="comment">/// Controller value change</span></span><br><span class="line">    ControlChange = <span class="number">0b1011</span>,</span><br><span class="line">    <span class="comment">/// Change program (patch) number</span></span><br><span class="line">    ProgramChange = <span class="number">0b1100</span>,</span><br><span class="line">    <span class="comment">/// Greatest pressure on key after pressed down</span></span><br><span class="line">    Aftertouch = <span class="number">0b1101</span>,</span><br><span class="line">    <span class="comment">/// Chainge pitch wheel</span></span><br><span class="line">    PitchWheelChange = <span class="number">0b1110</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <ul>
@@ -626,7 +626,7 @@
 <li><strong>Program Change</strong></li>
 </ul>
 <p>在上面的 status 中有一个 <code>Program Change</code>，说的是改变乐器。</p>
-<p><img alt="Program Change" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-07_midi-program-change.png"></p>
+<p><img alt="Program Change" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-07_midi-program-change.png"></p>
 <p>在 MIDI 中，对于不同的乐器也有相应的数字定义，这里简单列出了几个 Family 的序列范围。</p>
 <div class="table-container">
 <table>
@@ -729,7 +729,7 @@
 <p>到现在，我们还只是粗暴的遍历进行旋律创作，没有涉及到编曲等其他进一步的创作。这几年随着深度学习的进一步发展，已经有很多人开始把眼光投到了音乐生成这个领域。比如这篇论文 <a href="https://mp.weixin.qq.com/s/VkDlfbuKWd6WiLZVzxJTEg" target="_blank" rel="external nofollow noopener noreferrer">KDD 2018 Research Track 最佳学生论文详解：流行音乐的旋律与编曲生成</a> 就把深度学习技术运用到了音乐生成这个领域。这个话题先停留在这里，或许以后会再回来填这个坑吧 ：）</p>
 <h2 id="Post-Script"><a href="#Post-Script" class="headerlink" title="Post Script"></a>Post Script</h2><p>两周前看到 <code>Damien Riehl</code>那个视频的时候，就对这个话题非常感兴趣。且先不说版权这个话题(这是另外一个要填的坑)，就只是用计算机编曲这个事情就足以让我兴奋了。如果再加上人工智能编曲，那又是另外一个深坑了。大一的时候在学校听过一个讲座，一个帅气美国小哥讲了他用人工智能创作音乐的故事（好久远啊，好像是那次信科学院本科生科研成果展示会？可是当时自己对这些完全没有概念）。</p>
 <p>过去的两个星期我尝试去学习编曲，对着B站上一个台湾小哥的 <a href="https://www.bilibili.com/video/av23248675" target="_blank" rel="external nofollow noopener noreferrer">GarageBand 教程</a> 玩起了 GarageBand。在这个过程中，我越来越发现这是一个超级深的坑 ：）</p>
-<p><img alt="编曲技能树" data-src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/blog/2020-03-07_composer-tech-tree.jpg"></p>
+<p><img alt="编曲技能树" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-03-07_composer-tech-tree.jpg"></p>
 <p>这是我在知乎上看到的一张图，还能怎么办呢 ：）</p>
 <p>慢慢来吧，作曲编曲，也许有一天，我能够自己创作出自己的歌曲呢 👀</p>
 <h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ul>
@@ -876,19 +876,19 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">74</span>
+          <span class="site-state-item-count">96</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">125</span>
+        <span class="site-state-item-count">146</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -956,13 +956,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">586k</span>
+    <span title="站点总字数">775k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">17:46</span>
+    <span title="站点阅读时长">23:28</span>
 </div>
 
         
