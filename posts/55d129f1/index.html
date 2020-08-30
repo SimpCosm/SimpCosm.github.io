@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
 <meta name="generator" content="Hexo 4.0.0">
-  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
-  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
   <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
   <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
   <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
@@ -75,7 +75,7 @@
 <meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/9/28/16d7625e53fc7ff9?imageView2/0/w/1280/h/960/format/webp/ignore-error/1">
 <meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/9/28/16d7625dbdfb4f03?imageView2/0/w/1280/h/960/format/webp/ignore-error/1">
 <meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/9/28/16d7625f82db3eba?imageView2/0/w/1280/h/960/format/webp/ignore-error/1">
-<meta property="og:updated_time" content="2020-08-21T08:11:30.133Z">
+<meta property="og:updated_time" content="2020-08-22T08:36:58.983Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://tonybai.com/wp-content/uploads/google-trunk-based-and-release-branch-dev-model.png">
 
@@ -251,7 +251,7 @@
     <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/55d129f1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
       <meta itemprop="name" content="Houmin">
       <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
     </span>
@@ -549,7 +549,7 @@
 <p>另外需要注意，Go modules 是不支持在 “导入路径” 里写相对路径的。举个例子，如果项目 A 依赖了模块 B，比如模块 B 的“模块路径”是 <code>example.com/b</code>，然后它在的磁盘路径是 <code>~/b</code>，在项目 A 里的 go.mod 文件中你有一行 <code>replace example.com/b=&gt;~/b</code>，然后在项目 A 里的代码中的“导入路基”就是 <code>import&quot;example.com/b&quot;</code>，而不是 <code>import&quot;~/b&quot;</code>，剩下的工作是 Go modules 帮你自动完成了的。</p>
 <p>然后就是我在分享中也提到了， exclude 和 replace 这两个动词只作用于当前主模块，也就是当前项目，它所依赖的那些其他模块版本中如果出现了你待替换的那个模块版本的话，Go modules 还是会为你依赖的那个模块版本去拉取你的这个待替换的模块版本。</p>
 <p>举个例子，比如项目 A 直接依赖了模块 B 和模块 C，然后模块 B 也直接依赖了模块 C，那么你在项目 A 中的 go.mod 文件里的 <code>replace c=&gt;~/some/path/c</code> 是只会影响项目 A 里写的代码中，而模块 B 所用到的还是你 replace 之前的那个 c，并不是你替换成的 <code>~/some/path/c</code> 这个。</p>
-<h2 id><a href="#" class="headerlink" title=" "></a> </h2><h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
 <li><a href="https://www.youtube.com/watch?v=F8nrpe0XWRg&amp;list=PLq2Nv-Sh8EbbIjQgDzapOFeVfv5bGOoPE&amp;index=3&amp;t=0s" target="_blank" rel="external nofollow noopener noreferrer">Russ Cox 介绍 go module背后的设计哲学</a></li>
 <li><a href="https://go.googlesource.com/proposal/+/master/design/24301-versioned-go.md" target="_blank" rel="external nofollow noopener noreferrer">Go Module Proposal</a></li>
 <li><a href="https://research.swtch.com/vgo" target="_blank" rel="external nofollow noopener noreferrer">vgo博客系列</a> </li>
@@ -590,12 +590,12 @@
   <div id="qr" style="display: none;">
       
       <div style="display: inline-block;">
-        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
         <p>微信支付</p>
       </div>
       
       <div style="display: inline-block;">
-        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
         <p>支付宝</p>
       </div>
 
@@ -681,13 +681,13 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#包管理机制"><span class="nav-number">1.</span> <span class="nav-text">包管理机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Quick-Start"><span class="nav-number">2.</span> <span class="nav-text">Quick Start</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Example"><span class="nav-number">2.1.</span> <span class="nav-text">Example</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Workflow"><span class="nav-number">2.2.</span> <span class="nav-text">Workflow</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#New-Concept"><span class="nav-number">3.</span> <span class="nav-text">New Concept</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Modules-定义"><span class="nav-number">3.1.</span> <span class="nav-text">Modules 定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#go-mod"><span class="nav-number">3.2.</span> <span class="nav-text">go.mod</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Version-Selection"><span class="nav-number">3.3.</span> <span class="nav-text">Version Selection</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Semantic-Import-Versioning"><span class="nav-number">3.4.</span> <span class="nav-text">Semantic Import Versioning</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#How-to-Use-Modules"><span class="nav-number">4.</span> <span class="nav-text">How to Use Modules</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#包管理命令"><span class="nav-number">5.</span> <span class="nav-text">包管理命令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#升级依赖项"><span class="nav-number">5.1.</span> <span class="nav-text">升级依赖项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#删除未使用的依赖项"><span class="nav-number">5.2.</span> <span class="nav-text">删除未使用的依赖项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#命令备忘"><span class="nav-number">5.3.</span> <span class="nav-text">命令备忘</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#包管理命令-1"><span class="nav-number">6.</span> <span class="nav-text">包管理命令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#安装依赖"><span class="nav-number">6.1.</span> <span class="nav-text">安装依赖</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#升级依赖"><span class="nav-number">6.2.</span> <span class="nav-text">升级依赖</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#移除依赖"><span class="nav-number">6.3.</span> <span class="nav-text">移除依赖</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看依赖包"><span class="nav-number">6.4.</span> <span class="nav-text">查看依赖包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#模块配置文本格式化"><span class="nav-number">6.5.</span> <span class="nav-text">模块配置文本格式化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#发布版本"><span class="nav-number">6.6.</span> <span class="nav-text">发布版本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#从老项目迁移"><span class="nav-number">6.7.</span> <span class="nav-text">从老项目迁移</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GOSUMDB"><span class="nav-number">6.8.</span> <span class="nav-text">GOSUMDB</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Go-Checksum-Database"><span class="nav-number">6.9.</span> <span class="nav-text">Go Checksum Database</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GONOPROXY-GONOSUMDB-GOPRIVATE"><span class="nav-number">6.10.</span> <span class="nav-text">GONOPROXY/GONOSUMDB/GOPRIVATE</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Global-Caching"><span class="nav-number">6.11.</span> <span class="nav-text">Global Caching</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#快速迁移项目至-Go-Modules"><span class="nav-number">7.</span> <span class="nav-text">快速迁移项目至 Go Modules</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#迁移后-go-get-行为的改变"><span class="nav-number">8.</span> <span class="nav-text">迁移后 go get 行为的改变</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用-Go-Modules-时常遇见的坑"><span class="nav-number">9.</span> <span class="nav-text">使用 Go Modules 时常遇见的坑</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#坑-1-判断项目是否启用了-Go-Modules"><span class="nav-number">9.1.</span> <span class="nav-text">坑 1: 判断项目是否启用了 Go Modules</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#坑-2-管理-Go-的环境变量"><span class="nav-number">9.2.</span> <span class="nav-text">坑 2: 管理 Go 的环境变量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#坑-3-从-dep、glide-等迁移至-Go-Modules"><span class="nav-number">9.3.</span> <span class="nav-text">坑 3: 从 dep、glide 等迁移至 Go Modules</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#坑-4-拉取私有模块"><span class="nav-number">9.4.</span> <span class="nav-text">坑 4:拉取私有模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#坑-5-更新现有的模块"><span class="nav-number">9.5.</span> <span class="nav-text">坑 5:更新现有的模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#坑-6-主版本号"><span class="nav-number">9.6.</span> <span class="nav-text">坑 6:主版本号</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Go-Module-Proxy-简介"><span class="nav-number">10.</span> <span class="nav-text">Go Module Proxy 简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Goproxy-中国-goproxy-cn"><span class="nav-number">11.</span> <span class="nav-text">Goproxy 中国(goproxy.cn)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Q-amp-A"><span class="nav-number">11.1.</span> <span class="nav-text">Q&amp;A</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#近况"><span class="nav-number">11.2.</span> <span class="nav-text">近况</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#情况"><span class="nav-number">11.3.</span> <span class="nav-text">情况</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Q-amp-A-1"><span class="nav-number">12.</span> <span class="nav-text">Q&amp;A</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#null"><span class="nav-number">13.</span> <span class="nav-text"> </span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">14.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#包管理机制"><span class="nav-number">1.</span> <span class="nav-text">包管理机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Quick-Start"><span class="nav-number">2.</span> <span class="nav-text">Quick Start</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Example"><span class="nav-number">2.1.</span> <span class="nav-text">Example</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Workflow"><span class="nav-number">2.2.</span> <span class="nav-text">Workflow</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#New-Concept"><span class="nav-number">3.</span> <span class="nav-text">New Concept</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Modules-定义"><span class="nav-number">3.1.</span> <span class="nav-text">Modules 定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#go-mod"><span class="nav-number">3.2.</span> <span class="nav-text">go.mod</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Version-Selection"><span class="nav-number">3.3.</span> <span class="nav-text">Version Selection</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Semantic-Import-Versioning"><span class="nav-number">3.4.</span> <span class="nav-text">Semantic Import Versioning</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#How-to-Use-Modules"><span class="nav-number">4.</span> <span class="nav-text">How to Use Modules</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#包管理命令"><span class="nav-number">5.</span> <span class="nav-text">包管理命令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#升级依赖项"><span class="nav-number">5.1.</span> <span class="nav-text">升级依赖项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#删除未使用的依赖项"><span class="nav-number">5.2.</span> <span class="nav-text">删除未使用的依赖项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#命令备忘"><span class="nav-number">5.3.</span> <span class="nav-text">命令备忘</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#包管理命令-1"><span class="nav-number">6.</span> <span class="nav-text">包管理命令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#安装依赖"><span class="nav-number">6.1.</span> <span class="nav-text">安装依赖</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#升级依赖"><span class="nav-number">6.2.</span> <span class="nav-text">升级依赖</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#移除依赖"><span class="nav-number">6.3.</span> <span class="nav-text">移除依赖</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看依赖包"><span class="nav-number">6.4.</span> <span class="nav-text">查看依赖包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#模块配置文本格式化"><span class="nav-number">6.5.</span> <span class="nav-text">模块配置文本格式化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#发布版本"><span class="nav-number">6.6.</span> <span class="nav-text">发布版本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#从老项目迁移"><span class="nav-number">6.7.</span> <span class="nav-text">从老项目迁移</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GOSUMDB"><span class="nav-number">6.8.</span> <span class="nav-text">GOSUMDB</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Go-Checksum-Database"><span class="nav-number">6.9.</span> <span class="nav-text">Go Checksum Database</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GONOPROXY-GONOSUMDB-GOPRIVATE"><span class="nav-number">6.10.</span> <span class="nav-text">GONOPROXY/GONOSUMDB/GOPRIVATE</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Global-Caching"><span class="nav-number">6.11.</span> <span class="nav-text">Global Caching</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#快速迁移项目至-Go-Modules"><span class="nav-number">7.</span> <span class="nav-text">快速迁移项目至 Go Modules</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#迁移后-go-get-行为的改变"><span class="nav-number">8.</span> <span class="nav-text">迁移后 go get 行为的改变</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用-Go-Modules-时常遇见的坑"><span class="nav-number">9.</span> <span class="nav-text">使用 Go Modules 时常遇见的坑</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#坑-1-判断项目是否启用了-Go-Modules"><span class="nav-number">9.1.</span> <span class="nav-text">坑 1: 判断项目是否启用了 Go Modules</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#坑-2-管理-Go-的环境变量"><span class="nav-number">9.2.</span> <span class="nav-text">坑 2: 管理 Go 的环境变量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#坑-3-从-dep、glide-等迁移至-Go-Modules"><span class="nav-number">9.3.</span> <span class="nav-text">坑 3: 从 dep、glide 等迁移至 Go Modules</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#坑-4-拉取私有模块"><span class="nav-number">9.4.</span> <span class="nav-text">坑 4:拉取私有模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#坑-5-更新现有的模块"><span class="nav-number">9.5.</span> <span class="nav-text">坑 5:更新现有的模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#坑-6-主版本号"><span class="nav-number">9.6.</span> <span class="nav-text">坑 6:主版本号</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Go-Module-Proxy-简介"><span class="nav-number">10.</span> <span class="nav-text">Go Module Proxy 简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Goproxy-中国-goproxy-cn"><span class="nav-number">11.</span> <span class="nav-text">Goproxy 中国(goproxy.cn)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Q-amp-A"><span class="nav-number">11.1.</span> <span class="nav-text">Q&amp;A</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#近况"><span class="nav-number">11.2.</span> <span class="nav-text">近况</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#情况"><span class="nav-number">11.3.</span> <span class="nav-text">情况</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Q-amp-A-1"><span class="nav-number">12.</span> <span class="nav-text">Q&amp;A</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">13.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
       <div class="site-overview-wrap sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
   <p class="site-author-name" itemprop="name">Houmin</p>
   <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
 </div>
@@ -696,7 +696,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">96</span>
+          <span class="site-state-item-count">97</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -708,7 +708,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">146</span>
+        <span class="site-state-item-count">147</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -776,13 +776,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">775k</span>
+    <span title="站点总字数">819k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">23:28</span>
+    <span title="站点阅读时长">24:49</span>
 </div>
 
         

@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
 <meta name="generator" content="Hexo 4.0.0">
-  <link rel="icon" type="image/png" sizes="32x32" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
-  <link rel="icon" type="image/png" sizes="16x16" href="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
   <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
   <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
   <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
@@ -56,7 +56,7 @@
 </script>
 
   <meta name="description" content="Go 语言作为一个原生支持用户态进程（Goroutine）的语言，当提到并发编程、多线程编程时，往往都离不开锁这一概念。锁是一种并发编程中的同步原语（Synchronization Primitives），它能保证多个 Goroutine 在访问同一片内存时不会出现竞争条件（Race condition）等问题。 本节会介绍 Go 语言中常见的同步原语 sync.Mutex、sync.RWMute">
-<meta name="keywords" content="Go,并发,源码阅读">
+<meta name="keywords" content="Go,源码阅读,并发">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Go语言设计与实现】同步原语">
 <meta property="og:url" content="http://houmin.cc/posts/77ffac6b/index.html">
@@ -74,7 +74,7 @@
 <meta property="og:image" content="https://img.draveness.me/2020-01-23-15797104328063-golang-semaphore.png">
 <meta property="og:image" content="https://img.draveness.me/2020-01-23-15797104328070-golang-query-without-single-flight.png">
 <meta property="og:image" content="https://img.draveness.me/2020-01-23-15797104328078-golang-extension-single-flight.png">
-<meta property="og:updated_time" content="2020-08-21T08:11:30.156Z">
+<meta property="og:updated_time" content="2020-08-22T08:35:03.922Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://img.draveness.me/2020-01-23-15797104327981-golang-basic-sync-primitives.png">
 
@@ -250,7 +250,7 @@
     <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/77ffac6b/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
       <meta itemprop="name" content="Houmin">
       <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
     </span>
@@ -511,8 +511,10 @@
 <p>  <code>sync.RWMutex.Lock</code></p>
 <p>  尝试获取写锁时；</p>
 <ul>
-<li>每次 <a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/rwmutex.go#L62-L75" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.RWMutex.RUnlock</code></a> 都会将 <code>readerWait</code> 其减一，当它归零时该 Goroutine 就会获得写锁；</li>
+<li>每次 <a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/rwmutex.go#L62-L75" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.RWMutex.RUnlock</code></a> 都会将 <code>readerWait</code> 其减一，当它归零时该 Goroutine 就会获得写锁；<ul>
 <li>将 <code>readerCount</code> 减少 <code>rwmutexMaxReaders</code> 个数以阻塞后续的读操作；</li>
+</ul>
+</li>
 </ul>
 <ul>
 <li>调用 <a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/rwmutex.go#L118-L140" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.RWMutex.Unlock</code></a> 释放写锁时，会先通知所有的读操作，然后才会释放持有的互斥锁；</li>
@@ -522,7 +524,6 @@
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">requests := []*Request&#123;...&#125;</span><br><span class="line">wg := &amp;sync.WaitGroup&#123;&#125;</span><br><span class="line">wg.Add(<span class="built_in">len</span>(requests))</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> _, request := <span class="keyword">range</span> requests &#123;</span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(r *Request)</span></span> &#123;</span><br><span class="line">        <span class="keyword">defer</span> wg.Done()</span><br><span class="line">        <span class="comment">// res, err := service.call(r)</span></span><br><span class="line">    &#125;(request)</span><br><span class="line">&#125;</span><br><span class="line">wg.Wait()</span><br></pre></td></tr></table></figure>
 <p>我们可以通过 <a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/waitgroup.go#L20-L29" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.WaitGroup</code></a> 将原本顺序执行的代码在多个 Goroutine 中并发执行，加快程序处理的速度。</p>
 <p><img alt="golang-syncgroup" data-src="https://img.draveness.me/2020-01-23-15797104328028-golang-syncgroup.png"></p>
-<p><strong>图 6-8 WaitGroup 等待多个 Goroutine</strong></p>
 <h4 id="结构体-1"><a href="#结构体-1" class="headerlink" title="结构体"></a>结构体</h4><p><a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/waitgroup.go#L20-L29" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.WaitGroup</code></a> 结构体中的成员变量非常简单，其中只包含两个成员变量：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> WaitGroup <span class="keyword">struct</span> &#123;</span><br><span class="line">	noCopy noCopy</span><br><span class="line">	state1 [<span class="number">3</span>]<span class="keyword">uint32</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <ul>
@@ -579,7 +580,6 @@
 </ul>
 <p>调用 <a href="https://github.com/golang/go/blob/71bbffbc48d03b447c73da1f54ac57350fc9b36a/src/sync/cond.go#L73-L76" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.Cond.Broadcast</code></a> 方法后，上述代码会打印出 10 次 “listen” 并结束调用。</p>
 <p><img alt="golang-cond-broadcast" data-src="https://img.draveness.me/2020-01-23-15797104328042-golang-cond-broadcast.png"></p>
-<p><strong>图 6-10 Cond 条件广播</strong></p>
 <h4 id="结构体-3"><a href="#结构体-3" class="headerlink" title="结构体"></a>结构体</h4><p><a href="https://github.com/golang/go/blob/71bbffbc48d03b447c73da1f54ac57350fc9b36a/src/sync/cond.go#L21-L29" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.Cond</code></a> 的结构体中包含以下 4 个字段：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Cond <span class="keyword">struct</span> &#123;</span><br><span class="line">	noCopy  noCopy</span><br><span class="line">	L       Locker</span><br><span class="line">	notify  notifyList</span><br><span class="line">	checker copyChecker</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <ul>
@@ -600,7 +600,6 @@
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">notifyListWait</span><span class="params">(l *notifyList, t <span class="keyword">uint32</span>)</span></span> &#123;</span><br><span class="line">	s := acquireSudog()</span><br><span class="line">	s.g = getg()</span><br><span class="line">	s.ticket = t</span><br><span class="line">	<span class="keyword">if</span> l.tail == <span class="literal">nil</span> &#123;</span><br><span class="line">		l.head = s</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		l.tail.next = s</span><br><span class="line">	&#125;</span><br><span class="line">	l.tail = s</span><br><span class="line">	goparkunlock(&amp;l.lock, waitReasonSyncCondWait, traceEvGoBlockCond, <span class="number">3</span>)</span><br><span class="line">	releaseSudog(s)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>除了将当前 Goroutine 追加到链表的末端之外，我们还会调用 <a href="https://github.com/golang/go/blob/cfe3cd903f018dec3cb5997d53b1744df4e53909/src/runtime/proc.go#L309-L311" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.goparkunlock</code></a> 将当前 Goroutine 陷入休眠状态，该函数也是在 Go 语言切换 Goroutine 时经常会使用的方法，它会直接让出当前处理器的使用权并等待调度器的唤醒。</p>
 <p><img alt="golang-cond-notifylist" data-src="https://img.draveness.me/2020-01-23-15797104328049-golang-cond-notifylist.png"></p>
-<p><strong>图 6-11 Cond 条件通知列表</strong></p>
 <p><a href="https://github.com/golang/go/blob/71bbffbc48d03b447c73da1f54ac57350fc9b36a/src/sync/cond.go#L64-L67" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.Cond.Signal</code></a> 和 <a href="https://github.com/golang/go/blob/71bbffbc48d03b447c73da1f54ac57350fc9b36a/src/sync/cond.go#L73-L76" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.Cond.Broadcast</code></a> 方法就是用来唤醒调用 <a href="https://github.com/golang/go/blob/71bbffbc48d03b447c73da1f54ac57350fc9b36a/src/sync/cond.go#L52-L58" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.Cond.Wait</code></a> 陷入休眠的 Goroutine，它们两个的实现有一些细微差别：</p>
 <ul>
 <li><a href="https://github.com/golang/go/blob/71bbffbc48d03b447c73da1f54ac57350fc9b36a/src/sync/cond.go#L64-L67" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.Cond.Signal</code></a> 方法会唤醒队列最前面的 Goroutine；</li>
@@ -619,9 +618,8 @@
 <li><a href="https://github.com/golang/go/blob/71bbffbc48d03b447c73da1f54ac57350fc9b36a/src/sync/cond.go#L64-L67" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.Cond.Signal</code></a> 方法唤醒的 Goroutine 都是队列最前面、等待最久的 Goroutine；</li>
 <li><a href="https://github.com/golang/go/blob/71bbffbc48d03b447c73da1f54ac57350fc9b36a/src/sync/cond.go#L73-L76" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.Cond.Broadcast</code></a> 会按照一定顺序广播通知等待的全部 Goroutine；</li>
 </ul>
-<h2 id="扩展原语"><a href="#扩展原语" class="headerlink" title="扩展原语"></a>扩展原语</h2><p>除了标准库中提供的同步原语之外，Go 语言还在子仓库 <a href="https://github.com/golang/sync" target="_blank" rel="external nofollow noopener noreferrer">sync</a> 中提供了四种扩展原语，<a href="https://github.com/golang/sync/blob/cd5d95a43a6e21273425c7ae415d3df9ea832eeb/errgroup/errgroup.go#L18-L25" target="_blank" rel="external nofollow noopener noreferrer"><code>x/sync/errgroup.Group</code></a>、<a href="https://github.com/golang/sync/blob/cd5d95a43a6e21273425c7ae415d3df9ea832eeb/semaphore/semaphore.go#L28-L33" target="_blank" rel="external nofollow noopener noreferrer"><code>x/sync/semaphore.Weighted</code></a>、<a href="https://github.com/golang/sync/blob/cd5d95a43a6e21273425c7ae415d3df9ea832eeb/singleflight/singleflight.go#L33-L36" target="_blank" rel="external nofollow noopener noreferrer"><code>x/sync/singleflight.Group</code></a> 和 <a href="https://github.com/golang/sync/blob/cd5d95a43a6e21273425c7ae415d3df9ea832eeb/syncmap/go19.go#L17" target="_blank" rel="external nofollow noopener noreferrer"><code>x/sync/syncmap.Map</code></a>，其中的 <a href="https://github.com/golang/sync/blob/cd5d95a43a6e21273425c7ae415d3df9ea832eeb/syncmap/go19.go#L17" target="_blank" rel="external nofollow noopener noreferrer"><code>x/sync/syncmap.Map</code></a> 在 1.9 版本中被移植到了标准库中<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-sync-primitives/#fn:2" target="_blank" rel="external nofollow noopener noreferrer">2</a>。</p>
+<h2 id="扩展原语"><a href="#扩展原语" class="headerlink" title="扩展原语"></a>扩展原语</h2><p>除了标准库中提供的同步原语之外，Go 语言还在子仓库 <a href="https://github.com/golang/sync" target="_blank" rel="external nofollow noopener noreferrer">sync</a> 中提供了四种扩展原语，<a href="https://github.com/golang/sync/blob/cd5d95a43a6e21273425c7ae415d3df9ea832eeb/errgroup/errgroup.go#L18-L25" target="_blank" rel="external nofollow noopener noreferrer"><code>x/sync/errgroup.Group</code></a>、<a href="https://github.com/golang/sync/blob/cd5d95a43a6e21273425c7ae415d3df9ea832eeb/semaphore/semaphore.go#L28-L33" target="_blank" rel="external nofollow noopener noreferrer"><code>x/sync/semaphore.Weighted</code></a>、<a href="https://github.com/golang/sync/blob/cd5d95a43a6e21273425c7ae415d3df9ea832eeb/singleflight/singleflight.go#L33-L36" target="_blank" rel="external nofollow noopener noreferrer"><code>x/sync/singleflight.Group</code></a> 和 <a href="https://github.com/golang/sync/blob/cd5d95a43a6e21273425c7ae415d3df9ea832eeb/syncmap/go19.go#L17" target="_blank" rel="external nofollow noopener noreferrer"><code>x/sync/syncmap.Map</code></a>，其中的 <a href="https://github.com/golang/sync/blob/cd5d95a43a6e21273425c7ae415d3df9ea832eeb/syncmap/go19.go#L17" target="_blank" rel="external nofollow noopener noreferrer"><code>x/sync/syncmap.Map</code></a> 在 1.9 版本中被移植到了标准库中。</p>
 <p><img alt="golang-extension-sync-primitives" data-src="https://img.draveness.me/2020-01-23-15797104328056-golang-extension-sync-primitives.png"></p>
-<p><strong>图 6-11 Go 扩展原语</strong></p>
 <p>本节会介绍 Go 语言在扩展包中提供的三种同步原语，也就是 <a href="https://github.com/golang/sync/blob/cd5d95a43a6e21273425c7ae415d3df9ea832eeb/errgroup/errgroup.go#L18-L25" target="_blank" rel="external nofollow noopener noreferrer"><code>x/sync/errgroup.Group</code></a>、<a href="https://github.com/golang/sync/blob/cd5d95a43a6e21273425c7ae415d3df9ea832eeb/semaphore/semaphore.go#L28-L33" target="_blank" rel="external nofollow noopener noreferrer"><code>x/sync/semaphore.Weighted</code></a> 和 <a href="https://github.com/golang/sync/blob/cd5d95a43a6e21273425c7ae415d3df9ea832eeb/singleflight/singleflight.go#L33-L36" target="_blank" rel="external nofollow noopener noreferrer"><code>x/sync/singleflight.Group</code></a>。</p>
 <h3 id="ErrGroup"><a href="#ErrGroup" class="headerlink" title="ErrGroup"></a>ErrGroup</h3><p><a href="https://github.com/golang/sync/blob/cd5d95a43a6e21273425c7ae415d3df9ea832eeb/errgroup/errgroup.go#L18-L25" target="_blank" rel="external nofollow noopener noreferrer"><code>x/sync/errgroup.Group</code></a> 就为我们在一组 Goroutine 中提供了同步、错误传播以及上下文取消的功能，我们可以使用如下所示的方式并行获取网页的数据：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> g errgroup.Group</span><br><span class="line"><span class="keyword">var</span> urls = []<span class="keyword">string</span>&#123;</span><br><span class="line">    <span class="string">"http://www.golang.org/"</span>,</span><br><span class="line">    <span class="string">"http://www.google.com/"</span>,</span><br><span class="line">    <span class="string">"http://www.somestupidname.com/"</span>,</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">for</span> i := <span class="keyword">range</span> urls &#123;</span><br><span class="line">    url := urls[i]</span><br><span class="line">    g.Go(<span class="function"><span class="keyword">func</span><span class="params">()</span> <span class="title">error</span></span> &#123;</span><br><span class="line">        resp, err := http.Get(url)</span><br><span class="line">        <span class="keyword">if</span> err == <span class="literal">nil</span> &#123;</span><br><span class="line">            resp.Body.Close()</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> err := g.Wait(); err == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Println(<span class="string">"Successfully fetched all URLs."</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -773,13 +771,13 @@
       <div class="popular-posts-title"><a href="/posts/c3c43baa/" rel="bookmark">【Go语言设计与实现】Hash Table</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
-    </li>
-    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/bf9c845a/" rel="bookmark">【Go语言设计与实现】Reflect</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/c31234d9/" rel="bookmark">【Go语言设计与实现】Interface</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/540e2781/" rel="bookmark">【Go语言设计与实现】Defer</a></div>
     </li>
   </ul>
 
@@ -792,12 +790,12 @@
   <div id="qr" style="display: none;">
       
       <div style="display: inline-block;">
-        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
         <p>微信支付</p>
       </div>
       
       <div style="display: inline-block;">
-        <img src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
         <p>支付宝</p>
       </div>
 
@@ -826,8 +824,8 @@
           
           <div class="post-tags">
               <a href="/tags/Go/" rel="tag"><i class="fa fa-tag"></i> Go</a>
-              <a href="/tags/%E5%B9%B6%E5%8F%91/" rel="tag"><i class="fa fa-tag"></i> 并发</a>
               <a href="/tags/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码阅读</a>
+              <a href="/tags/%E5%B9%B6%E5%8F%91/" rel="tag"><i class="fa fa-tag"></i> 并发</a>
           </div>
 
         
@@ -890,7 +888,7 @@
 
       <div class="site-overview-wrap sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://images-cosmos.s3-ap-southeast-1.amazonaws.com/theme/avatar.png">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
   <p class="site-author-name" itemprop="name">Houmin</p>
   <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
 </div>
@@ -899,7 +897,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">96</span>
+          <span class="site-state-item-count">97</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -911,7 +909,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">146</span>
+        <span class="site-state-item-count">147</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -979,13 +977,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">775k</span>
+    <span title="站点总字数">819k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">23:28</span>
+    <span title="站点阅读时长">24:49</span>
 </div>
 
         
