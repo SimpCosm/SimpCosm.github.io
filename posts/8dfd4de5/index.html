@@ -55,20 +55,18 @@
   };
 </script>
 
-  <meta name="description" content="Ingress 是 Kubernetes 的一种 API 对象，将集群内部的 Service 通过 HTTP&#x2F;HTTPS 方式暴露到集群外部，并通过规则定义 HTTP&#x2F;HTTPS 的路由。Ingress 具备如下特性：集群外部可访问的 URL、负载均衡、SSL Termination、按域名路由（name-based virtual hosting）。">
-<meta name="keywords" content="k8s,网络,ingress">
+  <meta name="description" content="Ingress 是 Kubernetes 的一种 API 对象，将集群内部的 Service 通过 HTTP&#x2F;HTTPS 方式暴露到集群外部，并通过规则定义 HTTP&#x2F;HTTPS 的路由。Ingress 具备如下特性：集群外部可访问的 URL、负载均衡、SSL Termination、按域名路由。">
+<meta name="keywords" content="k8s,网络,ingress,service">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Kubernetes解读】Ingress">
 <meta property="og:url" content="http://houmin.cc/posts/8dfd4de5/index.html">
 <meta property="og:site_name" content="Houmin">
-<meta property="og:description" content="Ingress 是 Kubernetes 的一种 API 对象，将集群内部的 Service 通过 HTTP&#x2F;HTTPS 方式暴露到集群外部，并通过规则定义 HTTP&#x2F;HTTPS 的路由。Ingress 具备如下特性：集群外部可访问的 URL、负载均衡、SSL Termination、按域名路由（name-based virtual hosting）。">
+<meta property="og:description" content="Ingress 是 Kubernetes 的一种 API 对象，将集群内部的 Service 通过 HTTP&#x2F;HTTPS 方式暴露到集群外部，并通过规则定义 HTTP&#x2F;HTTPS 的路由。Ingress 具备如下特性：集群外部可访问的 URL、负载均衡、SSL Termination、按域名路由。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://kuboard.cn/assets/img/image-20190910222649193.d809a7d7.png">
-<meta property="og:image" content="https://kuboard.cn/images/topology/k8s.png">
-<meta property="og:image" content="https://kuboard.cn/images/topology/kubernetes.png">
-<meta property="og:updated_time" content="2020-08-21T08:11:30.171Z">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-08-31_k8s-ingress.png">
+<meta property="og:updated_time" content="2020-08-31T13:48:44.405Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://kuboard.cn/assets/img/image-20190910222649193.d809a7d7.png">
+<meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-08-31_k8s-ingress.png">
 
 <link rel="canonical" href="http://houmin.cc/posts/8dfd4de5/">
 
@@ -303,14 +301,14 @@
                 <i class="fa fa-file-word-o"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>3.8k</span>
+              <span>1.4k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>7 分钟</span>
+              <span>3 分钟</span>
             </span>
 
         </div>
@@ -322,72 +320,31 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>Ingress 是 Kubernetes 的一种 API 对象，将集群内部的 Service 通过 HTTP/HTTPS 方式暴露到集群外部，并通过规则定义 HTTP/HTTPS 的路由。Ingress 具备如下特性：集群外部可访问的 URL、负载均衡、SSL Termination、按域名路由（name-based virtual hosting）。</p>
+        <p>Ingress 是 Kubernetes 的一种 API 对象，将集群内部的 Service 通过 HTTP/HTTPS 方式暴露到集群外部，并通过规则定义 HTTP/HTTPS 的路由。Ingress 具备如下特性：集群外部可访问的 URL、负载均衡、SSL Termination、按域名路由。</p>
 <a id="more"></a>
-<h2 id="为什么需要Ingress"><a href="#为什么需要Ingress" class="headerlink" title="为什么需要Ingress"></a>为什么需要Ingress</h2><h2 id="Ingress工作流程"><a href="#Ingress工作流程" class="headerlink" title="Ingress工作流程"></a>Ingress工作流程</h2><p>Ingress 是 Kubernetes 的一种 API 对象，将集群内部的 Service 通过 HTTP/HTTPS 方式暴露到集群外部，并通过规则定义 HTTP/HTTPS 的路由。Ingress 具备如下特性：集群外部可访问的 URL、负载均衡、SSL Termination、按域名路由（name-based virtual hosting）。</p>
-<p>Ingress Controller （通常需要负载均衡器配合）负责实现 Ingress API 对象所声明的能力。如下图所示：</p>
-<ol>
-<li>Ingress Controller 监听所有 worker 节点上的 80/443 端口</li>
-<li>Ingress Controller 将所有对域名为 a.kuboard.cn 的 HTTP/HTTPS 请求路由到 Service B 的 9080 端口</li>
-<li>Service B 将请求进一步转发到其标签所选择的 Pod 容器组（通过 targetPort 指定容器组上的端口号）</li>
-</ol>
-<p>该图中，<strong>请求被转发的过程为：</strong></p>
-<ol>
-<li>假设您将 a.kuboard.cn 的 DNS 解析到了集群中的一个 worker 节点的 IP 地址 <code>192.168.2.69</code>。（如果您的 worker 节点有外网地址，请使用外网地址，这样您可以从外网访问您的服务）</li>
-<li>从客户端机器执行命令 <code>curl http://a.kuboard.cn/abc/</code>，该请求您将被转发到 <code>192.168.2.69</code> 这个地址的 80 端口，并被 Ingress Controller 接收</li>
-<li>Ingress Controller 根据请求的域名 <code>a.kuboard.cn</code> 和路径 <code>abc</code> 匹配集群中所有的 Ingress 信息，并最终找到 <code>Ingress B</code> 中有这个配置，其对应的 Service 为 <code>Service B</code> 的 <code>9080</code> 端口</li>
-<li>Ingress Controller 通过 kube-proxy 将请求转发到 <code>Service B</code> 对应的任意一个 Pod 上 与 <code>Service B</code> 的 <code>9080</code> 端口对应的容器端口上。（从 Ingress Controller 到 Pod 的负载均衡由 kube-proxy + Service 实现）</li>
-</ol>
-<p><img alt="Kubernetes教程：Ingress及其Controller" data-src="https://kuboard.cn/assets/img/image-20190910222649193.d809a7d7.png"></p>
-<h2 id="Ingress-Controller"><a href="#Ingress-Controller" class="headerlink" title="Ingress Controller"></a>Ingress Controller</h2><p>如上所述，您必须在 Kubernetes 集群中安装了 Ingress Controller，您配置的 Ingress 才能生效。</p>
-<p>划重点</p>
-<p>Ingress 只是 Kubernetes 中的一种配置信息；Ingress Controller 才是监听 80/443 端口，并根据 Ingress 上配置的路由信息执行 HTTP 路由转发的组件。</p>
-<p>Ingress Controller 有多种实现可供选择，请参考 Kubernetes 官方文档 <a href="https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/#additional-controllers" target="_blank" rel="external nofollow noopener noreferrer">Additional controllers</a>，比较常用的有 <a href="https://github.com/containous/traefik" target="_blank" rel="external nofollow noopener noreferrer">Traefic</a> 、 <a href="https://www.nginx.com/products/nginx/kubernetes-ingress-controller" target="_blank" rel="external nofollow noopener noreferrer">Nginx Ingress Controller for Kubernetes</a> 等。</p>
-<p>如果您参考 <a href="https://kuboard.cn" target="_blank" rel="external nofollow noopener noreferrer">https://kuboard.cn</a> 网站上提供的文档安装了 Kubernetes，您应该已经完成了 <a href="https://www.nginx.com/products/nginx/kubernetes-ingress-controller" target="_blank" rel="external nofollow noopener noreferrer">Nginx Ingress Controller for Kubernetes</a> 在您 Kubernetes 集群中的安装。该 Ingress Controller 以 DaemonSet 的类型部署到 Kubernetes，且监听了 hostPort 80/443，YAML 片段如下所示：</p>
-<blockquote>
-<p>如果您打算使用其他 Ingress Controller，您可以 <a href="https://kuboard.cn/install/install-k8s.html#安装-ingress-controller" target="_blank" rel="external nofollow noopener noreferrer">卸载 Nginx Ingress Controller</a>；如果您尚未安装任何 Ingress Controller，请参考 <a href="https://kuboard.cn/install/install-k8s.html#安装-ingress-controller" target="_blank" rel="external nofollow noopener noreferrer">安装 Nginx Ingress Controller</a>，以便可以完成本教程的后续内容。</p>
-</blockquote>
-<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">extensions/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DaemonSet</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx-ingress</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">nginx-ingress</span></span><br><span class="line">	<span class="comment"># ...</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">nginx-ingress</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">nginx-ingress</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">serviceAccountName:</span> <span class="string">nginx-ingress</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">image:</span> <span class="string">nginx/nginx-ingress:1.5.3</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">nginx-ingress</span></span><br><span class="line">        <span class="attr">ports:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">http</span></span><br><span class="line">          <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">          <span class="attr">hostPort:</span> <span class="number">80</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">https</span></span><br><span class="line">          <span class="attr">containerPort:</span> <span class="number">443</span></span><br><span class="line">          <span class="attr">hostPort:</span> <span class="number">443</span></span><br></pre></td></tr></table></figure>
-<p>TIP</p>
+<h2 id="Background"><a href="#Background" class="headerlink" title="Background"></a>Background</h2><p>Kubernetes 暴露服务的有三种方式：分别为 LoadBlancer Service、NodePort Service、Ingress。</p>
+<p>LoadBlancer Service 是 Kubernetes 结合云平台的组件，如国外 GCE、AWS、国内阿里云等等，使用它向使用的底层云平台申请创建负载均衡器来实现，有局限性，对于使用云平台的集群比较方便，但是和云平台强绑定。</p>
+<p>NodePort Service 是通过在节点上暴露端口，然后通过将端口映射到具体某个服务上来实现服务暴露，比较直观方便，但是对于集群来说，随着 Service 的不断增加，需要的端口越来越多，很容易出现端口冲突，而且不容易管理。此外，打开节点的端口，也会面临安全上的风险，生产环境并不推荐使用。</p>
+<p>Ingress 作为 Kubernetes 基本API对象，是外部请求访问集群的入口，负责为进入集群的请求提供路由规则集合和转发，将外部的请求转发到集群内部Service上。相对于上述两种暴露方式，有以下特点：</p>
 <ul>
-<li>Ingress Controller 并非只能监听 80/443 端口，您可以根据自己网络拓扑的需要，选择合适的端口</li>
-<li>根据您安装 Ingress Controller 的方式不同，您的 Ingress Controller 并不一定监听了所有 worker 节点的 80/443 端口（本教程不涉及此主题）</li>
-<li>您也可以在 Kubernetes 集群中安装多种 Ingress Controller，请参考 <a href="https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/#using-multiple-ingress-controllers" target="_blank" rel="external nofollow noopener noreferrer">Using multiple Ingress controllers</a></li>
+<li>动态配置服务：增加新的服务时，不再需要在流量入口新增反向代理指向新的服务，只需配置好Ingress即可</li>
+<li>减少不必要端口暴露：只需要将Ingress服务映射出去，即可代理所有后端服务，更加安全，便于管理端口</li>
 </ul>
-<h2 id="融入到网络拓扑中"><a href="#融入到网络拓扑中" class="headerlink" title="融入到网络拓扑中"></a>融入到网络拓扑中</h2><p>如前所述，Kubernetes Ingress 只能监听到节点的 80/443 端口，且 Ingress 可以完成 L7 路由的功能。由于 Kubernetes Ingress 配置更便捷，推荐使用 Kubernetes Ingress 替代常规的互联网应用架构中的 Nginx 反向代理。那么，如何使部署在内网的 Kubernetes 集群上的 Ingress Controller 的 80/443 端口可以在外网访问到呢？</p>
-<p>本教程推荐如下两种做法，结合您自己对安全性、可靠性等因素的考量，您可以演化出适合自己的拓扑结构。</p>
-<h3 id="暴露单worker节点"><a href="#暴露单worker节点" class="headerlink" title="暴露单worker节点"></a>暴露单worker节点</h3><p>如下图所示，暴露单个 worker 节点的步骤如下：</p>
+<h2 id="Ingress"><a href="#Ingress" class="headerlink" title="Ingress"></a>Ingress</h2><p>Ingress 通过反向代理负载均衡服务器实现对外暴露服务目的，一般有三个组件组成：</p>
 <ul>
-<li>为您 Kubernetes 集群中的某一个 worker 节点配置外网 IP 地址 Z.Z.Z.Z</li>
-<li>将您在 Ingress 中使用到的域名（假设是<code>a.demo.kuboard.cn</code>）解析到该外网 IP 地址 Z.Z.Z.Z</li>
-<li>设置合理的安全组规则（开放该外网 IP 地址 80/443 端口的入方向访问）</li>
+<li>反向代理负载均衡服务器<strong>：拦截外部请求，通常以 <code>Deployment</code> 或者 <code>DaemonSet</code> 的方式部署到集群中，常见的有 <code>Nginx</code>、<code>Apache</code>、<code>Traefik</code>等。</strong></li>
+<li><strong>Ingress</strong>：定义路由规则，将路由配置抽象成一个 Ingress 对象。</li>
+<li><strong>Ingress Controller</strong>：实时监控集群，获取 <code>Service</code> 、<code>Pod</code>和 <code>Ingress</code>等的变化，将 Ingress 的规则动态更新到反向代理负载均衡服务器上，刷新其路由配置信息，实现 <strong>服务发现</strong>。</li>
 </ul>
-<blockquote>
-<p>文档 <a href="https://kuboard.cn/install/install-k8s.html" target="_blank" rel="external nofollow noopener noreferrer">安装 Kubernetes 单Master节点</a> 中使用的就是这种拓扑结构。这种方式下，Ingress Controller 存在单点故障的可能性。</p>
-</blockquote>
-<p><img alt="Kubernetes教程：单IngressController节点" data-src="https://kuboard.cn/images/topology/k8s.png"></p>
-<h3 id="使用外部负载均衡器"><a href="#使用外部负载均衡器" class="headerlink" title="使用外部负载均衡器"></a>使用外部负载均衡器</h3><p>如下图所示，使用外部负载均衡器的步骤如下：</p>
+<p><img alt="Kubernetes Ingress" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-08-31_k8s-ingress.png"></p>
+<h2 id="In-Action"><a href="#In-Action" class="headerlink" title="In Action"></a>In Action</h2><p><code>Traefik</code>是一个用Go语言开发的轻量级的Http反向代理和<a href="https://cloud.tencent.com/product/clb?from=10680" target="_blank" rel="external nofollow noopener noreferrer">负载均衡</a>器，能够监听后端的变化并自动更新服务配置。它的特点如下：</p>
 <ul>
-<li>创建一个集群外部的负载均衡器，该负载均衡器拥有一个外网 IP 地址 Z.Z.Z.Z，并监听 80/443 端口的 TCP 协议</li>
-<li>将负载均衡器在 80/443 端口上监听到的 TCP 请求转发到 Kubernetes 集群中所有（或某些）worker 节点的 80/443 端口，可开启按源IP地址的会话保持</li>
-<li>将您在 Ingress 中使用到的域名（假设是<code>a.demo.kuboard.cn</code>）解析到该负载均衡器的外网 IP 地址 Z.Z.Z.Z</li>
+<li>天然拥抱<code>kubernetes</code>，直接与集群k8s的<code>Api Server</code>通信，反应非常迅速，实时感知集群中<code>Ingress</code>定义的路由规则集合和后端<code>Service</code>、<code>Pod</code>的变化，自动<strong>热更新</strong><code>Traefik</code>后端配置，根本不用创建<code>Ingress controller</code>对象</li>
+<li>提供了友好的控制面板和监控界面，不仅可以方便地查看<code>Traefik</code>根据<code>Ingress</code>生成的路由配置信息，还可以查看统计的一些性能指标数据</li>
+<li>支持丰富的<code>annotations</code>配置，可配置众多出色的特性，例如：<strong>自动熔断</strong>、<strong>负载均衡策略</strong>、<strong>黑名单</strong>、<strong>白名单</strong></li>
+<li>支持许多后端存储，如：zookeeper、eureka、consul、rancher、docker等，它会自动感知这些统一配置中心的变化，热更新自己的路由配置</li>
 </ul>
-<blockquote>
-<p>文档 <a href="https://kuboard.cn/install/install-kubernetes.html" target="_blank" rel="external nofollow noopener noreferrer">安装 Kubernetes 高可用</a> 中使用的就是这种拓扑结构。</p>
-</blockquote>
-<p><img alt="Kubernetes教程：LoadBalancer" data-src="https://kuboard.cn/images/topology/kubernetes.png"></p>
-<h2 id="实战"><a href="#实战" class="headerlink" title="实战"></a>实战</h2><p><strong>创建文件 nginx-deployment.yaml</strong></p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim nginx-deployment.yaml</span><br></pre></td></tr></table></figure>
-<p><strong>文件内容如下</strong></p>
-<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx-deployment</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">nginx:1.7.9</span></span><br></pre></td></tr></table></figure>
-<p><strong>创建文件 nginx-service.yaml</strong></p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim nginx-service.yaml</span><br></pre></td></tr></table></figure>
-<p><strong>文件内容如下</strong></p>
-<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx-service</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx-port</span></span><br><span class="line">    <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">    <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">    <span class="attr">nodePort:</span> <span class="number">32600</span></span><br><span class="line">    <span class="attr">targetPort:</span> <span class="number">80</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">NodePort</span></span><br></pre></td></tr></table></figure>
-<p><strong>创建文件 nginx-ingress.yaml</strong></p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim nginx-ingress.yaml</span><br></pre></td></tr></table></figure>
-<p><strong>文件内容如下</strong></p>
-<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.k8s.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Ingress</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">my-ingress-for-nginx</span>  <span class="comment"># Ingress 的名字，仅用于标识</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">rules:</span>                      <span class="comment"># Ingress 中定义 L7 路由规则</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">host:</span> <span class="string">a.demo.kuboard.cn</span>   <span class="comment"># 根据 virtual hostname 进行路由（请使用您自己的域名）</span></span><br><span class="line">    <span class="attr">http:</span></span><br><span class="line">      <span class="attr">paths:</span>                  <span class="comment"># 按路径进行路由</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">path:</span> <span class="string">/</span></span><br><span class="line">        <span class="attr">backend:</span></span><br><span class="line">          <span class="attr">serviceName:</span> <span class="string">nginx-service</span>  <span class="comment"># 指定后端的 Service 为之前创建的 nginx-service</span></span><br></pre></td></tr></table></figure>
+<p><a href="https://www.infoq.cn/article/2glSpfgdiwG0UYz3V4tM" target="_blank" rel="external nofollow noopener noreferrer">如何在 K8S 集群中部署 Traefik Ingress Controller</a> 详细介绍了如何在 k8s 集群部署 Traefik Ingress Controller 的详细过程，此处不再赘述。</p>
 
     </div>
 
@@ -398,10 +355,10 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/87e9f747/" rel="bookmark">【Kubernetes解读】Kube-Proxy</a></div>
+      <div class="popular-posts-title"><a href="/posts/cfed77f0/" rel="bookmark">【Kubernetes解读】Service</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/cfed77f0/" rel="bookmark">【Kubernetes解读】Service</a></div>
+      <div class="popular-posts-title"><a href="/posts/87e9f747/" rel="bookmark">【Kubernetes解读】Kube-Proxy</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes解读】开篇</a></div>
@@ -459,6 +416,7 @@
               <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
               <a href="/tags/%E7%BD%91%E7%BB%9C/" rel="tag"><i class="fa fa-tag"></i> 网络</a>
               <a href="/tags/ingress/" rel="tag"><i class="fa fa-tag"></i> ingress</a>
+              <a href="/tags/service/" rel="tag"><i class="fa fa-tag"></i> service</a>
           </div>
 
         
@@ -515,7 +473,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么需要Ingress"><span class="nav-number">1.</span> <span class="nav-text">为什么需要Ingress</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Ingress工作流程"><span class="nav-number">2.</span> <span class="nav-text">Ingress工作流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Ingress-Controller"><span class="nav-number">3.</span> <span class="nav-text">Ingress Controller</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#融入到网络拓扑中"><span class="nav-number">4.</span> <span class="nav-text">融入到网络拓扑中</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#暴露单worker节点"><span class="nav-number">4.1.</span> <span class="nav-text">暴露单worker节点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用外部负载均衡器"><span class="nav-number">4.2.</span> <span class="nav-text">使用外部负载均衡器</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实战"><span class="nav-number">5.</span> <span class="nav-text">实战</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Background"><span class="nav-number">1.</span> <span class="nav-text">Background</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Ingress"><span class="nav-number">2.</span> <span class="nav-text">Ingress</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#In-Action"><span class="nav-number">3.</span> <span class="nav-text">In Action</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
