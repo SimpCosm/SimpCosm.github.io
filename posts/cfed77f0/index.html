@@ -56,7 +56,7 @@
 </script>
 
   <meta name="description" content="Kubernetes 中的 Service 将一组 Pod 以统一的形式对外暴露成一个服务，它利用运行在内核空间的 iptables 或者 ipvs 高效地转发来自节点内部和外部的流量。作为非常重要的 Kubernetes 对象，Service 不仅在逻辑上提供了微服务的概念，还引入 LoadBalancer 类型的 Service 无缝对接云服务商提供的复杂资源。">
-<meta name="keywords" content="k8s,网络,service">
+<meta name="keywords" content="网络,k8s,service">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Kubernetes解读】Service">
 <meta property="og:url" content="http://houmin.cc/posts/cfed77f0/index.html">
@@ -551,16 +551,16 @@
       <div class="popular-posts-title"><a href="/posts/8dfd4de5/" rel="bookmark">【Kubernetes解读】Ingress</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/87e9f747/" rel="bookmark">【Kubernetes解读】Kube-Proxy</a></div>
+      <div class="popular-posts-title"><a href="/posts/3675eff/" rel="bookmark">virtio</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/941301e/" rel="bookmark">Linux网络包收发流程</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/f07e2cff/" rel="bookmark">网络虚拟化</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes解读】开篇</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/83a17de0/" rel="bookmark">【Kubernetes解读】Scheduling Framework</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes解读】调度策略</a></div>
     </li>
   </ul>
 
@@ -606,8 +606,8 @@
       <footer class="post-footer">
           
           <div class="post-tags">
-              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
               <a href="/tags/%E7%BD%91%E7%BB%9C/" rel="tag"><i class="fa fa-tag"></i> 网络</a>
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
               <a href="/tags/service/" rel="tag"><i class="fa fa-tag"></i> service</a>
           </div>
 
@@ -615,8 +615,8 @@
 
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
-                <a href="/posts/3adb7157/" rel="next" title="【Kubernetes解读】Workqueue">
-                  <i class="fa fa-chevron-left"></i> 【Kubernetes解读】Workqueue
+                <a href="/posts/b88b921f/" rel="next" title="【Kubernetes解读】Pod">
+                  <i class="fa fa-chevron-left"></i> 【Kubernetes解读】Pod
                 </a>
             </div>
 
@@ -680,7 +680,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">97</span>
+          <span class="site-state-item-count">95</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -692,7 +692,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">147</span>
+        <span class="site-state-item-count">144</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -760,13 +760,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">819k</span>
+    <span title="站点总字数">877k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">24:49</span>
+    <span title="站点阅读时长">26:34</span>
 </div>
 
         
