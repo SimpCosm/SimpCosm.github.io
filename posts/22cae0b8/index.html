@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Istio 是一个完全开源的服务网格，以透明的方式构建在现有的分布式应用中。它也是一个平台，拥有可以集成任何日志、遥测和策略系统的 API 接口。Istio 多样化的特性使你能够成功且高效地运行分布式微服务架构，并提供保护、连接和监控微服务的统一方法。">
+<meta name="keywords" content="istio,service mesh">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Service Mesh】Istio 入门">
+<meta property="og:url" content="http://houmin.cc/posts/22cae0b8/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="Istio 是一个完全开源的服务网格，以透明的方式构建在现有的分布式应用中。它也是一个平台，拥有可以集成任何日志、遥测和策略系统的 API 接口。Istio 多样化的特性使你能够成功且高效地运行分布式微服务架构，并提供保护、连接和监控微服务的统一方法。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_istio-secure-arch.svg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_istio-arch.svg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_istio-pilot-arch.svg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_istio-data-plane-arch.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_istio-bookinfo-noistio.svg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_istio-external-access.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_traefik-kiali.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_istio-kiali.png">
+<meta property="og:updated_time" content="2020-09-10T12:36:25.335Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_istio-secure-arch.svg">
+
+<link rel="canonical" href="http://houmin.cc/posts/22cae0b8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Service Mesh】Istio 入门 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/22cae0b8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Service Mesh】Istio 入门
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-09-10 10:44:08" itemprop="dateCreated datePublished" datetime="2020-09-10T10:44:08+08:00">2020-09-10</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/22cae0b8/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/22cae0b8/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>9.5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>17 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Istio 是一个完全开源的服务网格，以透明的方式构建在现有的分布式应用中。它也是一个平台，拥有可以集成任何日志、遥测和策略系统的 API 接口。Istio 多样化的特性使你能够成功且高效地运行分布式微服务架构，并提供保护、连接和监控微服务的统一方法。</p>
+<a id="more"></a>
+<h2 id="核心功能"><a href="#核心功能" class="headerlink" title="核心功能"></a>核心功能</h2><h3 id="流量控制"><a href="#流量控制" class="headerlink" title="流量控制"></a>流量控制</h3><p>微服务应用最大的痛点就是处理服务间的通信，而这一问题的核心其实就是流量管理。首先我们来看看传统的微服务应用在没有 <a href="https://www.servicemesher.com/istio-handbook/GLOSSARY.html#service-mesh" target="_blank" rel="external nofollow noopener noreferrer">Service Mesh</a> 介入的情况下，是如何完成诸如金丝雀发布这样的路由功能的。我们假设不借助任何现成的第三方框架，一个最简单的实现方法，就是在服务间添加一个负载均衡（比如 Nginx）做代理，通过修改配置的权重来分配流量。这种方式使得对流量的管理和基础设施绑定在了一起，难以维护。</p>
+<p>而使用 <a href="https://www.servicemesher.com/istio-handbook/GLOSSARY.html#istio" target="_blank" rel="external nofollow noopener noreferrer">Istio</a> 就可以轻松的实现各种维度的流量控制。下图是典型的金丝雀发布策略：根据权重把 5% 的流量路由给新版本，如果服务正常，再逐渐转移更多的流量到新版本。</p>
+<p><a href="https://www.servicemesher.com/istio-handbook/GLOSSARY.html#istio" target="_blank" rel="external nofollow noopener noreferrer">Istio</a> 中的流量控制功能主要分为三个方面：</p>
+<ul>
+<li>请求路由和流量转移</li>
+<li>弹性功能，包括熔断、超时、重试</li>
+<li>调试能力，包括故障注入和流量镜像</li>
+</ul>
+<p>关于流量控制的更多内容，参考 <a href="../151719f0">Istio流量控制</a></p>
+<h3 id="安全管理"><a href="#安全管理" class="headerlink" title="安全管理"></a>安全管理</h3><p>安全对于微服务这样的分布式系统来说至关重要。与单体应用在进程内进行通信不同，网络成为了服务间通信的纽带，这使得它对安全有了更迫切的需求。比如为了抵御外来攻击，我们需要对流量进行加密；为保证服务间通信的可靠性，需要使用mTLS的方式进行交互；为控制不同身份的访问，需要设置不同粒度的授权策略。作为一个服务网格，<a href="https://www.servicemesher.com/istio-handbook/GLOSSARY.html#istio" target="_blank" rel="external nofollow noopener noreferrer">Istio</a> 提供了一整套完整的安全解决方案。它可以以透明的方式，为我们的微服务应用添加安全策略。</p>
+<p><a href="https://www.servicemesher.com/istio-handbook/GLOSSARY.html#istio" target="_blank" rel="external nofollow noopener noreferrer">Istio</a> 中的安全架构是由多个组件协同完成的。Citadel 是负责安全的主要组件，用于密钥和证书的管理；<a href="https://www.servicemesher.com/istio-handbook/GLOSSARY.html#pilot" target="_blank" rel="external nofollow noopener noreferrer">Pilot</a> 会将安全策略配置分发给 <a href="https://www.servicemesher.com/istio-handbook/GLOSSARY.html#envoy" target="_blank" rel="external nofollow noopener noreferrer">Envoy</a> 代理；<a href="https://www.servicemesher.com/istio-handbook/GLOSSARY.html#envoy" target="_blank" rel="external nofollow noopener noreferrer">Envoy</a> 执行安全策略来实现访问控制。下图展示了 <a href="https://www.servicemesher.com/istio-handbook/GLOSSARY.html#istio" target="_blank" rel="external nofollow noopener noreferrer">Istio</a> 的安全架构和运作流程。</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_istio-secure-arch.svg"></p>
+<p>关于安全管理的更多内容，参考 <a href="../">Istio安全管理</a></p>
+<h3 id="可观测性"><a href="#可观测性" class="headerlink" title="可观测性"></a>可观测性</h3><p>面对复杂的应用环境和不断扩展的业务需求，即使再完备的测试也难以覆盖所有场景，无法保证服务不会出现故障。正因为如此，才需要“可观察性”来对服务的运行时状态进行监控、上报、分析，以提高服务可靠性。具有可观察性的系统，可以在服务出现故障时大大降低问题定位的难度，甚至可以在出现问题之前及时发现问题以降低风险。具体来说，可观察性可以：</p>
+<ul>
+<li>及时反馈异常或者风险使得开发人员可以及时关注、修复和解决问题（告警）；</li>
+<li>出现问题时，能够帮助快速定位问题根源并解决问题，以减少服务损失（减损）；</li>
+<li>收集并分析数据，以帮助开发人员不断调整和改善服务（持续优化）。</li>
+</ul>
+<p>而在微服务治理之中，随着服务数量大大增加，服务拓扑不断复杂化，可观察性更是至关重要。<a href="https://www.servicemesher.com/istio-handbook/GLOSSARY.html#istio" target="_blank" rel="external nofollow noopener noreferrer">Istio</a> 自然也不可能缺少对可观察性的支持。它会为所有的服务间通信生成详细的遥测数据，使得网格中每个服务请求都可以被观察和跟踪。开发人员可以凭此定位故障，维护和优化相关服务。而且，这一特性的引入无需侵入被观察的服务。</p>
+<p><a href="https://www.servicemesher.com/istio-handbook/GLOSSARY.html#istio" target="_blank" rel="external nofollow noopener noreferrer">Istio</a> 一共提供了三种不同类型的数据从不同的角度支撑起其可观察性：</p>
+<ul>
+<li>指标（Metrics）</li>
+<li>日志（Access Logs）</li>
+<li>分布式追踪（Distributed Traces）</li>
+</ul>
+<p>关于可观测行的更多内容，参考 <a href="../">Istio可观测性</a></p>
+<h2 id="架构解析"><a href="#架构解析" class="headerlink" title="架构解析"></a>架构解析</h2><p>Istio的架构由<strong>控制平面</strong>和<strong>数据平面</strong>两个部分组成。</p>
+<ul>
+<li>数据平面：由整个网格内的sidecar代理组成，每个sidecar代理会接管流入和流出服务的流量，并配合控制平面完成流量控制等方面的内容。</li>
+<li>控制平面：负责控制和管理数据平面的sidecar代理，完成配置的分发、服务发现和授权鉴权等功能。</li>
+</ul>
+<p>控制平面是 Istio 在原有服务网格产品上，首次提出的架构，实现了对于数据平面的统一管理。</p>
+<p><img alt="Istio Arch" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_istio-arch.svg"></p>
+<h3 id="控制平面"><a href="#控制平面" class="headerlink" title="控制平面"></a>控制平面</h3><h4 id="Pilot"><a href="#Pilot" class="headerlink" title="Pilot"></a>Pilot</h4><p><code>Pilot</code> 组件的主要功能是将路由规则等配置信息转换为 sidecar 可以识别的信息，并下发给数据平面。可以把它简单的理解为是一个<strong>配置分发器</strong>（dispatcher），并辅助 sidecar 完成流量控制相关的功能。它管理sidecar代理之间的路由流量规则，并配置故障恢复功能，如超时、重试和熔断。</p>
+<p><img alt="Istio Pilot Arch" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_istio-pilot-arch.svg"></p>
+<p>上图显示了Pilot的基本架构，它主要由以下几个部分组成：</p>
+<h5 id="Abstract-Model"><a href="#Abstract-Model" class="headerlink" title="Abstract Model"></a>Abstract Model</h5><p>为了实现对不同服务注册中心 （Kubernetes、consul） 的支持，<a href="https://www.servicemesher.com/istio-handbook/GLOSSARY.html#pilot" target="_blank" rel="external nofollow noopener noreferrer">Pilot</a> 需要对不同的输入来源的数据有一个统一的存储格式，也就是抽象模型。抽象模型中定义的关键成员包括 HostName（Service名称）、Ports（Service端口）、Address（Service ClusterIP）、Resolution （负载均衡策略） 等。</p>
+<h5 id="Platform-Adapters"><a href="#Platform-Adapters" class="headerlink" title="Platform Adapters"></a>Platform Adapters</h5><p>借助平台适配器 Pilot 可以实现服务注册中心数据到抽象模型之间的数据转换。例如 Pilot 中的 Kubernetes 适配器通过 Kubernetes API 服务器得到 Kubernetes 中 Service 和 Pod 的相关信息，然后翻译为抽象模型提供给 Pilot 使用。通过平台适配器模式，Pilot 还可以从 Consul 等平台中获取服务信息，还可以开发适配器将其他提供服务发现的组件集成到 Pilot 中。</p>
+<h5 id="xDS-API"><a href="#xDS-API" class="headerlink" title="xDS API"></a>xDS API</h5><p>Pilot 使用了一套起源于 Envoy 项目的标准数据面 API 来将服务信息和流量规则下发到数据面的 sidecar 中。这套标准数据面 API，也叫 xDS。Sidecar 通过 xDS API 可以动态获取 Listener （监听器）、Route （路由）、<a href="https://www.servicemesher.com/istio-handbook/GLOSSARY.html#cluster" target="_blank" rel="external nofollow noopener noreferrer">Cluster</a> （集群）及 Endpoint （集群成员）配置：</p>
+<ul>
+<li>LDS，Listener 发现服务：Listener 监听器控制 <a href="https://www.servicemesher.com/istio-handbook/GLOSSARY.html#sidecar" target="_blank" rel="external nofollow noopener noreferrer">sidecar</a> 启动端口监听（目前只支持 TCP 协议），并配置 L3/L4 层过滤器，当网络连接达到后，配置好的网络过滤器堆栈开始处理后续事件。</li>
+<li>RDS，Router 发现服务：用于 HTTP 连接管理过滤器动态获取路由配置，路由配置包含 HTTP 头部修改（增加、删除 HTTP 头部键值），virtual hosts （虚拟主机），以及 virtual hosts 定义的各个路由条目。</li>
+<li>CDS，Cluster发现服务：用于动态获取 Cluster 信息。</li>
+<li>EDS，Endpoint 发现服务：用于动态维护端点信息，端点信息中还包括负载均衡权重、金丝雀状态等，基于这些信息，Sidecar 可以做出智能的负载均衡决策。</li>
+</ul>
+<h5 id="User-API"><a href="#User-API" class="headerlink" title="User API"></a>User API</h5><p>Pilot 还定义了一套用户 API， 用户 API 提供了面向业务的高层抽象，可以被运维人员理解和使用。</p>
+<p>运维人员使用该 API 定义流量规则并下发到 Pilot，这些规则被 Pilot 翻译成数据面的配置，再通过标准数据面 API 分发到 sidecar 实例，可以在运行期对微服务的流量进行控制和调整。</p>
+<p>通过运用不同的流量规则，可以对网格中微服务进行精细化的流量控制，如按版本分流、断路器、故障注入、灰度发布等。</p>
+<p>关于 Pilot 的具体实现，可以参考 <a href="../">Istio Pilot 模块分析</a></p>
+<h4 id="Citadel"><a href="#Citadel" class="headerlink" title="Citadel"></a>Citadel</h4><p><code>Citadel</code> 是 Istio 中专门负责安全的组件，内置有身份和证书管理功能，可以实现较为强大的授权和认证等操作，在1.5 版本之后取消了独立进程，作为一个模块被整合在 istiod 中。</p>
+<p>总体来说，Istio 在安全架构方面主要包括以下内容：</p>
+<ul>
+<li>证书签发机构（CA）负责密钥和证书管理</li>
+<li>API 服务器将安全配置分发给数据平面</li>
+<li>客户端、服务端通过代理安全通信</li>
+<li>Envoy 代理管理遥测和审计</li>
+</ul>
+<p>Istio 的身份标识模型使用一级服务标识来确定请求的来源，它可以灵活的标识终端用户、工作负载等。在平台层面，Istio 可以使用类似于服务名称来标识身份，或直接使用平台提供的服务标识。比如 Kubernetes 的 ServiceAccount，AWS IAM 用户、角色账户等。</p>
+<p>在身份和证书管理方面，Istio 使用 X.509 证书，并支持密钥和证书的自动轮换。从 1.1 版本开始，Istio 开始支持安全发现服务器（SDS），随着不断的完善和增强，1.5 版本 SDS 已经成为默认开启的组件。Citadel 以前有两个功能：将证书以 Secret 的方式挂载到命名空间里；通过 SDS gRPC 接口与 nodeagent（已废弃）通信。目前 Citadel 只需要完成与 SDS 相关的工作，其他功能被移动到了 istiod 中。</p>
+<p>关于Citadel的更多内容，参考 <a href="../">Istio安全管理</a></p>
+<h4 id="Galley"><a href="#Galley" class="headerlink" title="Galley"></a>Galley</h4><p><code>Galley</code> 是 Istio 1.1 版本中新增加的组件，其目的是将 <code>Pilot</code> 和底层平台（如 Kubernetes）进行解耦。它分担了原本 <code>Pilot</code> 的一部分功能，主要负责配置的验证、提取和处理等功能。</p>
+<h3 id="数据平面"><a href="#数据平面" class="headerlink" title="数据平面"></a>数据平面</h3><p>Istio 数据平面核心是以 sidecar 模式运行的智能代理。Sidecar 模式将数据平面核心组件部署到单独的流程或容器中，以提供隔离和封装。Sidecar 应用与父应用程序共享相同的生命周期，与父应用程序一起创建和退出。Sidecar 应用附加到父应用程序，并为应用程序提供额外的特性支持。</p>
+<p>如下图所示，数据平面的 sidecar 代理可以调节和控制微服务之间所有的网络通信，每个服务 Pod 启动时会伴随启动 <code>istio-init</code> 和 proxy 容器。 </p>
+<ul>
+<li><code>istio-init</code> 容器主要功能是初始化 Pod 网络和对 Pod设置 iptable 规则，设置完成后自动结束。</li>
+<li>Proxy 容器会启动两个服务：<code>istio-agent</code> 以及网络代理组件<ul>
+<li><code>istio-agent</code>  的作用是同步管理数据，启动并管理网络代理服务进程，上报遥测数据</li>
+<li>网络代理组件则根据管理策略完成流量管控、生成遥测数据。</li>
+</ul>
+</li>
+</ul>
+<p>数据平面真正触及到对网络数据包的相关操作，是上层控制平面策略的具体执行者。</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_istio-data-plane-arch.png"></p>
+<p>Envoy 是 Istio 中默认的数据平面 Sidecar 代理，关于 Sidecar 是如何实现自动注入和流量劫持，以及Sidecar的流量路由机制如何实现，更多可参考 <a href="../">Envoy系列文章</a> 。</p>
+<h2 id="安装部署"><a href="#安装部署" class="headerlink" title="安装部署"></a>安装部署</h2><h3 id="下载安装"><a href="#下载安装" class="headerlink" title="下载安装"></a>下载安装</h3><p>这里介绍在 Kubernetes 环境下安装 Istio，在开始之前，你需要有一个 Kubernetes 运行环境。</p>
+<p>从 Istio v1.7 版本开始，Istio官方推荐使用 istioctl 安装。下面是安装步骤：</p>
+<ul>
+<li>在 <a href="https://github.com/istio/istio/releases" target="_blank" rel="external nofollow noopener noreferrer">Istio release</a> 页面下载与操作系统匹配的安装包，并将其解压。这里可以直接用Istio提供的脚本：</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">$ curl -L https://raw.githubusercontent.com/istio/istio/release-1.7/release/downloadIstioCandidate.sh | sh -</span><br><span class="line">$  [root@VM-1-28-centos istio]<span class="comment"># ls </span></span><br><span class="line">istio-1.7.0  istio-1.7.0-linux-amd64.tar.gz</span><br><span class="line">$ [root@VM-1-28-centos istio]<span class="built_in">cd</span> istio-1.7.0</span><br><span class="line">$ [root@VM-1-28-centos istio-1.7.0]<span class="comment"># tree -L 2</span></span><br><span class="line">.</span><br><span class="line">├── bin</span><br><span class="line">│   └── istioctl</span><br><span class="line">├── LICENSE</span><br><span class="line">├── manifests</span><br><span class="line">│   ├── charts</span><br><span class="line">│   ├── deploy</span><br><span class="line">│   ├── examples</span><br><span class="line">│   └── profiles</span><br><span class="line">├── manifest.yaml</span><br><span class="line">├── README.md</span><br><span class="line">├── samples</span><br><span class="line">│   ├── addons</span><br><span class="line">│   ├── bookinfo</span><br><span class="line">│   ├── certs</span><br><span class="line">│   ├── cross-network-gateway</span><br><span class="line">│   ├── custom-bootstrap</span><br><span class="line">│   ├── external</span><br><span class="line">│   ├── fortio</span><br><span class="line">│   ├── health-check</span><br><span class="line">│   ├── helloworld</span><br><span class="line">│   ├── httpbin</span><br><span class="line">│   ├── https</span><br><span class="line">│   ├── kubernetes-blog</span><br><span class="line">│   ├── operator</span><br><span class="line">│   ├── rawvm</span><br><span class="line">│   ├── README.md</span><br><span class="line">│   ├── security</span><br><span class="line">│   ├── sleep</span><br><span class="line">│   ├── tcp-echo</span><br><span class="line">│   └── websockets</span><br><span class="line">└── tools</span><br><span class="line">    ├── certs</span><br><span class="line">    ├── convert_RbacConfig_to_ClusterRbacConfig.sh</span><br><span class="line">    ├── dump_kubernetes.sh</span><br><span class="line">    ├── _istioctl</span><br><span class="line">    └── istioctl.bash</span><br><span class="line"></span><br><span class="line">27 directories, 9 files</span><br></pre></td></tr></table></figure>
+<p>安装目录内容： </p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>目录</th>
+<th>包含内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bin</code></td>
+<td>包含 istioctl 的客户端文件</td>
+</tr>
+<tr>
+<td><code>manifests</code></td>
+<td>包含 各种部署的 manifests</td>
+</tr>
+<tr>
+<td><code>samples</code></td>
+<td>包含示例应用程序</td>
+</tr>
+<tr>
+<td><code>tools</code></td>
+<td>包含用于性能测试和在本地机器上进行测试的脚本</td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>将<code>istioctl</code>客户端路径加入 <code>$PATH</code> 中，从而可以使用 istioctl 命令行工具</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">export</span> PATH=<span class="variable">$PATH</span>:$(<span class="built_in">pwd</span>)/bin</span><br></pre></td></tr></table></figure>
+<ul>
+<li>安装 <code>demo</code> 配置</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ istioctl install --<span class="built_in">set</span> profile=demo</span><br><span class="line">✔ Istio core installed</span><br><span class="line">✔ Istiod installed</span><br><span class="line">✔ Egress gateways installed</span><br><span class="line">✔ Ingress gateways installed</span><br><span class="line">✔ Installation complete</span><br></pre></td></tr></table></figure>
+<ul>
+<li>添加一个Namespace Label，使得之后在部署你的应用的时候，istio会自动注入Envoy sidecar 代理</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl label namespace default istio-injection=enabled</span><br></pre></td></tr></table></figure>
+<h3 id="部署-Bookinfo"><a href="#部署-Bookinfo" class="headerlink" title="部署 Bookinfo"></a>部署 Bookinfo</h3><p>Bookinfo 是 <a href="https://www.servicemesher.com/istio-handbook/GLOSSARY.html#istio" target="_blank" rel="external nofollow noopener noreferrer">Istio</a> 社区官方推荐的示例应用之一。它可以用来演示多种 <a href="https://www.servicemesher.com/istio-handbook/GLOSSARY.html#istio" target="_blank" rel="external nofollow noopener noreferrer">Istio</a> 的特性，并且它是一个异构的微服务应用。该应用由四个单独的微服务构成。 这个应用模仿了在线书店，可以展示书店中书籍的信息。例如页面上会显示一本书的描述，书籍的细节（ ISBN、页数等），以及关于这本书的一些评论。</p>
+<p>Bookinfo 应用分为四个单独的微服务， 这些服务对 <a href="https://www.servicemesher.com/istio-handbook/GLOSSARY.html#istio" target="_blank" rel="external nofollow noopener noreferrer">Istio</a> 并无依赖，但是构成了一个有代表性的服务网格的例子：它由多个不同语言编写的服务构成，并且其中有一个应用会包含多个版本。</p>
+<ul>
+<li><code>productpage</code> 会调用 <code>details</code> 和 <code>reviews</code> 两个微服务，用来生成页面。</li>
+<li><code>details</code> 中包含了书籍的信息。</li>
+<li><code>reviews</code> 中包含了书籍相关的评论。它还会调用 <code>ratings</code> 微服务。</li>
+<li><code>ratings</code> 中包含了由书籍评价组成的评级信息。</li>
+</ul>
+<p><code>reviews</code> 微服务有 3 个版本，可用来展示各服务之间的不同的调用链路：</p>
+<ul>
+<li>v1 版本不会调用 <code>ratings</code> 服务。</li>
+<li>v2 版本会调用 <code>ratings</code> 服务，并使用 1 到 5 个黑色星形图标来显示评分信息。</li>
+<li>v3 版本会调用 <code>ratings</code> 服务，并使用 1 到 5 个红色星形图标来显示评分信息。</li>
+</ul>
+<p>下图展示了这个应用的端到端架构：</p>
+<p><img alt="Bookinfo Application without Istio" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_istio-bookinfo-noistio.svg"></p>
+<ul>
+<li>部署示例应用程序</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl apply -f samples/bookinfo/platform/kube/bookinfo.yaml</span><br><span class="line">service/details created</span><br><span class="line">serviceaccount/bookinfo-details unchanged</span><br><span class="line">deployment.apps/details-v1 created</span><br><span class="line">service/ratings created</span><br><span class="line">serviceaccount/bookinfo-ratings unchanged</span><br><span class="line">deployment.apps/ratings-v1 created</span><br><span class="line">service/reviews created</span><br><span class="line">serviceaccount/bookinfo-reviews unchanged</span><br><span class="line">deployment.apps/reviews-v1 created</span><br><span class="line">deployment.apps/reviews-v2 created</span><br><span class="line">deployment.apps/reviews-v3 created</span><br><span class="line">service/productpage created</span><br><span class="line">serviceaccount/bookinfo-productpage unchanged</span><br><span class="line">deployment.apps/productpage-v1 created</span><br></pre></td></tr></table></figure>
+<ul>
+<li>之后应用起来，当每个Pod状态变为Ready的时候，sidecar也部署成功。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get svc</span><br><span class="line">NAME          TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE</span><br><span class="line">details       ClusterIP   172.18.252.45    &lt;none&gt;        9080/TCP   97s</span><br><span class="line">kubernetes    ClusterIP   172.18.252.1     &lt;none&gt;        443/TCP    51d</span><br><span class="line">productpage   ClusterIP   172.18.253.238   &lt;none&gt;        9080/TCP   97s</span><br><span class="line">ratings       ClusterIP   172.18.254.131   &lt;none&gt;        9080/TCP   97s</span><br><span class="line">reviews       ClusterIP   172.18.255.63    &lt;none&gt;        9080/TCP   97s</span><br><span class="line">$ kubectl get pods</span><br><span class="line">NAME                              READY   STATUS    RESTARTS   AGE</span><br><span class="line">details-v1-5974b67c8-z67st        2/2     Running   0          2m8s</span><br><span class="line">productpage-v1-797898bc54-frzdz   2/2     Running   0          2m8s</span><br><span class="line">ratings-v1-c6cdf8d98-xmhz8        2/2     Running   0          2m8s</span><br><span class="line">reviews-v1-8bdc65f7b-mjktx        2/2     Running   0          2m8s</span><br><span class="line">reviews-v2-868d77d678-4dzmn       2/2     Running   0          2m8s</span><br><span class="line">reviews-v3-6c9b646cb4-5tp9q       2/2     Running   0          2m8s</span><br></pre></td></tr></table></figure>
+<ul>
+<li>查看应用是否成功运行，通过给productpage发送请求，查看其返回</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl <span class="built_in">exec</span> <span class="string">"<span class="variable">$(kubectl get pod -l app=ratings -o jsonpath='&#123;.items[0].metadata.name&#125;')</span>"</span> -c ratings -- curl -s productpage:9080/productpage | grep -o <span class="string">"&lt;title&gt;.*&lt;/title&gt;"</span></span><br><span class="line">&lt;title&gt;Simple Bookstore App&lt;/title&gt;</span><br></pre></td></tr></table></figure>
+<h3 id="集群外部访问应用"><a href="#集群外部访问应用" class="headerlink" title="集群外部访问应用"></a>集群外部访问应用</h3><p>到现在，Bookinfo 应用已经成功部署，我们在集群内部也已经可以访问，但是在集群外部还不能够访问。为了使得外部能够访问应用程序，我们需要创建一个<a href="https://istio.io/latest/docs/concepts/traffic-management/#gateways" target="_blank" rel="external nofollow noopener noreferrer">Istio Ingress Gateway</a>。</p>
+<ul>
+<li>将应用于istio gateway关联</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl apply -f samples/bookinfo/networking/bookinfo-gateway.yaml</span><br><span class="line">gateway.networking.istio.io/bookinfo-gateway created</span><br><span class="line">virtualservice.networking.istio.io/bookinfo created</span><br></pre></td></tr></table></figure>
+<ul>
+<li>确保配置上没有问题</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ istioctl analyze</span><br><span class="line">✔ No validation issues found when analyzing namespace: default.</span><br></pre></td></tr></table></figure>
+<ul>
+<li>确定Ingress的IP和Ports</li>
+</ul>
+<p>通过下面的命令来设置 <code>INGRESS_HOST</code> 和 <code>INGRESS_PORT</code>环境变量。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kubectl get svc istio-ingressgateway -n istio-system</span><br><span class="line">NAME                   TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)                                                                      AGE</span><br><span class="line">istio-ingressgateway   LoadBalancer   172.18.252.12   49.233.242.233   15021:32663/TCP,80:31968/TCP,443:31588/TCP,31400:32002/TCP,15443:30652/TCP   18m</span><br></pre></td></tr></table></figure>
+<p>这里显示 <code>EXTERNAL_IP</code> 已经变设置，表明当前环境下有一个可以使用的外部负载均衡器。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">export</span> INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath=<span class="string">'&#123;.status.loadBalancer.ingress[0].ip&#125;'</span>)</span><br><span class="line">$ <span class="built_in">export</span> INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath=<span class="string">'&#123;.spec.ports[?(@.name=="http2")].port&#125;'</span>)</span><br><span class="line">$ <span class="built_in">export</span> SECURE_INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath=<span class="string">'&#123;.spec.ports[?(@.name=="https")].port&#125;'</span>)</span><br></pre></td></tr></table></figure>
+<ul>
+<li>设定GATEWAY_URL</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">export</span> GATEWAY_URL=<span class="variable">$INGRESS_HOST</span>:<span class="variable">$INGRESS_PORT</span></span><br><span class="line">$ <span class="built_in">echo</span> <span class="variable">$GATEWAY_URL</span></span><br><span class="line">49.233.242.233:80</span><br></pre></td></tr></table></figure>
+<ul>
+<li>确认外部访问是否成功：在浏览器直接访问 <code>http://&lt;GATE_WAYURL&gt;/productpage</code> 来访问Bookinfo应用</li>
+</ul>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_istio-external-access.png"></p>
+<h3 id="查看Dashboard"><a href="#查看Dashboard" class="headerlink" title="查看Dashboard"></a>查看Dashboard</h3><p>Istio集成了 <a href="https://istio.io/latest/docs/ops/integrations/" target="_blank" rel="external nofollow noopener noreferrer">一些</a> 遥测应用，他们可以帮助你对你的服务网格有直观的认识、展示网格的拓扑、分析网格的健康状态</p>
+<ul>
+<li>安装Kiali </li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl apply -f samples/addons</span><br><span class="line">$ <span class="keyword">while</span> ! kubectl <span class="built_in">wait</span> --<span class="keyword">for</span>=condition=available --timeout=600s deployment/kiali -n istio-system; <span class="keyword">do</span> sleep 1; <span class="keyword">done</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>访问Kiali</li>
+</ul>
+<p>官方教程指示使用 <code>istioctl dashboard kiali</code> 命令来打开浏览器访问 Kiali服务，但是我的 Kubernetes 集群在服务器上，这样显然不行，不要将 Kiali 服务暴露给外部。因为之前集群已经安装了 Traefik ，所以可以使用 Ingress来暴露。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">extensions/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Ingress</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">kiali</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">istio-system</span></span><br><span class="line">  <span class="attr">annotations:</span></span><br><span class="line">    <span class="attr">kubernetes.io/ingress.class:</span> <span class="string">traefik</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">rules:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">http:</span></span><br><span class="line">      <span class="attr">paths:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">path:</span> <span class="string">/kiali</span></span><br><span class="line">        <span class="attr">backend:</span></span><br><span class="line">          <span class="attr">serviceName:</span> <span class="string">kiali</span></span><br><span class="line">          <span class="attr">servicePort:</span> <span class="number">20001</span></span><br></pre></td></tr></table></figure>
+<p>在命令行创建Ingress，打开浏览器访问 <code>http://&lt;NodeIP&gt;:&lt;TraefikWebNodePort&gt;/kiali</code> 即可访问Kiali</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_traefik-kiali.png"></p>
+<p>在左侧导航栏点击Graph，选择default的命名空间，可以看到 <code>Bookinfo</code> 应用中各个服务间的关系：</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_istio-kiali.png"></p>
+<p>到此为止，你的Istio和相关的服务已经在集群中完好的部署，关于其具体功能演示，参照 <a href="../151719f0">Istio流量控制</a>。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://istio.io/latest/docs/setup/getting-started" target="_blank" rel="external nofollow noopener noreferrer">https://istio.io/latest/docs/setup/getting-started</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/151719f0/" rel="bookmark">【Service Mesh】Istio 流量控制</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/22cae0b8/" title="【Service Mesh】Istio 入门">http://houmin.cc/posts/22cae0b8/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/istio/" rel="tag"><i class="fa fa-tag"></i> istio</a>
+              <a href="/tags/service-mesh/" rel="tag"><i class="fa fa-tag"></i> service mesh</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/8dfd4de5/" rel="next" title="【Kubernetes解读】Ingress">
+                  <i class="fa fa-chevron-left"></i> 【Kubernetes解读】Ingress
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/151719f0/" rel="prev" title="【Service Mesh】Istio 流量控制">
+                  【Service Mesh】Istio 流量控制 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#核心功能"><span class="nav-number">1.</span> <span class="nav-text">核心功能</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#流量控制"><span class="nav-number">1.1.</span> <span class="nav-text">流量控制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安全管理"><span class="nav-number">1.2.</span> <span class="nav-text">安全管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#可观测性"><span class="nav-number">1.3.</span> <span class="nav-text">可观测性</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#架构解析"><span class="nav-number">2.</span> <span class="nav-text">架构解析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#控制平面"><span class="nav-number">2.1.</span> <span class="nav-text">控制平面</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Pilot"><span class="nav-number">2.1.1.</span> <span class="nav-text">Pilot</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Abstract-Model"><span class="nav-number">2.1.1.1.</span> <span class="nav-text">Abstract Model</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Platform-Adapters"><span class="nav-number">2.1.1.2.</span> <span class="nav-text">Platform Adapters</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#xDS-API"><span class="nav-number">2.1.1.3.</span> <span class="nav-text">xDS API</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#User-API"><span class="nav-number">2.1.1.4.</span> <span class="nav-text">User API</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Citadel"><span class="nav-number">2.1.2.</span> <span class="nav-text">Citadel</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Galley"><span class="nav-number">2.1.3.</span> <span class="nav-text">Galley</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据平面"><span class="nav-number">2.2.</span> <span class="nav-text">数据平面</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装部署"><span class="nav-number">3.</span> <span class="nav-text">安装部署</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#下载安装"><span class="nav-number">3.1.</span> <span class="nav-text">下载安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#部署-Bookinfo"><span class="nav-number">3.2.</span> <span class="nav-text">部署 Bookinfo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#集群外部访问应用"><span class="nav-number">3.3.</span> <span class="nav-text">集群外部访问应用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看Dashboard"><span class="nav-number">3.4.</span> <span class="nav-text">查看Dashboard</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">4.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">96</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">146</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">934k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">28:19</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>
