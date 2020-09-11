@@ -2,16 +2,23 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://houmin.cc/posts/7beb34d2/</loc>
+    
+    <lastmod>2020-09-11T12:26:23.205Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://houmin.cc/posts/151719f0/</loc>
     
-    <lastmod>2020-09-11T05:51:40.867Z</lastmod>
+    <lastmod>2020-09-11T12:16:08.044Z</lastmod>
     
   </url>
   
   <url>
     <loc>http://houmin.cc/posts/22cae0b8/</loc>
     
-    <lastmod>2020-09-10T12:36:25.335Z</lastmod>
+    <lastmod>2020-09-11T07:17:06.769Z</lastmod>
     
   </url>
   
@@ -660,14 +667,14 @@
   </url>
   
   <url>
-    <loc>http://houmin.cc/hitokoto/index.html</loc>
+    <loc>http://houmin.cc/links/index.html</loc>
     
     <lastmod>2020-07-14T08:24:44.107Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://houmin.cc/links/index.html</loc>
+    <loc>http://houmin.cc/hitokoto/index.html</loc>
     
     <lastmod>2020-07-14T08:24:44.107Z</lastmod>
     

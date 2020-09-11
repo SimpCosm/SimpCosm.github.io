@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Envoy 是一款由 Lyft 开源的高性能数据和服务代理软件，使用现代 C++ 开发，提供四层和七层网络代理能力。尽管在设计之初 Envoy没有将性能作为最终的目标，而是更加强调模块化、易测试、易开发等特性，可它仍旧拥有足可媲美 Nginx 等经典代理软件的超高性能。在保证性能的同时，Envoy也提供了强大的流量治理能力和可观察性。其独创的 xDS 协议则成为了构建 Service Mesh 通">
+<meta name="keywords" content="网络,envoy">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Service Mesh】Envoy 入门">
+<meta property="og:url" content="http://houmin.cc/posts/7beb34d2/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="Envoy 是一款由 Lyft 开源的高性能数据和服务代理软件，使用现代 C++ 开发，提供四层和七层网络代理能力。尽管在设计之初 Envoy没有将性能作为最终的目标，而是更加强调模块化、易测试、易开发等特性，可它仍旧拥有足可媲美 Nginx 等经典代理软件的超高性能。在保证性能的同时，Envoy也提供了强大的流量治理能力和可观察性。其独创的 xDS 协议则成为了构建 Service Mesh 通">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/yangchuansheng/imghosting/img/20200504160047.png">
+<meta property="og:image" content="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-topology-service-mesh.svg">
+<meta property="og:image" content="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-topology-ilb.svg">
+<meta property="og:image" content="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-topology-edge.svg">
+<meta property="og:image" content="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-topology-hybrid.svg">
+<meta property="og:image" content="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-topology-tiered.svg">
+<meta property="og:image" content="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-architecture.svg">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/yangchuansheng/imghosting/img/20200504224710.png">
+<meta property="og:image" content="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-listeners.svg">
+<meta property="og:image" content="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-listener-filters.svg">
+<meta property="og:image" content="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-filter-chain-match.svg">
+<meta property="og:image" content="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-transport-socket.svg">
+<meta property="og:image" content="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-network-filters.svg">
+<meta property="og:image" content="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-network-read.svg">
+<meta property="og:image" content="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-network-write.svg">
+<meta property="og:image" content="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-http-filters.svg">
+<meta property="og:image" content="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-http.svg">
+<meta property="og:image" content="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-http-decode.svg">
+<meta property="og:image" content="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-http-encode.svg">
+<meta property="og:image" content="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-route-config.svg">
+<meta property="og:image" content="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-lb.svg">
+<meta property="og:image" content="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-client.svg">
+<meta property="og:updated_time" content="2020-09-11T12:26:23.205Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/yangchuansheng/imghosting/img/20200504160047.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/7beb34d2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Service Mesh】Envoy 入门 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/7beb34d2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Service Mesh】Envoy 入门
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-09-11 19:15:08" itemprop="dateCreated datePublished" datetime="2020-09-11T19:15:08+08:00">2020-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/7beb34d2/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/7beb34d2/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><code>Envoy</code> 是一款由 Lyft 开源的高性能数据和服务代理软件，使用现代 C++ 开发，提供四层和七层网络代理能力。尽管在设计之初 <code>Envoy</code>没有将性能作为最终的目标，而是更加强调模块化、易测试、易开发等特性，可它仍旧拥有足可媲美 Nginx 等经典代理软件的超高性能。在保证性能的同时，<code>Envoy</code>也提供了强大的流量治理能力和可观察性。其独创的 xDS 协议则成为了构建 Service Mesh 通用数据面 API（UPDA）的基石。</p>
+<a id="more"></a>
+<h2 id="Architecture"><a href="#Architecture" class="headerlink" title="Architecture"></a>Architecture</h2><p><img alt="Envoy Architecture" data-src="https://cdn.jsdelivr.net/gh/yangchuansheng/imghosting/img/20200504160047.png"></p>
+<p>首先介绍Envoy中的一些基本概念：</p>
+<ul>
+<li>Downstream：下游主机，指连接到Envoy的主机，这些主机用来发送请求并接受响应。</li>
+<li>Upstream：上游主机，指接收来自Envoy连接和请求的主机，并返回响应。</li>
+<li>Listener：服务或程序的监听器， Envoy暴露一个或多个监听器监听下游主机的请求，当监听到请求时，通过Filter Chain把对请求的处理全部抽象为Filter， 例如ReadFilter、WriteFilter、HttpFilter等。</li>
+<li>Cluster：服务提供集群，指Envoy连接的一组逻辑相同的上游主机。Envoy通过服务发现功能来发现集群内的成员，通过负载均衡功能将流量路由到集群的各个成员。</li>
+<li>xDS：xDS中的x是一个代词，类似云计算里的XaaS可以指代IaaS、PaaS、SaaS等。DS为Discovery Service，即发现服务的意思。xDS包括CDS（cluster discovery service）、RDS（route discovery service）、EDS（endpoint discovery service）、ADS（aggregated discovery service），其中ADS称为聚合的发现服务，是对CDS、RDS、LDS、EDS服务的统一封装，解决CDS、RDS、LDS、EDS信息更新顺序依赖的问题，从而保证以一定的顺序同步各类配置信息。以上Endpoint、Cluster、Route的概念介绍如下：<ul>
+<li>Endpoint：一个具体的“应用实例”，类似于Kubernetes中的一个Pod；</li>
+<li>Cluster：可以理解“应用集群”，对应提供相同服务的一个或多个Endpoint， 类似Kubernetes中Service概念，即一个Service提供多个相同服务的Pod；</li>
+<li>Route：当我们做金丝雀发布部署时，同一个服务会有多个版本，这时需要Route规则规定请求如何路由到其中的某个版本上。</li>
+</ul>
+</li>
+</ul>
+<p>xDS模块的功能是通过Envoy API V1（基于HTTP）或V2（基于gRPC）实现一个服务端将配置信息暴露给上游主机，等待上游主机的拉取。</p>
+<p>Envoy正常的工作流程为Host A（下游主机）发送请求至上游主机（Host B、Host C、Host D等），Envoy通过Listener监听到有下游主机的请求，收到请求后的Envoy将所有请求流量劫持至Envoy内部，并将请求内容抽象为Filter Chains路由至某个上游主机中从而实现路由转发及负载均衡能力。</p>
+<p>Envoy为了实现流量代理能力通常需要一个统一的配置文件来记录信息以便启动时加载，在Envoy中启动配置文件有静态配置和动态配置两种方式。静态配置是将配置信息写入文件中，启动时直接加载，动态配置通过xDS实现一个Envoy的服务端（可以理解为以API接口对外实现服务发现能力）。</p>
+<h3 id="Network-Topology"><a href="#Network-Topology" class="headerlink" title="Network Topology"></a>Network Topology</h3><p>Envoy作为Service Mesh中的 sidecar 代理，请求可以通过 ingress 或者 egress listener 到达 envoy。</p>
+<ul>
+<li>Ingress Listener 负责从服务网格中其他节点接受请求，并将请求转发到本地应用。本地应用的响应之后通过 Envoy 转发到 downstream。</li>
+<li>Egress Listener 负责从本地应用接受请求，并将请求转发到服务网格中的其他节点。</li>
+</ul>
+<p><img alt="Service Mesh" data-src="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-topology-service-mesh.svg"></p>
+<p>除了服务网格外，Envoy还可以用作很多其他的请求，比如作为内部的负载均衡器：</p>
+<p><img alt="Internal Load Balancer" data-src="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-topology-ilb.svg"></p>
+<p>或者作为网络边缘的 <code>ingress/egress</code> 代理：</p>
+<p><img alt="Ingress/Egress Proxy on Network Edge" data-src="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-topology-edge.svg"></p>
+<p>在实际应用中，Envoy一般会发挥上述多种功能，一个网络请求路径中可能会通过多个Envoy：</p>
+<p><img alt="Hybrid Envoy" data-src="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-topology-hybrid.svg"></p>
+<p>为了可靠性和可扩充性，Envoy可能会被配置成多层拓扑的形式：</p>
+<p><img alt="Envoy Tiered" data-src="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-topology-tiered.svg"></p>
+<h3 id="High-Level-Architecture"><a href="#High-Level-Architecture" class="headerlink" title="High Level Architecture"></a>High Level Architecture</h3><p>Envoy中服务请求处理过程可以大致分为两个部分：</p>
+<ul>
+<li>Listener 子系统：处理来自 downstream 的请求。</li>
+<li>Cluster 子系统：负责选择和配置 upstream 连接。</li>
+</ul>
+<p><img alt="High Level Architecture" data-src="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-architecture.svg"></p>
+<p>Envoy采用了基于事件的线程模型：</p>
+<ul>
+<li>一个主线程负责server的生命周期，配置处理，统计等</li>
+<li>多个worker线程负责处理请求。</li>
+</ul>
+<p>所有的线程都运行在一个基于 <a href="https://libevent.org/" target="_blank" rel="external nofollow noopener noreferrer">libevent</a> 的事件循环中，任何 downstream 的 TCP连接都会被分配一个 work 线程来处理</p>
+<h3 id="过滤器"><a href="#过滤器" class="headerlink" title="过滤器"></a>过滤器</h3><p>Envoy 进程中运行着一系列 <code>Inbound/Outbound</code> 监听器（Listener），<code>Inbound</code> 代理入站流量，<code>Outbound</code> 代理出站流量。Listener 的核心就是过滤器链（FilterChain），链中每个过滤器都能够控制流量的处理流程。过滤器链中的过滤器分为两个类别：</p>
+<ul>
+<li><strong>网络过滤器</strong>（Network Filters）: 工作在 <code>L3/L4</code>，是 Envoy 网络连接处理的核心，处理的是原始字节，分为 <code>Read</code>、<code>Write</code> 和 <code>Read/Write</code> 三类。</li>
+<li><strong>HTTP 过滤器</strong>（HTTP Filters）: 工作在 <code>L7</code>，由特殊的网络过滤器 <code>HTTP connection manager</code> 管理，专门处理 <code>HTTP1/HTTP2/gRPC</code> 请求。它将原始字节转换成 <code>HTTP</code> 格式，从而可以对 <code>HTTP</code> 协议进行精确控制。</li>
+</ul>
+<p>除了 <code>HTTP connection manager</code> 之外，还有一种特别的网络过滤器叫 <code>Thrift Proxy</code>。<code>Thrift</code> 是一套包含序列化功能和支持服务通信的 RPC 框架，详情参考<a href="https://zh.wikipedia.org/wiki/Thrift" target="_blank" rel="external nofollow noopener noreferrer">维基百科</a>。Thrift Proxy 管理了两个 Filter：<a href="https://www.envoyproxy.io/docs/envoy/latest/configuration/other_protocols/thrift_filters/router_filter" target="_blank" rel="external nofollow noopener noreferrer">Router</a> 和 <a href="https://www.envoyproxy.io/docs/envoy/latest/configuration/other_protocols/thrift_filters/rate_limit_filter" target="_blank" rel="external nofollow noopener noreferrer">Rate Limit</a>。</p>
+<p>除了过滤器链之外，还有一种过滤器叫<strong>监听器过滤器</strong>（Listener Filters），它会在过滤器链之前执行，用于操纵连接的<strong>元数据</strong>。这样做的目的是，无需更改 Envoy 的核心代码就可以方便地集成更多功能。例如，当监听的地址协议是 <code>UDP</code> 时，就可以指定 UDP 监听器过滤器。根据上面的分类，Envoy 过滤器的架构如下图所示：</p>
+<p><img alt="img" data-src="https://cdn.jsdelivr.net/gh/yangchuansheng/imghosting/img/20200504224710.png"></p>
+<h2 id="Request-Flow"><a href="#Request-Flow" class="headerlink" title="Request Flow"></a>Request Flow</h2><h3 id="Listener-TCP-Accept"><a href="#Listener-TCP-Accept" class="headerlink" title="Listener TCP Accept"></a>Listener TCP Accept</h3><p><img alt="Listener TCP Accept" data-src="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-listeners.svg"></p>
+<h3 id="Listener-filter-chains-and-network-filter-chain-matching"><a href="#Listener-filter-chains-and-network-filter-chain-matching" class="headerlink" title="Listener filter chains and network filter chain matching"></a>Listener filter chains and network filter chain matching</h3><p><img alt="Listener Filter Chains" data-src="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-listener-filters.svg"></p>
+<p><img alt="../_images/lor-filter-chain-match.svg" data-src="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-filter-chain-match.svg"></p>
+<h3 id="TLS-transport-socket-decryption"><a href="#TLS-transport-socket-decryption" class="headerlink" title="TLS transport socket decryption"></a>TLS transport socket decryption</h3><p><img alt="../_images/lor-transport-socket.svg" data-src="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-transport-socket.svg"></p>
+<h3 id="Network-filter-chain-processing"><a href="#Network-filter-chain-processing" class="headerlink" title="Network filter chain processing"></a>Network filter chain processing</h3><p><img alt="../_images/lor-network-filters.svg" data-src="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-network-filters.svg"></p>
+<p><img alt="../_images/lor-network-read.svg" data-src="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-network-read.svg"></p>
+<p><img alt="../_images/lor-network-write.svg" data-src="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-network-write.svg"></p>
+<h3 id="HTTP-2-codec-encoding"><a href="#HTTP-2-codec-encoding" class="headerlink" title="HTTP/2 codec encoding"></a>HTTP/2 codec encoding</h3><h3 id="TLS-transport-socket-encryption"><a href="#TLS-transport-socket-encryption" class="headerlink" title="TLS transport socket encryption"></a>TLS transport socket encryption</h3><p><img alt="../_images/lor-http-filters.svg" data-src="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-http-filters.svg"></p>
+<p><img alt="../_images/lor-http.svg" data-src="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-http.svg"></p>
+<p><img alt="../_images/lor-http-decode.svg" data-src="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-http-decode.svg"></p>
+<p><img alt="../_images/lor-http-encode.svg" data-src="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-http-encode.svg"></p>
+<p><img alt="../_images/lor-route-config.svg" data-src="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-route-config.svg"></p>
+<h3 id="Load-Balancing"><a href="#Load-Balancing" class="headerlink" title="Load Balancing"></a>Load Balancing</h3><p><img alt="../_images/lor-lb.svg" data-src="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-lb.svg"></p>
+<h3 id="Response-path-and-HTTP-lifecycle"><a href="#Response-path-and-HTTP-lifecycle" class="headerlink" title="Response path and HTTP lifecycle"></a>Response path and HTTP lifecycle</h3><p><img alt="../_images/lor-client.svg" data-src="https://www.envoyproxy.io/docs/envoy/latest/_images/lor-client.svg"></p>
+<h3 id="Post-request-processing"><a href="#Post-request-processing" class="headerlink" title="Post-request processing"></a>Post-request processing</h3><h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://developer.aliyun.com/article/606655" target="_blank" rel="external nofollow noopener noreferrer">https://developer.aliyun.com/article/606655</a></li>
+<li><a href="https://www.cnblogs.com/popsuper1982/p/9841978.html" target="_blank" rel="external nofollow noopener noreferrer">https://www.cnblogs.com/popsuper1982/p/9841978.html</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/151719f0/" rel="bookmark">【Service Mesh】Istio 流量控制</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/941301e/" rel="bookmark">Linux网络包收发流程</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/f07e2cff/" rel="bookmark">网络虚拟化</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/3675eff/" rel="bookmark">virtio</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/cfed77f0/" rel="bookmark">【Kubernetes解读】Service</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/7beb34d2/" title="【Service Mesh】Envoy 入门">http://houmin.cc/posts/7beb34d2/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E7%BD%91%E7%BB%9C/" rel="tag"><i class="fa fa-tag"></i> 网络</a>
+              <a href="/tags/envoy/" rel="tag"><i class="fa fa-tag"></i> envoy</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/151719f0/" rel="next" title="【Service Mesh】Istio 流量控制">
+                  <i class="fa fa-chevron-left"></i> 【Service Mesh】Istio 流量控制
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Architecture"><span class="nav-number">1.</span> <span class="nav-text">Architecture</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Network-Topology"><span class="nav-number">1.1.</span> <span class="nav-text">Network Topology</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#High-Level-Architecture"><span class="nav-number">1.2.</span> <span class="nav-text">High Level Architecture</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#过滤器"><span class="nav-number">1.3.</span> <span class="nav-text">过滤器</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Request-Flow"><span class="nav-number">2.</span> <span class="nav-text">Request Flow</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Listener-TCP-Accept"><span class="nav-number">2.1.</span> <span class="nav-text">Listener TCP Accept</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Listener-filter-chains-and-network-filter-chain-matching"><span class="nav-number">2.2.</span> <span class="nav-text">Listener filter chains and network filter chain matching</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TLS-transport-socket-decryption"><span class="nav-number">2.3.</span> <span class="nav-text">TLS transport socket decryption</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Network-filter-chain-processing"><span class="nav-number">2.4.</span> <span class="nav-text">Network filter chain processing</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HTTP-2-codec-encoding"><span class="nav-number">2.5.</span> <span class="nav-text">HTTP/2 codec encoding</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TLS-transport-socket-encryption"><span class="nav-number">2.6.</span> <span class="nav-text">TLS transport socket encryption</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Load-Balancing"><span class="nav-number">2.7.</span> <span class="nav-text">Load Balancing</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Response-path-and-HTTP-lifecycle"><span class="nav-number">2.8.</span> <span class="nav-text">Response path and HTTP lifecycle</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Post-request-processing"><span class="nav-number">2.9.</span> <span class="nav-text">Post-request processing</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">3.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">97</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">146</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">916k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">27:45</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>
