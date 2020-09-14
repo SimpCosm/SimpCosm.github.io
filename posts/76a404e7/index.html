@@ -58,14 +58,14 @@
   <meta name="description" content="Controller Manager作为集群的管理控制中心，维护集群中的所有控制器，对维持集群的稳定和自我修复，实现高可用，副本控制等起关键作用。">
 <meta name="keywords" content="k8s,go,源码解读,controller">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【Kubernetes解读】Controller Manager">
+<meta property="og:title" content="【Kubernetes】Controller Manager">
 <meta property="og:url" content="http://houmin.cc/posts/76a404e7/index.html">
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="Controller Manager作为集群的管理控制中心，维护集群中的所有控制器，对维持集群的稳定和自我修复，实现高可用，副本控制等起关键作用。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://www.pianshen.com/images/715/6480752a76065ff8de202236459f36bb.png">
 <meta property="og:image" content="https://www.pianshen.com/images/592/394742076228162f618ca01a59ee1170.png">
-<meta property="og:updated_time" content="2020-08-21T08:11:30.117Z">
+<meta property="og:updated_time" content="2020-09-12T01:46:48.715Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://www.pianshen.com/images/715/6480752a76065ff8de202236459f36bb.png">
 
@@ -83,7 +83,7 @@
   };
 </script>
 
-  <title>【Kubernetes解读】Controller Manager | Houmin</title>
+  <title>【Kubernetes】Controller Manager | Houmin</title>
   
 
 
@@ -251,7 +251,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          【Kubernetes解读】Controller Manager
+          【Kubernetes】Controller Manager
         </h2>
 
         <div class="post-meta">
@@ -393,19 +393,19 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes解读】ApiServer之初识API</a></div>
+      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer之初识API</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/d3e0e7a2/" rel="bookmark">【Kubernetes解读】Scheduler</a></div>
+      <div class="popular-posts-title"><a href="/posts/d3e0e7a2/" rel="bookmark">【Kubernetes】Scheduler</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes解读】开篇</a></div>
+      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/83a17de0/" rel="bookmark">【Kubernetes解读】Scheduling Framework</a></div>
+      <div class="popular-posts-title"><a href="/posts/83a17de0/" rel="bookmark">【Kubernetes】Scheduling Framework</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes解读】调度策略</a></div>
+      <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes】调度策略</a></div>
     </li>
   </ul>
 
@@ -439,7 +439,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://houmin.cc/posts/76a404e7/" title="【Kubernetes解读】Controller Manager">http://houmin.cc/posts/76a404e7/</a>
+    <a href="http://houmin.cc/posts/76a404e7/" title="【Kubernetes】Controller Manager">http://houmin.cc/posts/76a404e7/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -461,16 +461,16 @@
 
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
-                <a href="/posts/3bc1a603/" rel="next" title="【Kubernetes解读】ApiServer之初识API">
-                  <i class="fa fa-chevron-left"></i> 【Kubernetes解读】ApiServer之初识API
+                <a href="/posts/3bc1a603/" rel="next" title="【Kubernetes】ApiServer之初识API">
+                  <i class="fa fa-chevron-left"></i> 【Kubernetes】ApiServer之初识API
                 </a>
             </div>
 
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
-                <a href="/posts/b88b921f/" rel="prev" title="【Kubernetes解读】Pod">
-                  【Kubernetes解读】Pod <i class="fa fa-chevron-right"></i>
+                <a href="/posts/b88b921f/" rel="prev" title="【Kubernetes】Pod">
+                  【Kubernetes】Pod <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>
@@ -538,7 +538,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">146</span>
+        <span class="site-state-item-count">147</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -612,7 +612,7 @@
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">27:45</span>
+    <span title="站点阅读时长">27:46</span>
 </div>
 
         

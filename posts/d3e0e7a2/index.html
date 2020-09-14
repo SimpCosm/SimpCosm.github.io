@@ -58,7 +58,7 @@
   <meta name="description" content="调度器（Scheduler）是 Kubernetes 的核心组件，它的主要功能是为待运行的工作负载 Pod 绑定运行的节点 Node。从最早基于谓词和优先级（Predicates and Priorities）的调度器，到 V1.15基于调度框架（Scheduling Framework）的调度器，Kubernetes的调度器正在快速演进，以满足不同场景对于资源调度的需求。 本文是「Kuberne">
 <meta name="keywords" content="k8s,go,scheduler,源码解读">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【Kubernetes解读】Scheduler">
+<meta property="og:title" content="【Kubernetes】Scheduler">
 <meta property="og:url" content="http://houmin.cc/posts/d3e0e7a2/index.html">
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="调度器（Scheduler）是 Kubernetes 的核心组件，它的主要功能是为待运行的工作负载 Pod 绑定运行的节点 Node。从最早基于谓词和优先级（Predicates and Priorities）的调度器，到 V1.15基于调度框架（Scheduling Framework）的调度器，Kubernetes的调度器正在快速演进，以满足不同场景对于资源调度的需求。 本文是「Kuberne">
@@ -75,7 +75,7 @@
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/97498/1579429125998-3ddcaf40-b47c-4234-81bc-fce652fe6f46.png">
 <meta property="og:image" content="https://static001.infoq.cn/resource/image/ba/71/ba41b64474d1afffa4fa44fe7130c071.jpg">
 <meta property="og:image" content="https://static001.infoq.cn/resource/image/98/de/982345178a76967d014yy05300ca59de.jpg">
-<meta property="og:updated_time" content="2020-08-21T08:11:30.148Z">
+<meta property="og:updated_time" content="2020-09-12T01:47:16.944Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-27_k8s-scheduler.png">
 
@@ -93,7 +93,7 @@
   };
 </script>
 
-  <title>【Kubernetes解读】Scheduler | Houmin</title>
+  <title>【Kubernetes】Scheduler | Houmin</title>
   
 
 
@@ -261,7 +261,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          【Kubernetes解读】Scheduler
+          【Kubernetes】Scheduler
         </h2>
 
         <div class="post-meta">
@@ -716,19 +716,19 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/83a17de0/" rel="bookmark">【Kubernetes解读】Scheduling Framework</a></div>
+      <div class="popular-posts-title"><a href="/posts/83a17de0/" rel="bookmark">【Kubernetes】Scheduling Framework</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/76a404e7/" rel="bookmark">【Kubernetes解读】Controller Manager</a></div>
+      <div class="popular-posts-title"><a href="/posts/76a404e7/" rel="bookmark">【Kubernetes】Controller Manager</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes解读】ApiServer之初识API</a></div>
+      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer之初识API</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes解读】开篇</a></div>
+      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes解读】调度策略</a></div>
+      <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes】调度策略</a></div>
     </li>
   </ul>
 
@@ -762,7 +762,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://houmin.cc/posts/d3e0e7a2/" title="【Kubernetes解读】Scheduler">http://houmin.cc/posts/d3e0e7a2/</a>
+    <a href="http://houmin.cc/posts/d3e0e7a2/" title="【Kubernetes】Scheduler">http://houmin.cc/posts/d3e0e7a2/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -861,7 +861,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">146</span>
+        <span class="site-state-item-count">147</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -935,7 +935,7 @@
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">27:45</span>
+    <span title="站点阅读时长">27:46</span>
 </div>
 
         

@@ -58,7 +58,7 @@
   <meta name="description" content="Informer模块是Kubernetes中的基础组件，负责各组件与Apiserver的资源与事件同步。List&#x2F;Watch机制是Kubernetes中实现集群控制模块最核心的设计之一，它采用统一的异步消息处理机制，保证了消息的实时性、可靠性、顺序性和性能等，为声明式风格的API奠定了良好的基础。">
 <meta name="keywords" content="k8s,informer,watch,消息机制,异步">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【Kubernetes解读】List&#x2F;Watch机制和Informer模块详解">
+<meta property="og:title" content="【Kubernetes】List&#x2F;Watch机制和Informer模块详解">
 <meta property="og:url" content="http://houmin.cc/posts/1f0eb2ff/index.html">
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="Informer模块是Kubernetes中的基础组件，负责各组件与Apiserver的资源与事件同步。List&#x2F;Watch机制是Kubernetes中实现集群控制模块最核心的设计之一，它采用统一的异步消息处理机制，保证了消息的实时性、可靠性、顺序性和性能等，为声明式风格的API奠定了良好的基础。">
@@ -76,7 +76,7 @@
 <meta property="og:image" content="https://baxiaoshi.cdn.bcebos.com/blog/kubernetes/clientgo/1583738078512-ade28ada-2824-46d3-af63-45873a8a37a4.png">
 <meta property="og:image" content="https://baxiaoshi.cdn.bcebos.com/blog/kubernetes/clientgo/1583738429252-bd646701-8543-47cd-a638-552ac419f5c9.png">
 <meta property="og:image" content="https://static001.geekbang.org/wechat/images/a1/a1a5745f0c0309c9d05c484905887fb8.jpeg">
-<meta property="og:updated_time" content="2020-08-21T08:11:30.177Z">
+<meta property="og:updated_time" content="2020-09-12T01:47:11.209Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://res.cloudinary.com/dqxtn0ick/image/upload/v1555472372/article/code-analysis/informer/client-go.png">
 
@@ -94,7 +94,7 @@
   };
 </script>
 
-  <title>【Kubernetes解读】List/Watch机制和Informer模块详解 | Houmin</title>
+  <title>【Kubernetes】List/Watch机制和Informer模块详解 | Houmin</title>
   
 
 
@@ -262,7 +262,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          【Kubernetes解读】List/Watch机制和Informer模块详解
+          【Kubernetes】List/Watch机制和Informer模块详解
         </h2>
 
         <div class="post-meta">
@@ -647,19 +647,19 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes解读】开篇</a></div>
+      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/83a17de0/" rel="bookmark">【Kubernetes解读】Scheduling Framework</a></div>
+      <div class="popular-posts-title"><a href="/posts/83a17de0/" rel="bookmark">【Kubernetes】Scheduling Framework</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes解读】调度策略</a></div>
+      <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes】调度策略</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/76a404e7/" rel="bookmark">【Kubernetes解读】Controller Manager</a></div>
+      <div class="popular-posts-title"><a href="/posts/76a404e7/" rel="bookmark">【Kubernetes】Controller Manager</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b88b921f/" rel="bookmark">【Kubernetes解读】Pod</a></div>
+      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer之初识API</a></div>
     </li>
   </ul>
 
@@ -693,7 +693,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://houmin.cc/posts/1f0eb2ff/" title="【Kubernetes解读】List&#x2F;Watch机制和Informer模块详解">http://houmin.cc/posts/1f0eb2ff/</a>
+    <a href="http://houmin.cc/posts/1f0eb2ff/" title="【Kubernetes】List&#x2F;Watch机制和Informer模块详解">http://houmin.cc/posts/1f0eb2ff/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -793,7 +793,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">146</span>
+        <span class="site-state-item-count">147</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -867,7 +867,7 @@
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">27:45</span>
+    <span title="站点阅读时长">27:46</span>
 </div>
 
         

@@ -58,7 +58,7 @@
   <meta name="description" content="Pod 是 Kubernetes 集群中能够被创建、调度和管理的最小部署单元，是一组容器的集合，是 k8s 中最简单的对象，也是 k8s 中最为基础的概念。同一个 Pod 中的容器可以共享同一个网络命名空间，IP地址和端口空间。从生命周期上来讲，Pod是短暂而不是长久的应用。Pod被调度到节点，保持在这个节点直到被摧毁。 本文将分两个部分对 Pod 解读，第一个部分介绍 Pod 的基本概念和常见特">
 <meta name="keywords" content="k8s,源码阅读,pod">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【Kubernetes解读】Pod">
+<meta property="og:title" content="【Kubernetes】Pod">
 <meta property="og:url" content="http://houmin.cc/posts/b88b921f/index.html">
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="Pod 是 Kubernetes 集群中能够被创建、调度和管理的最小部署单元，是一组容器的集合，是 k8s 中最简单的对象，也是 k8s 中最为基础的概念。同一个 Pod 中的容器可以共享同一个网络命名空间，IP地址和端口空间。从生命周期上来讲，Pod是短暂而不是长久的应用。Pod被调度到节点，保持在这个节点直到被摧毁。 本文将分两个部分对 Pod 解读，第一个部分介绍 Pod 的基本概念和常见特">
@@ -69,7 +69,7 @@
 <meta property="og:image" content="https://img.draveness.me/2018-12-25-kubernetes-pod-lifecycle.png">
 <meta property="og:image" content="https://img.draveness.me/2018-12-25-kubernetes-probe-manager.png">
 <meta property="og:image" content="https://img.draveness.me/2018-12-25-kubernetes-pod-killer.png">
-<meta property="og:updated_time" content="2020-08-21T08:11:30.140Z">
+<meta property="og:updated_time" content="2020-09-12T01:46:44.784Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://img.draveness.me/2018-12-25-kubernetes-pod-init-and-regular-containers.png">
 
@@ -87,7 +87,7 @@
   };
 </script>
 
-  <title>【Kubernetes解读】Pod | Houmin</title>
+  <title>【Kubernetes】Pod | Houmin</title>
   
 
 
@@ -255,7 +255,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          【Kubernetes解读】Pod
+          【Kubernetes】Pod
         </h2>
 
         <div class="post-meta">
@@ -409,19 +409,19 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes解读】开篇</a></div>
+      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/83a17de0/" rel="bookmark">【Kubernetes解读】Scheduling Framework</a></div>
+      <div class="popular-posts-title"><a href="/posts/83a17de0/" rel="bookmark">【Kubernetes】Scheduling Framework</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes解读】调度策略</a></div>
+      <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes】调度策略</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/76a404e7/" rel="bookmark">【Kubernetes解读】Controller Manager</a></div>
+      <div class="popular-posts-title"><a href="/posts/76a404e7/" rel="bookmark">【Kubernetes】Controller Manager</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/fb705539/" rel="bookmark">【Kubernetes解读】Kubelet</a></div>
+      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer之初识API</a></div>
     </li>
   </ul>
 
@@ -455,7 +455,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://houmin.cc/posts/b88b921f/" title="【Kubernetes解读】Pod">http://houmin.cc/posts/b88b921f/</a>
+    <a href="http://houmin.cc/posts/b88b921f/" title="【Kubernetes】Pod">http://houmin.cc/posts/b88b921f/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -476,16 +476,16 @@
 
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
-                <a href="/posts/76a404e7/" rel="next" title="【Kubernetes解读】Controller Manager">
-                  <i class="fa fa-chevron-left"></i> 【Kubernetes解读】Controller Manager
+                <a href="/posts/76a404e7/" rel="next" title="【Kubernetes】Controller Manager">
+                  <i class="fa fa-chevron-left"></i> 【Kubernetes】Controller Manager
                 </a>
             </div>
 
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
-                <a href="/posts/cfed77f0/" rel="prev" title="【Kubernetes解读】Service">
-                  【Kubernetes解读】Service <i class="fa fa-chevron-right"></i>
+                <a href="/posts/cfed77f0/" rel="prev" title="【Kubernetes】Service">
+                  【Kubernetes】Service <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>
@@ -553,7 +553,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">146</span>
+        <span class="site-state-item-count">147</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -627,7 +627,7 @@
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">27:45</span>
+    <span title="站点阅读时长">27:46</span>
 </div>
 
         
