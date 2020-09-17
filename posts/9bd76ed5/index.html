@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="已经有了cadvisor、heapster、metric-server，几乎容器运行的所有指标都能拿到，但是下面这种情况却无能为力：  我调度了多少个replicas？现在可用的有几个？ 多少个Pod是running&#x2F;stopped&#x2F;terminated状态？ Pod重启了多少次？ 我有多少job在运行中  而这些则是kube-state-metrics提供的内容，它基于client-go开发，轮">
+<meta name="keywords" content="k8s,监控">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Kubernetes】kube-state-metrics">
+<meta property="og:url" content="http://houmin.cc/posts/9bd76ed5/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="已经有了cadvisor、heapster、metric-server，几乎容器运行的所有指标都能拿到，但是下面这种情况却无能为力：  我调度了多少个replicas？现在可用的有几个？ 多少个Pod是running&#x2F;stopped&#x2F;terminated状态？ Pod重启了多少次？ 我有多少job在运行中  而这些则是kube-state-metrics提供的内容，它基于client-go开发，轮">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://www.xuyasong.com/wp-content/uploads/2019/01/d3c663e527607ecc3eab922ca13a8f44.png">
+<meta property="og:updated_time" content="2020-09-17T08:03:35.164Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.xuyasong.com/wp-content/uploads/2019/01/d3c663e527607ecc3eab922ca13a8f44.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/9bd76ed5/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Kubernetes】kube-state-metrics | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/9bd76ed5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Kubernetes】kube-state-metrics
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-09-15 13:40:21" itemprop="dateCreated datePublished" datetime="2020-09-15T13:40:21+08:00">2020-09-15</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/9bd76ed5/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/9bd76ed5/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>11 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>已经有了cadvisor、heapster、metric-server，几乎容器运行的所有指标都能拿到，但是下面这种情况却无能为力：</p>
+<ul>
+<li>我调度了多少个replicas？现在可用的有几个？</li>
+<li>多少个Pod是running/stopped/terminated状态？</li>
+<li>Pod重启了多少次？</li>
+<li>我有多少job在运行中</li>
+</ul>
+<p>而这些则是kube-state-metrics提供的内容，它基于client-go开发，轮询Kubernetes API，并将Kubernetes的结构化信息转换为metrics。</p>
+<a id="more"></a>
+<h2 id="功能"><a href="#功能" class="headerlink" title="功能"></a>功能</h2><p>kube-state-metrics提供的指标，按照阶段分为三种类别：</p>
+<ul>
+<li>1.实验性质的：k8s api中alpha阶段的或者spec的字段。</li>
+<li>2.稳定版本的：k8s中不向后兼容的主要版本的更新</li>
+<li>3.被废弃的：已经不在维护的。</li>
+</ul>
+<p>指标类别包括：</p>
+<ul>
+<li>CronJob Metrics</li>
+<li>DaemonSet Metrics</li>
+<li>Deployment Metrics</li>
+<li>Job Metrics</li>
+<li>LimitRange Metrics</li>
+<li>Node Metrics</li>
+<li>PersistentVolume Metrics</li>
+<li>PersistentVolumeClaim Metrics</li>
+<li>Pod Metrics</li>
+<li>Pod Disruption Budget Metrics</li>
+<li>ReplicaSet Metrics</li>
+<li>ReplicationController Metrics</li>
+<li>ResourceQuota Metrics</li>
+<li>Service Metrics</li>
+<li>StatefulSet Metrics</li>
+<li>Namespace Metrics</li>
+<li>Horizontal Pod Autoscaler Metrics</li>
+<li>Endpoint Metrics</li>
+<li>Secret Metrics</li>
+<li>ConfigMap Metrics</li>
+</ul>
+<p>以pod为例：</p>
+<ul>
+<li>kube_pod_info</li>
+<li>kube_pod_owner</li>
+<li>kube_pod_status_phase</li>
+<li>kube_pod_status_ready</li>
+<li>kube_pod_status_scheduled</li>
+<li>kube_pod_container_status_waiting</li>
+<li>kube_pod_container_status_terminated_reason</li>
+<li>…</li>
+</ul>
+<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p><a href="https://github.com/kubernetes/kube-state-metrics/tree/master/examples/standard" target="_blank" rel="external nofollow noopener noreferrer">部署清单</a>：</p>
+<figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">kube-<span class="section">state</span>-metrics/</span><br><span class="line">   ├── kube-<span class="section">state</span>-metrics-cluster-role-binding.yaml</span><br><span class="line">   ├── kube-<span class="section">state</span>-metrics-cluster-role.yaml</span><br><span class="line">   ├── kube-<span class="section">state</span>-metrics-deployment.yaml</span><br><span class="line">   ├── kube-<span class="section">state</span>-metrics-role-binding.yaml</span><br><span class="line">   ├── kube-<span class="section">state</span>-metrics-role.yaml</span><br><span class="line">   ├── kube-<span class="section">state</span>-metrics-service-account.yaml</span><br><span class="line">   ├── kube-<span class="section">state</span>-metrics-service.yaml</span><br></pre></td></tr></table></figure>
+<p>主要镜像有： image: quay.io/coreos/kube-state-metrics:v1.5.0 image: k8s.gcr.io/addon-resizer:1.8.3（参考metric-server文章，用于扩缩容）</p>
+<p>对于pod的资源限制，一般情况下：</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">200</span>MiB memory <span class="number">0.1</span> cores</span><br></pre></td></tr></table></figure>
+<p>超过100节点的集群：</p>
+<figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">2M</span>iB memory per <span class="keyword">node</span> <span class="title">0</span>.<span class="number">001</span> cores per <span class="keyword">node</span><span class="title"></span></span><br></pre></td></tr></table></figure>
+<p>kube-state-metrics做过一次性能优化，具体内容参考下文</p>
+<p>部署成功后，prometheus的target会出现如下标志</p>
+<p><img alt="img" data-src="http://www.xuyasong.com/wp-content/uploads/2019/01/d3c663e527607ecc3eab922ca13a8f44.png"></p>
+<p>因为kube-state-metrics-service.yaml中有<code>prometheus.io/scrape: &#39;true&#39;</code>标识，因此会将metric暴露给prometheus，而Prometheus会在kubernetes-service-endpoints这个job下自动发现kube-state-metrics，并开始拉取metrics，无需其他配置。</p>
+<p>使用kube-state-metrics后的常用场景有：</p>
+<ul>
+<li>存在执行失败的Job: kube_job_status_failed{job=”kubernetes-service-endpoints”,k8s_app=”kube-state-metrics”}==1</li>
+<li>集群节点状态错误: kube_node_status_condition{condition=”Ready”,status!=”true”}==1</li>
+<li>集群中存在启动失败的Pod：kube_pod_status_phase{phase=~”Failed|Unknown”}==1</li>
+<li>最近30分钟内有Pod容器重启: changes(kube_pod_container_status_restarts[30m])&gt;0</li>
+</ul>
+<p>配合报警可以更好地监控集群的运行</p>
+<h2 id="与metric-server的对比"><a href="#与metric-server的对比" class="headerlink" title="与metric-server的对比"></a>与metric-server的对比</h2><ul>
+<li>metric-server（或heapster）是从api-server中获取cpu、内存使用率这种监控指标，并把他们发送给存储后端，如influxdb或云厂商，他当前的核心作用是：为HPA等组件提供决策指标支持。</li>
+<li>kube-state-metrics关注于获取k8s各种资源的最新状态，如deployment或者daemonset，之所以没有把kube-state-metrics纳入到metric-server的能力中，是因为他们的关注点本质上是不一样的。metric-server仅仅是获取、格式化现有数据，写入特定的存储，实质上是一个监控系统。而kube-state-metrics是将k8s的运行状况在内存中做了个快照，并且获取新的指标，但他没有能力导出这些指标</li>
+<li>换个角度讲，kube-state-metrics本身是metric-server的一种数据来源，虽然现在没有这么做。</li>
+<li>另外，像Prometheus这种监控系统，并不会去用metric-server中的数据，他都是自己做指标收集、集成的（Prometheus包含了metric-server的能力），但Prometheus可以监控metric-server本身组件的监控状态并适时报警，这里的监控就可以通过kube-state-metrics来实现，如metric-serverpod的运行状态。</li>
+</ul>
+<h2 id="深入解析"><a href="#深入解析" class="headerlink" title="深入解析"></a>深入解析</h2><p>kube-state-metrics本质上是不断轮询api-server，代码结构也很简单 主要代码目录</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">.</span><br><span class="line">├── collectors</span><br><span class="line">│   ├── builder.<span class="keyword">go</span></span><br><span class="line">│   ├── collectors.<span class="keyword">go</span></span><br><span class="line">│   ├── configmap.<span class="keyword">go</span></span><br><span class="line">│   ......</span><br><span class="line">│   ├── testutils.<span class="keyword">go</span></span><br><span class="line">│   ├── testutils_test.<span class="keyword">go</span></span><br><span class="line">│   └── utils.<span class="keyword">go</span></span><br><span class="line">├── constant</span><br><span class="line">│   └── resource_unit.<span class="keyword">go</span></span><br><span class="line">├── metrics</span><br><span class="line">│   ├── metrics.<span class="keyword">go</span></span><br><span class="line">│   └── metrics_test.<span class="keyword">go</span></span><br><span class="line">├── metrics_store</span><br><span class="line">│   ├── metrics_store.<span class="keyword">go</span></span><br><span class="line">│   └── metrics_store_test.<span class="keyword">go</span></span><br><span class="line">├── <span class="keyword">options</span></span><br><span class="line">│   ├── collector.<span class="keyword">go</span></span><br><span class="line">│   ├── <span class="keyword">options</span>.<span class="keyword">go</span></span><br><span class="line">│   ├── options_test.<span class="keyword">go</span></span><br><span class="line">│   ├── types.<span class="keyword">go</span></span><br><span class="line">│   └── types_test.<span class="keyword">go</span></span><br><span class="line">├── <span class="keyword">version</span></span><br><span class="line">│   └── <span class="keyword">version</span>.<span class="keyword">go</span></span><br><span class="line">└── whiteblacklist</span><br><span class="line">    ├── whiteblacklist.<span class="keyword">go</span></span><br><span class="line">    └── whiteblacklist_test.<span class="keyword">go</span></span><br></pre></td></tr></table></figure>
+<p>所有类型：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> (</span><br><span class="line">    DefaultNamespaces = NamespaceList&#123;metav1.NamespaceAll&#125;</span><br><span class="line">    DefaultCollectors = CollectorSet&#123;</span><br><span class="line">        <span class="string">"daemonsets"</span>:               <span class="keyword">struct</span>&#123;&#125;&#123;&#125;,</span><br><span class="line">        <span class="string">"deployments"</span>:              <span class="keyword">struct</span>&#123;&#125;&#123;&#125;,</span><br><span class="line">        <span class="string">"limitranges"</span>:              <span class="keyword">struct</span>&#123;&#125;&#123;&#125;,</span><br><span class="line">        <span class="string">"nodes"</span>:                    <span class="keyword">struct</span>&#123;&#125;&#123;&#125;,</span><br><span class="line">        <span class="string">"pods"</span>:                     <span class="keyword">struct</span>&#123;&#125;&#123;&#125;,</span><br><span class="line">        <span class="string">"poddisruptionbudgets"</span>:     <span class="keyword">struct</span>&#123;&#125;&#123;&#125;,</span><br><span class="line">        <span class="string">"replicasets"</span>:              <span class="keyword">struct</span>&#123;&#125;&#123;&#125;,</span><br><span class="line">        <span class="string">"replicationcontrollers"</span>:   <span class="keyword">struct</span>&#123;&#125;&#123;&#125;,</span><br><span class="line">        <span class="string">"resourcequotas"</span>:           <span class="keyword">struct</span>&#123;&#125;&#123;&#125;,</span><br><span class="line">        <span class="string">"services"</span>:                 <span class="keyword">struct</span>&#123;&#125;&#123;&#125;,</span><br><span class="line">        <span class="string">"jobs"</span>:                     <span class="keyword">struct</span>&#123;&#125;&#123;&#125;,</span><br><span class="line">        <span class="string">"cronjobs"</span>:                 <span class="keyword">struct</span>&#123;&#125;&#123;&#125;,</span><br><span class="line">        <span class="string">"statefulsets"</span>:             <span class="keyword">struct</span>&#123;&#125;&#123;&#125;,</span><br><span class="line">        <span class="string">"persistentvolumes"</span>:        <span class="keyword">struct</span>&#123;&#125;&#123;&#125;,</span><br><span class="line">        <span class="string">"persistentvolumeclaims"</span>:   <span class="keyword">struct</span>&#123;&#125;&#123;&#125;,</span><br><span class="line">        <span class="string">"namespaces"</span>:               <span class="keyword">struct</span>&#123;&#125;&#123;&#125;,</span><br><span class="line">        <span class="string">"horizontalpodautoscalers"</span>: <span class="keyword">struct</span>&#123;&#125;&#123;&#125;,</span><br><span class="line">        <span class="string">"endpoints"</span>:                <span class="keyword">struct</span>&#123;&#125;&#123;&#125;,</span><br><span class="line">        <span class="string">"secrets"</span>:                  <span class="keyword">struct</span>&#123;&#125;&#123;&#125;,</span><br><span class="line">        <span class="string">"configmaps"</span>:               <span class="keyword">struct</span>&#123;&#125;&#123;&#125;,</span><br><span class="line">    &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p>构建对应的收集器</p>
+<p>Family即一个类型的资源集合，如job下的kube_job_info、kube_job_created，都是一个FamilyGenerator实例</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">metrics.FamilyGenerator&#123;</span><br><span class="line">            Name: <span class="string">"kube_job_info"</span>,</span><br><span class="line">            Type: metrics.MetricTypeGauge,</span><br><span class="line">            Help: <span class="string">"Information about job."</span>,</span><br><span class="line">            GenerateFunc: wrapJobFunc(<span class="function"><span class="keyword">func</span><span class="params">(j *v1batch.Job)</span> <span class="title">metrics</span>.<span class="title">Family</span></span> &#123;</span><br><span class="line">                <span class="keyword">return</span> metrics.Family&#123;&amp;metrics.Metric&#123;</span><br><span class="line">                    Name:  <span class="string">"kube_job_info"</span>,</span><br><span class="line">                    Value: <span class="number">1</span>,</span><br><span class="line">                &#125;&#125;</span><br><span class="line">            &#125;),</span><br><span class="line">        &#125;,</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(b *Builder)</span> <span class="title">buildCronJobCollector</span><span class="params">()</span> *<span class="title">Collector</span></span> &#123;</span><br><span class="line">   <span class="comment">// 过滤传入的白名单</span></span><br><span class="line">    filteredMetricFamilies := filterMetricFamilies(b.whiteBlackList, cronJobMetricFamilies)</span><br><span class="line">    composedMetricGenFuncs := composeMetricGenFuncs(filteredMetricFamilies)</span><br><span class="line">  <span class="comment">// 将参数写到header中</span></span><br><span class="line">    familyHeaders := extractMetricFamilyHeaders(filteredMetricFamilies)</span><br><span class="line">  <span class="comment">// NewMetricsStore实现了client-go的cache.Store接口，实现本地缓存。</span></span><br><span class="line">    store := metricsstore.NewMetricsStore(</span><br><span class="line">        familyHeaders,</span><br><span class="line">        composedMetricGenFuncs,</span><br><span class="line">    )</span><br><span class="line">  <span class="comment">// 按namespace构建Reflector，监听变化</span></span><br><span class="line">    reflectorPerNamespace(b.ctx, b.kubeClient, &amp;batchv1beta1.CronJob&#123;&#125;, store, b.namespaces, createCronJobListWatch)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> NewCollector(store)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>性能优化：</p>
+<p>kube-state-metrics在之前的版本中暴露出两个问题：</p>
+<ul>
+<li><ol>
+<li>/metrics接口响应慢(10-20s)</li>
+</ol>
+</li>
+<li><ol>
+<li>内存消耗太大，导致超出limit被杀掉</li>
+</ol>
+</li>
+</ul>
+<p>问题一的方案就是基于client-go的cache tool实现本地缓存，具体结构为：</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">var cache = map[<span class="string">uuid</span>][<span class="symbol"></span>]byte&#123;&#125;</span><br></pre></td></tr></table></figure>
+<p>问题二的的方案是：对于时间序列的字符串，是存在很多重复字符的（如namespace等前缀筛选），可以用指针或者结构化这些重复字符。</p>
+<h2 id="优化点和问题"><a href="#优化点和问题" class="headerlink" title="优化点和问题"></a>优化点和问题</h2><ul>
+<li>因为kube-state-metrics是监听资源的add、delete、update事件，那么在kube-state-metrics部署之前已经运行的资源，岂不是拿不到数据？kube-state-metric利用client-go可以初始化所有已经存在的资源对象，确保没有任何遗漏</li>
+<li>kube-state-metrics当前不会输出metadata信息(如help和description）</li>
+<li>缓存实现是基于golang的map，解决并发读问题当期是用了一个简单的互斥锁，应该可以解决问题，后续会考虑golang的sync.Map安全map。</li>
+<li>kube-state-metrics通过比较resource version来保证event的顺序</li>
+<li>kube-state-metrics并不保证包含所有资源</li>
+</ul>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://github.com/kubernetes/kube-state-metrics" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/kubernetes/kube-state-metrics</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/58272b06/" rel="bookmark">【Kubernetes】监控的可观测性</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/913a8837/" rel="bookmark">Metrics Server</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/83a17de0/" rel="bookmark">【Kubernetes】Scheduling Framework</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes】调度策略</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/9bd76ed5/" title="【Kubernetes】kube-state-metrics">http://houmin.cc/posts/9bd76ed5/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
+              <a href="/tags/%E7%9B%91%E6%8E%A7/" rel="tag"><i class="fa fa-tag"></i> 监控</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/913a8837/" rel="next" title="Metrics Server">
+                  <i class="fa fa-chevron-left"></i> Metrics Server
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/dd1e183c/" rel="prev" title="Node Exporter">
+                  Node Exporter <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#功能"><span class="nav-number">1.</span> <span class="nav-text">功能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用"><span class="nav-number">2.</span> <span class="nav-text">使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#与metric-server的对比"><span class="nav-number">3.</span> <span class="nav-text">与metric-server的对比</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#深入解析"><span class="nav-number">4.</span> <span class="nav-text">深入解析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#优化点和问题"><span class="nav-number">5.</span> <span class="nav-text">优化点和问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">6.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">105</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">158</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">976k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">29:34</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

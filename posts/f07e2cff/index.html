@@ -55,18 +55,17 @@
   };
 </script>
 
-  <meta name="description" content="网络虚拟化前言网络虚拟化相对计算、存储虚拟化来说是比较抽象的，以我们在学校书本上学的那点网络知识来理解网络虚拟化可能是不够的。在我们的印象中，网络就是由各种网络设备（如交换机、路由器）相连组成的一个网状结构，世界上的任何两个人都可以通过网络建立起连接。带着这样一种思路去理解网络虚拟化可能会感觉云里雾里——这样一个庞大的网络如何实现虚拟化？">
+  <meta name="description" content="其实，网络虚拟化更多关注的是数据中心网络、主机网络这样比较「细粒度」的网络，所谓细粒度，是相对来说的，是深入到某一台物理主机之上的网络结构来谈的。如果把传统的网络看作「宏观网络」的话，那网络虚拟化关注的就是「微观网络」。网络虚拟化的目的，是要节省物理主机的网卡设备资源。从资源这个角度去理解，可能会比较好理解一点。">
 <meta name="keywords" content="虚拟化,网络">
 <meta property="og:type" content="article">
 <meta property="og:title" content="网络虚拟化">
 <meta property="og:url" content="http://houmin.cc/posts/f07e2cff/index.html">
 <meta property="og:site_name" content="Houmin">
-<meta property="og:description" content="网络虚拟化前言网络虚拟化相对计算、存储虚拟化来说是比较抽象的，以我们在学校书本上学的那点网络知识来理解网络虚拟化可能是不够的。在我们的印象中，网络就是由各种网络设备（如交换机、路由器）相连组成的一个网状结构，世界上的任何两个人都可以通过网络建立起连接。带着这样一种思路去理解网络虚拟化可能会感觉云里雾里——这样一个庞大的网络如何实现虚拟化？">
+<meta property="og:description" content="其实，网络虚拟化更多关注的是数据中心网络、主机网络这样比较「细粒度」的网络，所谓细粒度，是相对来说的，是深入到某一台物理主机之上的网络结构来谈的。如果把传统的网络看作「宏观网络」的话，那网络虚拟化关注的就是「微观网络」。网络虚拟化的目的，是要节省物理主机的网卡设备资源。从资源这个角度去理解，可能会比较好理解一点。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://images2017.cnblogs.com/blog/431521/201712/431521-20171214124122201-325159441.png">
 <meta property="og:image" content="https://images2017.cnblogs.com/blog/431521/201712/431521-20171214124154982-781297498.png">
 <meta property="og:image" content="https://images2017.cnblogs.com/blog/431521/201712/431521-20171214124231185-514213579.png">
-<meta property="og:image" content="https://images2017.cnblogs.com/blog/431521/201712/431521-20171214124456982-1971018216.png">
 <meta property="og:image" content="https://i.loli.net/2020/01/28/yDTFvEohmQfiWz5.jpg">
 <meta property="og:image" content="https://i.loli.net/2020/01/28/dOA19SeZHPLanYC.jpg">
 <meta property="og:image" content="https://i.loli.net/2020/01/28/JljuUAEyNRfb6Dq.jpg">
@@ -76,7 +75,7 @@
 <meta property="og:image" content="https://i.loli.net/2020/01/28/IPSwuRVbgTDKnhB.jpg">
 <meta property="og:image" content="https://i.loli.net/2020/01/29/bexu9Qt26K7FiND.jpg">
 <meta property="og:image" content="https://i.loli.net/2020/01/29/95RPciVgDqtSmNb.jpg">
-<meta property="og:updated_time" content="2020-09-01T07:54:56.206Z">
+<meta property="og:updated_time" content="2020-09-14T12:31:19.764Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://images2017.cnblogs.com/blog/431521/201712/431521-20171214124122201-325159441.png">
 
@@ -313,14 +312,14 @@
                 <i class="fa fa-file-word-o"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>18k</span>
+              <span>16k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>32 分钟</span>
+              <span>29 分钟</span>
             </span>
 
         </div>
@@ -332,68 +331,61 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h3 id="网络虚拟化"><a href="#网络虚拟化" class="headerlink" title="网络虚拟化"></a>网络虚拟化</h3><h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>网络虚拟化相对计算、存储虚拟化来说是比较抽象的，以我们在学校书本上学的那点网络知识来理解网络虚拟化可能是不够的。</p><p>在我们的印象中，网络就是由各种网络设备（如交换机、路由器）相连组成的一个网状结构，世界上的任何两个人都可以通过网络建立起连接。</p><p>带着这样一种思路去理解网络虚拟化可能会感觉云里雾里——这样一个庞大的网络如何实现虚拟化？</p><a id="more"></a>
+        <p>其实，网络虚拟化更多关注的是数据中心网络、主机网络这样比较「细粒度」的网络，所谓细粒度，是相对来说的，是深入到某一台物理主机之上的网络结构来谈的。</p><p>如果把传统的网络看作「宏观网络」的话，那网络虚拟化关注的就是「微观网络」。网络虚拟化的目的，是要节省物理主机的网卡设备资源。从资源这个角度去理解，可能会比较好理解一点。</p><a id="more"></a>
 
-
-<p>其实，网络虚拟化更多关注的是数据中心网络、主机网络这样比较「细粒度」的网络，所谓细粒度，是相对来说的，是深入到某一台物理主机之上的网络结构来谈的。</p>
-<p>如果把传统的网络看作「宏观网络」的话，那网络虚拟化关注的就是「微观网络」。网络虚拟化的目的，是要节省物理主机的网卡设备资源。从资源这个角度去理解，可能会比较好理解一点。</p>
 <h4 id="传统网络架构"><a href="#传统网络架构" class="headerlink" title="传统网络架构"></a>传统网络架构</h4><p>在传统网络环境中，一台物理主机包含一个或多个网卡（NIC），要实现与其他物理主机之间的通信，需要通过自身的 NIC 连接到外部的网络设施，如交换机上，如下图所示。</p>
 <p><img alt="img" data-src="https://images2017.cnblogs.com/blog/431521/201712/431521-20171214124122201-325159441.png"></p>
-<p>这种架构下，为了对应用进行隔离，往往是将一个应用部署在一台物理设备上，这样会存在两个问题，1）是某些应用大部分情况可能处于空闲状态，2）是当应用增多的时候，只能通过增加物理设备来解决扩展性问题。不管怎么样，这种架构都会对物理资源造成极大的浪费。</p>
+<p>这种架构下，为了对应用进行隔离，往往是将一个应用部署在一台物理设备上，这样会存在两个问题，</p>
+<ul>
+<li>是某些应用大部分情况可能处于空闲状态</li>
+<li>是当应用增多的时候，只能通过增加物理设备来解决扩展性问题。</li>
+</ul>
+<p>不管怎么样，这种架构都会对物理资源造成极大的浪费。</p>
 <h4 id="虚拟化网络架构"><a href="#虚拟化网络架构" class="headerlink" title="虚拟化网络架构"></a>虚拟化网络架构</h4><p>为了解决这个问题，可以借助虚拟化技术对一台物理资源进行抽象，将一张物理网卡虚拟成多张虚拟网卡（vNIC），通过虚拟机来隔离不同的应用。</p>
-<p>这样对于上面的问题 1），可以利用虚拟化层 Hypervisor 的调度技术，将资源从空闲的应用上调度到繁忙的应用上，达到资源的合理利用；针对问题 2），可以根据物理设备的资源使用情况进行横向扩容，除非设备资源已经用尽，否则没有必要新增设备。这种架构如下所示。</p>
+<ul>
+<li>针对问题 1），可以利用虚拟化层 Hypervisor 的调度技术，将资源从空闲的应用上调度到繁忙的应用上，达到资源的合理利用；</li>
+<li>针对问题 2），可以根据物理设备的资源使用情况进行横向扩容，除非设备资源已经用尽，否则没有必要新增设备。这种架构如下所示。</li>
+</ul>
 <p><img alt="img" data-src="https://images2017.cnblogs.com/blog/431521/201712/431521-20171214124154982-781297498.png"></p>
 <p>其中虚拟机与虚拟机之间的通信，由虚拟交换机完成，虚拟网卡和虚拟交换机之间的链路也是虚拟的链路，整个主机内部构成了一个虚拟的网络，如果虚拟机之间涉及到三层的网络包转发，则又由另外一个角色——虚拟路由器来完成。</p>
 <p>一般，这一整套虚拟网络的模块都可以独立出去，由第三方来完成，如其中比较出名的一个解决方案就是 Open vSwitch（OVS）。</p>
 <p>OVS 的优势在于它基于 SDN 的设计原则，方便虚拟机集群的控制与管理，另外就是它分布式的特性，可以「透明」地实现跨主机之间的虚拟机通信，如下是跨主机启用 OVS 通信的图示。</p>
 <p><img alt="img" data-src="https://images2017.cnblogs.com/blog/431521/201712/431521-20171214124231185-514213579.png"></p>
 <p>总结下来，网络虚拟化主要解决的是虚拟机构成的网络通信问题，完成的是各种网络设备的虚拟化，如网卡、交换设备、路由设备等。</p>
-<h2 id="NAT"><a href="#NAT" class="headerlink" title="NAT"></a>NAT</h2><h2 id="虚拟网络设备"><a href="#虚拟网络设备" class="headerlink" title="虚拟网络设备"></a>虚拟网络设备</h2><hr>
-<h4 id="虚拟化的几种形式"><a href="#虚拟化的几种形式" class="headerlink" title="虚拟化的几种形式"></a>虚拟化的几种形式</h4><p>为了完成虚拟机在同主机和跨主机之间的通信，需要借助某种“桥梁”来完成用户态到内核态（Guest 到 Host）的数据传输，这种桥梁的角色就是由虚拟的网络设备来完成，上面介绍了一个第三方的开源方案——OVS，它其实是一个融合了各种虚拟网络设备的集大成者，是一个产品级的解决方案。</p>
-<p>但 Linux 本身由于虚拟化技术的演进，也集成了一些虚拟网络设备的解决方案，主要有以下几种：</p>
-<h5 id="TAP-TUN-VETH"><a href="#TAP-TUN-VETH" class="headerlink" title="TAP/TUN/VETH"></a>TAP/TUN/VETH</h5><p>TAP/TUN 是 Linux 内核实现的一对虚拟网络设备，TAP 工作在二层，TUN 工作在三层。Linux 内核通过 TAP/TUN 设备向绑定该设备的用户空间程序发送数据，反之，用户空间程序也可以像操作物理网络设备那样，向 TAP/TUN 设备发送数据。</p>
-<p>基于 TAP 驱动，即可实现虚拟机 vNIC 的功能，虚拟机的每个 vNIC 都与一个 TAP 设备相连，vNIC 之于 TAP 就如同 NIC 之于 eth。</p>
-<p>当一个 TAP 设备被创建时，在 Linux 设备文件目录下会生成一个对应的字符设备文件，用户程序可以像打开一个普通文件一样对这个文件进行读写。</p>
-<p>比如，当对这个 TAP 文件执行 write 操作时，相当于 TAP 设备收到了数据，并请求内核接受它，内核收到数据后将根据网络配置进行后续处理，处理过程类似于普通物理网卡从外界收到数据。当用户程序执行 read 请求时，相当于向内核查询 TAP 设备是否有数据要发送，有的话则发送，从而完成 TAP 设备的数据发送。</p>
-<p>TUN 则属于网络中三层的概念，数据收发过程和 TAP 是类似的，只不过它要指定一段 IPv4 地址或 IPv6 地址，并描述其相关的配置信息，其数据处理过程也是类似于普通物理网卡收到三层 IP 报文数据。</p>
-<p>VETH 设备总是成对出现，一端连着内核协议栈，另一端连着另一个设备，一个设备收到内核发送的数据后，会发送到另一个设备上去，这种设备通常用于容器中两个 namespace 之间的通信。</p>
-<h5 id="Bridge"><a href="#Bridge" class="headerlink" title="Bridge"></a>Bridge</h5><p>Bridge 也是 Linux 内核实现的一个工作在二层的虚拟网络设备，但不同于 TAP/TUN 这种单端口的设备，Bridge 实现为多端口，本质上是一个虚拟交换机，具备和物理交换机类似的功能。</p>
-<p>Bridge 可以绑定其他 Linux 网络设备作为从设备，并将这些从设备虚拟化为端口，当一个从设备被绑定到 Bridge 上时，就相当于真实网络中的交换机端口上插入了一根连有终端的网线。</p>
-<p>如下图所示，Bridge 设备 br0 绑定了实际设备 eth0 和 虚拟设备设备 tap0/tap1，当这些从设备接收到数据时，会发送给 br0 ，br0 会根据 MAC 地址与端口的映射关系进行转发。</p>
-<p><img alt="img" data-src="https://images2017.cnblogs.com/blog/431521/201712/431521-20171214124456982-1971018216.png"></p>
-<p>因为 Bridge 工作在二层，所以绑定到它上面的从设备 eth0、tap0、tap1 均不需要设 IP，但是需要为 br0 设置 IP，因为对于上层路由器来说，这些设备位于同一个子网，需要一个统一的 IP 将其加入路由表中。</p>
-<p>这里有人可能会有疑问，Bridge 不是工作在二层吗，为什么会有 IP 的说法？其实 Bridge 虽然工作在二层，但它只是 Linux 网络设备抽象的一种，能设 IP 也不足为奇。</p>
-<p>对于实际设备 eth0 来说，本来它是有自己的 IP 的，但是绑定到 br0 之后，其 IP 就失效了，就和 br0 共享一个 IP 网段了，在设路由表的时候，就需要将 br0 设为目标网段的地址。</p>
-<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><ol>
-<li>传统网络架构到虚拟化的网络架构，可以看作是宏观网络到微观网络的过渡</li>
-<li>TAP/TUN/VETH、Bridge 这些虚拟的网络设备是 Linux 为了实现网络虚拟化而实现的网络设备模块，很多的云开源项目的网络功能都是基于这些技术做的，比如 Neutron、Docker network 等。</li>
-<li>OVS 是一个开源的成熟的产品级分布式虚拟交换机，基于 SDN 的思想，被大量应用在生产环境中。</li>
-</ol>
-<p>随着容器逐步取代虚拟机，成为现在云基础架构的标准，这些容器的网络管理模块都离不开Linux虚拟网络设备。事实上，了解常用的Linux虚拟网络设备对于我们理解容器网络以及其他依赖于容器的基础架构网络实现都大有裨益。现在开始，我们就来看看常见的Linux虚拟网络设备有哪些以及它们的典型使用场景。</p>
-<h2 id><a href="#" class="headerlink" title=" "></a> </h2><hr>
-<p>通过上一篇笔记我们也知道，网络设备的驱动程序并不直接与内核中的协议栈交互，而是通过内核的网络设备管理模块。这样做的好处是，驱动程序不需要了解协议栈的细节，协议栈也不需要针对特定驱动处理数据包。</p>
+<h2 id="NAT"><a href="#NAT" class="headerlink" title="NAT"></a>NAT</h2><p>通过上一篇笔记我们也知道，网络设备的驱动程序并不直接与内核中的协议栈交互，而是通过内核的网络设备管理模块。这样做的好处是，驱动程序不需要了解协议栈的细节，协议栈也不需要针对特定驱动处理数据包。</p>
 <p>对于内核网络设备管理模块来说，虚拟设备和物理设备没有区别，都是网络设备，都能配置IP，甚至从逻辑上来看，虚拟网络设备和物理网络设备并没有什么区别，它们都类似于管道，从任意一端接收到的数据将从另外一端发送出去。比如物理网卡的两端分别是协议栈于外面的物理网络，从外面物理网络接收到的数据包会转发给协议栈，相反，应用程序通过协议栈发送过来的数据包会通过物理网卡发送到外面的物理网络。但是对于具体将数据包发送到哪里，怎么发送，不同的网络设备有不同的驱动实现，与内核设备管理模块以及协议栈没什么关系。</p>
 <p>总的来说，虚拟网络设备与物理网络设备没有什么区别，它们的一端连接着内核协议栈，而另一端的行为是什么取决于不同虚拟网络设备的驱动实现。</p>
-<h3 id="TUN-TAP"><a href="#TUN-TAP" class="headerlink" title="TUN/TAP"></a>TUN/TAP</h3><p>TUN/TAP虚拟网络设备一端连着协议栈，另外一端不是物理网络，而是另外一个处于用户空间的应用程序。也就是说，协议栈发给TUN/TAP的数据包能被这个应用程序读取到，当然应用程序能直接向TUN/TAP发送数据包。</p>
+<h2 id="TUN-TAP"><a href="#TUN-TAP" class="headerlink" title="TUN/TAP"></a>TUN/TAP</h2><p>TUN/TAP虚拟网络设备一端连着协议栈，另外一端不是物理网络，而是另外一个处于用户空间的应用程序。也就是说，协议栈发给TUN/TAP的数据包能被这个应用程序读取到，当然应用程序能直接向TUN/TAP发送数据包。</p>
 <p>一个典型的TUN/TAP的例子如下图所示：</p>
 <p><img alt="network-device-tun-tap.jpg" data-src="https://i.loli.net/2020/01/28/yDTFvEohmQfiWz5.jpg"></p>
 <p>上图中我们配置了一个物理网卡，IP为<code>18.12.0.92</code>，而tun0为一个TUN/TAP设备，IP配置为<code>10.0.0.12</code>。数据包的流向为：</p>
 <ol>
-<li>应用程序A通过socket A发送了一个数据包，假设这个数据包的目的IP地址是<code>10.0.0.22</code></li>
-<li>socket A将这个数据包丢给协议栈</li>
-<li>协议栈根据本地路由规则和数据包的目的IP，将数据包由给tun0设备发送出去</li>
-<li>tun0收到数据包之后，将数据包转发给给了用户空间的应用程序B</li>
-<li>应用程序B收到数据包之后构造一个新的数据包，将原来的数据包嵌入在新的数据包（IPIP包）中，最后通过socket B将数据包转发出去 &gt; Note: 新数据包的源地址变成了eth0的地址，而目的IP地址则变成了另外一个地址<code>18.13.0.91</code>.</li>
-<li>socket B将数据包发给协议栈</li>
-<li>协议栈根据本地路由规则和数据包的目的IP，决定将这个数据包要通过eth0发送出去，于是将数据包转发给eth0</li>
-<li>eth0通过物理网络将数据包发送出去</li>
+<li><p>应用程序A通过socket A发送了一个数据包，假设这个数据包的目的IP地址是<code>10.0.0.22</code></p>
+</li>
+<li><p>socket A将这个数据包丢给协议栈</p>
+</li>
+<li><p>协议栈根据本地路由规则和数据包的目的IP，将数据包由给tun0设备发送出去</p>
+</li>
+<li><p>tun0收到数据包之后，将数据包转发给给了用户空间的应用程序B</p>
+</li>
+<li><p>应用程序B收到数据包之后构造一个新的数据包，将原来的数据包嵌入在新的数据包（IPIP包）中，最后通过socket B将数据包转发出去 </p>
+<blockquote>
+<p>Note: 新数据包的源地址变成了eth0的地址，而目的IP地址则变成了另外一个地址<code>18.13.0.91</code>.</p>
+</blockquote>
+</li>
+<li><p>socket B将数据包发给协议栈</p>
+</li>
+<li><p>协议栈根据本地路由规则和数据包的目的IP，决定将这个数据包要通过eth0发送出去，于是将数据包转发给eth0</p>
+</li>
+<li><p>eth0通过物理网络将数据包发送出去</p>
+</li>
 </ol>
 <p>我们看到发送给<code>10.0.0.22</code>的网络数据包通过在用户空间的应用程序B，利用<code>18.12.0.92</code>发到远端网络的<code>18.13.0.91</code>，网络包到达<code>18.13.0.91</code>后，读取里面的原始数据包，读取里面的原始数据包，再转发给本地的<code>10.0.0.22</code>。这就是<a href="https://en.wikipedia.org/wiki/Virtual_private_network" target="_blank" rel="external nofollow noopener noreferrer">VPN</a>的基本原理。</p>
 <p>使用TUN/TAP设备我们有机会将协议栈中的部分数据包转发给用户空间的应用程序，让应用程序处理数据包。常用的使用场景包括数据压缩，加密等功能。</p>
 <blockquote>
 <p>Note: TUN和TAP设备的区别在于，TUN设备是一个虚拟的端到端IP层设备，也就是说用户空间的应用程序通过TUN设备只能读写IP网络数据包（三层），而TAP设备是一个虚拟的链路层设备，通过TAP设备能读写链路层数据包（二层）。在使用<code>ip</code>命令创建设备的时候使用<code>--dev tun</code>和<code>--dev tap</code>来区分。</p>
 </blockquote>
-<h3 id="veth"><a href="#veth" class="headerlink" title="veth"></a>veth</h3><p>veth虚拟网络设备一端连着协议栈，另外一端不是物理网络，而是另一个veth设备，成对的veth设备中一个数据包发送出去后会直接到另一个veth设备上去。每个veth设备都可以被配置IP地址，并参与三层IP网络路由过程。</p>
+<h2 id="Veth"><a href="#Veth" class="headerlink" title="Veth"></a>Veth</h2><p>veth虚拟网络设备一端连着协议栈，另外一端不是物理网络，而是另一个veth设备，成对的veth设备中一个数据包发送出去后会直接到另一个veth设备上去。每个veth设备都可以被配置IP地址，并参与三层IP网络路由过程。</p>
 <p>下面就是一个典型的veth设备对的例子：</p>
 <p><img alt="network-device-veth.jpg" data-src="https://i.loli.net/2020/01/28/dOA19SeZHPLanYC.jpg"></p>
 <p>我们配置物理网卡eth0的IP为<code>12.124.10.11</code>， 而成对出现的veth设备分别为veth0和veth1，它们的IP分别是<code>20.1.0.10</code>和<code>20.1.0.11</code>。</p>
@@ -410,7 +402,7 @@
 <p>我们可以尝试使用tcpdump抓取lo设备上的数据：</p>
 <figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># tcpdump -n -i lo</span><br><span class="line">tcpdump: verbose output suppressed, use -v <span class="keyword">or</span> -vv <span class="keyword">for</span> full protocol decode</span><br><span class="line">listening on lo, link-type EN10MB (Ethernet), capture size <span class="number">458122</span> bytes</span><br><span class="line"><span class="number">20</span>:<span class="number">25</span>:<span class="number">49.486019</span> IP IP <span class="number">20.1</span><span class="number">.0</span><span class="number">.11</span> &gt; <span class="number">20.1</span><span class="number">.0</span><span class="number">.10</span>: ICMP echo reply, id <span class="number">24177</span>, seq <span class="number">1</span>, length <span class="number">64</span></span><br><span class="line"><span class="number">20</span>:<span class="number">25</span>:<span class="number">50.4861228</span> IP IP <span class="number">20.1</span><span class="number">.0</span><span class="number">.11</span> &gt; <span class="number">20.1</span><span class="number">.0</span><span class="number">.10</span>: ICMP echo reply, id <span class="number">24177</span>, seq <span class="number">2</span>, length <span class="number">64</span></span><br></pre></td></tr></table></figure>
 <p>由此可见，对于成对出现的veth设备对，从一个设备出去的数据包会直接发给另外一个设备。在实际的应用场景中，比如容器网络中，成对的veth设备对处于不同的<a href="https://blog.scottlowe.org/2013/09/04/introducing-linux-network-namespaces/" target="_blank" rel="external nofollow noopener noreferrer">网络命名空间</a>中，数据包的转发在不同网络命名空间之间进行，后续在介绍容器网络的时候会详细说明。</p>
-<h3 id="bridge"><a href="#bridge" class="headerlink" title="bridge"></a>bridge</h3><p><a href="https://wiki.linuxfoundation.org/networking/bridge" target="_blank" rel="external nofollow noopener noreferrer">bridge</a>一般叫网桥，它也是一种虚拟网络设备，所以具有虚拟网络设备的特征，可以配置IP、MAC地址等。与其他去你网络设备不同的是，bridge是一个虚拟交换机，和物理交换机有类似的功能。bridge一端连接着协议栈，另外一端有多个端口，数据在各个端口间转发是基于MAC地址。</p>
+<h2 id="Bridge"><a href="#Bridge" class="headerlink" title="Bridge"></a>Bridge</h2><p><a href="https://wiki.linuxfoundation.org/networking/bridge" target="_blank" rel="external nofollow noopener noreferrer">bridge</a>一般叫网桥，它也是一种虚拟网络设备，所以具有虚拟网络设备的特征，可以配置IP、MAC地址等。与其他虚拟网络设备不同的是，bridge是一个虚拟交换机，和物理交换机有类似的功能。bridge一端连接着协议栈，另外一端有多个端口，数据在各个端口间转发是基于MAC地址。</p>
 <p>bridge可以工作在二层(链路层)，也可以工作在三层（IP网路层）。默认工作在二层。默认情况下，其工作在二层，可以在同一子网内的的不同主机间转发以太网报文；当给bridge分配了IP地址，也就开启了该bridge的三层工作模式。在Linux下，你可以用<a href="https://wiki.linuxfoundation.org/networking/iproute2" target="_blank" rel="external nofollow noopener noreferrer">iproute2</a>或<code>brctl</code>命令对bridge进行管理。</p>
 <p>创建bridge与创建其他虚拟网络设备类似，只需要制定type为<code>bridge</code>:</p>
 <figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># <span class="built_in">ip</span> link <span class="keyword">add </span>name <span class="keyword">br0 </span>type <span class="keyword">bridge</span></span><br><span class="line"><span class="keyword"># </span><span class="built_in">ip</span> link set <span class="keyword">br0 </span>up</span><br></pre></td></tr></table></figure>
@@ -436,13 +428,6 @@
 <p><strong>容器</strong></p>
 <p>而对于容器网络来说，每个容器的网络设备单独的网络命名空间中，所以很好地不同容器的协议栈，我们在接下来的笔记中进一步讨论不同的容器实现。</p>
 <p><img alt="network-device-docker.jpg" data-src="https://i.loli.net/2020/01/28/IPSwuRVbgTDKnhB.jpg"></p>
-<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><ul>
-<li><a href="https://backreference.org/2010/03/26/tuntap-interface-tutorial/" target="_blank" rel="external nofollow noopener noreferrer">https://backreference.org/2010/03/26/tuntap-interface-tutorial/</a></li>
-<li><a href="https://blog.scottlowe.org/2013/09/04/introducing-linux-network-namespaces/" target="_blank" rel="external nofollow noopener noreferrer">https://blog.scottlowe.org/2013/09/04/introducing-linux-network-namespaces/</a></li>
-<li><a href="https://www.ibm.com/developerworks/cn/linux/1310_xiawc_networkdevice/" target="_blank" rel="external nofollow noopener noreferrer">https://www.ibm.com/developerworks/cn/linux/1310_xiawc_networkdevice/</a></li>
-<li><a href="http://ifeanyi.co/posts/linux-namespaces-part-1/" target="_blank" rel="external nofollow noopener noreferrer">http://ifeanyi.co/posts/linux-namespaces-part-1/</a></li>
-<li><a href="http://www.opencloudblog.com/?p=66" target="_blank" rel="external nofollow noopener noreferrer">http://www.opencloudblog.com/?p=66</a></li>
-</ul>
 <h2 id="VxLAN"><a href="#VxLAN" class="headerlink" title="VxLAN"></a>VxLAN</h2><h2 id="IPIP"><a href="#IPIP" class="headerlink" title="IPIP"></a>IPIP</h2><p>上一篇笔记中，我们在介绍网络设备的时候了解了一种典型的通过TUN/TAP设备来实现VPN的原理，但是并没有实践TUN/TAP虚拟网络设备具体在linux中怎么发挥实际的功能。这篇笔记我们就来看看在云计算领域中一种非常典型的IPIP隧道如何TUN设备来实现。</p>
 <h3 id="IPIP隧道"><a href="#IPIP隧道" class="headerlink" title="IPIP隧道"></a>IPIP隧道</h3><p>上一篇笔记中我们也提到了，TUN网络设备能将三层（IP）网络包封装在另外一个三层网络包之中，看起来通过TUN设备发送出来的数据包会像会这样：</p>
 <figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">MAC: xx:xx:xx:xx:xx:xx</span><br><span class="line">IP Header: &lt;new destination IP&gt;</span><br><span class="line">IP Body:</span><br><span class="line">  IP: &lt;original destination IP&gt;</span><br><span class="line">  TCP: stuff</span><br><span class="line">  HTTP: stuff</span><br></pre></td></tr></table></figure>
@@ -548,11 +533,16 @@
 <p>C:</p>
 <figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># tcpdump -n -i tunl0</span></span><br><span class="line">tcpdump: verbose output suppressed, use -v <span class="keyword">or</span> -vv <span class="keyword">for</span> full protocol decode</span><br><span class="line">listening on tunl0, link-type<span class="built_in"> RAW </span>(Raw IP), capture size 262144 bytes</span><br><span class="line">22:36:18.236446<span class="built_in"> IP </span>10.42.1.0 &gt; 10.42.3.1: ICMP echo request, id 5894, seq 1, length 64</span><br><span class="line">22:36:18.236499<span class="built_in"> IP </span>10.42.3.1 &gt; 10.42.1.0: ICMP echo reply, id 5894, seq 1, length 64</span><br><span class="line">22:36:19.265946<span class="built_in"> IP </span>10.42.1.0 &gt; 10.42.3.1: ICMP echo request, id 5894, seq 2, length 64</span><br><span class="line">22:36:19.265997<span class="built_in"> IP </span>10.42.3.1 &gt; 10.42.1.0: ICMP echo reply, id 5894, seq 2, length 64</span><br></pre></td></tr></table></figure>
 <p>其实，从创建one-to-many的IPIP隧道的过程中我们就能大致猜到Linux的ipip模块基于路由信息获取IPIP包的内部ip然后再用外部IP封装成新的IP包。至于怎么解封IPIP数据包的呢，我们来看看ipip模块收数据包的过程：</p>
-<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">void</span> <span class="string">ip_protocol_deliver_rcu(struct net *net, struct sk_buff *skb, int protocol)</span></span><br><span class="line"><span class="attr">&#123;</span></span><br><span class="line">	<span class="attr">const</span> <span class="string">struct net_protocol *ipprot;</span></span><br><span class="line">	<span class="attr">int</span> <span class="string">raw, ret;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">resubmit</span>:<span class="string"></span></span><br><span class="line">	<span class="attr">raw</span> = <span class="string">raw_local_deliver(skb, protocol);</span></span><br><span class="line"></span><br><span class="line">	<span class="attr">ipprot</span> = <span class="string">rcu_dereference(inet_protos[protocol]);</span></span><br><span class="line">	<span class="attr">if</span> <span class="string">(ipprot) &#123;</span></span><br><span class="line">		<span class="attr">if</span> <span class="string">(!ipprot-&gt;no_policy) &#123;</span></span><br><span class="line">			<span class="attr">if</span> <span class="string">(!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb)) &#123;</span></span><br><span class="line">				<span class="attr">kfree_skb(skb);</span></span><br><span class="line">				<span class="attr">return;</span></span><br><span class="line">			<span class="attr">&#125;</span></span><br><span class="line">			<span class="attr">nf_reset_ct(skb);</span></span><br><span class="line">		<span class="attr">&#125;</span></span><br><span class="line">		<span class="attr">ret</span> = <span class="string">INDIRECT_CALL_2(ipprot-&gt;handler, tcp_v4_rcv, udp_rcv,</span></span><br><span class="line">				      <span class="attr">skb);</span></span><br><span class="line">		<span class="attr">if</span> <span class="string">(ret &lt; 0) &#123;</span></span><br><span class="line">			<span class="attr">protocol</span> = <span class="string">-ret;</span></span><br><span class="line">			<span class="attr">goto</span> <span class="string">resubmit;</span></span><br><span class="line">		<span class="attr">&#125;</span></span><br><span class="line">		<span class="meta">__IP_INC_STATS(net,</span> <span class="string">IPSTATS_MIB_INDELIVERS);</span></span><br><span class="line">	<span class="meta">&#125;</span> <span class="string">else &#123;</span></span><br><span class="line">		<span class="attr">if</span> <span class="string">(!raw) &#123;</span></span><br><span class="line">			<span class="attr">if</span> <span class="string">(xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb)) &#123;</span></span><br><span class="line">				<span class="meta">__IP_INC_STATS(net,</span> <span class="string">IPSTATS_MIB_INUNKNOWNPROTOS);</span></span><br><span class="line">				<span class="meta">icmp_send(skb,</span> <span class="string">ICMP_DEST_UNREACH,</span></span><br><span class="line">					  <span class="meta">ICMP_PROT_UNREACH,</span> <span class="string">0);</span></span><br><span class="line">			<span class="attr">&#125;</span></span><br><span class="line">			<span class="attr">kfree_skb(skb);</span></span><br><span class="line">		<span class="meta">&#125;</span> <span class="string">else &#123;</span></span><br><span class="line">			<span class="meta">__IP_INC_STATS(net,</span> <span class="string">IPSTATS_MIB_INDELIVERS);</span></span><br><span class="line">			<span class="attr">consume_skb(skb);</span></span><br><span class="line">		<span class="attr">&#125;</span></span><br><span class="line">	<span class="attr">&#125;</span></span><br><span class="line"><span class="attr">&#125;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">ip_protocol_deliver_rcu</span><span class="params">(struct net *net, struct sk_buff *skb, <span class="keyword">int</span> protocol)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">net_protocol</span> *<span class="title">ipprot</span>;</span></span><br><span class="line">	<span class="keyword">int</span> raw, ret;</span><br><span class="line"></span><br><span class="line">resubmit:</span><br><span class="line">	raw = raw_local_deliver(skb, protocol);</span><br><span class="line"></span><br><span class="line">	ipprot = rcu_dereference(inet_protos[protocol]);</span><br><span class="line">	<span class="keyword">if</span> (ipprot) &#123;</span><br><span class="line">		<span class="keyword">if</span> (!ipprot-&gt;no_policy) &#123;</span><br><span class="line">			<span class="keyword">if</span> (!xfrm4_policy_check(<span class="literal">NULL</span>, XFRM_POLICY_IN, skb)) &#123;</span><br><span class="line">				kfree_skb(skb);</span><br><span class="line">				<span class="keyword">return</span>;</span><br><span class="line">			&#125;</span><br><span class="line">			nf_reset_ct(skb);</span><br><span class="line">		&#125;</span><br><span class="line">		ret = INDIRECT_CALL_2(ipprot-&gt;handler, tcp_v4_rcv, udp_rcv,</span><br><span class="line">				      skb);</span><br><span class="line">		<span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">			protocol = -ret;</span><br><span class="line">			<span class="keyword">goto</span> resubmit;</span><br><span class="line">		&#125;</span><br><span class="line">		__IP_INC_STATS(net, IPSTATS_MIB_INDELIVERS);</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> (!raw) &#123;</span><br><span class="line">			<span class="keyword">if</span> (xfrm4_policy_check(<span class="literal">NULL</span>, XFRM_POLICY_IN, skb)) &#123;</span><br><span class="line">				__IP_INC_STATS(net, IPSTATS_MIB_INUNKNOWNPROTOS);</span><br><span class="line">				icmp_send(skb, ICMP_DEST_UNREACH,</span><br><span class="line">					  ICMP_PROT_UNREACH, <span class="number">0</span>);</span><br><span class="line">			&#125;</span><br><span class="line">			kfree_skb(skb);</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			__IP_INC_STATS(net, IPSTATS_MIB_INDELIVERS);</span><br><span class="line">			consume_skb(skb);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>From <a href="https://github.com/torvalds/linux/blob/master/net/ipv4/ip_input.c#L187-L224" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/torvalds/linux/blob/master/net/ipv4/ip_input.c#L187-L224</a></p>
 <p>可以看到，ipip模块会根据数据包的协议类型去解封，然后将解封后的skb数据包再做一次解封。以上只是一些非常浅显的分析，如果大家感兴趣，推荐去多看看ipip模块的源代码实现。</p>
 <h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
 <li><a href="https://ring0.me/2014/02/network-virtualization-techniques/" target="_blank" rel="external nofollow noopener noreferrer">https://ring0.me/2014/02/network-virtualization-techniques/</a></li>
+<li><a href="https://backreference.org/2010/03/26/tuntap-interface-tutorial/" target="_blank" rel="external nofollow noopener noreferrer">https://backreference.org/2010/03/26/tuntap-interface-tutorial/</a></li>
+<li><a href="https://blog.scottlowe.org/2013/09/04/introducing-linux-network-namespaces/" target="_blank" rel="external nofollow noopener noreferrer">https://blog.scottlowe.org/2013/09/04/introducing-linux-network-namespaces/</a></li>
+<li><a href="https://www.ibm.com/developerworks/cn/linux/1310_xiawc_networkdevice/" target="_blank" rel="external nofollow noopener noreferrer">https://www.ibm.com/developerworks/cn/linux/1310_xiawc_networkdevice/</a></li>
+<li><a href="http://ifeanyi.co/posts/linux-namespaces-part-1/" target="_blank" rel="external nofollow noopener noreferrer">http://ifeanyi.co/posts/linux-namespaces-part-1/</a></li>
+<li><a href="http://www.opencloudblog.com/?p=66" target="_blank" rel="external nofollow noopener noreferrer">http://www.opencloudblog.com/?p=66</a></li>
 </ul>
 
     </div>
@@ -564,10 +554,10 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/65866329/" rel="bookmark">虚拟化技术概览</a></div>
+      <div class="popular-posts-title"><a href="/posts/ccdd2b68/" rel="bookmark">macOS 使用 Vagrant 管理虚拟机</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/ccdd2b68/" rel="bookmark">macOS 使用 Vagrant 管理虚拟机</a></div>
+      <div class="popular-posts-title"><a href="/posts/65866329/" rel="bookmark">虚拟化技术概览</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/941301e/" rel="bookmark">Linux网络包收发流程</a></div>
@@ -680,7 +670,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#网络虚拟化"><span class="nav-number">1.</span> <span class="nav-text">网络虚拟化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#前言"><span class="nav-number">1.1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#传统网络架构"><span class="nav-number">1.2.</span> <span class="nav-text">传统网络架构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#虚拟化网络架构"><span class="nav-number">1.3.</span> <span class="nav-text">虚拟化网络架构</span></a></li></ol></li></ol><li class="nav-item nav-level-2"><a class="nav-link" href="#NAT"><span class="nav-number"></span> <span class="nav-text">NAT</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#虚拟网络设备"><span class="nav-number"></span> <span class="nav-text">虚拟网络设备</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#虚拟化的几种形式"><span class="nav-number">0.1.</span> <span class="nav-text">虚拟化的几种形式</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#TAP-TUN-VETH"><span class="nav-number">0.1.1.</span> <span class="nav-text">TAP/TUN/VETH</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Bridge"><span class="nav-number">0.1.2.</span> <span class="nav-text">Bridge</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#总结"><span class="nav-number">0.2.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#null"><span class="nav-number"></span> <span class="nav-text"> </span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#TUN-TAP"><span class="nav-number">1.</span> <span class="nav-text">TUN/TAP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#veth"><span class="nav-number">2.</span> <span class="nav-text">veth</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bridge"><span class="nav-number">3.</span> <span class="nav-text">bridge</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VxLAN"><span class="nav-number"></span> <span class="nav-text">VxLAN</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IPIP"><span class="nav-number"></span> <span class="nav-text">IPIP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#IPIP隧道"><span class="nav-number">1.</span> <span class="nav-text">IPIP隧道</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#one-to-one"><span class="nav-number">2.</span> <span class="nav-text">one-to-one</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#one-to-many"><span class="nav-number">3.</span> <span class="nav-text">one-to-many</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#under-the-hood"><span class="nav-number">4.</span> <span class="nav-text">under the hood</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number"></span> <span class="nav-text">参考资料</span></a></li></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#传统网络架构"><span class="nav-number">1.</span> <span class="nav-text">传统网络架构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#虚拟化网络架构"><span class="nav-number">2.</span> <span class="nav-text">虚拟化网络架构</span></a></li></ol><li class="nav-item nav-level-2"><a class="nav-link" href="#NAT"><span class="nav-number"></span> <span class="nav-text">NAT</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TUN-TAP"><span class="nav-number"></span> <span class="nav-text">TUN/TAP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Veth"><span class="nav-number"></span> <span class="nav-text">Veth</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bridge"><span class="nav-number"></span> <span class="nav-text">Bridge</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VxLAN"><span class="nav-number"></span> <span class="nav-text">VxLAN</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IPIP"><span class="nav-number"></span> <span class="nav-text">IPIP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#IPIP隧道"><span class="nav-number"></span> <span class="nav-text">IPIP隧道</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#one-to-one"><span class="nav-number"></span> <span class="nav-text">one-to-one</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#one-to-many"><span class="nav-number"></span> <span class="nav-text">one-to-many</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#under-the-hood"><span class="nav-number"></span> <span class="nav-text">under the hood</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number"></span> <span class="nav-text">参考资料</span></a></li></div>
       </div>
       <!--/noindex-->
 
@@ -695,7 +685,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">97</span>
+          <span class="site-state-item-count">105</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -707,7 +697,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">147</span>
+        <span class="site-state-item-count">158</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -775,13 +765,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">916k</span>
+    <span title="站点总字数">976k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">27:46</span>
+    <span title="站点阅读时长">29:34</span>
 </div>
 
         
