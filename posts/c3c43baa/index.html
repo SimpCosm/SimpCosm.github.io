@@ -56,7 +56,7 @@
 </script>
 
   <meta name="description" content="Hash Table（哈希表，也叫散列表） 是在计算机科学中除了 Array 外应用最为广泛的数据结构，它通过 Hash 函数以 Key 为参数，计算出一个在Buckets Array中的 Index，用于将 Key 映射到表中的 Value。在平均情况下，哈希表具有 O(1) 的读写性能，实际证明它比搜索树等其他数据结构查找效率更高，所以也应用最为广泛。理想条件下，Hash 函数会将每个Key分">
-<meta name="keywords" content="Go,源码阅读,数据结构,HashTable">
+<meta name="keywords" content="Go,源码阅读,HashTable,数据结构">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Go语言设计与实现】Hash Table">
 <meta property="og:url" content="http://houmin.cc/posts/c3c43baa/index.html">
@@ -505,13 +505,13 @@ Hash_i = (Hash(key) + D_i)\ \ mod\ \ m,\ i = 1,2,...,k(k<=m-1)</script><p>根据
       <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/c31234d9/" rel="bookmark">【Go语言设计与实现】Interface</a></div>
-    </li>
-    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/e87a4e07/" rel="bookmark">【Go语言设计与实现】String</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/4e214fa9/" rel="bookmark">【Go语言设计与实现】Function</a></div>
+      <div class="popular-posts-title"><a href="/posts/bf9c845a/" rel="bookmark">【Go语言设计与实现】Reflect</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/c31234d9/" rel="bookmark">【Go语言设计与实现】Interface</a></div>
     </li>
   </ul>
 
@@ -559,8 +559,8 @@ Hash_i = (Hash(key) + D_i)\ \ mod\ \ m,\ i = 1,2,...,k(k<=m-1)</script><p>根据
           <div class="post-tags">
               <a href="/tags/Go/" rel="tag"><i class="fa fa-tag"></i> Go</a>
               <a href="/tags/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码阅读</a>
-              <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag"><i class="fa fa-tag"></i> 数据结构</a>
               <a href="/tags/HashTable/" rel="tag"><i class="fa fa-tag"></i> HashTable</a>
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag"><i class="fa fa-tag"></i> 数据结构</a>
           </div>
 
         
@@ -632,7 +632,7 @@ Hash_i = (Hash(key) + D_i)\ \ mod\ \ m,\ i = 1,2,...,k(k<=m-1)</script><p>根据
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">105</span>
+          <span class="site-state-item-count">106</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -644,7 +644,7 @@ Hash_i = (Hash(key) + D_i)\ \ mod\ \ m,\ i = 1,2,...,k(k<=m-1)</script><p>根据
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">158</span>
+        <span class="site-state-item-count">159</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -712,13 +712,13 @@ Hash_i = (Hash(key) + D_i)\ \ mod\ \ m,\ i = 1,2,...,k(k<=m-1)</script><p>根据
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">976k</span>
+    <span title="站点总字数">960k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">29:34</span>
+    <span title="站点阅读时长">29:05</span>
 </div>
 
         
