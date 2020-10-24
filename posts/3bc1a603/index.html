@@ -56,7 +56,7 @@
 </script>
 
   <meta name="description" content="ApiServer作为 Kubernetes 的核心组件，让集群中所有资源可被描述和配置，即包括了pod、ingress、pvc这些基础资源，也包括deployment、rc、hpa等管理对象；ApiServer就像是一个包含一定逻辑的对象数据库代理；提供了RESTful API接口，其他组件或客户端可以通过该接口获取集群中资源对象的配置和状态，以实现各种逻辑处理；ApiServer本身是无状态的">
-<meta name="keywords" content="k8s,go,源码解读,apiserver">
+<meta name="keywords" content="Go,k8s,源码阅读,apiserver">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Kubernetes】ApiServer之初识API">
 <meta property="og:url" content="http://houmin.cc/posts/3bc1a603/index.html">
@@ -69,7 +69,7 @@
 <meta property="og:image" content="http://cdn.tianfeiyu.com/API-server-flow-2.png">
 <meta property="og:image" content="http://cdn.tianfeiyu.com/API-server-storage-flow-2.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/TroyYing/image/master/k8s_code_apiserver/apiserver_diagram.png">
-<meta property="og:updated_time" content="2020-09-12T01:46:57.005Z">
+<meta property="og:updated_time" content="2020-10-24T11:33:34.480Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http://cdn.tianfeiyu.com/API-server-space-1.png">
 
@@ -458,19 +458,19 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
+    </li>
+    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/76a404e7/" rel="bookmark">【Kubernetes】Controller Manager</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/d3e0e7a2/" rel="bookmark">【Kubernetes】Scheduler</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
-    </li>
-    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/83a17de0/" rel="bookmark">【Kubernetes】Scheduling Framework</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes】调度策略</a></div>
+      <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
     </li>
   </ul>
 
@@ -516,9 +516,9 @@
       <footer class="post-footer">
           
           <div class="post-tags">
+              <a href="/tags/Go/" rel="tag"><i class="fa fa-tag"></i> Go</a>
               <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
-              <a href="/tags/go/" rel="tag"><i class="fa fa-tag"></i> go</a>
-              <a href="/tags/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码解读</a>
+              <a href="/tags/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码阅读</a>
               <a href="/tags/apiserver/" rel="tag"><i class="fa fa-tag"></i> apiserver</a>
           </div>
 
@@ -603,7 +603,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">159</span>
+        <span class="site-state-item-count">157</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

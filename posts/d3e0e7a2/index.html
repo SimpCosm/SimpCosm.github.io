@@ -56,7 +56,7 @@
 </script>
 
   <meta name="description" content="调度器（Scheduler）是 Kubernetes 的核心组件，它的主要功能是为待运行的工作负载 Pod 绑定运行的节点 Node。从最早基于谓词和优先级（Predicates and Priorities）的调度器，到 V1.15基于调度框架（Scheduling Framework）的调度器，Kubernetes的调度器正在快速演进，以满足不同场景对于资源调度的需求。 本文是「Kuberne">
-<meta name="keywords" content="k8s,go,scheduler,源码解读">
+<meta name="keywords" content="Go,k8s,源码阅读,scheduler">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Kubernetes】Scheduler">
 <meta property="og:url" content="http://houmin.cc/posts/d3e0e7a2/index.html">
@@ -75,7 +75,7 @@
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/97498/1579429125998-3ddcaf40-b47c-4234-81bc-fce652fe6f46.png">
 <meta property="og:image" content="https://static001.infoq.cn/resource/image/ba/71/ba41b64474d1afffa4fa44fe7130c071.jpg">
 <meta property="og:image" content="https://static001.infoq.cn/resource/image/98/de/982345178a76967d014yy05300ca59de.jpg">
-<meta property="og:updated_time" content="2020-09-12T01:47:16.944Z">
+<meta property="og:updated_time" content="2020-10-24T11:34:33.398Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-27_k8s-scheduler.png">
 
@@ -716,6 +716,9 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
+    </li>
+    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/83a17de0/" rel="bookmark">【Kubernetes】Scheduling Framework</a></div>
     </li>
     <li class="popular-posts-item">
@@ -725,10 +728,7 @@
       <div class="popular-posts-title"><a href="/posts/76a404e7/" rel="bookmark">【Kubernetes】Controller Manager</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes】调度策略</a></div>
+      <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
     </li>
   </ul>
 
@@ -774,10 +774,10 @@
       <footer class="post-footer">
           
           <div class="post-tags">
+              <a href="/tags/Go/" rel="tag"><i class="fa fa-tag"></i> Go</a>
               <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
-              <a href="/tags/go/" rel="tag"><i class="fa fa-tag"></i> go</a>
+              <a href="/tags/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码阅读</a>
               <a href="/tags/scheduler/" rel="tag"><i class="fa fa-tag"></i> scheduler</a>
-              <a href="/tags/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码解读</a>
           </div>
 
         
@@ -861,7 +861,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">159</span>
+        <span class="site-state-item-count">157</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
