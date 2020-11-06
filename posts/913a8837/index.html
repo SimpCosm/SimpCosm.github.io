@@ -56,9 +56,9 @@
 </script>
 
   <meta name="description" content="从 v1.8 开始，资源使用情况的监控可以通过 Metrics API的形式获取，具体的组件为Metrics Server，用来替换之前的 heapster，heapster从1.11开始逐渐被废弃。 Metrics-Server是集群核心监控数据的聚合器，从 Kubernetes1.8 开始，它作为一个 Deployment对象默认部署在由kube-up.sh脚本创建的集群中，如果是其他部署方式">
-<meta name="keywords" content="k8s,监控">
+<meta name="keywords" content="k8s,monitoring">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Metrics Server">
+<meta property="og:title" content="【系统监控】Metrics Server">
 <meta property="og:url" content="http://houmin.cc/posts/913a8837/index.html">
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="从 v1.8 开始，资源使用情况的监控可以通过 Metrics API的形式获取，具体的组件为Metrics Server，用来替换之前的 heapster，heapster从1.11开始逐渐被废弃。 Metrics-Server是集群核心监控数据的聚合器，从 Kubernetes1.8 开始，它作为一个 Deployment对象默认部署在由kube-up.sh脚本创建的集群中，如果是其他部署方式">
@@ -66,7 +66,7 @@
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-17_metrics-server.png">
 <meta property="og:image" content="http://www.xuyasong.com/wp-content/uploads/2019/01/15473067971765.jpg">
 <meta property="og:image" content="http://www.xuyasong.com/wp-content/uploads/2019/01/15473069387068.jpg">
-<meta property="og:updated_time" content="2020-09-17T07:48:51.700Z">
+<meta property="og:updated_time" content="2020-11-03T03:06:31.872Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-17_metrics-server.png">
 
@@ -84,7 +84,7 @@
   };
 </script>
 
-  <title>Metrics Server | Houmin</title>
+  <title>【系统监控】Metrics Server | Houmin</title>
   
 
 
@@ -252,7 +252,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          Metrics Server
+          【系统监控】Metrics Server
         </h2>
 
         <div class="post-meta">
@@ -380,10 +380,7 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/9bd76ed5/" rel="bookmark">【Kubernetes】kube-state-metrics</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/58272b06/" rel="bookmark">【Kubernetes】监控的可观测性</a></div>
+      <div class="popular-posts-title"><a href="/posts/9bd76ed5/" rel="bookmark">【系统监控】kube-state-metrics</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
@@ -393,6 +390,9 @@
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes】调度策略</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/fb705539/" rel="bookmark">【Kubernetes】Kubelet</a></div>
     </li>
   </ul>
 
@@ -426,7 +426,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://houmin.cc/posts/913a8837/" title="Metrics Server">http://houmin.cc/posts/913a8837/</a>
+    <a href="http://houmin.cc/posts/913a8837/" title="【系统监控】Metrics Server">http://houmin.cc/posts/913a8837/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -439,23 +439,23 @@
           
           <div class="post-tags">
               <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
-              <a href="/tags/%E7%9B%91%E6%8E%A7/" rel="tag"><i class="fa fa-tag"></i> 监控</a>
+              <a href="/tags/monitoring/" rel="tag"><i class="fa fa-tag"></i> monitoring</a>
           </div>
 
         
 
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
-                <a href="/posts/703a5727/" rel="next" title="cAdvisor">
-                  <i class="fa fa-chevron-left"></i> cAdvisor
+                <a href="/posts/703a5727/" rel="next" title="【系统监控】cAdvisor">
+                  <i class="fa fa-chevron-left"></i> 【系统监控】cAdvisor
                 </a>
             </div>
 
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
-                <a href="/posts/9bd76ed5/" rel="prev" title="【Kubernetes】kube-state-metrics">
-                  【Kubernetes】kube-state-metrics <i class="fa fa-chevron-right"></i>
+                <a href="/posts/9bd76ed5/" rel="prev" title="【系统监控】kube-state-metrics">
+                  【系统监控】kube-state-metrics <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>
@@ -511,7 +511,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">106</span>
+          <span class="site-state-item-count">107</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -523,7 +523,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">157</span>
+        <span class="site-state-item-count">159</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -591,13 +591,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">960k</span>
+    <span title="站点总字数">999k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">29:06</span>
+    <span title="站点阅读时长">30:16</span>
 </div>
 
         

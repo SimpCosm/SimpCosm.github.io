@@ -63,7 +63,7 @@
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="本文分析了Kubernetes内置的各种调度策略。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-09-12T01:47:04.086Z">
+<meta property="og:updated_time" content="2020-11-04T11:06:18.874Z">
 <meta name="twitter:card" content="summary">
 
 <link rel="canonical" href="http://houmin.cc/posts/b130e91a/">
@@ -488,7 +488,6 @@
 <figure class="highlight go"><figcaption><span>pkg/scheduler/framework/plugins/legacy_registry.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">registry.registerPredicateConfigProducer(MaxCinderVolumeCountPred,</span><br><span class="line">		<span class="function"><span class="keyword">func</span><span class="params">(_ ConfigProducerArgs)</span> <span class="params">(plugins config.Plugins, pluginConfig []config.PluginConfig)</span></span> &#123;</span><br><span class="line">			plugins.Filter = appendToPluginSet(plugins.Filter, nodevolumelimits.CinderName, <span class="literal">nil</span>)</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;)</span><br></pre></td></tr></table></figure>
 <h3 id="Pod-与-Node-匹配相关"><a href="#Pod-与-Node-匹配相关" class="headerlink" title="Pod 与 Node 匹配相关"></a>Pod 与 Node 匹配相关</h3><ul>
 <li>CheckNodeCondition：校验节点是否准备好被调度，校验node.condition的condition type ：Ready为true和NetworkUnavailable为false以及Node.Spec.Unschedulable为false；</li>
-<li></li>
 <li>PodFitsHostPorts：校验 Pod 上的 Container 声明的 Ports 是否正在被 Node 上已经分配的 Pod 使用；</li>
 <li>MatchNodeSelector: 校验 Pod.Spec.Affinity.NodeAffinity 和 Pod.Spec.NodeSelector 是否与 Node 的 Labels 匹配。</li>
 </ul>
@@ -549,42 +548,42 @@
 </thead>
 <tbody>
 <tr>
-<td>BalancedResourceAllocation</td>
+<td>BalancedResourceAllocation*</td>
 <td>CPU和内存利用率越接近，得分越高</td>
 <td>1</td>
 </tr>
 <tr>
-<td>ImageLocalityPriority</td>
+<td>ImageLocalityPriority*</td>
 <td>待调度的Pod会使用一些镜像，拥有这些镜像越多的节点，得分越高</td>
 <td>1</td>
 </tr>
 <tr>
-<td>InterPodAffinityPriority</td>
+<td>InterPodAffinityPriority*</td>
 <td>Pod与Node上正运行的其他Pod亲和性匹配度越高，得分越高</td>
 <td>1</td>
 </tr>
 <tr>
-<td>LeastRequestedPriority</td>
+<td>LeastRequestedPriority*</td>
 <td>剩余资源越多，得分越高</td>
 <td>1</td>
 </tr>
 <tr>
-<td>NodeAffinityPriority</td>
+<td>NodeAffinityPriority*</td>
 <td>Pod与Node亲和性匹配度越高，得分越高</td>
 <td>1</td>
 </tr>
 <tr>
-<td>NodePreferAvoidPodsPriority</td>
+<td>NodePreferAvoidPodsPriority*</td>
 <td>该Node的annotation scheduler.alpha.kubernetes.io/preferAvoidPods被设置时，说明该Node不希望被调度，得分低。</td>
 <td>10000</td>
 </tr>
 <tr>
-<td>SelectorSpreadPriority</td>
+<td>SelectorSpreadPriority*</td>
 <td>相同service/rc的Pods越分散，得分越高</td>
 <td>1</td>
 </tr>
 <tr>
-<td>TaintTolerationPriority</td>
+<td>TaintTolerationPriority*</td>
 <td>Pod对Node的taint容忍度越高，得分越高</td>
 <td>1</td>
 </tr>
@@ -732,10 +731,10 @@ score = (1 - variance(cpuFraction,memoryFraction,volumeFraction)) * MaxNodeScore
       <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer之初识API</a></div>
+      <div class="popular-posts-title"><a href="/posts/fb705539/" rel="bookmark">【Kubernetes】Kubelet</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/76a404e7/" rel="bookmark">【Kubernetes】Controller Manager</a></div>
+      <div class="popular-posts-title"><a href="/posts/b88b921f/" rel="bookmark">【Kubernetes】Pod</a></div>
     </li>
   </ul>
 
@@ -854,7 +853,7 @@ score = (1 - variance(cpuFraction,memoryFraction,volumeFraction)) * MaxNodeScore
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">106</span>
+          <span class="site-state-item-count">107</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -866,7 +865,7 @@ score = (1 - variance(cpuFraction,memoryFraction,volumeFraction)) * MaxNodeScore
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">157</span>
+        <span class="site-state-item-count">159</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -934,13 +933,13 @@ score = (1 - variance(cpuFraction,memoryFraction,volumeFraction)) * MaxNodeScore
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">960k</span>
+    <span title="站点总字数">999k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">29:06</span>
+    <span title="站点阅读时长">30:16</span>
 </div>
 
         

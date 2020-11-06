@@ -56,16 +56,16 @@
 </script>
 
   <meta name="description" content="Exporter 是Prometheus的一类数据采集组件的总称，负责从目标处搜集数据，并将其转化为Prometheus支持的格式。与传统的数据采集组件不同的是，它并不向中央服务器发送数据，而是等待中央服务器主动前来抓取，默认的抓取地址为 http:&#x2F;&#x2F;current_ip:9100&#x2F;metrics。Node Exporter 用于采集服务器层面的运行指标，包括机器的 loadavg、filesy">
-<meta name="keywords" content="监控,可观测性">
+<meta name="keywords" content="monitoring,可观测性">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Node Exporter">
+<meta property="og:title" content="【系统监控】Node Exporter">
 <meta property="og:url" content="http://houmin.cc/posts/dd1e183c/index.html">
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="Exporter 是Prometheus的一类数据采集组件的总称，负责从目标处搜集数据，并将其转化为Prometheus支持的格式。与传统的数据采集组件不同的是，它并不向中央服务器发送数据，而是等待中央服务器主动前来抓取，默认的抓取地址为 http:&#x2F;&#x2F;current_ip:9100&#x2F;metrics。Node Exporter 用于采集服务器层面的运行指标，包括机器的 loadavg、filesy">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-17_node-exporter-metrics.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-17_prometheus-node-exporter.png">
-<meta property="og:updated_time" content="2020-09-17T07:49:51.291Z">
+<meta property="og:updated_time" content="2020-11-03T03:06:10.667Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-17_node-exporter-metrics.png">
 
@@ -83,7 +83,7 @@
   };
 </script>
 
-  <title>Node Exporter | Houmin</title>
+  <title>【系统监控】Node Exporter | Houmin</title>
   
 
 
@@ -251,7 +251,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          Node Exporter
+          【系统监控】Node Exporter
         </h2>
 
         <div class="post-meta">
@@ -380,19 +380,19 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/18c039ab/" rel="bookmark">【系统监控】Prometheus</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/703a5727/" rel="bookmark">【系统监控】cAdvisor</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/913a8837/" rel="bookmark">【系统监控】Metrics Server</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/9bd76ed5/" rel="bookmark">【系统监控】kube-state-metrics</a></div>
+    </li>
+    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/588dbd28/" rel="bookmark">Grafana 入门</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/703a5727/" rel="bookmark">cAdvisor</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/9bd76ed5/" rel="bookmark">【Kubernetes】kube-state-metrics</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/913a8837/" rel="bookmark">Metrics Server</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/58272b06/" rel="bookmark">【Kubernetes】监控的可观测性</a></div>
     </li>
   </ul>
 
@@ -426,7 +426,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://houmin.cc/posts/dd1e183c/" title="Node Exporter">http://houmin.cc/posts/dd1e183c/</a>
+    <a href="http://houmin.cc/posts/dd1e183c/" title="【系统监控】Node Exporter">http://houmin.cc/posts/dd1e183c/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -438,7 +438,7 @@
       <footer class="post-footer">
           
           <div class="post-tags">
-              <a href="/tags/%E7%9B%91%E6%8E%A7/" rel="tag"><i class="fa fa-tag"></i> 监控</a>
+              <a href="/tags/monitoring/" rel="tag"><i class="fa fa-tag"></i> monitoring</a>
               <a href="/tags/%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7/" rel="tag"><i class="fa fa-tag"></i> 可观测性</a>
           </div>
 
@@ -446,16 +446,16 @@
 
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
-                <a href="/posts/9bd76ed5/" rel="next" title="【Kubernetes】kube-state-metrics">
-                  <i class="fa fa-chevron-left"></i> 【Kubernetes】kube-state-metrics
+                <a href="/posts/9bd76ed5/" rel="next" title="【系统监控】kube-state-metrics">
+                  <i class="fa fa-chevron-left"></i> 【系统监控】kube-state-metrics
                 </a>
             </div>
 
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
-                <a href="/posts/18c039ab/" rel="prev" title="Prometheus">
-                  Prometheus <i class="fa fa-chevron-right"></i>
+                <a href="/posts/18c039ab/" rel="prev" title="【系统监控】Prometheus">
+                  【系统监控】Prometheus <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>
@@ -511,7 +511,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">106</span>
+          <span class="site-state-item-count">107</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -523,7 +523,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">157</span>
+        <span class="site-state-item-count">159</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -591,13 +591,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">960k</span>
+    <span title="站点总字数">999k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">29:06</span>
+    <span title="站点阅读时长">30:16</span>
 </div>
 
         
