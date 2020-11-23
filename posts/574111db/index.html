@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="我们在 GPU 与 CUDA 编程入门 这篇博客中初步介绍了如何Linux上使用GPU的方法，随着容器和k8s的迅猛发展，人们对于在容器中使用GPU的需求越发强烈。本文将基于前文，继续介绍如何在容器中使用GPU，进一步地，介绍在Kubernetes中如何调度GPU，并以Tensorflow为例，介绍如何基于Docker搭建部署了GPU的深度学习开发环境。">
+<meta name="keywords" content="container,docker,k8s,GPU,Nvidia,tensorflow">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Kubernetes】在Docker中使用GPU">
+<meta property="og:url" content="http://houmin.cc/posts/574111db/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="我们在 GPU 与 CUDA 编程入门 这篇博客中初步介绍了如何Linux上使用GPU的方法，随着容器和k8s的迅猛发展，人们对于在容器中使用GPU的需求越发强烈。本文将基于前文，继续介绍如何在容器中使用GPU，进一步地，介绍在Kubernetes中如何调度GPU，并以Tensorflow为例，介绍如何基于Docker搭建部署了GPU的深度学习开发环境。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-22_nvidia-gpu-docker.png">
+<meta property="og:image" content="https://docs.nvidia.com/datacenter/cloud-native/_images/nvidia-docker-arch.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-22_tensorflow-jupiter.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-22_tensorflow-jupiter.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-22_tensorflow-gpu.png">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3521279-7ab3727232db8073.png">
+<meta property="og:updated_time" content="2020-11-23T05:29:01.884Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-22_nvidia-gpu-docker.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/574111db/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Kubernetes】在Docker中使用GPU | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/574111db/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Kubernetes】在Docker中使用GPU
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-17 20:45:00" itemprop="dateCreated datePublished" datetime="2020-11-17T20:45:00+08:00">2020-11-17</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/574111db/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/574111db/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>11k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>21 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>我们在 <a href="https://houmin.cc/posts/5004f8e5/">GPU 与 CUDA 编程入门</a> 这篇博客中初步介绍了如何Linux上使用GPU的方法，随着容器和k8s的迅猛发展，人们对于在容器中使用GPU的需求越发强烈。本文将基于前文，继续介绍如何在容器中使用GPU，进一步地，介绍在Kubernetes中如何调度GPU，并以Tensorflow为例，介绍如何基于Docker搭建部署了GPU的深度学习开发环境。</p>
+<a id="more"></a>
+<h2 id="NVIDIA-Container-Toolkit"><a href="#NVIDIA-Container-Toolkit" class="headerlink" title="NVIDIA Container Toolkit"></a>NVIDIA Container Toolkit</h2><h3 id="背景介绍"><a href="#背景介绍" class="headerlink" title="背景介绍"></a>背景介绍</h3><p>容器最早是用于无缝部署基于CPU的应用，它们对于硬件和平台是无感知的，但是显然这种使用场景对于GPU并不适用。对于不同的GPU，需要机器安装不同的硬件驱动，这极大限制了在容器中使用GPU。为了解决这个问题，最早的一种使用方法是在容器中完全重新安装一次NVIDIA驱动，然后将在容器启动的时候将GPU以字符设备 <code>/dev/nvidia0</code> 的方式传递给容器。然而这种方法要求容器中安装的驱动版本与Host上的驱动版本完全一致，同一个Docker Image不能在各个机器上复用，这极大的限制了容器的扩展性。</p>
+<p>为了解决上述问题，容器必须对于 NVIDIA 驱动是无感知的，基于此 NVIDIA 推出了 <a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/overview.html" target="_blank" rel="external nofollow noopener noreferrer">NVIDIA Container Toolkit</a>：</p>
+<p><img alt="nvidia-gpu-docker" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-22_nvidia-gpu-docker.png"></p>
+<p>如上图所示， NVIDIA 将原来 CUDA 应用依赖的API环境划分为两个部分：</p>
+<ul>
+<li>驱动级API：由<code>libcuda.so.major.minor</code>动态库和内核module提供支持，图中表示为CUDA Driver<ul>
+<li>驱动级API属于底层API，每当NVIDIA公司释放出某一个版本的驱动时，如果你要升级主机上的驱动，那么内核模块和<code>libcuda.so.major.minor</code>这2个文件就必须同时升级到同一个版本，这样原有的程序才能正常工作,</li>
+<li>不同版本的驱动不能同时存在于宿主机上</li>
+</ul>
+</li>
+<li>非驱动级API：由动态库<code>libcublas.so</code>等用户空间级别的API组成，图中表示为CUDA Toolkit<ul>
+<li>非驱动级API的版本号是以Toolkit自身的版本号来管理, 比如cuda-10，cuda-11</li>
+<li>不同版本的Toolkit可以同时运行在相同的宿主机上</li>
+<li>非驱动级API算是对驱动级API的一种更高级的封装,最终还是要调用驱动级API来实现功能</li>
+</ul>
+</li>
+</ul>
+<p>为了让使用GPU的容器更具可扩展性，关于非驱动级的API被 NVIDIA 打包进了  <a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/overview.html" target="_blank" rel="external nofollow noopener noreferrer">NVIDIA Container Toolkit</a>，因此在容器中使用GPU之前，每个机器需要先安装好NVIDIA驱动，之后配置好 NVIDIA Container Toolkit之后，就可以在容器中方便使用GPU了。</p>
+<h3 id="整体架构"><a href="#整体架构" class="headerlink" title="整体架构"></a>整体架构</h3><p>NVIDIA 的容器工具包本质是使用一个<code>nvidia-runc</code>的方式来提供GPU容器的创建, 在用户创建出来的OCI spec上补上几个hook函数，来达到GPU设备运行的准备工作。具体包括以下几个组件，从上到下展示如图：</p>
+<ul>
+<li><code>nvidia-docker2</code></li>
+<li><code>nvidia-container-runtime</code></li>
+<li><code>nvidia-container-toolkit</code></li>
+<li><code>libnvidia-container</code></li>
+</ul>
+<p><img alt data-src="https://docs.nvidia.com/datacenter/cloud-native/_images/nvidia-docker-arch.png"></p>
+<p>下面对这几个组件依次介绍：</p>
+<h4 id="libnvidia-container"><a href="#libnvidia-container" class="headerlink" title="libnvidia-container"></a><code>libnvidia-container</code></h4><p>This component provides a library and a simple CLI utility to automatically configure GNU/Linux containers leveraging NVIDIA GPUs. The implementation relies on kernel primitives and is designed to be agnostic of the container runtime.</p>
+<p><code>libnvidia-container</code> provides a well-defined API and a wrapper CLI (called <code>nvidia-container-cli</code>) that different runtimes can invoke to inject NVIDIA GPU support into their containers.</p>
+<h4 id="nvidia-container-toolkit"><a href="#nvidia-container-toolkit" class="headerlink" title="nvidia-container-toolkit"></a><code>nvidia-container-toolkit</code></h4><p>This component includes a script that implements the interface required by a <code>runC</code> <code>prestart</code> hook. This script is invoked by <code>runC</code> after a container has been created, but before it has been started, and is given access to the <code>config.json</code> associated with the container (e.g. this <a href="https://github.com/opencontainers/runtime-spec/blob/master/config.md#configuration-schema-example=" target="_blank" rel="external nofollow noopener noreferrer">config.json</a> ). It then takes information contained in the <code>config.json</code> and uses it to invoke the <code>libnvidia-container</code> CLI with an appropriate set of flags. One of the most important flags being which specific GPU devices should be injected into the container.</p>
+<p>Note that the previous name of this component was <code>nvidia-container-runtime-hook</code>. <code>nvidia-container-runtime-hook</code> is now simply a symlink to <code>nvidia-container-toolkit</code> on the system.</p>
+<h4 id="nvidia-container-runtime"><a href="#nvidia-container-runtime" class="headerlink" title="nvidia-container-runtime"></a><code>nvidia-container-runtime</code></h4><p>This component used to be a complete fork of <code>runC</code> with NVIDIA specific code injected into it. Since 2019, it is a thin wrapper around the native <code>runC</code> installed on the host system. <code>nvidia-container-runtime</code> takes a <code>runC</code> spec as input, injects the <code>nvidia-container-toolkit</code> script as a <code>prestart</code> hook into it, and then calls out to the native <code>runC</code>, passing it the modified <code>runC</code> spec with that hook set. It’s important to note that this component is not necessarily specific to docker (but it is specific to <code>runC</code>).</p>
+<p>When the package is installed, the Docker <code>daemon.json</code> is updated to point to the binary as can be seen below:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">/etc/docker/daemon.json</span><br><span class="line">&#123;</span><br><span class="line"><span class="string">"default-runtime"</span>: <span class="string">"nvidia"</span>,</span><br><span class="line"><span class="string">"runtimes"</span>: &#123;</span><br><span class="line">    <span class="string">"nvidia"</span>: &#123;</span><br><span class="line">        <span class="string">"path"</span>: <span class="string">"/usr/bin/nvidia-container-runtime"</span>,</span><br><span class="line">        <span class="string">"runtimeArgs"</span>: []</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="nvidia-docker2"><a href="#nvidia-docker2" class="headerlink" title="nvidia-docker2"></a><code>nvidia-docker2</code></h4><p>This package is the only docker-specific package of the hierarchy. It takes the script associated with the <code>nvidia-container-runtime</code> and installs it into docker’s <code>/etc/docker/daemon.json</code> file. This then allows you to run (for example) <code>docker run --runtime=nvidia ...</code> to automatically add GPU support to your containers. It also installs a wrapper script around the native docker CLI called <code>nvidia-docker</code> which lets you invoke docker without needing to specify <code>--runtime=nvidia</code> every single time. It also lets you set an environment variable on the host (<code>NV_GPU</code>) to specify which GPUs should be injected into a container.</p>
+<h3 id="部署验证"><a href="#部署验证" class="headerlink" title="部署验证"></a>部署验证</h3><p>这里仍然基于腾讯云的 CentOS 7机器为例演示如何在安装配置 <code>NVIDIA Container Toolkit</code>，对于更多的平台可以参考其<a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html" target="_blank" rel="external nofollow noopener noreferrer">官方文档</a>。</p>
+<h4 id="安装-Docker-CE"><a href="#安装-Docker-CE" class="headerlink" title="安装 Docker CE"></a>安装 Docker CE</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ curl https://get.docker.com | sh \</span><br><span class="line">  &amp;&amp; sudo systemctl start docker \</span><br><span class="line">  &amp;&amp; sudo systemctl <span class="built_in">enable</span> docker</span><br></pre></td></tr></table></figure>
+<h4 id="安装-NVIDIA-Container-Toolkit"><a href="#安装-NVIDIA-Container-Toolkit" class="headerlink" title="安装 NVIDIA Container Toolkit"></a>安装 NVIDIA Container Toolkit</h4><p>Setup the <code>stable</code> repository and the GPG key:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ distribution=$(. /etc/os-release;<span class="built_in">echo</span> <span class="variable">$ID</span><span class="variable">$VERSION_ID</span>) \</span><br><span class="line">   &amp;&amp; curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add - \</span><br><span class="line">   &amp;&amp; curl -s -L https://nvidia.github.io/nvidia-docker/<span class="variable">$distribution</span>/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list</span><br></pre></td></tr></table></figure>
+<p>Install the <code>nvidia-docker2</code> package (and dependencies) after updating the package listing:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ sudo apt-get update</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ sudo apt-get install -y nvidia-docker2</span><br></pre></td></tr></table></figure>
+<p>Restart the Docker daemon to complete the installation after setting the default runtime:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ sudo systemctl restart docker</span><br></pre></td></tr></table></figure>
+<p>At this point, a working setup can be tested by running a base CUDA container:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ sudo docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi</span><br></pre></td></tr></table></figure>
+<p>This should result in a console output shown below:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">+-----------------------------------------------------------------------------+</span><br><span class="line">| NVIDIA-SMI 450.51.06    Driver Version: 450.51.06    CUDA Version: 11.0     |</span><br><span class="line">|-------------------------------+----------------------+----------------------+</span><br><span class="line">| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |</span><br><span class="line">| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |</span><br><span class="line">|                               |                      |               MIG M. |</span><br><span class="line">|===============================+======================+======================|</span><br><span class="line">|   0  Tesla T4            On   | 00000000:00:1E.0 Off |                    0 |</span><br><span class="line">| N/A   34C    P8     9W /  70W |      0MiB / 15109MiB |      0%      Default |</span><br><span class="line">|                               |                      |                  N/A |</span><br><span class="line">+-------------------------------+----------------------+----------------------+</span><br><span class="line"></span><br><span class="line">+-----------------------------------------------------------------------------+</span><br><span class="line">| Processes:                                                                  |</span><br><span class="line">|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |</span><br><span class="line">|        ID   ID                                                   Usage      |</span><br><span class="line">|=============================================================================|</span><br><span class="line">|  No running processes found                                                 |</span><br><span class="line">+-----------------------------------------------------------------------------+</span><br></pre></td></tr></table></figure>
+<h4 id="配置-NVIDIA-Runtime"><a href="#配置-NVIDIA-Runtime" class="headerlink" title="配置 NVIDIA Runtime"></a>配置 NVIDIA Runtime</h4><p>To register the <code>nvidia</code> runtime, use the method below that is best suited to your environment. You might need to merge the new argument with your existing configuration. Three options are available:</p>
+<h4 id="Systemd-drop-in-file"><a href="#Systemd-drop-in-file" class="headerlink" title="Systemd drop-in file"></a>Systemd drop-in file</h4><figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ sudo mkdir -p <span class="regexp">/etc/</span>systemd<span class="regexp">/system/</span>docker.service.d</span><br></pre></td></tr></table></figure>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ sudo tee <span class="regexp">/etc/</span>systemd<span class="regexp">/system/</span>docker.service.d/override.conf &lt;&lt;EOF</span><br><span class="line">[Service]</span><br><span class="line">ExecStart=</span><br><span class="line">ExecStart=<span class="regexp">/usr/</span>bin<span class="regexp">/dockerd --host=fd:/</span><span class="regexp">/ --add-runtime=nvidia=/</span>usr<span class="regexp">/bin/</span>nvidia-container-runtime</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ sudo systemctl daemon-reload \</span><br><span class="line">  &amp;&amp; sudo systemctl restart docker</span><br></pre></td></tr></table></figure>
+<h4 id="Daemon-configuration-file"><a href="#Daemon-configuration-file" class="headerlink" title="Daemon configuration file"></a>Daemon configuration file</h4><p>The <code>nvidia</code> runtime can also be registered with Docker using the <code>daemon.json</code> configuration file:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ sudo tee /etc/docker/daemon.json &lt;&lt;EOF</span><br><span class="line">&#123;</span><br><span class="line">    <span class="string">"runtimes"</span>: &#123;</span><br><span class="line">        <span class="string">"nvidia"</span>: &#123;</span><br><span class="line">            <span class="string">"path"</span>: <span class="string">"/usr/bin/nvidia-container-runtime"</span>,</span><br><span class="line">            <span class="string">"runtimeArgs"</span>: []</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo pkill -SIGHUP dockerd</span><br></pre></td></tr></table></figure>
+<p>You can optionally reconfigure the default runtime by adding the following to <code>/etc/docker/daemon.json</code>:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"default-runtime"</span>: <span class="string">"nvidia"</span></span><br></pre></td></tr></table></figure>
+<h4 id="Command-Line"><a href="#Command-Line" class="headerlink" title="Command Line"></a>Command Line</h4><p>Use <code>dockerd</code> to add the <code>nvidia</code> runtime:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ sudo dockerd --add-runtime=nvidia=/usr/bin/nvidia-container-runtime [...]</span><br></pre></td></tr></table></figure>
+<h2 id="在k8s中管理GPU"><a href="#在k8s中管理GPU" class="headerlink" title="在k8s中管理GPU"></a>在k8s中管理GPU</h2><p>为了在 k8s 中管理和使用GPU，我们除了需要配置 <code>NVIDIA Container Toolkit</code>，还需要安装NVIDIA推出的 <a href="https://github.com/NVIDIA/k8s-device-plugin" target="_blank" rel="external nofollow noopener noreferrer">NVIDIA/k8s-device-plugin</a>，具体安装可以参考 <a href="../3f069334">我的这篇博文</a>。上面的步骤加起来显得还是有些繁琐，如果你直接使用腾讯云 TKE 的话，在集群添加装有GPU的Node时候，就会自动帮你安装配置好  <code>NVIDIA Container Toolkit</code> 和  <code>NVIDIA/k8s-device-plugin</code>，十分方便。接下来我们以Tensorflow为例，演示在 k8s 环境运行有GPU的Tensorflow。</p>
+<h3 id="单机版Tensorflow"><a href="#单机版Tensorflow" class="headerlink" title="单机版Tensorflow"></a>单机版Tensorflow</h3><p>首先是单机版的Tensorflow，执行 <code>kubectl apply -f tensorflow.yaml</code>来运行 <code>Jupiter Notebook</code>。</p>
+<figure class="highlight yaml"><figcaption><span>tensorflow.yaml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span> </span><br><span class="line">  <span class="attr">name:</span> <span class="string">tensorflow</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">k8s-app:</span> <span class="string">tensorflow</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">k8s-app:</span> <span class="string">tensorflow</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">k8s-app:</span> <span class="string">tensorflow</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">tensorflow</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">tensorflow/tensorflow:2.2.1-gpu-py3-jupyter</span></span><br><span class="line">        <span class="attr">ports:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">8888</span></span><br><span class="line">        <span class="attr">resources:</span></span><br><span class="line">          <span class="attr">limits:</span></span><br><span class="line">            <span class="attr">cpu:</span> <span class="number">4</span></span><br><span class="line">            <span class="attr">memory:</span> <span class="string">2Gi</span></span><br><span class="line">          <span class="attr">requests:</span></span><br><span class="line">            <span class="attr">cpu:</span> <span class="number">2</span></span><br><span class="line">            <span class="attr">memory:</span> <span class="string">1Gi</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">jupyter-service</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">NodePort</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">    <span class="attr">targetPort:</span> <span class="number">8888</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">tensorflow</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">k8s-app:</span> <span class="string">tensorflow</span></span><br></pre></td></tr></table></figure>
+<p>我们看到容器很快运行起来，根据 <code>http:&lt;nodeIP&gt;:&lt;nodePort&gt;</code> 可以访问到 <code>Jupiter Notebook</code>，但是显示需要token：</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-22_tensorflow-jupiter.png"></p>
+<p>查看 <code>Tensorflow</code> 日志，可以获得 token：<code>aa06c9f12d80adac1a6288b97bf8030522cecc92202dbb20</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">[root@VM-1-14-centos single]<span class="comment"># kubectl get pods</span></span><br><span class="line">NAME                          READY   STATUS    RESTARTS   AGE</span><br><span class="line">tensorflow-6cbc85744b-c567p   1/1     Running   0          7m37s</span><br><span class="line">[root@VM-1-14-centos single]<span class="comment"># kubectl logs tensorflow-6cbc85744b-c567p</span></span><br><span class="line"></span><br><span class="line">________                               _______________</span><br><span class="line">___  __/__________________________________  ____/__  /________      __</span><br><span class="line">__  /  _  _ \_  __ \_  ___/  __ \_  ___/_  /_   __  /_  __ \_ | /| / /</span><br><span class="line">_  /   /  __/  / / /(__  )/ /_/ /  /   _  __/   _  / / /_/ /_ |/ |/ /</span><br><span class="line">/_/    \___//_/ /_//____/ \____//_/    /_/      /_/  \____/____/|__/</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">WARNING: You are running this container as root, <span class="built_in">which</span> can cause new files <span class="keyword">in</span></span><br><span class="line">mounted volumes to be created as the root user on your host machine.</span><br><span class="line"></span><br><span class="line">To avoid this, run the container by specifying your user<span class="string">'s userid:</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">$ docker run -u $(id -u):$(id -g) args...</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">[I 04:47:52.083 NotebookApp] Writing notebook server cookie secret to /root/.local/share/jupyter/runtime/notebook_cookie_secret</span></span><br><span class="line"><span class="string">[I 04:47:52.315 NotebookApp] Serving notebooks from local directory: /tf</span></span><br><span class="line"><span class="string">[I 04:47:52.315 NotebookApp] Jupyter Notebook 6.1.4 is running at:</span></span><br><span class="line"><span class="string">[I 04:47:52.315 NotebookApp] http://tensorflow-6cbc85744b-c567p:8888/?token=aa06c9f12d80adac1a6288b97bf8030522cecc92202dbb20</span></span><br><span class="line"><span class="string">[I 04:47:52.315 NotebookApp]  or http://127.0.0.1:8888/?token=aa06c9f12d80adac1a6288b97bf8030522cecc92202dbb20</span></span><br><span class="line"><span class="string">[I 04:47:52.315 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).</span></span><br><span class="line"><span class="string">[C 04:47:52.319 NotebookApp]</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    To access the notebook, open this file in a browser:</span></span><br><span class="line"><span class="string">        file:///root/.local/share/jupyter/runtime/nbserver-1-open.html</span></span><br><span class="line"><span class="string">    Or copy and paste one of these URLs:</span></span><br><span class="line"><span class="string">        http://tensorflow-6cbc85744b-c567p:8888/?token=aa06c9f12d80adac1a6288b97bf8030522cecc92202dbb20</span></span><br><span class="line"><span class="string">     or http://127.0.0.1:8888/?token=aa06c9f12d80adac1a6288b97bf8030522cecc92202dbb20</span></span><br><span class="line"><span class="string">[I 04:49:28.692 NotebookApp] 302 GET / (172.16.0.193) 0.57ms</span></span><br><span class="line"><span class="string">[I 04:49:28.700 NotebookApp] 302 GET /tree? (172.16.0.193) 0.67ms</span></span><br></pre></td></tr></table></figure>
+<p>登陆之后即可看到 <code>Jupiter Notebook</code>：</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-22_tensorflow-jupiter.png"></p>
+<p>新建Notebook，运行命令如下：</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-22_tensorflow-gpu.png"></p>
+<p>可以看到，TensorFlow 支持在GPU上的运算</p>
+<ul>
+<li><code>&quot;/device:GPU:0&quot;</code>：TensorFlow 可见的机器上第一个 GPU 的速记表示法。</li>
+<li><code>&quot;/job:localhost/replica:0/task:0/device:GPU:0&quot;</code>：TensorFlow 可见的机器上第一个 GPU 的完全限定名称。</li>
+</ul>
+<h3 id="分布式Tensorflow"><a href="#分布式Tensorflow" class="headerlink" title="分布式Tensorflow"></a>分布式Tensorflow</h3><p>整体架构：</p>
+<p>这个架构图是分布式tensorflow的实战图，其中有</p>
+<ul>
+<li>两个参数服务</li>
+<li>多个worker服务</li>
+<li>还有个shuffle和抽样的服务</li>
+</ul>
+<p>shuffle就是对样根据其标签进行混排，然后对外提供batch抽样服务（可以是有放回和无放回，抽样是一门科学，详情可以参考抽样技术一书），每个batch的抽样是由每个worker去触发，worker拿到抽样的数据样本ID后就去基于kubernetes构建的分布式数据库里边提取该batchSize的样本数据，进行训练计算，由于分布式的tensorflow能够保证异步梯度下降算法，所以每次训练batch数据的时候都会基于最新的参数迭代，然而，更新参数操作就是两个参数服务做的，架构中模型（参数）的存储在NFS中，这样以来，参数服务与worker就可以共享参数了，最后说明一下，我们训练的所有数据都是存储在分布式数据库中（数据库的选型可以根据具体的场景而定）。为什么需要一个shuffle和抽样的服务，因为当数据量很大的时候，我们如果对所有的样本数据进行shuffle和抽样计算的话会浪费很大的资源，因此需要一个这样的服务专门提取数据的（id，label）来进行混排和抽样，这里如果（id, label）的数据量也很大的时候我们可以考虑基于spark 来分布式的进行shuffle和抽样，目前spark2.3已经原生支持kubernetes调度</p>
+<p><img alt data-src="https://upload-images.jianshu.io/upload_images/3521279-7ab3727232db8073.png"></p>
+<p>首先是 <code>Parameter Server</code>：</p>
+<figure class="highlight yaml"><figcaption><span>tf-ps.yaml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">extensions/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span> </span><br><span class="line">  <span class="attr">name:</span> <span class="string">tensorflow-ps</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">tensorflow-ps</span></span><br><span class="line">        <span class="attr">role:</span> <span class="string">ps</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">ps</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">tensorflow/tensorflow:2.2.1-gpu-py3-jupyter</span></span><br><span class="line">        <span class="attr">ports:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">2222</span></span><br><span class="line">        <span class="attr">resources:</span></span><br><span class="line">          <span class="attr">limits:</span></span><br><span class="line">            <span class="attr">cpu:</span> <span class="number">4</span></span><br><span class="line">            <span class="attr">memory:</span> <span class="string">2Gi</span></span><br><span class="line">          <span class="attr">requests:</span></span><br><span class="line">            <span class="attr">cpu:</span> <span class="number">2</span></span><br><span class="line">            <span class="attr">memory:</span> <span class="string">1Gi</span></span><br><span class="line">        <span class="attr">volumeMounts:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">mountPath:</span> <span class="string">/datanfs</span></span><br><span class="line">          <span class="attr">readOnly:</span> <span class="literal">false</span></span><br><span class="line">          <span class="attr">name:</span> <span class="string">nfs</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nfs</span></span><br><span class="line">        <span class="attr">nfs:</span></span><br><span class="line">          <span class="attr">server:</span> <span class="string">你的nfs服务地址</span></span><br><span class="line">          <span class="attr">path:</span> <span class="string">"/data/nfs"</span>   </span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">tensorflow-ps-service</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">tensorflow-ps</span></span><br><span class="line">    <span class="attr">role:</span> <span class="string">service</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">2222</span></span><br><span class="line">    <span class="attr">targetPort:</span> <span class="number">2222</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">tensorflow-ps</span></span><br></pre></td></tr></table></figure>
+<p>然后是 <code>Worker</code>：</p>
+<figure class="highlight yaml"><figcaption><span>tf-worker.yaml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">extensions/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">tensorflow-worker</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">3</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">tensorflow-worker</span></span><br><span class="line">        <span class="attr">role:</span> <span class="string">worker</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">worker</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">tensorflow/tensorflow:2.2.1-gpu-py3-jupyter</span></span><br><span class="line">        <span class="attr">ports:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">2222</span></span><br><span class="line">        <span class="attr">resources:</span></span><br><span class="line">          <span class="attr">limits:</span></span><br><span class="line">            <span class="attr">cpu:</span> <span class="number">4</span></span><br><span class="line">            <span class="attr">memory:</span> <span class="string">2Gi</span></span><br><span class="line">          <span class="attr">requests:</span></span><br><span class="line">            <span class="attr">cpu:</span> <span class="number">2</span></span><br><span class="line">            <span class="attr">memory:</span> <span class="string">1Gi</span></span><br><span class="line">        <span class="attr">volumeMounts:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">mountPath:</span> <span class="string">/datanfs</span></span><br><span class="line">          <span class="attr">readOnly:</span> <span class="literal">false</span></span><br><span class="line">          <span class="attr">name:</span> <span class="string">nfs</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nfs</span></span><br><span class="line">        <span class="attr">nfs:</span></span><br><span class="line">          <span class="attr">server:</span> <span class="string">你的nfs服务地址</span></span><br><span class="line">          <span class="attr">path:</span> <span class="string">"/data/nfs"</span>   </span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">tensorflow-wk-service</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">tensorflow-worker</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">2222</span></span><br><span class="line">    <span class="attr">targetPort:</span> <span class="number">2222</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">tensorflow-worker</span></span><br></pre></td></tr></table></figure>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://cloud.tencent.com/developer/article/1005137" target="_blank" rel="external nofollow noopener noreferrer">https://cloud.tencent.com/developer/article/1005137</a></li>
+<li><a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/overview.html" target="_blank" rel="external nofollow noopener noreferrer">NVIDIA Container Toolkit</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/f5d73ad0/" rel="bookmark">Hexo 博客容器化</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/58272b06/" rel="bookmark">【Kubernetes】监控的可观测性</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/3f069334/" rel="bookmark">【Kubernetes】Device Plugin</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/cf391335/" rel="bookmark">【Kubernetes】GPU 共享</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d1848f4f/" rel="bookmark">自动抓取经济学人</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/574111db/" title="【Kubernetes】在Docker中使用GPU">http://houmin.cc/posts/574111db/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/container/" rel="tag"><i class="fa fa-tag"></i> container</a>
+              <a href="/tags/docker/" rel="tag"><i class="fa fa-tag"></i> docker</a>
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
+              <a href="/tags/GPU/" rel="tag"><i class="fa fa-tag"></i> GPU</a>
+              <a href="/tags/Nvidia/" rel="tag"><i class="fa fa-tag"></i> Nvidia</a>
+              <a href="/tags/tensorflow/" rel="tag"><i class="fa fa-tag"></i> tensorflow</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/3f069334/" rel="next" title="【Kubernetes】Device Plugin">
+                  <i class="fa fa-chevron-left"></i> 【Kubernetes】Device Plugin
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/cf391335/" rel="prev" title="【Kubernetes】GPU 共享">
+                  【Kubernetes】GPU 共享 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#NVIDIA-Container-Toolkit"><span class="nav-number">1.</span> <span class="nav-text">NVIDIA Container Toolkit</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#背景介绍"><span class="nav-number">1.1.</span> <span class="nav-text">背景介绍</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#整体架构"><span class="nav-number">1.2.</span> <span class="nav-text">整体架构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#libnvidia-container"><span class="nav-number">1.2.1.</span> <span class="nav-text">libnvidia-container</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#nvidia-container-toolkit"><span class="nav-number">1.2.2.</span> <span class="nav-text">nvidia-container-toolkit</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#nvidia-container-runtime"><span class="nav-number">1.2.3.</span> <span class="nav-text">nvidia-container-runtime</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#nvidia-docker2"><span class="nav-number">1.2.4.</span> <span class="nav-text">nvidia-docker2</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#部署验证"><span class="nav-number">1.3.</span> <span class="nav-text">部署验证</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#安装-Docker-CE"><span class="nav-number">1.3.1.</span> <span class="nav-text">安装 Docker CE</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#安装-NVIDIA-Container-Toolkit"><span class="nav-number">1.3.2.</span> <span class="nav-text">安装 NVIDIA Container Toolkit</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#配置-NVIDIA-Runtime"><span class="nav-number">1.3.3.</span> <span class="nav-text">配置 NVIDIA Runtime</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Systemd-drop-in-file"><span class="nav-number">1.3.4.</span> <span class="nav-text">Systemd drop-in file</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Daemon-configuration-file"><span class="nav-number">1.3.5.</span> <span class="nav-text">Daemon configuration file</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Command-Line"><span class="nav-number">1.3.6.</span> <span class="nav-text">Command Line</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#在k8s中管理GPU"><span class="nav-number">2.</span> <span class="nav-text">在k8s中管理GPU</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#单机版Tensorflow"><span class="nav-number">2.1.</span> <span class="nav-text">单机版Tensorflow</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分布式Tensorflow"><span class="nav-number">2.2.</span> <span class="nav-text">分布式Tensorflow</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">3.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">114</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">175</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.1m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">32:38</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>
