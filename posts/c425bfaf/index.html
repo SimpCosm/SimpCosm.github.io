@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Kubernetes要求集群中所有pod，无论是节点内还是跨节点，都可以直接通信，或者说所有pod工作在同一跨节点网络，此网络一般是二层虚拟网络，称为pod网络。在安装引导kubernetes时，由选择并安装的network plugin实现。默认情况下，集群中所有pod之间、pod与节点之间可以互通。 网络主要解决两个问题，一个是连通性，实体之间能够通过网络互通。另一个是隔离性，出于安全、限制网">
+<meta name="keywords" content="网络,k8s,networkpolicy">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Kubernetes解读】Network Policy">
+<meta property="og:url" content="http://houmin.cc/posts/c425bfaf/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="Kubernetes要求集群中所有pod，无论是节点内还是跨节点，都可以直接通信，或者说所有pod工作在同一跨节点网络，此网络一般是二层虚拟网络，称为pod网络。在安装引导kubernetes时，由选择并安装的network plugin实现。默认情况下，集群中所有pod之间、pod与节点之间可以互通。 网络主要解决两个问题，一个是连通性，实体之间能够通过网络互通。另一个是隔离性，出于安全、限制网">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-11-26T10:32:15.315Z">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://houmin.cc/posts/c425bfaf/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Kubernetes解读】Network Policy | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/c425bfaf/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Kubernetes解读】Network Policy
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-08-25 19:14:56" itemprop="dateCreated datePublished" datetime="2020-08-25T19:14:56+08:00">2020-08-25</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/c425bfaf/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/c425bfaf/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>9 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Kubernetes要求集群中所有pod，无论是节点内还是跨节点，都可以直接通信，或者说所有pod工作在同一跨节点网络，此网络一般是二层虚拟网络，称为pod网络。在安装引导kubernetes时，由选择并安装的network plugin实现。默认情况下，集群中所有pod之间、pod与节点之间可以互通。</p>
+<p>网络主要解决两个问题，一个是连通性，实体之间能够通过网络互通。另一个是隔离性，出于安全、限制网络流量的目的，又要控制实体之间的连通性。<strong>Network Policy用来实现隔离性</strong>，只有匹配规则的流量才能进入pod，同理只有匹配规则的流量才可以离开pod。</p>
+<p>但请注意，kubernetes支持的用以实现pod网络的network plugin有很多种，并不是全部都支持Network Policy，为kubernetes选择network plugin时需要考虑到这点，是否需要隔离？可用network plugin及是否支持Network Policy请参考<a href="https://kubernetes.io/docs/concepts/cluster-administration/addons/#networking-and-network-policy" target="_blank" rel="external nofollow noopener noreferrer">这里</a>。</p>
+<a id="more"></a>
+<h2 id="基本原理"><a href="#基本原理" class="headerlink" title="基本原理"></a>基本原理</h2><p>Network Policy是kubernetes中的一种资源类型，它从属于某个namespace。其内容从逻辑上看包含两个关键部分，一是pod选择器，基于标签选择相同namespace下的pod，将其中定义的规则作用于选中的pod。另一个就是规则了，就是网络流量进出pod的规则，其采用的是白名单模式，符合规则的通过，不符合规则的拒绝。</p>
+<h2 id="Network-Policy对象Spec说明"><a href="#Network-Policy对象Spec说明" class="headerlink" title="Network Policy对象Spec说明"></a>Network Policy对象Spec说明</h2><p>首先给出示例Spec，结合示例说明Spec中的关键字段与逻辑，关于Spec完全说明参考<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#networkpolicy-v1-networking-k8s-io" target="_blank" rel="external nofollow noopener noreferrer">这里</a>。示例如下：</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">NetworkPolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">test-network-policy</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">podSelector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">role:</span> <span class="string">db</span></span><br><span class="line">  <span class="attr">policyTypes:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">Ingress</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">Egress</span></span><br><span class="line">  <span class="attr">ingress:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">from:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">ipBlock:</span></span><br><span class="line">        <span class="attr">cidr:</span> <span class="number">172.17</span><span class="number">.0</span><span class="number">.0</span><span class="string">/16</span></span><br><span class="line">        <span class="attr">except:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="number">172.17</span><span class="number">.1</span><span class="number">.0</span><span class="string">/24</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">namespaceSelector:</span></span><br><span class="line">        <span class="attr">matchLabels:</span></span><br><span class="line">          <span class="attr">project:</span> <span class="string">myproject</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">podSelector:</span></span><br><span class="line">        <span class="attr">matchLabels:</span></span><br><span class="line">          <span class="attr">role:</span> <span class="string">frontend</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">6379</span></span><br><span class="line">  <span class="attr">egress:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">to:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">ipBlock:</span></span><br><span class="line">        <span class="attr">cidr:</span> <span class="number">10.0</span><span class="number">.0</span><span class="number">.0</span><span class="string">/24</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">5978</span></span><br></pre></td></tr></table></figure>
+<p>对象创建方法与其它如ReplicaSet相同。apiVersion、kind、metadata与其它类型对象含义相同，不详细描述。</p>
+<h3 id="spec-PodSelector"><a href="#spec-PodSelector" class="headerlink" title=".spec.PodSelector"></a>.spec.PodSelector</h3><p>顾名思义，它是pod选择器，基于标签选择与Network Policy处于同一namespace下的pod，如果pod被选中，则对其应用Network Policy中定义的规则。此为可选字段，当没有此字段时，表示选中所有pod。</p>
+<h3 id="spec-PolicyTypes"><a href="#spec-PolicyTypes" class="headerlink" title=".spec.PolicyTypes"></a>.spec.PolicyTypes</h3><p>Network Policy定义的规则可以分成两种，一种是入pod的Ingress规则，一种是出pod的Egress规则。本字段可以看作是一个开关，如果其中包含Ingress，则Ingress部分定义的规则生效，如果是Egress则Egress部分定义的规则生效，如果都包含则全部生效。当然此字段也可选，如果没有指定的话，则默认Ingress生效，如果Egress部分有定义的话，Egress才生效。怎么理解这句话，下文会提到，没有明确定义Ingress、Egress部分，它也是一种规则，默认规则而非没有规则。</p>
+<h3 id="spec-ingress与-spec-egress"><a href="#spec-ingress与-spec-egress" class="headerlink" title=".spec.ingress与.spec.egress"></a>.spec.ingress与.spec.egress</h3><p>前者定义入pod规则，后者定义出pod规则，详细参考这里，这里只讲一下重点。上例中ingress与egress都只包含一条规则，两者都是数组，可以包含多条规则。当包含多条时，条目之间的逻辑关系是“或”，只要匹配其中一条就可以。</p>
+<h3 id="spec-ingress-from"><a href="#spec-ingress-from" class="headerlink" title=".spec.ingress[].from"></a>.spec.ingress[].from</h3><p>也是数组，数组成员对访问pod的外部source进行描述，符合条件的source才可以访问pod，有多种方法，如示例中的ip地址块、名称空间、pod标签等，数组中的成员也是逻辑或的关系。spec.ingress[].from.prots表示允许通过的协议及端口号。</p>
+<h3 id="spec-egress-to"><a href="#spec-egress-to" class="headerlink" title=".spec.egress.to"></a>.spec.egress.to</h3><p>定义的是pod想要访问的外部destination，其它与ingress相同。</p>
+<h2 id="默认规则"><a href="#默认规则" class="headerlink" title="默认规则"></a>默认规则</h2><p>不定义规则并非没有规则，此时默认规则生效，以下展示默认规则用法。</p>
+<h3 id="默认禁止所有入pod流量-Default-deny-all-ingress-traffic"><a href="#默认禁止所有入pod流量-Default-deny-all-ingress-traffic" class="headerlink" title="默认禁止所有入pod流量(Default deny all ingress traffic)"></a>默认禁止所有入pod流量(Default deny all ingress traffic)</h3><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">NetworkPolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">default-deny</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">podSelector:</span> <span class="string">&#123;&#125;</span></span><br><span class="line">  <span class="attr">policyTypes:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">Ingress</span></span><br></pre></td></tr></table></figure>
+<p>上例中没有定义pod选择器，表示如果namespace下的某个pod没有被任何Network Policy对象选中，则应用此对象，如果被其它Network Policy选中则不应用此对象。</p>
+<p>policyTypes的值为Ingress，表示本例启用Ingress规则。但是本例没有定义具体的Ingress，那就应用默认规则。默认规则禁止所有入pod流量，但例外情况是如果source就是pod运行的节点，则允许通过。</p>
+<h3 id="默认允许所有入pod流量-Default-allow-all-ingress-traffic"><a href="#默认允许所有入pod流量-Default-allow-all-ingress-traffic" class="headerlink" title="默认允许所有入pod流量(Default allow all ingress traffic)"></a>默认允许所有入pod流量(Default allow all ingress traffic)</h3><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">NetworkPolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">allow-all</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">podSelector:</span> <span class="string">&#123;&#125;</span></span><br><span class="line">  <span class="attr">ingress:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">&#123;&#125;</span></span><br></pre></td></tr></table></figure>
+<p>同样没有定义pod选择器，意义与上例同。注意ingress的定义，这个是有规则的，只是规则中的条目为空，与默认规则不同，表示全部允许通过。</p>
+<h3 id="默认禁止所有出pod流量-Default-deny-all-egress-traffic"><a href="#默认禁止所有出pod流量-Default-deny-all-egress-traffic" class="headerlink" title="默认禁止所有出pod流量(Default deny all egress traffic)"></a>默认禁止所有出pod流量(Default deny all egress traffic)</h3><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">NetworkPolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">default-deny</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">podSelector:</span> <span class="string">&#123;&#125;</span></span><br><span class="line">  <span class="attr">policyTypes:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">Egress</span></span><br></pre></td></tr></table></figure>
+<p>与默认禁止所有入pod流量(Default deny all ingress traffic)同，只是流量由入变成出</p>
+<h3 id="默认允许所有出pod流量-Default-allow-all-egress-traffic"><a href="#默认允许所有出pod流量-Default-allow-all-egress-traffic" class="headerlink" title="默认允许所有出pod流量(Default allow all egress traffic)"></a>默认允许所有出pod流量(Default allow all egress traffic)</h3><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">NetworkPolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">allow-all</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">podSelector:</span> <span class="string">&#123;&#125;</span></span><br><span class="line">  <span class="attr">egress:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">&#123;&#125;</span></span><br><span class="line">  <span class="attr">policyTypes:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">Egress</span></span><br></pre></td></tr></table></figure>
+<p>与默认允许所有入pod流量(Default allow all ingress traffic)同，只是流量由入变成出。</p>
+<h3 id="默认禁止所有入出pod流量-Default-deny-all-ingress-and-all-egress-traffic"><a href="#默认禁止所有入出pod流量-Default-deny-all-ingress-and-all-egress-traffic" class="headerlink" title="默认禁止所有入出pod流量(Default deny all ingress and all egress traffic)"></a>默认禁止所有入出pod流量(Default deny all ingress and all egress traffic)</h3><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">NetworkPolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">default-deny</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">podSelector:</span> <span class="string">&#123;&#125;</span></span><br><span class="line">  <span class="attr">policyTypes:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">Ingress</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">Egress</span></span><br></pre></td></tr></table></figure>
+<p>无需详解，但请注意，pod与所运行节点之间流量不受Network Policy限制。</p>
+<h2 id="In-Action"><a href="#In-Action" class="headerlink" title="In Action"></a>In Action</h2><p>下面通过一个真实示例展示Network Policy普通用法</p>
+<h3 id="用Deployment创建nginx-pod实例并用service暴露"><a href="#用Deployment创建nginx-pod实例并用service暴露" class="headerlink" title="用Deployment创建nginx pod实例并用service暴露"></a>用Deployment创建nginx pod实例并用service暴露</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl run nginx --image=nginx --replicas=2</span><br><span class="line">deployment <span class="string">"nginx"</span> created</span><br><span class="line">$ kubectl expose deployment nginx --port=80</span><br><span class="line">service <span class="string">"nginx"</span> exposed</span><br></pre></td></tr></table></figure>
+<h3 id="确认创建结果"><a href="#确认创建结果" class="headerlink" title="确认创建结果"></a>确认创建结果</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get svc,pod</span><br><span class="line">NAME                        CLUSTER-IP    EXTERNAL-IP   PORT(S)    AGE</span><br><span class="line">svc/kubernetes              10.100.0.1    &lt;none&gt;        443/TCP    46m</span><br><span class="line">svc/nginx                   10.100.0.16   &lt;none&gt;        80/TCP     33s</span><br><span class="line"> </span><br><span class="line">NAME                        READY         STATUS        RESTARTS   AGE</span><br><span class="line">po/nginx-701339712-e0qfq    1/1           Running       0          35s</span><br><span class="line">po/nginx-701339712-o00ef    1/1           Running       0          35s</span><br></pre></td></tr></table></figure>
+<h3 id="测试nginx服务连通性"><a href="#测试nginx服务连通性" class="headerlink" title="测试nginx服务连通性"></a>测试nginx服务连通性</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl run busybox --rm -ti --image=busybox /bin/sh</span><br><span class="line">Waiting <span class="keyword">for</span> pod default/busybox-472357175-y0m47 to be running, status is Pending, pod ready: <span class="literal">false</span></span><br><span class="line"> </span><br><span class="line">Hit enter <span class="keyword">for</span> <span class="built_in">command</span> prompt</span><br><span class="line"> </span><br><span class="line">/ <span class="comment"># wget --spider --timeout=1 nginx</span></span><br><span class="line">Connecting to nginx (10.100.0.16:80)</span><br><span class="line">/ <span class="comment">#</span></span><br></pre></td></tr></table></figure>
+<h3 id="通过创建Network-Policy对象添加隔离性"><a href="#通过创建Network-Policy对象添加隔离性" class="headerlink" title="通过创建Network Policy对象添加隔离性"></a>通过创建Network Policy对象添加隔离性</h3><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">kind:</span> <span class="string">NetworkPolicy</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.k8s.io/v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">access-nginx</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">podSelector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">run:</span> <span class="string">nginx</span></span><br><span class="line">  <span class="attr">ingress:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">from:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">podSelector:</span></span><br><span class="line">        <span class="attr">matchLabels:</span></span><br><span class="line">          <span class="attr">access:</span> <span class="string">"true"</span></span><br></pre></td></tr></table></figure>
+<p>只允许包含access: “true”标签的pod访问nginx服务。</p>
+<h3 id="创建Network-Policy"><a href="#创建Network-Policy" class="headerlink" title="创建Network Policy"></a>创建Network Policy</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl create -f nginx-policy.yaml</span><br><span class="line">networkpolicy <span class="string">"access-nginx"</span> created</span><br></pre></td></tr></table></figure>
+<h3 id="测试隔离性"><a href="#测试隔离性" class="headerlink" title="测试隔离性"></a>测试隔离性</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl run busybox --rm -ti --image=busybox /bin/sh</span><br><span class="line">Waiting <span class="keyword">for</span> pod default/busybox-472357175-y0m47 to be running, status is Pending, pod ready: <span class="literal">false</span></span><br><span class="line"> </span><br><span class="line">Hit enter <span class="keyword">for</span> <span class="built_in">command</span> prompt</span><br><span class="line"> </span><br><span class="line">/ <span class="comment"># wget --spider --timeout=1 nginx</span></span><br><span class="line">Connecting to nginx (10.100.0.16:80)</span><br><span class="line">wget: download timed out</span><br><span class="line">/ <span class="comment">#</span></span><br></pre></td></tr></table></figure>
+<h3 id="为pod添加access-“true”标签测试连通性"><a href="#为pod添加access-“true”标签测试连通性" class="headerlink" title="为pod添加access: “true”标签测试连通性"></a>为pod添加access: “true”标签测试连通性</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl run busybox --rm -ti --labels=<span class="string">"access=true"</span> --image=busybox /bin/sh</span><br><span class="line">Waiting <span class="keyword">for</span> pod default/busybox-472357175-y0m47 to be running, status is Pending, pod ready: <span class="literal">false</span></span><br><span class="line"> </span><br><span class="line">Hit enter <span class="keyword">for</span> <span class="built_in">command</span> prompt</span><br><span class="line"> </span><br><span class="line">/ <span class="comment"># wget --spider --timeout=1 nginx</span></span><br><span class="line">Connecting to nginx (10.100.0.16:80)</span><br><span class="line">/ <span class="comment">#</span></span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/8dfd4de5/" rel="bookmark">【Kubernetes解读】Ingress</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/cfed77f0/" rel="bookmark">【Kubernetes】Service</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/3675eff/" rel="bookmark">virtio</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/f07e2cff/" rel="bookmark">网络虚拟化</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/941301e/" rel="bookmark">Linux网络包收发流程</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/c425bfaf/" title="【Kubernetes解读】Network Policy">http://houmin.cc/posts/c425bfaf/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E7%BD%91%E7%BB%9C/" rel="tag"><i class="fa fa-tag"></i> 网络</a>
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
+              <a href="/tags/networkpolicy/" rel="tag"><i class="fa fa-tag"></i> networkpolicy</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/8dfd4de5/" rel="next" title="【Kubernetes解读】Ingress">
+                  <i class="fa fa-chevron-left"></i> 【Kubernetes解读】Ingress
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/353fef53/" rel="prev" title="【Kubernetes】e2e 测试">
+                  【Kubernetes】e2e 测试 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#基本原理"><span class="nav-number">1.</span> <span class="nav-text">基本原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Network-Policy对象Spec说明"><span class="nav-number">2.</span> <span class="nav-text">Network Policy对象Spec说明</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#spec-PodSelector"><span class="nav-number">2.1.</span> <span class="nav-text">.spec.PodSelector</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#spec-PolicyTypes"><span class="nav-number">2.2.</span> <span class="nav-text">.spec.PolicyTypes</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#spec-ingress与-spec-egress"><span class="nav-number">2.3.</span> <span class="nav-text">.spec.ingress与.spec.egress</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#spec-ingress-from"><span class="nav-number">2.4.</span> <span class="nav-text">.spec.ingress[].from</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#spec-egress-to"><span class="nav-number">2.5.</span> <span class="nav-text">.spec.egress.to</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#默认规则"><span class="nav-number">3.</span> <span class="nav-text">默认规则</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#默认禁止所有入pod流量-Default-deny-all-ingress-traffic"><span class="nav-number">3.1.</span> <span class="nav-text">默认禁止所有入pod流量(Default deny all ingress traffic)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#默认允许所有入pod流量-Default-allow-all-ingress-traffic"><span class="nav-number">3.2.</span> <span class="nav-text">默认允许所有入pod流量(Default allow all ingress traffic)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#默认禁止所有出pod流量-Default-deny-all-egress-traffic"><span class="nav-number">3.3.</span> <span class="nav-text">默认禁止所有出pod流量(Default deny all egress traffic)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#默认允许所有出pod流量-Default-allow-all-egress-traffic"><span class="nav-number">3.4.</span> <span class="nav-text">默认允许所有出pod流量(Default allow all egress traffic)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#默认禁止所有入出pod流量-Default-deny-all-ingress-and-all-egress-traffic"><span class="nav-number">3.5.</span> <span class="nav-text">默认禁止所有入出pod流量(Default deny all ingress and all egress traffic)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#In-Action"><span class="nav-number">4.</span> <span class="nav-text">In Action</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#用Deployment创建nginx-pod实例并用service暴露"><span class="nav-number">4.1.</span> <span class="nav-text">用Deployment创建nginx pod实例并用service暴露</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#确认创建结果"><span class="nav-number">4.2.</span> <span class="nav-text">确认创建结果</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#测试nginx服务连通性"><span class="nav-number">4.3.</span> <span class="nav-text">测试nginx服务连通性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#通过创建Network-Policy对象添加隔离性"><span class="nav-number">4.4.</span> <span class="nav-text">通过创建Network Policy对象添加隔离性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#创建Network-Policy"><span class="nav-number">4.5.</span> <span class="nav-text">创建Network Policy</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#测试隔离性"><span class="nav-number">4.6.</span> <span class="nav-text">测试隔离性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为pod添加access-“true”标签测试连通性"><span class="nav-number">4.7.</span> <span class="nav-text">为pod添加access: “true”标签测试连通性</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">116</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">179</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.1m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">33:30</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

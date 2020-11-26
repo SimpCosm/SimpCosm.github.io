@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="作为信息源建设的一部分，最近突然想把「经济学人」阅读捡起来。为了能够固定获取「经济学人」文本，研究了一下其爬取过程，记录如下，希望能够有所帮助。经济学人是什么经济学人是一份创办于 1843 年 9 月 2 日的英国杂志。这是一本涉及全球政治、经济、文化、科技等多方面事务的综合性新闻评论刊物，着重于对这些议题提供深入的分析和评论。它的社论持有古典自由主义与经济自由主义的立场，倾向于支持自由贸易、全球">
+<meta name="keywords" content="docker,calibre,ebook">
+<meta property="og:type" content="article">
+<meta property="og:title" content="自动抓取经济学人">
+<meta property="og:url" content="http://houmin.cc/posts/d1848f4f/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="作为信息源建设的一部分，最近突然想把「经济学人」阅读捡起来。为了能够固定获取「经济学人」文本，研究了一下其爬取过程，记录如下，希望能够有所帮助。经济学人是什么经济学人是一份创办于 1843 年 9 月 2 日的英国杂志。这是一本涉及全球政治、经济、文化、科技等多方面事务的综合性新闻评论刊物，着重于对这些议题提供深入的分析和评论。它的社论持有古典自由主义与经济自由主义的立场，倾向于支持自由贸易、全球">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-07-14T08:24:44.104Z">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://houmin.cc/posts/d1848f4f/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>自动抓取经济学人 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/d1848f4f/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          自动抓取经济学人
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-04-08 22:05:25" itemprop="dateCreated datePublished" datetime="2020-04-08T22:05:25+08:00">2020-04-08</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/d1848f4f/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/d1848f4f/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>7.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>13 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>作为信息源建设的一部分，最近突然想把「经济学人」阅读捡起来。为了能够固定获取「经济学人」文本，研究了一下其爬取过程，记录如下，希望能够有所帮助。</p><h2 id="经济学人是什么"><a href="#经济学人是什么" class="headerlink" title="经济学人是什么"></a>经济学人是什么</h2><p>经济学人是一份创办于 1843 年 9 月 2 日的英国杂志。这是一本涉及全球政治、经济、文化、科技等多方面事务的综合性新闻评论刊物，着重于对这些议题提供深入的分析和评论。它的社论持有<a href="https://zh.wikipedia.org/wiki/古典自由主義" target="_blank" rel="external nofollow noopener noreferrer">古典自由主义</a>与<a href="https://zh.wikipedia.org/wiki/經濟自由主義" target="_blank" rel="external nofollow noopener noreferrer">经济自由主义</a>的立场，倾向于支持<a href="https://zh.wikipedia.org/wiki/自由貿易" target="_blank" rel="external nofollow noopener noreferrer">自由贸易</a>、<a href="https://zh.wikipedia.org/wiki/全球化" target="_blank" rel="external nofollow noopener noreferrer">全球化</a>、<a href="https://zh.wikipedia.org/w/index.php?title=人口自由流動&amp;action=edit&amp;redlink=1" target="_blank" rel="external nofollow noopener noreferrer">人口自由流动</a>和<a href="https://zh.wikipedia.org/wiki/社會自由主義" target="_blank" rel="external nofollow noopener noreferrer">社会自由主义</a>。</p><a id="more"></a>
+
+<ul>
+<li>在创刊之初，其议题主要囊括英国及其殖民地的政治、经济及自由贸易等范围。</li>
+<li>1941 年珍珠港事件后首次开辟美国专栏，这是其第一个专门报道某个国家的栏目。</li>
+<li>2012年1月，首次开设了中国专栏，这是继1941年的美国栏目之后的首个国家栏目。</li>
+</ul>
+<h2 id="神奇的calibre"><a href="#神奇的calibre" class="headerlink" title="神奇的calibre"></a>神奇的calibre</h2><p><a href="https://calibre-ebook.com/" target="_blank" rel="external nofollow noopener noreferrer">calibre</a>是一个开源的多平台（支持 Linux，macOS，Windows）电子书管理工具，它支持以下功能：</p>
+<ul>
+<li>强大的电子书管理工具，支持从网络上下载电子书的元数据。</li>
+<li>强大的电子书阅读工具，支持 ToC，搜索，复制等功能。</li>
+<li>支持从网络上下载新闻杂志，比如 <code>The Economist</code>, <code>New York Times</code>等，甚至是 RSS源。</li>
+<li>内置 web 服务器，可以更加方便的分享和备份图书库</li>
+<li>支持编辑电子书，进行格式转换，包括 epub，mobi 等格式</li>
+</ul>
+<p>calibre 支持一种 <code>recipe</code>的概念，calibre 可以通过 <code>recipe</code>从网络上下载新闻，并且组织成电子书。</p>
+<blockquote>
+<p><strong>A recipe is a set of instructions that teach calibre how to convert an online news source</strong>, such as a magazine or a blog, into an e-book.</p>
+</blockquote>
+<p><code>recipe</code>本质上都是 Python 代码，最简单的时候他们只是一些变量，比如 URL，用来告诉 calibre 要从哪里下载新闻。</p>
+<p>下面以 <a href="https://lwn.net/" target="_blank" rel="external nofollow noopener noreferrer">LWN</a> 为例（对的，calibre 也可以爬 LWN，但是我太穷了，还订不起）。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env  python2</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> calibre.web.feeds.news <span class="keyword">import</span> BasicNewsRecipe</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">LWN</span><span class="params">(BasicNewsRecipe)</span>:</span></span><br><span class="line">    title = <span class="string">u'lwn'</span></span><br><span class="line">    __author__ = <span class="string">'Oliver Niesner'</span></span><br><span class="line">    description = <span class="string">'Linux Weekly News'</span></span><br><span class="line">    oldest_article = <span class="number">54</span></span><br><span class="line">    language = _(<span class="string">'English'</span>)</span><br><span class="line">    max_articles_per_feed = <span class="number">100</span></span><br><span class="line">    needs_subscription = <span class="literal">True</span></span><br><span class="line">    language = <span class="string">'en'</span></span><br><span class="line">    remove_javascript = <span class="literal">True</span></span><br><span class="line">    simultaneous_downloads = <span class="number">1</span></span><br><span class="line">    delay = <span class="number">1</span></span><br><span class="line">    LOGIN = <span class="string">'https://lwn.net/login'</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_browser</span><span class="params">(self)</span>:</span></span><br><span class="line">        br = BasicNewsRecipe.get_browser(self)</span><br><span class="line">        <span class="keyword">if</span> self.username <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span> <span class="keyword">and</span> self.password <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span>:</span><br><span class="line">            br.open(self.LOGIN)</span><br><span class="line">            br.select_form(name=<span class="string">'loginform'</span>)</span><br><span class="line">            br[<span class="string">'Username'</span>] = self.username</span><br><span class="line">            br[<span class="string">'Password'</span>] = self.password</span><br><span class="line">            br.submit()</span><br><span class="line">        <span class="keyword">return</span> br</span><br><span class="line"></span><br><span class="line">    remove_tags = [</span><br><span class="line">        dict(name=<span class="string">'td'</span>, attrs=&#123;<span class="string">'class'</span>: <span class="string">'LeftColumn'</span>&#125;),</span><br><span class="line">        dict(name=<span class="string">'td'</span>, attrs=&#123;<span class="string">'class'</span>: <span class="string">'NavLink'</span>&#125;),</span><br><span class="line">        dict(name=<span class="string">'div'</span>, attrs=&#123;<span class="string">'class'</span>: <span class="string">'FormattedComment'</span>&#125;),</span><br><span class="line">        dict(name=<span class="string">'td'</span>, attrs=&#123;<span class="string">'class'</span>: <span class="string">'MCTopBanner'</span>&#125;),</span><br><span class="line">        dict(name=<span class="string">'div'</span>, attrs=&#123;<span class="string">'class'</span>: <span class="string">'CommentBox'</span>&#125;)</span><br><span class="line">    ]</span><br><span class="line"></span><br><span class="line">    feeds = [</span><br><span class="line">        (<span class="string">u'lwn'</span>, <span class="string">u'http://lwn.net/headlines/newrss'</span>),</span><br><span class="line">    ]</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">postprocess_html</span><span class="params">(self, soup, first)</span>:</span></span><br><span class="line">        <span class="keyword">for</span> tag <span class="keyword">in</span> soup.findAll(name=[<span class="string">'table'</span>, <span class="string">'tr'</span>, <span class="string">'td'</span>]):</span><br><span class="line">            tag.name = <span class="string">'div'</span></span><br><span class="line">        <span class="keyword">return</span> soup</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">print_version</span><span class="params">(self, url)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> url.replace(<span class="string">'rss'</span>, <span class="string">'?format=printable'</span>)</span><br></pre></td></tr></table></figure>
+<p>首先我们看到 LWN 这个 recipe 继承自 <a href="https://manual.calibre-ebook.com/news_recipe.html" target="_blank" rel="external nofollow noopener noreferrer">BasicRecipe</a> 这个基本的类， <a href="https://manual.calibre-ebook.com/news_recipe.html" target="_blank" rel="external nofollow noopener noreferrer">BasicRecipe</a> 实现了所有 recipe 都会用到的逻辑，比如 <strong>get_browser</strong>、<strong>postprocess_html</strong> 等方法，LWN 只需要根据自己的逻辑去重载即可。</p>
+<p>我们还可以看到，LWN 这个类下面也定义了很多的参数，这些参数都是根据自己的这次抓取的定制参数。比如最关键的 <code>feeds</code>，这是一个告诉 calibre 从哪下载的 list。</p>
+<p>到现在应该明白 calibre 的工作原理了吧。所有下载的源文件都在互联网上以 HTML 的形式你存在，不论是订阅还是非订阅。calibre 通过将这些源文件（HTML 以及图片等）下载后，对 HTML 文本进行再组织，最常用的工具就是 BeautifulSoup。最后，根据 epub 或者 mobi 等格式的要求，进行格式转换即可。</p>
+<p>在<a href="https://github.com/kovidgoyal/calibre/blob/master/recipes/economist.recipe" target="_blank" rel="external nofollow noopener noreferrer">这里</a>你可以看到经济学人的 recipe，比较复杂，主要是对 html文本的处理，有时间可以仔细研究。</p>
+<p>在 <a href="https://manual.calibre-ebook.com/news.html" target="_blank" rel="external nofollow noopener noreferrer">calibre 的官方文档</a>可以看到关于下载新闻更加详细的教程，以后折腾 RSS 的时候可以再看看。</p>
+<h2 id="自动定时抓取经济学人"><a href="#自动定时抓取经济学人" class="headerlink" title="自动定时抓取经济学人"></a>自动定时抓取经济学人</h2><h3 id="ebook-convert"><a href="#ebook-convert" class="headerlink" title="ebook-convert"></a>ebook-convert</h3><p>从 calibre manual 中可以看到，calibre 给我们提供了众多的命令行工具，但是如果只是下载经济学人的话，我们只需要用到 <code>ebook-convert</code>这一工具。其使用方法如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ ebook-convert input_file output_file [options]</span><br></pre></td></tr></table></figure>
+<p>一般情况下，这里的 <code>input_file</code>是需要进行格式转换的输入文件，<code>output_file</code>是格式转换的输出文件。比如我们把一个 epub 格式转换成 <code>mobi</code>格式。但是，calibre 也能够对于 <code>recipe</code>文件进行自动解析，去网络上下载对应的 HTML 文件，并将其输出成需要的格式。具体的，对于经济学人：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ ebook-convert <span class="string">"The Economist.recipe"</span> <span class="string">"te2020-04-06.epub'</span></span><br></pre></td></tr></table></figure>
+<p>在这里，calibre 会自动根据输出文件的后缀名，将输出文件转换成相应格式，真棒。</p>
+<p>对于不同格式的输入输出文件，还有相应的options。</p>
+<ul>
+<li>对于 Recipe 的输入格式，有以下参数<ul>
+<li><code>--username</code>和<code>--password</code>，如果需要用户名和密码的话，可以用于指定相关参数</li>
+</ul>
+</li>
+<li><code>--output-profile</code>可以针对不同设备对输出文件进行优化，比如 <code>--output-profile=kindle_pw3</code></li>
+</ul>
+<h3 id="什么时候抓取"><a href="#什么时候抓取" class="headerlink" title="什么时候抓取"></a>什么时候抓取</h3><p>根据经济学人的recipe，我们可以看到，其实它每次是以 <a href="https://www.economist.com/printedition" target="_blank" rel="external nofollow noopener noreferrer">https://www.economist.com/printedition</a> 为根节点进行遍历，爬取下面所有的文章。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Economist</span><span class="params">(BasicNewsRecipe)</span>:</span></span><br><span class="line"></span><br><span class="line">    title = <span class="string">'The Economist'</span></span><br><span class="line">    language = <span class="string">'en'</span></span><br><span class="line"></span><br><span class="line">    __author__ = <span class="string">"Kovid Goyal"</span></span><br><span class="line">    INDEX = <span class="string">'https://www.economist.com/printedition'</span></span><br><span class="line">    description = (</span><br><span class="line">        <span class="string">'Global news and current affairs from a European'</span></span><br><span class="line">        <span class="string">' perspective. Best downloaded on Friday mornings (GMT)'</span></span><br><span class="line">    )</span><br></pre></td></tr></table></figure>
+<p>什么时候爬取最合适呢，它也写了最好是在 GMT 时间的星期五上午，北京时间是 GMT + 8，所以我们设定自动定时就可以了。</p>
+<h3 id="如何抓取音频"><a href="#如何抓取音频" class="headerlink" title="如何抓取音频"></a>如何抓取音频</h3><p>经济学人在官方已经开源了所有的音频文件，其文件地址格式如下：</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https:<span class="regexp">//</span>audiocdn.economist.com<span class="regexp">/sites/</span>default<span class="regexp">/files/</span>AudioArchive<span class="regexp">/2013/</span><span class="number">2013</span>MMDD<span class="regexp">/Issue_****_2013MMDD_The_Economist_Full_edition.zip</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>MMDD为每周发行日（周六）的月份与日期</li>
+<li><code>****</code>为该周六距离1843年9月2日的周数，也就是其期数。</li>
+</ul>
+<p>为了便于计算，我们计算和查找 <code>2020-01-04</code>是其出版的第 <code>9175</code> 期，之后的期数以这一天为起点计算：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line">start_date = <span class="string">'2020-01-04'</span></span><br><span class="line">end_date = <span class="string">'2020-04-04'</span></span><br><span class="line">week_start = <span class="number">9175</span></span><br><span class="line">start_sec = time.mktime(time.strptime(start_date,<span class="string">'%Y-%m-%d'</span>))</span><br><span class="line">end_sec = time.mktime(time.strptime(end_date,<span class="string">'%Y-%m-%d'</span>))</span><br><span class="line">week_delta = int((end_sec - start_sec)/(<span class="number">24</span>*<span class="number">60</span>*<span class="number">60</span>*<span class="number">7</span>))</span><br><span class="line">week_now = week_start + week_delta</span><br></pre></td></tr></table></figure>
+<div class="note info">
+            <p>这里的期数应该不是严格按照每一周一期，因为我们发现 <code>20131109</code>这一期的期号为8861，而 <code>20200404</code>这一期的期号为 <code>9188</code>，其间周数间隔为334，而期数间隔为 327，应该是中间有几期没有音频。</p>
+          </div>
+<h2 id="容器化主宰世界"><a href="#容器化主宰世界" class="headerlink" title="容器化主宰世界"></a>容器化主宰世界</h2><p>将 calibre 容器化，Dockerfile 如下，这里主要是在 alpine 系统上安装了 <code>calibre</code>，然后启动 crontab 定时调用。</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> ljnelson/docker-calibre-alpine</span><br><span class="line"><span class="keyword">MAINTAINER</span> houmin &lt;houmin.wei@pku.edu.cn&gt;</span><br><span class="line"></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> apk add --no-cache python3 &amp;&amp; \</span></span><br><span class="line"><span class="bash">    <span class="keyword">if</span> [ ! -e /usr/bin/python ]; <span class="keyword">then</span> ln -sf python3 /usr/bin/python ; <span class="keyword">fi</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">ADD</span><span class="bash"> crontab.txt /crontab.txt</span></span><br><span class="line"><span class="keyword">ADD</span><span class="bash"> main.py /main.py</span></span><br><span class="line"><span class="keyword">COPY</span><span class="bash"> entry.sh /entry.sh</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> chmod 755 /entry.sh</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> /usr/bin/crontab /crontab.txt</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">VOLUME</span><span class="bash"> [<span class="string">"/data"</span>]</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">CMD</span><span class="bash"> [<span class="string">"/entry.sh"</span>]</span></span><br></pre></td></tr></table></figure>
+<p>为了让外界能够访问这些爬取到的数据，启动一个 FTP 服务器。整体的 <code>docker-compose.yaml</code>如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">'3'</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">vsftpd:</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">vsftpd</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">"fauria/vsftpd"</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/calibre/data:/home/vsftpd</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">"20:20"</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">"21:21"</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">"21100-21110:21100-21110"</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">FTP_USER=[user]</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">FTP_PASS=[passwd]</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">PASV_ADDRESS=127.0.0.1</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">PASV_MIN_PORT=21100</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">PASV_MAX_PORT=21110</span></span><br><span class="line">  <span class="attr">calibre:</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">calibre</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">"unicosmos/calibre"</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">~/calibre/data/[user]:/data</span></span><br></pre></td></tr></table></figure>
+<p>把这里的 <code>user</code> 和 <code>passwd</code> 改成自己服务器的就好了。</p>
+<p>程序主函数如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/python3</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> datetime, time, os</span><br><span class="line"><span class="keyword">import</span> smtplib</span><br><span class="line"><span class="keyword">from</span> email.mime.multipart <span class="keyword">import</span> MIMEMultipart</span><br><span class="line"><span class="keyword">from</span> email.mime.application <span class="keyword">import</span> MIMEApplication</span><br><span class="line"></span><br><span class="line">mail_host = <span class="string">"smtp.163.com"</span></span><br><span class="line">mail_user = <span class="string">"houmin_wei@163.com"</span></span><br><span class="line">mail_pass = <span class="string">"********"</span></span><br><span class="line"></span><br><span class="line">sender = <span class="string">'houmin_wei@163.com'</span></span><br><span class="line">receivers = [<span class="string">'houmin.wei@pku.edu.cn'</span>]</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">cal_week</span><span class="params">(date)</span>:</span></span><br><span class="line">    start_date = <span class="string">'20200104'</span></span><br><span class="line">    week_start = <span class="number">9175</span></span><br><span class="line">    start_sec = time.mktime(time.strptime(start_date, <span class="string">'%Y%m%d'</span>))</span><br><span class="line">    date_sec = time.mktime(time.strptime(date, <span class="string">'%Y%m%d'</span>))</span><br><span class="line">    week_delta = int((date_sec - start_sec)/(<span class="number">24</span>*<span class="number">60</span>*<span class="number">60</span>*<span class="number">7</span>))</span><br><span class="line">    week_now = week_start + week_delta</span><br><span class="line">    <span class="keyword">return</span> week_now</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_audio</span><span class="params">(date, path)</span>:</span></span><br><span class="line">    week_now = cal_week(date)</span><br><span class="line">    url = <span class="string">"https://audiocdn.economist.com/sites/default/files/AudioArchive/&#123;year&#125;/&#123;date&#125;/Issue_&#123;week&#125;_&#123;date&#125;_The_Economist_Full_edition.zip"</span>.format(year=date[<span class="number">0</span>:<span class="number">4</span>], date=date, week=week_now)</span><br><span class="line">    print(url)</span><br><span class="line">    cmd = <span class="string">"cd &#123;path&#125;/audio &amp;&amp; wget &#123;url&#125; &amp;&amp; cd -;"</span>.format(path=path, url=url)</span><br><span class="line">    os.system(cmd)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_book</span><span class="params">(date, path)</span>:</span></span><br><span class="line">    filename = path + <span class="string">"/ebook/te"</span> + date</span><br><span class="line">    <span class="comment">#cmd = 'ebook-convert \"The Economist.recipe\" ' + filename + '.mobi --output-profile=kindle'</span></span><br><span class="line">    cmd = <span class="string">'ebook-convert \"The Economist.recipe\" '</span> + filename + <span class="string">'.epub'</span></span><br><span class="line">    os.system(cmd)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">send_mail</span><span class="params">(date, path, sender, receivers)</span>:</span></span><br><span class="line">    epubFile = path + <span class="string">"/ebook/te"</span> + date + <span class="string">'.epub'</span></span><br><span class="line">    epubApart = MIMEApplication(open(epubFile, <span class="string">'rb'</span>).read())</span><br><span class="line">    epubApart.add_header(<span class="string">'Content-Disposition'</span>, <span class="string">'attachment'</span>, filename=epubFile)</span><br><span class="line"></span><br><span class="line">    message = MIMEMultipart()</span><br><span class="line">    message.attach(epubApart)</span><br><span class="line">    message[<span class="string">'Subject'</span>] = <span class="string">"The Economist "</span> + date</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        smtpObj = smtplib.SMTP(mail_host, <span class="number">465</span>)</span><br><span class="line">        smtpObj.login(mail_user, mail_pass)</span><br><span class="line">        smtpObj.sendmail(sender, receivers, message.as_string())</span><br><span class="line">        print(<span class="string">"sending mail success!"</span>)</span><br><span class="line">    <span class="keyword">except</span> smtplib.SMTPException:</span><br><span class="line">        print(<span class="string">"Error: cannot send mail"</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">operator</span><span class="params">(path)</span>:</span></span><br><span class="line">    today = datetime.date.today()</span><br><span class="line">    tomorrow = today + datetime.timedelta(days=<span class="number">1</span>)</span><br><span class="line">    date = tomorrow.strftime(<span class="string">'%Y%m%d'</span>)</span><br><span class="line">    print(<span class="string">"==============================================="</span>)</span><br><span class="line">    print(<span class="string">"Fetch The Economist &#123;date&#125; begin..."</span>.format(date=date))</span><br><span class="line">    get_book(date, path)</span><br><span class="line">    <span class="comment">#get_audio(date, path)</span></span><br><span class="line">    <span class="comment">#send_mail(date, path, sender, receivers)</span></span><br><span class="line">    print(<span class="string">"Fetch The Economist &#123;date&#125; end."</span>.format(date=date))</span><br><span class="line">    print(<span class="string">"===============================================\n\n"</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    operator(<span class="string">"./data"</span>)</span><br></pre></td></tr></table></figure>
+<p>更多具体的内容，可以参考我的 <a href="https://github.com/SimpCosm/calibre" target="_blank" rel="external nofollow noopener noreferrer">Github Repo</a>。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://manual.calibre-ebook.com/" target="_blank" rel="external nofollow noopener noreferrer">calibre manual</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/f5d73ad0/" rel="bookmark">Hexo 博客容器化</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/574111db/" rel="bookmark">【Kubernetes】在Docker中使用GPU</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/d1848f4f/" title="自动抓取经济学人">http://houmin.cc/posts/d1848f4f/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/docker/" rel="tag"><i class="fa fa-tag"></i> docker</a>
+              <a href="/tags/calibre/" rel="tag"><i class="fa fa-tag"></i> calibre</a>
+              <a href="/tags/ebook/" rel="tag"><i class="fa fa-tag"></i> ebook</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/65866329/" rel="next" title="虚拟化技术概览">
+                  <i class="fa fa-chevron-left"></i> 虚拟化技术概览
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/125bc0e5/" rel="prev" title="政治坐标系">
+                  政治坐标系 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#经济学人是什么"><span class="nav-number">1.</span> <span class="nav-text">经济学人是什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#神奇的calibre"><span class="nav-number">2.</span> <span class="nav-text">神奇的calibre</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#自动定时抓取经济学人"><span class="nav-number">3.</span> <span class="nav-text">自动定时抓取经济学人</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ebook-convert"><span class="nav-number">3.1.</span> <span class="nav-text">ebook-convert</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#什么时候抓取"><span class="nav-number">3.2.</span> <span class="nav-text">什么时候抓取</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何抓取音频"><span class="nav-number">3.3.</span> <span class="nav-text">如何抓取音频</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#容器化主宰世界"><span class="nav-number">4.</span> <span class="nav-text">容器化主宰世界</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">5.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">116</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">179</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.1m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">33:30</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>
