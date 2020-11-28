@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="源码结构Clientclient-go里面有许许多多的库，先从RESTClient说起，client-go一共支持4种客户端逻辑: DiscoveryClient：发现版本，请求访问k8s集群的API信息，如kubectl api-versions。 ClientSet：客户端集合，仅限使用k8s内置资源，如Pods,Service等。 DynamicClient：动态客户端，用于无类型资源, 如">
+<meta name="keywords" content="k8s,client-go">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Kubernetes】Client Go">
+<meta property="og:url" content="http://houmin.cc/posts/b7728477/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="源码结构Clientclient-go里面有许许多多的库，先从RESTClient说起，client-go一共支持4种客户端逻辑: DiscoveryClient：发现版本，请求访问k8s集群的API信息，如kubectl api-versions。 ClientSet：客户端集合，仅限使用k8s内置资源，如Pods,Service等。 DynamicClient：动态客户端，用于无类型资源, 如">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/062c4205c8fc48ba9dda4fd74afb69f1~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2a9b31ef1dfe48989dd53d0a01c3e264~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a32713d9de404a77b6a381adc46dc602~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:updated_time" content="2020-11-27T03:23:18.266Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/062c4205c8fc48ba9dda4fd74afb69f1~tplv-k3u1fbpfcp-zoom-1.image">
+
+<link rel="canonical" href="http://houmin.cc/posts/b7728477/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Kubernetes】Client Go | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/b7728477/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Kubernetes】Client Go
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-09-21 15:32:56" itemprop="dateCreated datePublished" datetime="2020-09-21T15:32:56+08:00">2020-09-21</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/b7728477/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/b7728477/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>7.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>14 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="源码结构"><a href="#源码结构" class="headerlink" title="源码结构"></a>源码结构</h2><h2 id="Client"><a href="#Client" class="headerlink" title="Client"></a>Client</h2><p><strong>client-go</strong>里面有许许多多的库，先从<code>RESTClient</code>说起，<strong>client-go</strong>一共支持4种客户端逻辑:</p><ul>
+<li><code>DiscoveryClient</code>：发现版本，请求访问k8s集群的API信息，如<code>kubectl api-versions</code>。</li>
+<li><code>ClientSet</code>：客户端集合，仅限使用k8s内置资源，如<code>Pods</code>,<code>Service</code>等。</li>
+<li><code>DynamicClient</code>：动态客户端，用于无类型资源, 如<code>CRD</code>。</li>
+<li><code>RESTClient</code>： 实现<code>rest.Interface</code>接口，自由度高，有需要时可以进行封装。</li>
+</ul><a id="more"></a>
+
+<p>其中前三者都是基于<code>RESTClient</code>实现，可以在下图或源码中看到<strong>restClient</strong>踪影（<code>DynamicClient</code>是<strong>client</strong>命名）。</p>
+<p><img alt="Client关系图" data-src="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/062c4205c8fc48ba9dda4fd74afb69f1~tplv-k3u1fbpfcp-zoom-1.image"></p>
+<h3 id="DiscoveryClient"><a href="#DiscoveryClient" class="headerlink" title="DiscoveryClient"></a>DiscoveryClient</h3><p>实现方法:</p>
+<ul>
+<li><code>ServerGroups</code>: 返回<code>metav1.ApiGroup</code>列表。</li>
+<li><code>ServerResourcesForGroupVersion</code>: 根据GV参数获取<code>metav1.APIResource</code>列表。</li>
+<li><code>ServerResources</code>: 获取<code>metav1.APIResource</code>列表。</li>
+<li><code>ServerGroupsAndResources</code>: 返回<code>metav1.APIGroup</code>数组和<code>metav1.APIResource</code>列表。</li>
+<li><code>ServerPreferredResources</code>: 返回首选的资源列表。</li>
+<li><code>ServerPreferredNamespacedResources</code>: 返回首选的命名空间层级资源列表。</li>
+<li><code>ServerVersion</code>: 返回服务器版本。</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> kubeconfig *<span class="keyword">string</span></span><br><span class="line">    <span class="keyword">if</span> home := homedir.HomeDir(); home != <span class="string">""</span> &#123;</span><br><span class="line">        kubeconfig = flag.String(<span class="string">"kubeconfig"</span>, filepath.Join(home, <span class="string">".kube"</span>, <span class="string">"config"</span>), <span class="string">"(optional) absolute path to the kubeconfig file"</span>)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        kubeconfig = flag.String(<span class="string">"kubeconfig"</span>, <span class="string">""</span>, <span class="string">"absolute path to the kubeconfig file"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    flag.Parse()</span><br><span class="line"></span><br><span class="line">    config, err := clientcmd.BuildConfigFromFlags(<span class="string">""</span>, *kubeconfig)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="built_in">panic</span>(err)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// DiscoveryClient示例</span></span><br><span class="line">    discoveryClient, err := discovery.NewDiscoveryClientForConfig(config)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="built_in">panic</span>(err)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    version, err := discoveryClient.ServerVersion()</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="built_in">panic</span>(err)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    pretty.Println(version)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="ClientSet"><a href="#ClientSet" class="headerlink" title="ClientSet"></a>ClientSet</h3><p>使用<code>ClientSet</code>比较简单，只需要配置好<code>RESTClient</code>就可以操作系统资源。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> kubeconfig *<span class="keyword">string</span></span><br><span class="line">    <span class="keyword">if</span> home := homeDir(); home != <span class="string">""</span> &#123;</span><br><span class="line">        kubeconfig = flag.String(<span class="string">"kubeconfig"</span>, filepath.Join(home, <span class="string">".kube"</span>, <span class="string">"config"</span>), <span class="string">"(optional) absolute path to the kubeconfig file"</span>)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        kubeconfig = flag.String(<span class="string">"kubeconfig"</span>, <span class="string">""</span>, <span class="string">"absolute path to the kubeconfig file"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    flag.Parse()</span><br><span class="line"></span><br><span class="line">    <span class="comment">// use the current context in kubeconfig</span></span><br><span class="line">    config, err := clientcmd.BuildConfigFromFlags(<span class="string">""</span>, *kubeconfig)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="built_in">panic</span>(err.Error())</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ClientSet示例</span></span><br><span class="line">    clientset, err := kubernetes.NewForConfig(config)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="built_in">panic</span>(err.Error())</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        <span class="comment">// 调用链：客户端-&gt;GV-&gt;Resources-&gt;OP</span></span><br><span class="line">        pods, err := clientset.CoreV1().Pods(<span class="string">""</span>).List(context.TODO(), metav1.ListOptions&#123;&#125;)</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="built_in">panic</span>(err.Error())</span><br><span class="line">        &#125;</span><br><span class="line">        fmt.Printf(<span class="string">"There are %d pods in the cluster\n"</span>, <span class="built_in">len</span>(pods.Items))</span><br><span class="line"></span><br><span class="line">        namespace := <span class="string">"default"</span></span><br><span class="line">        pod := <span class="string">"example-xxxxx"</span></span><br><span class="line">        _, err = clientset.CoreV1().Pods(namespace).Get(context.TODO(), pod, metav1.GetOptions&#123;&#125;)</span><br><span class="line">        <span class="keyword">if</span> errors.IsNotFound(err) &#123;</span><br><span class="line">            fmt.Printf(<span class="string">"Pod %s in namespace %s not found\n"</span>, pod, namespace)</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> statusError, isStatus := err.(*errors.StatusError); isStatus &#123;</span><br><span class="line">            fmt.Printf(<span class="string">"Error getting pod %s in namespace %s: %v\n"</span>,</span><br><span class="line">                pod, namespace, statusError.ErrStatus.Message)</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="built_in">panic</span>(err.Error())</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            fmt.Printf(<span class="string">"Found pod %s in namespace %s\n"</span>, pod, namespace)</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        time.Sleep(<span class="number">10</span> * time.Second)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="DynamicClient"><a href="#DynamicClient" class="headerlink" title="DynamicClient"></a>DynamicClient</h3><p>对自定义资源类型（CRD），采用<code>DynamicClient</code>进行CRUD操作，创建或返回数据的是<code>Unstructured</code>类型，本质是<code>map[string]interface</code>。目前有很多关于CRD库已经从自定义资源生成代码，关联相关类型，所以基本上没有这种接近原生数据的开发。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> kubeconfig *<span class="keyword">string</span></span><br><span class="line">    <span class="keyword">if</span> home := homedir.HomeDir(); home != <span class="string">""</span> &#123;</span><br><span class="line">        kubeconfig = flag.String(<span class="string">"kubeconfig"</span>, filepath.Join(home, <span class="string">".kube"</span>, <span class="string">"config"</span>), <span class="string">"(optional) absolute path to the kubeconfig file"</span>)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        kubeconfig = flag.String(<span class="string">"kubeconfig"</span>, <span class="string">""</span>, <span class="string">"absolute path to the kubeconfig file"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    flag.Parse()</span><br><span class="line"></span><br><span class="line">    config, err := clientcmd.BuildConfigFromFlags(<span class="string">""</span>, *kubeconfig)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="built_in">panic</span>(err)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// DynamicClient示例</span></span><br><span class="line">    dynamicClient, err := dynamic.NewForConfig(config)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="built_in">panic</span>(err)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 记得先创建CRD</span></span><br><span class="line">    gvr := schema.GroupVersionResource&#123;</span><br><span class="line">        Group:    <span class="string">"stable.example.com"</span>,</span><br><span class="line">        Version:  <span class="string">"v1"</span>,</span><br><span class="line">        Resource: <span class="string">"crontabs"</span>,</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    crontabList, err := dynamicClient.Resource(gvr).List(context.TODO(), v1.ListOptions&#123;&#125;)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="built_in">panic</span>(err)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> crontab *unstructured.Unstructured</span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">len</span>(crontabList.Items) &lt; <span class="number">1</span> &#123;</span><br><span class="line">        crontab, err = dynamicClient.Resource(gvr).</span><br><span class="line">            Namespace(<span class="string">"default"</span>).</span><br><span class="line">            Create(context.TODO(),</span><br><span class="line">                <span class="comment">// Unstructed类型</span></span><br><span class="line">                &amp;unstructured.Unstructured&#123;</span><br><span class="line">                    Object: <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">interface</span>&#123;&#125;&#123;</span><br><span class="line">                        <span class="string">"apiVersion"</span>: <span class="string">"stable.example.com/v1"</span>,</span><br><span class="line">                        <span class="string">"kind"</span>:       <span class="string">"CronTab"</span>,</span><br><span class="line">                        <span class="string">"metadata"</span>: <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">interface</span>&#123;&#125;&#123;</span><br><span class="line">                            <span class="string">"name"</span>: <span class="string">"demo-crontab"</span>,</span><br><span class="line">                        &#125;,</span><br><span class="line">                        <span class="string">"spec"</span>: <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">interface</span>&#123;&#125;&#123;</span><br><span class="line">                            <span class="string">"cronSpec"</span>: <span class="string">"* * * * 1"</span>,</span><br><span class="line">                            <span class="string">"replicas"</span>: <span class="number">5</span>,</span><br><span class="line">                            <span class="string">"image"</span>:    <span class="string">"nginx/nginx"</span>,</span><br><span class="line">                        &#125;,</span><br><span class="line">                    &#125;,</span><br><span class="line">                &#125;,</span><br><span class="line">                v1.CreateOptions&#123;&#125;)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="built_in">panic</span>(err)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        crontab = &amp;crontabList.Items[<span class="number">0</span>]</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    pretty.Println(crontab)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="RESTClient"><a href="#RESTClient" class="headerlink" title="RESTClient"></a>RESTClient</h3><p>如果用<code>RESTClient</code>CRUD某个资源，之前先要配置好<code>rest.Config</code>。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> kubeconfig *<span class="keyword">string</span></span><br><span class="line">    <span class="keyword">if</span> home := homeDir(); home != <span class="string">""</span> &#123;</span><br><span class="line">        kubeconfig = flag.String(<span class="string">"kubeconfig"</span>, filepath.Join(home, <span class="string">".kube"</span>, <span class="string">"config"</span>), <span class="string">"(optional) absolute path to the kubeconfig file"</span>)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        kubeconfig = flag.String(<span class="string">"kubeconfig"</span>, <span class="string">""</span>, <span class="string">"absolute path to the kubeconfig file"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    flag.Parse()</span><br><span class="line"></span><br><span class="line">    config, err := clientcmd.BuildConfigFromFlags(<span class="string">""</span>, *kubeconfig)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="built_in">panic</span>(err)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 这里开始配置</span></span><br><span class="line">    config.APIPath = <span class="string">"/api"</span></span><br><span class="line">    <span class="comment">// 资源配置，就像ClientSet配置每个资源一样</span></span><br><span class="line">    config.GroupVersion = &amp;corev1.SchemeGroupVersion</span><br><span class="line">    <span class="comment">// 序列化器(编解码器)</span></span><br><span class="line">    config.NegotiatedSerializer = scheme.Codecs.WithoutConversion()</span><br><span class="line">    <span class="comment">// 限速器</span></span><br><span class="line">    config.RateLimiter = flowcontrol.NewTokenBucketRateLimiter(rest.DefaultQPS, rest.DefaultBurst)</span><br><span class="line">    <span class="comment">// RESTClient示例</span></span><br><span class="line">    restClient, err := rest.RESTClientFor(config)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="built_in">panic</span>(err)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> (</span><br><span class="line">        options = &amp;metav1.ListOptions&#123;&#125;</span><br><span class="line">        pods = &amp;corev1.PodList&#123;&#125;</span><br><span class="line">        ctx = context.Background()</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> err := restClient.Get().</span><br><span class="line">        Resource(<span class="string">"pods"</span>).</span><br><span class="line">        VersionedParams(options, scheme.ParameterCodec).</span><br><span class="line">        Namespace(<span class="string">""</span>).</span><br><span class="line">        Do(ctx).</span><br><span class="line">        Into(pods); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="built_in">panic</span>(err)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> _, item := <span class="keyword">range</span> pods.Items &#123;</span><br><span class="line">        fmt.Println(item.Namespace, <span class="string">"/"</span>, item.Name)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>主要是以<code>Resquest</code>请求处理为主，封装了<code>http.Client</code>对象，但是<code>http.Client</code>对象是存放在<code>RESTClient</code>，当调用<code>RESTClient</code>时就返回<code>Resquest</code>对象，这是就可以调用<code>Resources()</code> <code>VersionedParams()</code> <code>Do()</code>等方法。最后在<code>Do()</code>方法返回<code>Result</code>类型，是用来进行对返回数据的处理，如<code>Into(&amp;pods)</code>就是对数据转换成目录类型。</p>
+<h3 id="kubeconfig配置管理"><a href="#kubeconfig配置管理" class="headerlink" title="kubeconfig配置管理"></a>kubeconfig配置管理</h3><p>下图是其中一个解析<code>kubeconfig</code>过程，主要涉及三个对象分别是<code>DeferredLoadingClientConfig</code>,<code>DeferredLoadingClientConfig</code>,<code>DirectClientConfig</code>。</p>
+<p><img alt="img" data-src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2a9b31ef1dfe48989dd53d0a01c3e264~tplv-k3u1fbpfcp-zoom-1.image"></p>
+<h4 id="DeferredLoadingClientConfig"><a href="#DeferredLoadingClientConfig" class="headerlink" title="DeferredLoadingClientConfig"></a>DeferredLoadingClientConfig</h4><p>对象里有个<code>loader</code>成员，用来调用加载配置的规则，对象里每个可导出的方法里首先执行<code>createClientConfig()</code>方法（除<code>ConfigAccess()</code>外），通过这个方调用<code>config.loader.Load()</code>。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> DeferredLoadingClientConfig <span class="keyword">struct</span> &#123;</span><br><span class="line">    <span class="comment">// 加载配置规则</span></span><br><span class="line">    loader         ClientConfigLoader</span><br><span class="line">    ... </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(config *DeferredLoadingClientConfig)</span> <span class="title">createClientConfig</span><span class="params">()</span> <span class="params">(ClientConfig, error)</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> config.clientConfig == <span class="literal">nil</span> &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">if</span> config.clientConfig == <span class="literal">nil</span> &#123;</span><br><span class="line">            mergedConfig, err := config.loader.Load()</span><br><span class="line">            ....</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> config.clientConfig, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="ClientCofnigLoadingRules"><a href="#ClientCofnigLoadingRules" class="headerlink" title="ClientCofnigLoadingRules"></a>ClientCofnigLoadingRules</h4><p>作用是当有多个配置的时候会合成一个<code>clientcmdapi.Config</code>对象，返回给<code>DeferredLoadingClientConfig</code>对象，如上述代码。</p>
+<ul>
+<li><code>LoadFromFile()</code>加载文件，读取字节码。</li>
+<li><code>Load()</code> 调用<code>Codec.Decoder.Decode()</code>编解码器解析文件内容。</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Config <span class="keyword">struct</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    Clusters <span class="keyword">map</span>[<span class="keyword">string</span>]*Cluster <span class="string">`json:"clusters"`</span></span><br><span class="line">    AuthInfos <span class="keyword">map</span>[<span class="keyword">string</span>]*AuthInfo <span class="string">`json:"users"`</span></span><br><span class="line">    Contexts <span class="keyword">map</span>[<span class="keyword">string</span>]*Context <span class="string">`json:"contexts"`</span></span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="DirectClientConfig"><a href="#DirectClientConfig" class="headerlink" title="DirectClientConfig"></a>DirectClientConfig</h4><p>最后通过<code>DirectClientConfig.ClientConfig()</code>获取<code>rest.Config</code>对象返回。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(config *DeferredLoadingClientConfig)</span> <span class="title">createClientConfig</span><span class="params">()</span> <span class="params">(ClientConfig, error)</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> config.clientConfig == <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> config.clientConfig == <span class="literal">nil</span> &#123;</span><br><span class="line">            mergedConfig, err := config.loader.Load()</span><br><span class="line">            </span><br><span class="line">            <span class="keyword">if</span> config.fallbackReader != <span class="literal">nil</span> &#123;</span><br><span class="line">                mergedClientConfig = NewInteractiveClientConfig(*mergedConfig, config.overrides.CurrentContext, config.overrides, config.fallbackReader, config.loader)</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">// 运行client-go的example/out-of-cluster-client-configuration会执行这段</span></span><br><span class="line">                mergedClientConfig = NewNonInteractiveClientConfig(*mergedConfig, config.overrides.CurrentContext, config.overrides, config.loader)</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            config.clientConfig = mergedClientConfig</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> config.clientConfig, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(config *DeferredLoadingClientConfig)</span> <span class="title">ClientConfig</span><span class="params">()</span> <span class="params">(*restclient.Config, error)</span></span> &#123;</span><br><span class="line">    mergedClientConfig, err := config.createClientConfig()</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 最后调用</span></span><br><span class="line">    mergedConfig, err := mergedClientConfig.ClientConfig()</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>最后附上对象图：</p>
+<p><img alt="img" data-src="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a32713d9de404a77b6a381adc46dc602~tplv-k3u1fbpfcp-zoom-1.image"></p>
+<h2 id="Informer-机制"><a href="#Informer-机制" class="headerlink" title="Informer 机制"></a>Informer 机制</h2><h3 id="Informer-机制架构设计"><a href="#Informer-机制架构设计" class="headerlink" title="Informer 机制架构设计"></a>Informer 机制架构设计</h3><h3 id="Reflector"><a href="#Reflector" class="headerlink" title="Reflector"></a>Reflector</h3><h3 id="DeltaFIFO"><a href="#DeltaFIFO" class="headerlink" title="DeltaFIFO"></a>DeltaFIFO</h3><h3 id="Indexer"><a href="#Indexer" class="headerlink" title="Indexer"></a>Indexer</h3><h2 id="WorkQueue"><a href="#WorkQueue" class="headerlink" title="WorkQueue"></a>WorkQueue</h2><h2 id="EventBroadcaster-事件管理器"><a href="#EventBroadcaster-事件管理器" class="headerlink" title="EventBroadcaster 事件管理器"></a>EventBroadcaster 事件管理器</h2><h2 id="代码生成器"><a href="#代码生成器" class="headerlink" title="代码生成器"></a>代码生成器</h2><h3 id="client-gen-代码生成器"><a href="#client-gen-代码生成器" class="headerlink" title="client-gen 代码生成器"></a>client-gen 代码生成器</h3><h3 id="lister-gen-代码生成器"><a href="#lister-gen-代码生成器" class="headerlink" title="lister-gen 代码生成器"></a>lister-gen 代码生成器</h3><h3 id="informer-gen-代码生成器"><a href="#informer-gen-代码生成器" class="headerlink" title="informer-gen 代码生成器"></a>informer-gen 代码生成器</h3>
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer之初识API</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/b4a40ecc/" rel="bookmark">【Kubernetes】Apiserver Api</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/1141907b/" rel="bookmark">【Kubernetes】Apiserver Install</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/777d3be4/" rel="bookmark">【Kubernetes】ApiServer Codec</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/b7728477/" title="【Kubernetes】Client Go">http://houmin.cc/posts/b7728477/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
+              <a href="/tags/client-go/" rel="tag"><i class="fa fa-tag"></i> client-go</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/ebd3de16/" rel="next" title="2020-09-18-k8s-events">
+                  <i class="fa fa-chevron-left"></i> 2020-09-18-k8s-events
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/1f0eb2ff/" rel="prev" title="【Kubernetes】List/Watch机制和Informer模块详解">
+                  【Kubernetes】List/Watch机制和Informer模块详解 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#源码结构"><span class="nav-number">1.</span> <span class="nav-text">源码结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Client"><span class="nav-number">2.</span> <span class="nav-text">Client</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#DiscoveryClient"><span class="nav-number">2.1.</span> <span class="nav-text">DiscoveryClient</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ClientSet"><span class="nav-number">2.2.</span> <span class="nav-text">ClientSet</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DynamicClient"><span class="nav-number">2.3.</span> <span class="nav-text">DynamicClient</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RESTClient"><span class="nav-number">2.4.</span> <span class="nav-text">RESTClient</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#kubeconfig配置管理"><span class="nav-number">2.5.</span> <span class="nav-text">kubeconfig配置管理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#DeferredLoadingClientConfig"><span class="nav-number">2.5.1.</span> <span class="nav-text">DeferredLoadingClientConfig</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ClientCofnigLoadingRules"><span class="nav-number">2.5.2.</span> <span class="nav-text">ClientCofnigLoadingRules</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#DirectClientConfig"><span class="nav-number">2.5.3.</span> <span class="nav-text">DirectClientConfig</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Informer-机制"><span class="nav-number">3.</span> <span class="nav-text">Informer 机制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Informer-机制架构设计"><span class="nav-number">3.1.</span> <span class="nav-text">Informer 机制架构设计</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reflector"><span class="nav-number">3.2.</span> <span class="nav-text">Reflector</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DeltaFIFO"><span class="nav-number">3.3.</span> <span class="nav-text">DeltaFIFO</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Indexer"><span class="nav-number">3.4.</span> <span class="nav-text">Indexer</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WorkQueue"><span class="nav-number">4.</span> <span class="nav-text">WorkQueue</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#EventBroadcaster-事件管理器"><span class="nav-number">5.</span> <span class="nav-text">EventBroadcaster 事件管理器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#代码生成器"><span class="nav-number">6.</span> <span class="nav-text">代码生成器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#client-gen-代码生成器"><span class="nav-number">6.1.</span> <span class="nav-text">client-gen 代码生成器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#lister-gen-代码生成器"><span class="nav-number">6.2.</span> <span class="nav-text">lister-gen 代码生成器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#informer-gen-代码生成器"><span class="nav-number">6.3.</span> <span class="nav-text">informer-gen 代码生成器</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">142</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">198</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.4m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">43:55</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

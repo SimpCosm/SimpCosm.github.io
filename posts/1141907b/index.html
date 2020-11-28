@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Kubernetes集群一经启动，就会有一个缺省的Service：kubernetes，这个服务对应的endpoints就是我们启动的API Server进程，这个服务是不需要手工创建，我们可以删除这个service，但是可以观察到它会立即重新生成，这个service的目的是什么？它又是怎么生成的呢？">
+<meta name="keywords" content="k8s,apiserver">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Kubernetes】Apiserver Install">
+<meta property="og:url" content="http://houmin.cc/posts/1141907b/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="Kubernetes集群一经启动，就会有一个缺省的Service：kubernetes，这个服务对应的endpoints就是我们启动的API Server进程，这个服务是不需要手工创建，我们可以删除这个service，但是可以观察到它会立即重新生成，这个service的目的是什么？它又是怎么生成的呢？">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3412164-72da057fccb539a7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1200/format/webp">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3412164-bbd7f86077efc1c4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1200/format/webp">
+<meta property="og:updated_time" content="2020-11-27T03:59:27.334Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://upload-images.jianshu.io/upload_images/3412164-72da057fccb539a7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1200/format/webp">
+
+<link rel="canonical" href="http://houmin.cc/posts/1141907b/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Kubernetes】Apiserver Install | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/1141907b/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Kubernetes】Apiserver Install
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-08-14 12:03:37" itemprop="dateCreated datePublished" datetime="2020-08-14T12:03:37+08:00">2020-08-14</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/1141907b/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/1141907b/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>13k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>24 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>Kubernetes集群一经启动，就会有一个缺省的Service：kubernetes，这个服务对应的endpoints就是我们启动的API Server进程，这个服务是不需要手工创建，我们可以删除这个service，但是可以观察到它会立即重新生成，这个service的目的是什么？它又是怎么生成的呢？</p>
+</blockquote><a id="more"></a>
+<h1 id="在K8S集群中观察"><a href="#在K8S集群中观察" class="headerlink" title="在K8S集群中观察"></a>在K8S集群中观察</h1><p>首先，在CreateKubeAPIServerConfig函数中，会根据运行参数调用master.DefaultServiceIPRange函数拿出第一个ip作为API Server的Service IP地址，保存在master.Config的APIServerServiceIP成员中，同时指定APIServerServicePort：443。</p>
+<p>下面我们观察一下线上的数据。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">yuxianbing@ubuntu<span class="symbol">:~</span>$ kubectl get service</span><br><span class="line">NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE</span><br><span class="line">kubernetes   ClusterIP   <span class="number">10.254</span>.<span class="number">0</span>.<span class="number">1</span>   &lt;none&gt;        <span class="number">443</span>/TCP   <span class="number">38</span>d</span><br><span class="line">yuxianbing@ubuntu<span class="symbol">:~</span>$ kubectl get endpoints</span><br><span class="line">NAME         ENDPOINTS                                                   AGE</span><br><span class="line">kubernetes   <span class="number">221.228</span>.<span class="number">106.151</span><span class="symbol">:</span><span class="number">6443</span>,<span class="number">58.215</span>.<span class="number">170.46</span><span class="symbol">:</span><span class="number">6443</span>,<span class="number">61.160</span>.<span class="number">36.43</span><span class="symbol">:</span><span class="number">6443</span>   <span class="number">38</span>d</span><br></pre></td></tr></table></figure>
+<p>下面是从etcd中读取到的kubernetes服务的基本信息以及Endpoints信息：</p>
+<p><img alt="img" data-src="https:////upload-images.jianshu.io/upload_images/3412164-72da057fccb539a7.png?imageMogr2/auto-orient/strip|imageView2/2/w/1200/format/webp"></p>
+<p>kubernets-service-in-etcd2.png</p>
+<p><img alt="img" data-src="https:////upload-images.jianshu.io/upload_images/3412164-bbd7f86077efc1c4.png?imageMogr2/auto-orient/strip|imageView2/2/w/1200/format/webp"></p>
+<p>kubernets-service-in-etcd.png</p>
+<p>从上面数据中可以看出，Kubernetes的ClusterIP为10.254.0.1，Endpoints就是我们启动的API Server所在IP地址。那这些IP是如何写到对应的ETCD目录中的呢？</p>
+<h1 id="GenericAPIServer的启动中的辅助功能"><a href="#GenericAPIServer的启动中的辅助功能" class="headerlink" title="GenericAPIServer的启动中的辅助功能"></a>GenericAPIServer的启动中的辅助功能</h1><p>这里就要研究一下GenericAPIServer的启动过程中的另外一项工作，PostStartHook/PreShutdownHook：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">master.Config &#123;</span><br><span class="line">  ExtraConfig: master.ExtraConfig&#123;</span><br><span class="line">    ......</span><br><span class="line">    EnableCoreControllers:   <span class="literal">true</span>,</span><br><span class="line">    ......</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(m *Master)</span> <span class="title">InstallLegacyAPI</span><span class="params">(c *completedConfig, restOptionsGetter generic.RESTOptionsGetter, legacyRESTStorageProvider corerest.LegacyRESTStorageProvider)</span></span> &#123;</span><br><span class="line">        ......</span><br><span class="line">        </span><br><span class="line">    <span class="keyword">if</span> c.ExtraConfig.EnableCoreControllers &#123;</span><br><span class="line">        controllerName := <span class="string">"bootstrap-controller"</span></span><br><span class="line">        coreClient := coreclient.NewForConfigOrDie(c.GenericConfig.LoopbackClientConfig)</span><br><span class="line">        bootstrapController := c.NewBootstrapController(legacyRESTStorage, coreClient, coreClient, coreClient)</span><br><span class="line">        m.GenericAPIServer.AddPostStartHookOrDie(controllerName, bootstrapController.PostStartHook)</span><br><span class="line">        m.GenericAPIServer.AddPreShutdownHookOrDie(controllerName, bootstrapController.PreShutdownHook)</span><br><span class="line">    &#125;</span><br><span class="line">        ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在Master的GenericAPIServer中添加了PostStartHook和ShutdownHook操作。在操作中，会执行启动和停止BootstrapController。</p>
+<h1 id="Controller"><a href="#Controller" class="headerlink" title="Controller"></a>Controller</h1><p>本节专门分析上面的BootstrapController，它与集群中的kube-controller没有任何关系，属于API Server的一部分代码，具体的代码在：k8s.io/kubernetes/pkg/master/controller.go中，具体的结构名为Controller。</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Controller is the controller manager for the core bootstrap Kubernetes</span></span><br><span class="line"><span class="comment">// controller loops, which manage creating the "kubernetes" service, the</span></span><br><span class="line"><span class="comment">// "default", "kube-system" and "kube-public" namespaces, and provide the IP</span></span><br><span class="line"><span class="comment">// repair check on service IPs</span></span><br><span class="line">type Controller struct &#123;</span><br><span class="line">    ServiceClient   coreclient.ServicesGetter</span><br><span class="line">    NamespaceClient coreclient.NamespacesGetter</span><br><span class="line">    EventClient     coreclient.EventsGetter</span><br><span class="line"></span><br><span class="line">    ServiceClusterIPRegistry rangeallocation.RangeRegistry</span><br><span class="line">    ServiceClusterIPInterval time.<span class="built_in">Duration</span></span><br><span class="line">    ServiceClusterIPRange    net.IPNet</span><br><span class="line"></span><br><span class="line">    ServiceNodePortRegistry rangeallocation.RangeRegistry</span><br><span class="line">    ServiceNodePortInterval time.<span class="built_in">Duration</span></span><br><span class="line">    ServiceNodePortRange    utilnet.PortRange</span><br><span class="line"></span><br><span class="line">    EndpointReconciler reconcilers.EndpointReconciler</span><br><span class="line">    EndpointInterval   time.<span class="built_in">Duration</span></span><br><span class="line"></span><br><span class="line">    SystemNamespaces         []string</span><br><span class="line">    SystemNamespacesInterval time.<span class="built_in">Duration</span></span><br><span class="line"></span><br><span class="line">    PublicIP net.IP                        <span class="comment">// API Server绑定的IP，这个IP会作为kubernetes service的Endpoint的IP</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// ServiceIP indicates where the kubernetes service will live.  It may not be nil.</span></span><br><span class="line">    ServiceIP                 net.IP      <span class="comment">// 按照我们的启动参数，这里是：10.254.0.1</span></span><br><span class="line">    ServicePort               <span class="built_in">int</span>          <span class="comment">// 按照我们的启动参数，这里是：643</span></span><br><span class="line">    ExtraServicePorts         []api.ServicePort      <span class="comment">// 为空</span></span><br><span class="line">    ExtraEndpointPorts        []api.EndpointPort  <span class="comment">// 为空</span></span><br><span class="line">    PublicServicePort         <span class="built_in">int</span>      <span class="comment">// 按照我们的启动参数，这里是6443</span></span><br><span class="line">    KubernetesServiceNodePort <span class="built_in">int</span>    <span class="comment">// 缺省是基于ClusterIP启动模式，那么这里为0</span></span><br><span class="line"></span><br><span class="line">    runner *<span class="keyword">async</span>.Runner</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Controller的主要功能：</p>
+<ul>
+<li>创建kubernetes服务</li>
+<li>创建default、kube-system和kube-public名字空间</li>
+<li>并且基于Service的Cluster IP提供IP修复检查功能</li>
+</ul>
+<p>Controller中的结构体中的几个重要的变量：</p>
+<ul>
+<li>ServiceIP：是kubernetes对外服务的Cluster IP，按照启动样例，为：10.254.0.1<br> 这个IP，是基于启动参数：service-cluster-ip-range而来，API Server启动过程中，会从中获取第一个Cluster IP网段中获取第一个IP，作为kubernetes这个服务的Cluster IP。<br> —service-cluster-ip-range ipNet                          A CIDR notation IP range from which to assign service cluster IPs. This must not overlap with any IP ranges assigned to nodes for pods.</li>
+<li>ServicePort：是kubernetes对外服务的Port，按照启动样例，为：443，目前是在创建master.Config时写死的，从master.ExtraConfig.APIServerServicePort中赋值过来</li>
+<li>PublicServicePort：基于启动参数secure-port来指定，缺省为6443。<br> —secure-port int                                         The port on which to serve HTTPS with authentication and authorization. If 0, don’t serve HTTPS at all. (default 6443)</li>
+<li>PublicIP：apiserver在集群中的服务IP，参考下面的参数<br> —advertise-address ip                                    The IP address on which to advertise the apiserver to members of the cluster. This address must be reachable by the rest of the cluster. If blank, the —bind-address will be used. If —bind-address is unspecified, the host’s default interface will be used.</li>
+</ul>
+<p>所以PublicIP的来源顺序：advertise-address &gt; bind-address &gt; default interface。<br> 代码见：ServerRunOptions.DefaultAdvertiseAddress函数内容。一般是找到ipv4，ipv6第一个合格的IP。</p>
+<ul>
+<li>EndpointReconciler ：负责Service的Endpoint的协调处理，还有一个成员EndpointInterval指定了对Endpoint进行协调处理的周期，所以，这个操作是周期性处理的。下面来看看这个成员是如何被赋值的？</li>
+</ul>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(<span class="built_in">c</span> *completedConfig)</span></span> <span class="type">NewBootstrapController</span>(legacyRESTStorage corerest.<span class="type">LegacyRESTStorage</span>, serviceClient coreclient.<span class="type">ServicesGetter</span>, nsClient coreclient.<span class="type">NamespacesGetter</span>, eventClient coreclient.<span class="type">EventsGetter</span>) *<span class="type">Controller</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> &amp;<span class="type">Controller</span>&#123;</span><br><span class="line">                ......</span><br><span class="line">        <span class="type">EndpointReconciler</span>: <span class="built_in">c</span>.<span class="type">ExtraConfig</span>.<span class="type">EndpointReconcilerConfig</span>.<span class="type">Reconciler</span>,</span><br><span class="line">                ......</span><br><span class="line">      &#125;</span><br><span class="line">&#125;</span><br><span class="line">见k8s.io/kubernetes/pkg/master/master.go中</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(cfg *Config)</span></span> <span class="type">Complete</span>(informers informers.<span class="type">SharedInformerFactory</span>) <span class="type">CompletedConfig</span> &#123;</span><br><span class="line">       ......</span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">c</span>.<span class="type">ExtraConfig</span>.<span class="type">EndpointReconcilerConfig</span>.<span class="type">Reconciler</span> == <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="built_in">c</span>.<span class="type">ExtraConfig</span>.<span class="type">EndpointReconcilerConfig</span>.<span class="type">Reconciler</span> = cfg.createEndpointReconciler()</span><br><span class="line">    &#125;</span><br><span class="line">       ......</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(<span class="built_in">c</span> *Config)</span></span> createEndpointReconciler() reconcilers.<span class="type">EndpointReconciler</span> &#123;</span><br><span class="line">    glog.<span class="type">Infof</span>(<span class="string">"Using reconciler: %v"</span>, <span class="built_in">c</span>.<span class="type">ExtraConfig</span>.<span class="type">EndpointReconcilerType</span>)</span><br><span class="line">    <span class="keyword">switch</span> <span class="built_in">c</span>.<span class="type">ExtraConfig</span>.<span class="type">EndpointReconcilerType</span> &#123;</span><br><span class="line">    <span class="comment">// there are numerous test dependencies that depend on a default controller</span></span><br><span class="line">    <span class="keyword">case</span> <span class="string">""</span>, reconcilers.<span class="type">MasterCountReconcilerType</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">c</span>.createMasterCountReconciler()    <span class="comment">// 缺省情况，见NewServerRunOptions函数</span></span><br><span class="line">    <span class="keyword">case</span> reconcilers.<span class="type">LeaseEndpointReconcilerType</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">c</span>.createLeaseReconciler()</span><br><span class="line">    <span class="keyword">case</span> reconcilers.<span class="type">NoneEndpointReconcilerType</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">c</span>.createNoneReconciler()</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        glog.<span class="type">Fatalf</span>(<span class="string">"Reconciler not implemented: %v"</span>, <span class="built_in">c</span>.<span class="type">ExtraConfig</span>.<span class="type">EndpointReconcilerType</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以通过endpoint-reconciler-type来指定endpoint的协调处理类型，缺省是MasterCountReconcilerType类型，这里我们就分析这种类型，如下所示，具体的类型为：masterCountEndpointReconciler：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">func</span> (<span class="selector-tag">c</span> *<span class="selector-tag">Config</span>) <span class="selector-tag">createMasterCountReconciler</span>() <span class="selector-tag">reconcilers</span><span class="selector-class">.EndpointReconciler</span> &#123;</span><br><span class="line">    <span class="attribute">endpointClient </span>:= coreclient.<span class="built_in">NewForConfigOrDie</span>(c.GenericConfig.LoopbackClientConfig)</span><br><span class="line">    return reconcilers.<span class="built_in">NewMasterCountEndpointReconciler</span>(c.ExtraConfig.MasterCount, endpointClient)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="Controller的启动"><a href="#Controller的启动" class="headerlink" title="Controller的启动"></a>Controller的启动</h1><p>Controller的启动代码如下：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(<span class="built_in">c</span> *Controller)</span></span> <span class="type">Start</span>() &#123;</span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">c</span>.runner != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    repairClusterIPs := servicecontroller.<span class="type">NewRepair</span>(<span class="built_in">c</span>.<span class="type">ServiceClusterIPInterval</span>, <span class="built_in">c</span>.<span class="type">ServiceClient</span>, <span class="built_in">c</span>.<span class="type">EventClient</span>, &amp;<span class="built_in">c</span>.<span class="type">ServiceClusterIPRange</span>, <span class="built_in">c</span>.<span class="type">ServiceClusterIPRegistry</span>)</span><br><span class="line">    repairNodePorts := portallocatorcontroller.<span class="type">NewRepair</span>(<span class="built_in">c</span>.<span class="type">ServiceNodePortInterval</span>, <span class="built_in">c</span>.<span class="type">ServiceClient</span>, <span class="built_in">c</span>.<span class="type">EventClient</span>, <span class="built_in">c</span>.<span class="type">ServiceNodePortRange</span>, <span class="built_in">c</span>.<span class="type">ServiceNodePortRegistry</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// run all of the controllers once prior to returning from Start.</span></span><br><span class="line">    <span class="keyword">if</span> err := repairClusterIPs.<span class="type">RunOnce</span>(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="comment">// If we fail to repair cluster IPs apiserver is useless. We should restart and retry.</span></span><br><span class="line">        glog.<span class="type">Fatalf</span>(<span class="string">"Unable to perform initial IP allocation check: %v"</span>, err)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> err := repairNodePorts.<span class="type">RunOnce</span>(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="comment">// If we fail to repair node ports apiserver is useless. We should restart and retry.</span></span><br><span class="line">        glog.<span class="type">Fatalf</span>(<span class="string">"Unable to perform initial service nodePort check: %v"</span>, err)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Service definition is reconciled during first run to correct port and type per expectations.</span></span><br><span class="line">    <span class="keyword">if</span> err := <span class="built_in">c</span>.<span class="type">UpdateKubernetesService</span>(<span class="literal">true</span>); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        glog.<span class="type">Errorf</span>(<span class="string">"Unable to perform initial Kubernetes service initialization: %v"</span>, err)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">c</span>.runner = async.<span class="type">NewRunner</span>(<span class="built_in">c</span>.<span class="type">RunKubernetesNamespaces</span>, <span class="built_in">c</span>.<span class="type">RunKubernetesService</span>, repairClusterIPs.<span class="type">RunUntil</span>, repairNodePorts.<span class="type">RunUntil</span>)</span><br><span class="line">    <span class="built_in">c</span>.runner.<span class="type">Start</span>()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>整个逻辑比较清晰，它主要四个内容：修复ClusterIP、修复NodePort、更新Kubernetes服务、创建几个default/kube-system/kube-public名字空间。启动过程中，首先在第一次启动的时候完成一次ClusterIP、NodePort和Kubernets服务的处理，然后异步循环运行上面的4个工作。</p>
+<ul>
+<li>创建缺省名字空间的最终代码如下所示：</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">createNamespaceIfNeeded</span><span class="params">(c coreclient.NamespacesGetter, ns <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> _, err := c.Namespaces().Get(ns, metav1.GetOptions&#123;&#125;); err == <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="comment">// the namespace already exists</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line">    newNs := &amp;api.Namespace&#123;</span><br><span class="line">        ObjectMeta: metav1.ObjectMeta&#123;</span><br><span class="line">            Name:      ns,</span><br><span class="line">            Namespace: <span class="string">""</span>,</span><br><span class="line">        &#125;,</span><br><span class="line">    &#125;</span><br><span class="line">    _, err := c.Namespaces().Create(newNs)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &amp;&amp; errors.IsAlreadyExists(err) &#123;</span><br><span class="line">        err = <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> err</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>更新kubernetes服务的代码</li>
+</ul>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(<span class="built_in">c</span> *Controller)</span></span> <span class="type">UpdateKubernetesService</span>(reconcile bool) error &#123;</span><br><span class="line">    <span class="comment">// Update service &amp; endpoint records.</span></span><br><span class="line">    <span class="comment">// <span class="doctag">TODO:</span> when it becomes possible to change this stuff,</span></span><br><span class="line">    <span class="comment">// stop polling and start watching.</span></span><br><span class="line">    <span class="comment">// <span class="doctag">TODO:</span> add endpoints of all replicas, not just the elected master.</span></span><br><span class="line">    <span class="keyword">if</span> err := createNamespaceIfNeeded(<span class="built_in">c</span>.<span class="type">NamespaceClient</span>, metav1.<span class="type">NamespaceDefault</span>); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    servicePorts, serviceType := createPortAndServiceSpec(<span class="built_in">c</span>.<span class="type">ServicePort</span>, <span class="built_in">c</span>.<span class="type">PublicServicePort</span>, <span class="built_in">c</span>.<span class="type">KubernetesServiceNodePort</span>, <span class="string">"https"</span>, <span class="built_in">c</span>.<span class="type">ExtraServicePorts</span>)</span><br><span class="line">    <span class="keyword">if</span> err := <span class="built_in">c</span>.<span class="type">CreateOrUpdateMasterServiceIfNeeded</span>(kubernetesServiceName, <span class="built_in">c</span>.<span class="type">ServiceIP</span>, servicePorts, serviceType, reconcile); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    endpointPorts := createEndpointPortSpec(<span class="built_in">c</span>.<span class="type">PublicServicePort</span>, <span class="string">"https"</span>, <span class="built_in">c</span>.<span class="type">ExtraEndpointPorts</span>)</span><br><span class="line">    <span class="keyword">if</span> err := <span class="built_in">c</span>.<span class="type">EndpointReconciler</span>.<span class="type">ReconcileEndpoints</span>(kubernetesServiceName, <span class="built_in">c</span>.<span class="type">PublicIP</span>, endpointPorts, reconcile); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里我们继续分析一下基于MasterCount类型的EndpointReconcier的ReconcileEndpoints方法。ReconcileEndpoints为指定service设置endpoints，它期望这些endpoints只被自己管理。<br> 需求：</p>
+<ul>
+<li>所有apiserver必须为他们的服务使用相同的端口；</li>
+<li>所有apiserver必须使用且只使用ReconcoleEndpoints来管理服务的endpoints</li>
+<li>所有apiserver必须知道，并且在apiservers期望运行数量（c.masterCount）达成一致</li>
+<li>所有apiserver都周期性的运行ReconcileEndpoints</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ReconcileEndpoints sets the endpoints for the given apiserver service (ro or rw).</span></span><br><span class="line"><span class="comment">// ReconcileEndpoints expects that the endpoints objects it manages will all be</span></span><br><span class="line"><span class="comment">// managed only by ReconcileEndpoints; therefore, to understand this, you need only</span></span><br><span class="line"><span class="comment">// understand the requirements and the body of this function.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// Requirements:</span></span><br><span class="line"><span class="comment">//  * All apiservers MUST use the same ports for their &#123;rw, ro&#125; services.</span></span><br><span class="line"><span class="comment">//  * All apiservers MUST use ReconcileEndpoints and only ReconcileEndpoints to manage the</span></span><br><span class="line"><span class="comment">//      endpoints for their &#123;rw, ro&#125; services.</span></span><br><span class="line"><span class="comment">//  * All apiservers MUST know and agree on the number of apiservers expected</span></span><br><span class="line"><span class="comment">//      to be running (c.masterCount).</span></span><br><span class="line"><span class="comment">//  * ReconcileEndpoints is called periodically from all apiservers.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(r *masterCountEndpointReconciler)</span> <span class="title">ReconcileEndpoints</span><span class="params">(serviceName <span class="keyword">string</span>, ip net.IP, endpointPorts []api.EndpointPort, reconcilePorts <span class="keyword">bool</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    r.reconcilingLock.Lock()</span><br><span class="line">    <span class="keyword">defer</span> r.reconcilingLock.Unlock()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> r.stopReconcilingCalled &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 查询出服务中的 Endpoints，放到变量e</span></span><br><span class="line">    e, err := r.endpointClient.Endpoints(metav1.NamespaceDefault).Get(serviceName, metav1.GetOptions&#123;&#125;)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        e = &amp;api.Endpoints&#123;</span><br><span class="line">            ObjectMeta: metav1.ObjectMeta&#123;</span><br><span class="line">                Name:      serviceName,</span><br><span class="line">                Namespace: metav1.NamespaceDefault,</span><br><span class="line">            &#125;,</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> errors.IsNotFound(err) &#123;</span><br><span class="line">        <span class="comment">// Simply create non-existing endpoints for the service.</span></span><br><span class="line">        e.Subsets = []api.EndpointSubset&#123;&#123;</span><br><span class="line">            Addresses: []api.EndpointAddress&#123;&#123;IP: ip.String()&#125;&#125;,</span><br><span class="line">            Ports:     endpointPorts,</span><br><span class="line">        &#125;&#125;</span><br><span class="line">        _, err = r.endpointClient.Endpoints(metav1.NamespaceDefault).Create(e)</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// First, determine if the endpoint is in the format we expect (one</span></span><br><span class="line">    <span class="comment">// subset, ports matching endpointPorts, N IP addresses).</span></span><br><span class="line">    <span class="comment">// 检查服务中的 Endpoints信息，是否包含现有ip，端口是否符合，格式是否正确（只有一个subnet）等</span></span><br><span class="line">    formatCorrect, ipCorrect, portsCorrect := checkEndpointSubsetFormat(e, ip.String(), endpointPorts, r.masterCount, reconcilePorts)</span><br><span class="line">    <span class="keyword">if</span> !formatCorrect &#123; <span class="comment">// 如果超过一个subnet，或者没有</span></span><br><span class="line">        <span class="comment">// Something is egregiously wrong, just re-make the endpoints record.</span></span><br><span class="line">        e.Subsets = []api.EndpointSubset&#123;&#123;</span><br><span class="line">            Addresses: []api.EndpointAddress&#123;&#123;IP: ip.String()&#125;&#125;,</span><br><span class="line">            Ports:     endpointPorts,</span><br><span class="line">        &#125;&#125;</span><br><span class="line">        glog.Warningf(<span class="string">"Resetting endpoints for master service %q to %#v"</span>, serviceName, e)</span><br><span class="line">        _, err = r.endpointClient.Endpoints(metav1.NamespaceDefault).Update(e)  <span class="comment">// 重新初始化，把自己写到Endpoints中</span></span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> ipCorrect &amp;&amp; portsCorrect &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> !ipCorrect &#123; <span class="comment">// 没有找到自己，把自己加进去</span></span><br><span class="line">        <span class="comment">// We *always* add our own IP address.</span></span><br><span class="line">        e.Subsets[<span class="number">0</span>].Addresses = <span class="built_in">append</span>(e.Subsets[<span class="number">0</span>].Addresses, api.EndpointAddress&#123;IP: ip.String()&#125;)</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Lexicographic order is retained by this step.</span></span><br><span class="line">        e.Subsets = endpoints.RepackSubsets(e.Subsets)</span><br><span class="line"></span><br><span class="line">        <span class="comment">// If too many IP addresses, remove the ones lexicographically after our</span></span><br><span class="line">        <span class="comment">// own IP address.  Given the requirements stated at the top of</span></span><br><span class="line">        <span class="comment">// this function, this should cause the list of IP addresses to</span></span><br><span class="line">        <span class="comment">// become eventually correct.</span></span><br><span class="line">        <span class="keyword">if</span> addrs := &amp;e.Subsets[<span class="number">0</span>].Addresses; <span class="built_in">len</span>(*addrs) &gt; r.masterCount &#123;</span><br><span class="line">            <span class="comment">// addrs is a pointer because we're going to mutate it.</span></span><br><span class="line">            <span class="keyword">for</span> i, addr := <span class="keyword">range</span> *addrs &#123;</span><br><span class="line">                <span class="keyword">if</span> addr.IP == ip.String() &#123;</span><br><span class="line">                    <span class="keyword">for</span> <span class="built_in">len</span>(*addrs) &gt; r.masterCount &#123;</span><br><span class="line">                        <span class="comment">// wrap around if necessary.</span></span><br><span class="line">                        remove := (i + <span class="number">1</span>) % <span class="built_in">len</span>(*addrs)</span><br><span class="line">                        *addrs = <span class="built_in">append</span>((*addrs)[:remove], (*addrs)[remove+<span class="number">1</span>:]...)</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">break</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> !portsCorrect &#123;</span><br><span class="line">        <span class="comment">// Reset ports.</span></span><br><span class="line">        e.Subsets[<span class="number">0</span>].Ports = endpointPorts</span><br><span class="line">    &#125;</span><br><span class="line">    glog.Warningf(<span class="string">"Resetting endpoints for master service %q to %v"</span>, serviceName, e)</span><br><span class="line">    _, err = r.endpointClient.Endpoints(metav1.NamespaceDefault).Update(e)  <span class="comment">// 把自己加进来，并更新完成</span></span><br><span class="line">    <span class="keyword">return</span> err</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>纠正ClusterIP信息<br> ClusterIP Repaire是一个控制循环，周期性的检查所有服务分配的ClusterIP，记录错误信息，然后为所有分配的IP，并纠正。<br> 处理的内容：</p>
+</li>
+<li><p>因为操作过程失误或者没有检测到的竞态条件下造成的重复ClusterIP</p>
+</li>
+<li>没有在正确配置范围的ClusterIP</li>
+<li>已经分配给服务，但是因为Crash或者掉电造成没有正确创建的ClusterIP</li>
+<li>自动迁移旧版本的Kubernetes服务到原子的ipallocator模型</li>
+</ul>
+<p>它可以不太频繁的调用，最好是在master启动之初运行一次。它是水平驱动和幂等的，在没有竞争碰到的情况下，所有的ClusterIP都会被更新到ipallocator map中。</p>
+<ul>
+<li>纠正NodePort信息</li>
+</ul>
+<p>保证所有的ports都基于cluster创建，当没有与cluster同步时创建一个告警信息。</p>
+<p>0人点赞</p>
+<p><a href>kubernetes源码分析</a></p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://www.jianshu.com/p/799d6c9b68ab" target="_blank" rel="external nofollow noopener noreferrer">https://www.jianshu.com/p/799d6c9b68ab</a></li>
+<li><a href="https://segmentfault.com/a/1190000014093609" target="_blank" rel="external nofollow noopener noreferrer">https://segmentfault.com/a/1190000014093609</a></li>
+<li><a href="https://www.cnblogs.com/chris-cp/p/6108821.html" target="_blank" rel="external nofollow noopener noreferrer">https://www.cnblogs.com/chris-cp/p/6108821.html</a></li>
+<li><a href="https://mp.weixin.qq.com/s/pto9_I5PWDWw1S0lklVrlQ" target="_blank" rel="external nofollow noopener noreferrer">https://mp.weixin.qq.com/s/pto9_I5PWDWw1S0lklVrlQ</a></li>
+<li><a href="https://qiankunli.github.io/2019/01/05/kubernetes_source_apiserver.html" target="_blank" rel="external nofollow noopener noreferrer">https://qiankunli.github.io/2019/01/05/kubernetes_source_apiserver.html</a></li>
+<li><a href="https://ahmet.im/blog/initializers/" target="_blank" rel="external nofollow noopener noreferrer">https://ahmet.im/blog/initializers/</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/81568238" target="_blank" rel="external nofollow noopener noreferrer">https://zhuanlan.zhihu.com/p/81568238</a></li>
+<li><a href="https://www.bookstack.cn/read/source-code-reading-notes/210918" target="_blank" rel="external nofollow noopener noreferrer">https://www.bookstack.cn/read/source-code-reading-notes/210918</a></li>
+<li><a href="https://mp.weixin.qq.com/s/hTEWatYLhTnC5X0FBM2RWQ" target="_blank" rel="external nofollow noopener noreferrer">https://mp.weixin.qq.com/s/hTEWatYLhTnC5X0FBM2RWQ</a></li>
+<li><a href="https://mp.weixin.qq.com/s/TQuqAAzBjeWHwKPJZ3iJhA" target="_blank" rel="external nofollow noopener noreferrer">https://mp.weixin.qq.com/s/TQuqAAzBjeWHwKPJZ3iJhA</a></li>
+<li><a href="https://www.jianshu.com/p/2b85a829d6bb" target="_blank" rel="external nofollow noopener noreferrer">https://www.jianshu.com/p/2b85a829d6bb</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer之初识API</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/b4a40ecc/" rel="bookmark">【Kubernetes】Apiserver Api</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/777d3be4/" rel="bookmark">【Kubernetes】ApiServer Codec</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/783fb758/" rel="bookmark">【Kubernetes】ApiServer与Etcd交互</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/1141907b/" title="【Kubernetes】Apiserver Install">http://houmin.cc/posts/1141907b/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
+              <a href="/tags/apiserver/" rel="tag"><i class="fa fa-tag"></i> apiserver</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/3bc1a603/" rel="next" title="【Kubernetes】ApiServer 启动分析">
+                  <i class="fa fa-chevron-left"></i> 【Kubernetes】ApiServer 启动分析
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/777d3be4/" rel="prev" title="【Kubernetes】ApiServer Codec">
+                  【Kubernetes】ApiServer Codec <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#在K8S集群中观察"><span class="nav-number">1.</span> <span class="nav-text">在K8S集群中观察</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#GenericAPIServer的启动中的辅助功能"><span class="nav-number">2.</span> <span class="nav-text">GenericAPIServer的启动中的辅助功能</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Controller"><span class="nav-number">3.</span> <span class="nav-text">Controller</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Controller的启动"><span class="nav-number">4.</span> <span class="nav-text">Controller的启动</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">4.1.</span> <span class="nav-text">参考资料</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">142</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">198</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.4m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">43:55</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

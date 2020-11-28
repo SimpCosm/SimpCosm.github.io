@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Deployment 是 Kubernetes 中用于处理无状态服务的资源，而 StatefulSet 是用于支持有状态服务的资源，这两种不同的资源从状态的角度对服务进行了划分，而 DaemonSet 从不同的维度解决了集群中的问题 — 如何同时在集群中的所有节点上提供基础服务和守护进程。我们在这里将介绍 DaemonSet 如何进行状态的同步、Pod 与节点（Node）之间的调度方式和滚动更新的">
+<meta name="keywords" content="k8s,daemonset">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Kubernetes】DaemonSet">
+<meta property="og:url" content="http://houmin.cc/posts/4756d236/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="Deployment 是 Kubernetes 中用于处理无状态服务的资源，而 StatefulSet 是用于支持有状态服务的资源，这两种不同的资源从状态的角度对服务进行了划分，而 DaemonSet 从不同的维度解决了集群中的问题 — 如何同时在集群中的所有节点上提供基础服务和守护进程。我们在这里将介绍 DaemonSet 如何进行状态的同步、Pod 与节点（Node）之间的调度方式和滚动更新的">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://img.draveness.me/2019-03-01-DaemonSet-Topology.png">
+<meta property="og:image" content="https://img.draveness.me/2019-03-01-DaemonSet-FlowChart.png">
+<meta property="og:updated_time" content="2020-11-27T03:29:56.013Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img.draveness.me/2019-03-01-DaemonSet-Topology.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/4756d236/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Kubernetes】DaemonSet | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/4756d236/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Kubernetes】DaemonSet
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-08-19 17:14:16" itemprop="dateCreated datePublished" datetime="2020-08-19T17:14:16+08:00">2020-08-19</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/4756d236/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/4756d236/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>16 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><a href="https://draveness.me/kubernetes-deployment" target="_blank" rel="external nofollow noopener noreferrer">Deployment</a> 是 Kubernetes 中用于处理无状态服务的资源，而 <a href="https://draveness.me/kubernetes-statefulset" target="_blank" rel="external nofollow noopener noreferrer">StatefulSet</a> 是用于支持有状态服务的资源，这两种不同的资源从状态的角度对服务进行了划分，而 DaemonSet 从不同的维度解决了集群中的问题 — 如何同时在集群中的所有节点上提供基础服务和守护进程。</p><p>我们在这里将介绍 DaemonSet 如何进行状态的同步、Pod 与节点（Node）之间的调度方式和滚动更新的过程以及实现原理。</p><a id="more"></a>
+
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>DaemonSet 可以保证集群中所有的或者部分的节点都能够运行同一份 Pod 副本，每当有新的节点被加入到集群时，Pod 就会在目标的节点上启动，如果节点被从集群中剔除，节点上的 Pod 也会被垃圾收集器清除；DaemonSet 的作用就像是计算机中的守护进程，它能够运行集群存储、日志收集和监控等『守护进程』，这些服务一般是集群中必备的基础服务。</p>
+<p>Google Cloud 的 Kubernetes 集群就会在所有的节点上启动 fluentd 和 Prometheus 来收集节点上的日志和监控数据，想要创建用于日志收集的守护进程其实非常简单，我们可以使用如下所示的代码：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DaemonSet</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">fluentd-elasticsearch</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">fluentd-elasticsearch</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">fluentd-elasticsearch</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">fluentd-elasticsearch</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">k8s.gcr.io/fluentd-elasticsearch:1.20</span></span><br><span class="line">        <span class="attr">volumeMounts:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">varlog</span></span><br><span class="line">          <span class="attr">mountPath:</span> <span class="string">/var/log</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">varlibdockercontainers</span></span><br><span class="line">          <span class="attr">mountPath:</span> <span class="string">/var/lib/docker/containers</span></span><br><span class="line">          <span class="attr">readOnly:</span> <span class="literal">true</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">varlog</span></span><br><span class="line">        <span class="attr">hostPath:</span></span><br><span class="line">          <span class="attr">path:</span> <span class="string">/var/log</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">varlibdockercontainers</span></span><br><span class="line">        <span class="attr">hostPath:</span></span><br><span class="line">          <span class="attr">path:</span> <span class="string">/var/lib/docker/containers</span></span><br></pre></td></tr></table></figure>
+<p>当我们使用 <code>kubectl apply -f</code> 创建上述的 DaemonSet 时，它会在 Kubernetes 集群的 <code>kube-system</code> 命名空间中创建 DaemonSet 资源并在所有的节点上创建新的 Pod：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get daemonsets.apps fluentd-elasticsearch --namespace kube-system</span><br><span class="line">NAME                    DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE</span><br><span class="line">fluentd-elasticsearch   <span class="number">1</span>         <span class="number">1</span>         <span class="number">1</span>       <span class="number">1</span>            <span class="number">1</span>           &lt;none&gt;          <span class="number">19</span>h</span><br><span class="line"></span><br><span class="line">$ kubectl get pods --namespace kube-system --label name=fluentd-elasticsearch</span><br><span class="line">NAME                          READY   STATUS    RESTARTS   AGE</span><br><span class="line">fluentd-elasticsearch-kvtwj   <span class="number">1</span>/<span class="number">1</span>     Running   <span class="number">0</span>          <span class="number">19</span>h</span><br></pre></td></tr></table></figure>
+<p>由于集群中只存在一个 Pod，所以 Kubernetes 只会在该节点上创建一个 Pod，如果我们向当前的集群中增加新的节点时，Kubernetes 就会创建在新节点上创建新的副本，总的来说，我们能够得到以下的拓扑结构：</p>
+<p><img alt="DaemonSet-Topology" data-src="https://img.draveness.me/2019-03-01-DaemonSet-Topology.png"></p>
+<p>集群中的 Pod 和 Node 一一对应，而 DaemonSet 会管理全部机器上的 Pod 副本，负责对它们进行更新和删除。</p>
+<h2 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h2><p>所有的 DaemonSet 都是由控制器负责管理的，与其他的资源一样，用于管理 DaemonSet 的控制器是 <code>DaemonSetsController</code>，该控制器会监听 DaemonSet、ControllerRevision、Pod 和 Node 资源的变动。</p>
+<p><img alt="DaemonSet-FlowChart" data-src="https://img.draveness.me/2019-03-01-DaemonSet-FlowChart.png"></p>
+<p>大多数的触发事件最终都会将一个待处理的 DaemonSet 资源入栈，下游 <code>DaemonSetsController</code> 持有的多个工作协程就会从队列里面取出资源进行消费和同步。</p>
+<h3 id="同步"><a href="#同步" class="headerlink" title="同步"></a>同步</h3><p><code>DaemonSetsController</code> 同步 DaemonSet 资源使用的方法就是 <code>syncDaemonSet</code>，这个方法从队列中拿到 DaemonSet 的名字时，会先从集群中获取最新的 DaemonSet 对象并通过 <code>constructHistory</code> 方法查找当前 DaemonSet 全部的历史版本：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(dsc *DaemonSetsController)</span> <span class="title">syncDaemonSet</span><span class="params">(key <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	namespace, name, _ := cache.SplitMetaNamespaceKey(key)</span><br><span class="line">	ds, _ := dsc.dsLister.DaemonSets(namespace).Get(name)</span><br><span class="line">	dsKey, _ := controller.KeyFunc(ds)</span><br><span class="line"></span><br><span class="line">	cur, old, _ := dsc.constructHistory(ds)</span><br><span class="line">	hash := cur.Labels[apps.DefaultDaemonSetUniqueLabelKey]</span><br><span class="line"></span><br><span class="line">	dsc.manage(ds, hash)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">switch</span> ds.Spec.UpdateStrategy.Type &#123;</span><br><span class="line">	<span class="keyword">case</span> apps.OnDeleteDaemonSetStrategyType:</span><br><span class="line">	<span class="keyword">case</span> apps.RollingUpdateDaemonSetStrategyType:</span><br><span class="line">		dsc.rollingUpdate(ds, hash)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	dsc.cleanupHistory(ds, old)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> dsc.updateDaemonSetStatus(ds, hash, <span class="literal">true</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后调用的 <code>manage</code> 方法会负责管理 DaemonSet 在节点上 Pod 的调度和运行，<code>rollingUpdate</code> 会负责 DaemonSet 的滚动更新；前者会先找出找出需要运行 Pod 和不需要运行 Pod 的节点，并调用 <code>syncNodes</code> 对这些需要创建和删除的 Pod 进行同步：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(dsc *DaemonSetsController)</span> <span class="title">syncNodes</span><span class="params">(ds *apps.DaemonSet, podsToDelete, nodesNeedingDaemonPods []<span class="keyword">string</span>, hash <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	dsKey, _ := controller.KeyFunc(ds)</span><br><span class="line">	generation, err := util.GetTemplateGeneration(ds)</span><br><span class="line">	template := util.CreatePodTemplate(ds.Spec.Template, generation, hash)</span><br><span class="line"></span><br><span class="line">	createDiff := <span class="built_in">len</span>(nodesNeedingDaemonPods)</span><br><span class="line">	createWait := sync.WaitGroup&#123;&#125;</span><br><span class="line">	createWait.Add(createDiff)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; createDiff; i++ &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(ix <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">			<span class="keyword">defer</span> createWait.Done()</span><br><span class="line"></span><br><span class="line">			podTemplate := template.DeepCopy()</span><br><span class="line">			<span class="keyword">if</span> utilfeature.DefaultFeatureGate.Enabled(features.ScheduleDaemonSetPods) &#123;</span><br><span class="line">				podTemplate.Spec.Affinity = util.ReplaceDaemonSetPodNodeNameNodeAffinity(podTemplate.Spec.Affinity, nodesNeedingDaemonPods[ix])</span><br><span class="line">				dsc.podControl.CreatePodsWithControllerRef(ds.Namespace, podTemplate, ds, metav1.NewControllerRef(ds, controllerKind))</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				podTemplate.Spec.SchedulerName = <span class="string">"kubernetes.io/daemonset-controller"</span></span><br><span class="line">				dsc.podControl.CreatePodsOnNode(nodesNeedingDaemonPods[ix], ds.Namespace, podTemplate, ds, metav1.NewControllerRef(ds, controllerKind))</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">		&#125;(i)</span><br><span class="line">	&#125;</span><br><span class="line">	createWait.Wait()</span><br></pre></td></tr></table></figure>
+<p>获取了 DaemonSet 中的模板之之后，就会开始并行地为节点创建 Pod 副本，并发创建的过程使用了 for 循环、Goroutine 和 <code>WaitGroup</code> 保证程序运行的正确，然而这里使用了特性开关来对调度新 Pod 的方式进行了控制，我们会在接下来的调度一节介绍 DaemonSet 调度方式的变迁和具体的执行过程。</p>
+<p>当 Kubernetes 创建了需要创建的 Pod 之后，就需要删除所有节点上不必要的 Pod 了，这里使用同样地方式并发地对 Pod 进行删除：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">	deleteDiff := <span class="built_in">len</span>(podsToDelete)</span><br><span class="line">	deleteWait := sync.WaitGroup&#123;&#125;</span><br><span class="line">	deleteWait.Add(deleteDiff)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; deleteDiff; i++ &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(ix <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">			<span class="keyword">defer</span> deleteWait.Done()</span><br><span class="line">			dsc.podControl.DeletePod(ds.Namespace, podsToDelete[ix], ds)</span><br><span class="line">		&#125;(i)</span><br><span class="line">	&#125;</span><br><span class="line">	deleteWait.Wait()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>到了这里我们就完成了节点上 Pod 的调度和运行，为一些节点创建 Pod 副本的同时删除另一部分节点上的副本，<code>manage</code> 方法执行完成之后就会调用 <code>rollingUpdate</code> 方法对 DaemonSet 的节点进行滚动更新并对控制器版本进行清理并更新 DaemonSet 的状态，文章后面的部分会介绍滚动更新的过程和实现。</p>
+<h3 id="调度"><a href="#调度" class="headerlink" title="调度"></a>调度</h3><p>在早期的 Kubernetes 版本中，所有 DaemonSet Pod 的创建都是由 <code>DaemonSetsController</code> 负责的，而其他的资源都是由 kube-scheduler 进行调度，这就导致了如下的一些问题：</p>
+<ol>
+<li><code>DaemonSetsController</code> 没有办法在节点资源变更时收到通知 (<a href="https://github.com/kubernetes/kubernetes/issues/46935" target="_blank" rel="external nofollow noopener noreferrer">#46935</a>, <a href="https://github.com/kubernetes/kubernetes/issues/58868" target="_blank" rel="external nofollow noopener noreferrer">#58868</a>)；</li>
+<li><code>DaemonSetsController</code> 没有办法遵循 Pod 的亲和性和反亲和性设置 (<a href="https://github.com/kubernetes/kubernetes/issues/29276" target="_blank" rel="external nofollow noopener noreferrer">#29276</a>)；</li>
+<li><code>DaemonSetsController</code> 可能需要二次实现 Pod 调度的重要逻辑，造成了重复的代码逻辑 (<a href="https://github.com/kubernetes/kubernetes/issues/42028" target="_blank" rel="external nofollow noopener noreferrer">#42028</a>)；</li>
+<li>多个组件负责调度会导致 Debug 和抢占等功能的实现非常困难；</li>
+</ol>
+<p>设计文档 <a href="https://github.com/kubernetes/community/blob/master/contributors/design-proposals/scheduling/schedule-DS-pod-by-scheduler.md" target="_blank" rel="external nofollow noopener noreferrer">Schedule DaemonSet Pods by default scheduler, not DaemonSet controller</a> 中包含了使用 <code>DaemonSetsController</code> 调度时遇到的问题以及新设计给出的解决方案。</p>
+<p>如果我们选择使用过去的调度方式，<code>DeamonSetsController</code> 就会负责在节点上创建 Pod，通过这种方式创建的 Pod 的 <code>schedulerName</code> 都会被设置成 <code>kubernetes.io/daemonset-controller</code>，但是在默认情况下这个字段一般为 <code>default-scheduler</code>，也就是使用 Kubernetes 默认的调度器 kube-scheduler 进行调度：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(dsc *DaemonSetsController)</span> <span class="title">syncNodes</span><span class="params">(ds *apps.DaemonSet, podsToDelete, nodesNeedingDaemonPods []<span class="keyword">string</span>, hash <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; createDiff; i++ &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(ix <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">			podTemplate := template.DeepCopy()</span><br><span class="line">			<span class="keyword">if</span> utilfeature.DefaultFeatureGate.Enabled(features.ScheduleDaemonSetPods) &#123;</span><br><span class="line">                <span class="comment">// ...</span></span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				podTemplate.Spec.SchedulerName = <span class="string">"kubernetes.io/daemonset-controller"</span></span><br><span class="line">				dsc.podControl.CreatePodsOnNode(nodesNeedingDaemonPods[ix], ds.Namespace, podTemplate, ds, metav1.NewControllerRef(ds, controllerKind))</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">		&#125;(i)</span><br><span class="line">	&#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>DaemonSetsController</code> 在调度 Pod 时都会使用 <code>CreatePodsOnNode</code> 方法，这个方法的实现非常简单，它会先对 Pod 模板进行验证，随后调用 <code>createPods</code> 方法通过 Kubernetes 提供的 API 创建新的副本：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(r RealPodControl)</span> <span class="title">CreatePodsWithControllerRef</span><span class="params">(namespace <span class="keyword">string</span>, template *v1.PodTemplateSpec, controllerObject runtime.Object, controllerRef *metav1.OwnerReference)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> err := validateControllerRef(controllerRef); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> r.createPods(<span class="string">""</span>, namespace, template, controllerObject, controllerRef)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>DaemonSetsController</code> 通过节点选择器和调度器的谓词对节点进行过滤，<code>createPods</code> 会直接为当前的 Pod 设置 <code>spec.NodeName</code> 属性，最后得到的 Pod 就会被目标节点上的 kubelet 创建。</p>
+<p>除了这种使用 <code>DaemonSetsController</code> 管理和调度 DaemonSet 的方法之外，我们还可以使用 Kubernetes 默认的方式 kube-scheduler 创建新的 Pod 副本：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(dsc *DaemonSetsController)</span> <span class="title">syncNodes</span><span class="params">(ds *apps.DaemonSet, podsToDelete, nodesNeedingDaemonPods []<span class="keyword">string</span>, hash <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; createDiff; i++ &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(ix <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">			podTemplate := template.DeepCopy()</span><br><span class="line">			<span class="keyword">if</span> utilfeature.DefaultFeatureGate.Enabled(features.ScheduleDaemonSetPods) &#123;</span><br><span class="line">				podTemplate.Spec.Affinity = util.ReplaceDaemonSetPodNodeNameNodeAffinity(podTemplate.Spec.Affinity, nodesNeedingDaemonPods[ix])</span><br><span class="line">				dsc.podControl.CreatePodsWithControllerRef(ds.Namespace, podTemplate, ds, metav1.NewControllerRef(ds, controllerKind))</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">// ...</span></span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">		&#125;(i)</span><br><span class="line">	&#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这种情况会使用 NodeAffinity 特性来避免发生在 <code>DaemonSetsController</code> 中的调度：</p>
+<ol>
+<li><p><code>DaemonSetsController</code> 会在 <code>podsShouldBeOnNode</code> 方法中根据节点选择器过滤所有的节点；</p>
+</li>
+<li><p>对于每一个节点，控制器都会创建一个遵循以下节点亲和的 Pod；</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">nodeAffinity:</span></span><br><span class="line">  <span class="attr">requiredDuringSchedulingIgnoredDuringExecution:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">nodeSelectorTerms:</span></span><br><span class="line">      <span class="attr">matchExpressions:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">kubernetes.io/hostname</span></span><br><span class="line">        <span class="attr">operator:</span> <span class="string">in</span></span><br><span class="line">        <span class="attr">values:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">dest_hostname</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>当节点进行同步时，DaemonSetsController 会根据节点亲和的设置来验证节点和 Pod 的关系；</p>
+</li>
+<li><p>如果调度的谓词失败了，DaemonSet 持有的 Pod 就会保持在 Pending 的状态，所以可以通过修改 Pod 的优先级和抢占保证集群在高负载下也能正常运行 DaemonSet 的副本；</p>
+</li>
+</ol>
+<p>Pod 的优先级和抢占功能在 Kubernetes 1.8 版本引入，1.11 时转变成 beta 版本，在目前最新的 1.13 中依然是 beta 版本，感兴趣的读者可以阅读 <a href="https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/" target="_blank" rel="external nofollow noopener noreferrer">Pod Priority and Preemption</a> 文档了解相关的内容。</p>
+<h3 id="滚动更新"><a href="#滚动更新" class="headerlink" title="滚动更新"></a>滚动更新</h3><p><code>DaemonSetsController</code> 对滚动更新的实现其实比较简单，它其实就是根据 DaemonSet 规格中的配置，删除集群中的 Pod 并保证同时不可用的副本数不会超过 <code>spec.updateStrategy.rollingUpdate.maxUnavailable</code>，这个参数也是 DaemonSet 滚动更新可以配置的唯一参数：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(dsc *DaemonSetsController)</span> <span class="title">rollingUpdate</span><span class="params">(ds *apps.DaemonSet, hash <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	nodeToDaemonPods, err := dsc.getNodesToDaemonPods(ds)</span><br><span class="line"></span><br><span class="line">	_, oldPods := dsc.getAllDaemonSetPods(ds, nodeToDaemonPods, hash)</span><br><span class="line">	maxUnavailable, numUnavailable, err := dsc.getUnavailableNumbers(ds, nodeToDaemonPods)</span><br><span class="line">	oldAvailablePods, oldUnavailablePods := util.SplitByAvailablePods(ds.Spec.MinReadySeconds, oldPods)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> oldPodsToDelete []<span class="keyword">string</span></span><br><span class="line">	<span class="keyword">for</span> _, pod := <span class="keyword">range</span> oldUnavailablePods &#123;</span><br><span class="line">		<span class="keyword">if</span> pod.DeletionTimestamp != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">continue</span></span><br><span class="line">		&#125;</span><br><span class="line">		oldPodsToDelete = <span class="built_in">append</span>(oldPodsToDelete, pod.Name)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> _, pod := <span class="keyword">range</span> oldAvailablePods &#123;</span><br><span class="line">		<span class="keyword">if</span> numUnavailable &gt;= maxUnavailable &#123;</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">		oldPodsToDelete = <span class="built_in">append</span>(oldPodsToDelete, pod.Name)</span><br><span class="line">		numUnavailable++</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> dsc.syncNodes(ds, oldPodsToDelete, []<span class="keyword">string</span>&#123;&#125;, hash)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>删除 Pod 的顺序其实也非常简单并且符合直觉，上述代码会将不可用的 Pod 先加入到待删除的数组中，随后将历史版本的可用 Pod 加入待删除数组 <code>oldPodsToDelete</code>，最后调用 <code>syncNodes</code> 完成对副本的删除。</p>
+<h3 id="删除"><a href="#删除" class="headerlink" title="删除"></a>删除</h3><p>与 <a href="https://draveness.me/kubernetes-deployment" target="_blank" rel="external nofollow noopener noreferrer">Deployment</a>、<a href="https://draveness.me/kubernetes-replicaset" target="_blank" rel="external nofollow noopener noreferrer">ReplicaSet</a> 和 <a href="https://draveness.me/kubernetes-statefulset" target="_blank" rel="external nofollow noopener noreferrer">StatefulSet</a> 一样，DaemonSet 的删除也会导致它持有的 Pod 的删除，如果我们使用如下的命令删除该对象，我们能观察到如下的现象：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl delete daemonsets.apps fluentd-elasticsearch --namespace kube-system</span><br><span class="line">daemonset.apps <span class="string">"fluentd-elasticsearch"</span> deleted</span><br><span class="line"></span><br><span class="line">$ kubectl get pods --watch --namespace kube-system</span><br><span class="line">fluentd-elasticsearch-wvffx   1/1   Terminating   0     14s</span><br></pre></td></tr></table></figure>
+<p>这部分的工作就都是由 Kubernetes 中的垃圾收集器完成的，读者可以阅读 <a href="https://draveness.me/kubernetes-garbage-collector" target="_blank" rel="external nofollow noopener noreferrer">垃圾收集器</a> 一文了解集群中的不同对象是如何进行关联的以及在删除单一对象时如何触发级联删除的原理。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>DaemonSet 其实就是 Kubernetes 中的守护进程，它会在每一个节点上创建能够提供服务的副本，很多云服务商都会使用 DaemonSet 在所有的节点上内置一些用于提供日志收集、统计分析和安全策略的服务。</p>
+<p>在研究 DaemonSet 的调度策略的过程中，我们其实能够通过一些历史的 issue 和 PR 了解到 DaemonSet 调度策略改动的原因，也能让我们对于 Kubernetes 的演进过程和设计决策有一个比较清楚的认识。</p>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer之初识API</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/b4a40ecc/" rel="bookmark">【Kubernetes】Apiserver Api</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/1141907b/" rel="bookmark">【Kubernetes】Apiserver Install</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/777d3be4/" rel="bookmark">【Kubernetes】ApiServer Codec</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/4756d236/" title="【Kubernetes】DaemonSet">http://houmin.cc/posts/4756d236/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
+              <a href="/tags/daemonset/" rel="tag"><i class="fa fa-tag"></i> daemonset</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/577c6df1/" rel="next" title="【Kubernetes】Deployment">
+                  <i class="fa fa-chevron-left"></i> 【Kubernetes】Deployment
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/256017f1/" rel="prev" title="【Kubernetes】Gabage Collector">
+                  【Kubernetes】Gabage Collector <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实现原理"><span class="nav-number">2.</span> <span class="nav-text">实现原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#同步"><span class="nav-number">2.1.</span> <span class="nav-text">同步</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#调度"><span class="nav-number">2.2.</span> <span class="nav-text">调度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#滚动更新"><span class="nav-number">2.3.</span> <span class="nav-text">滚动更新</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#删除"><span class="nav-number">2.4.</span> <span class="nav-text">删除</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">142</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">198</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.4m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">43:55</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

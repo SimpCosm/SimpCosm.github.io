@@ -56,7 +56,7 @@
 </script>
 
   <meta name="description" content="Controller Manager作为集群的管理控制中心，维护集群中的所有控制器，对维持集群的稳定和自我修复，实现高可用，副本控制等起关键作用。">
-<meta name="keywords" content="Go,k8s,源码阅读,controller">
+<meta name="keywords" content="Go,源码阅读,k8s,controller">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Kubernetes】Controller Manager">
 <meta property="og:url" content="http://houmin.cc/posts/76a404e7/index.html">
@@ -65,7 +65,7 @@
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://www.pianshen.com/images/715/6480752a76065ff8de202236459f36bb.png">
 <meta property="og:image" content="https://www.pianshen.com/images/592/394742076228162f618ca01a59ee1170.png">
-<meta property="og:updated_time" content="2020-10-24T11:33:46.514Z">
+<meta property="og:updated_time" content="2020-11-27T03:04:06.479Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://www.pianshen.com/images/715/6480752a76065ff8de202236459f36bb.png">
 
@@ -261,7 +261,7 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2020-08-11 20:46:45" itemprop="dateCreated datePublished" datetime="2020-08-11T20:46:45+08:00">2020-08-11</time>
+              <time title="创建时间：2020-08-17 20:46:45" itemprop="dateCreated datePublished" datetime="2020-08-17T20:46:45+08:00">2020-08-17</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -396,19 +396,19 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
-    </li>
-    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer之初识API</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/d3e0e7a2/" rel="bookmark">【Kubernetes】Scheduler</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/83a17de0/" rel="bookmark">【Kubernetes】Scheduling Framework</a></div>
+      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/c3c43baa/" rel="bookmark">【Go语言设计与实现】Hash Table</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
     </li>
   </ul>
 
@@ -455,8 +455,8 @@
           
           <div class="post-tags">
               <a href="/tags/Go/" rel="tag"><i class="fa fa-tag"></i> Go</a>
-              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
               <a href="/tags/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码阅读</a>
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
               <a href="/tags/controller/" rel="tag"><i class="fa fa-tag"></i> controller</a>
           </div>
 
@@ -464,16 +464,16 @@
 
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
-                <a href="/posts/3bc1a603/" rel="next" title="【Kubernetes】ApiServer之初识API">
-                  <i class="fa fa-chevron-left"></i> 【Kubernetes】ApiServer之初识API
+                <a href="/posts/783fb758/" rel="next" title="【Kubernetes】ApiServer与Etcd交互">
+                  <i class="fa fa-chevron-left"></i> 【Kubernetes】ApiServer与Etcd交互
                 </a>
             </div>
 
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
-                <a href="/posts/b88b921f/" rel="prev" title="【Kubernetes】Pod">
-                  【Kubernetes】Pod <i class="fa fa-chevron-right"></i>
+                <a href="/posts/577c6df1/" rel="prev" title="【Kubernetes】Deployment">
+                  【Kubernetes】Deployment <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>
@@ -529,7 +529,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">116</span>
+          <span class="site-state-item-count">142</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -541,7 +541,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">179</span>
+        <span class="site-state-item-count">198</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -609,13 +609,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">1.1m</span>
+    <span title="站点总字数">1.5m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">33:30</span>
+    <span title="站点阅读时长">44:01</span>
 </div>
 
         

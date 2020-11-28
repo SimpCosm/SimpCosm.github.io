@@ -58,7 +58,7 @@
   <meta name="description" content="Ingress 是 Kubernetes 的一种 API 对象，将集群内部的 Service 通过 HTTP&#x2F;HTTPS 方式暴露到集群外部，并通过规则定义 HTTP&#x2F;HTTPS 的路由。Ingress 具备如下特性：集群外部可访问的 URL、负载均衡、SSL Termination、按域名路由。">
 <meta name="keywords" content="网络,k8s,ingress,service">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【Kubernetes解读】Ingress">
+<meta property="og:title" content="【Kubernetes】Ingress">
 <meta property="og:url" content="http://houmin.cc/posts/8dfd4de5/index.html">
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="Ingress 是 Kubernetes 的一种 API 对象，将集群内部的 Service 通过 HTTP&#x2F;HTTPS 方式暴露到集群外部，并通过规则定义 HTTP&#x2F;HTTPS 的路由。Ingress 具备如下特性：集群外部可访问的 URL、负载均衡、SSL Termination、按域名路由。">
@@ -71,7 +71,7 @@
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_traefik-bear.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_traefik-hare.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_traefik-moose.png">
-<meta property="og:updated_time" content="2020-09-10T05:23:07.241Z">
+<meta property="og:updated_time" content="2020-11-27T03:26:55.069Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-08-31_k8s-ingress.png">
 
@@ -89,7 +89,7 @@
   };
 </script>
 
-  <title>【Kubernetes解读】Ingress | Houmin</title>
+  <title>【Kubernetes】Ingress | Houmin</title>
   
 
 
@@ -257,7 +257,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          【Kubernetes解读】Ingress
+          【Kubernetes】Ingress
         </h2>
 
         <div class="post-meta">
@@ -267,7 +267,7 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2020-08-19 20:52:45" itemprop="dateCreated datePublished" datetime="2020-08-19T20:52:45+08:00">2020-08-19</time>
+              <time title="创建时间：2020-08-28 20:52:45" itemprop="dateCreated datePublished" datetime="2020-08-28T20:52:45+08:00">2020-08-28</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -423,16 +423,16 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/cfed77f0/" rel="bookmark">【Kubernetes】Service</a></div>
+      <div class="popular-posts-title"><a href="/posts/87e9f747/" rel="bookmark">【Kubernetes】Kube-Proxy</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/c425bfaf/" rel="bookmark">【Kubernetes解读】Network Policy</a></div>
+      <div class="popular-posts-title"><a href="/posts/fdbf86e3/" rel="bookmark">【Kubernetes】网络模型</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/3675eff/" rel="bookmark">virtio</a></div>
+      <div class="popular-posts-title"><a href="/posts/c425bfaf/" rel="bookmark">【Kubernetes】Network Policy</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/f07e2cff/" rel="bookmark">网络虚拟化</a></div>
+      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer之初识API</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/941301e/" rel="bookmark">Linux网络包收发流程</a></div>
@@ -469,7 +469,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://houmin.cc/posts/8dfd4de5/" title="【Kubernetes解读】Ingress">http://houmin.cc/posts/8dfd4de5/</a>
+    <a href="http://houmin.cc/posts/8dfd4de5/" title="【Kubernetes】Ingress">http://houmin.cc/posts/8dfd4de5/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -499,8 +499,8 @@
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
-                <a href="/posts/c425bfaf/" rel="prev" title="【Kubernetes解读】Network Policy">
-                  【Kubernetes解读】Network Policy <i class="fa fa-chevron-right"></i>
+                <a href="/posts/fdbf86e3/" rel="prev" title="【Kubernetes】网络模型">
+                  【Kubernetes】网络模型 <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>
@@ -556,7 +556,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">116</span>
+          <span class="site-state-item-count">142</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -568,7 +568,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">179</span>
+        <span class="site-state-item-count">198</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -636,13 +636,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">1.1m</span>
+    <span title="站点总字数">1.5m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">33:30</span>
+    <span title="站点阅读时长">44:01</span>
 </div>
 
         

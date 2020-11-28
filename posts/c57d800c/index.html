@@ -58,14 +58,14 @@
   <meta name="description" content="在 Controller Manager 的系列文章 中我们看到，Kubernetes 内置的各种 Controller 通过ApiServer监控 Deployment、DaemonSet、StatefulSet 等内部资源对象，在一个控制循环中通过各种操作将系统维持在我们期望的一个状态中，这即是其经典的 声明式API设计。然而，内置的API资源大多仅代表相对底层和通用概念的对象，已经不能够满足">
 <meta name="keywords" content="k8s,controller,crd">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【Kubernetes解读】CRD">
+<meta property="og:title" content="【Kubernetes】CRD">
 <meta property="og:url" content="http://houmin.cc/posts/c57d800c/index.html">
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="在 Controller Manager 的系列文章 中我们看到，Kubernetes 内置的各种 Controller 通过ApiServer监控 Deployment、DaemonSet、StatefulSet 等内部资源对象，在一个控制循环中通过各种操作将系统维持在我们期望的一个状态中，这即是其经典的 声明式API设计。然而，内置的API资源大多仅代表相对底层和通用概念的对象，已经不能够满足">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://lihaoquan.me/media/2020/202003081.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-07-20_client-go-controller-interaction.jpeg">
-<meta property="og:updated_time" content="2020-11-06T03:06:46.377Z">
+<meta property="og:updated_time" content="2020-11-27T03:23:33.305Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://lihaoquan.me/media/2020/202003081.png">
 
@@ -83,7 +83,7 @@
   };
 </script>
 
-  <title>【Kubernetes解读】CRD | Houmin</title>
+  <title>【Kubernetes】CRD | Houmin</title>
   
 
 
@@ -251,7 +251,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          【Kubernetes解读】CRD
+          【Kubernetes】CRD
         </h2>
 
         <div class="post-meta">
@@ -496,19 +496,19 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/76a404e7/" rel="bookmark">【Kubernetes】Controller Manager</a></div>
+      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer之初识API</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/83a17de0/" rel="bookmark">【Kubernetes】Scheduling Framework</a></div>
+      <div class="popular-posts-title"><a href="/posts/b4a40ecc/" rel="bookmark">【Kubernetes】Apiserver Api</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes】调度策略</a></div>
+      <div class="popular-posts-title"><a href="/posts/1141907b/" rel="bookmark">【Kubernetes】Apiserver Install</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer之初识API</a></div>
+      <div class="popular-posts-title"><a href="/posts/777d3be4/" rel="bookmark">【Kubernetes】ApiServer Codec</a></div>
     </li>
   </ul>
 
@@ -542,7 +542,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://houmin.cc/posts/c57d800c/" title="【Kubernetes解读】CRD">http://houmin.cc/posts/c57d800c/</a>
+    <a href="http://houmin.cc/posts/c57d800c/" title="【Kubernetes】CRD">http://houmin.cc/posts/c57d800c/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -563,8 +563,8 @@
 
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
-                <a href="/posts/7beb34d2/" rel="next" title="【Service Mesh】Envoy 入门">
-                  <i class="fa fa-chevron-left"></i> 【Service Mesh】Envoy 入门
+                <a href="/posts/b88b921f/" rel="next" title="【Kubernetes】Pod">
+                  <i class="fa fa-chevron-left"></i> 【Kubernetes】Pod
                 </a>
             </div>
 
@@ -628,7 +628,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">116</span>
+          <span class="site-state-item-count">142</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -640,7 +640,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">179</span>
+        <span class="site-state-item-count">198</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -708,13 +708,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">1.1m</span>
+    <span title="站点总字数">1.4m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">33:30</span>
+    <span title="站点阅读时长">43:55</span>
 </div>
 
         

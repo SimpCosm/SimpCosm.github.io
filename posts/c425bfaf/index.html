@@ -58,12 +58,12 @@
   <meta name="description" content="Kubernetes要求集群中所有pod，无论是节点内还是跨节点，都可以直接通信，或者说所有pod工作在同一跨节点网络，此网络一般是二层虚拟网络，称为pod网络。在安装引导kubernetes时，由选择并安装的network plugin实现。默认情况下，集群中所有pod之间、pod与节点之间可以互通。 网络主要解决两个问题，一个是连通性，实体之间能够通过网络互通。另一个是隔离性，出于安全、限制网">
 <meta name="keywords" content="网络,k8s,networkpolicy">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【Kubernetes解读】Network Policy">
+<meta property="og:title" content="【Kubernetes】Network Policy">
 <meta property="og:url" content="http://houmin.cc/posts/c425bfaf/index.html">
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="Kubernetes要求集群中所有pod，无论是节点内还是跨节点，都可以直接通信，或者说所有pod工作在同一跨节点网络，此网络一般是二层虚拟网络，称为pod网络。在安装引导kubernetes时，由选择并安装的network plugin实现。默认情况下，集群中所有pod之间、pod与节点之间可以互通。 网络主要解决两个问题，一个是连通性，实体之间能够通过网络互通。另一个是隔离性，出于安全、限制网">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-11-26T10:32:15.315Z">
+<meta property="og:updated_time" content="2020-11-27T03:27:03.619Z">
 <meta name="twitter:card" content="summary">
 
 <link rel="canonical" href="http://houmin.cc/posts/c425bfaf/">
@@ -80,7 +80,7 @@
   };
 </script>
 
-  <title>【Kubernetes解读】Network Policy | Houmin</title>
+  <title>【Kubernetes】Network Policy | Houmin</title>
   
 
 
@@ -248,7 +248,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          【Kubernetes解读】Network Policy
+          【Kubernetes】Network Policy
         </h2>
 
         <div class="post-meta">
@@ -361,16 +361,16 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/8dfd4de5/" rel="bookmark">【Kubernetes解读】Ingress</a></div>
+      <div class="popular-posts-title"><a href="/posts/87e9f747/" rel="bookmark">【Kubernetes】Kube-Proxy</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/cfed77f0/" rel="bookmark">【Kubernetes】Service</a></div>
+      <div class="popular-posts-title"><a href="/posts/8dfd4de5/" rel="bookmark">【Kubernetes】Ingress</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/3675eff/" rel="bookmark">virtio</a></div>
+      <div class="popular-posts-title"><a href="/posts/fdbf86e3/" rel="bookmark">【Kubernetes】网络模型</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/f07e2cff/" rel="bookmark">网络虚拟化</a></div>
+      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer之初识API</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/941301e/" rel="bookmark">Linux网络包收发流程</a></div>
@@ -407,7 +407,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://houmin.cc/posts/c425bfaf/" title="【Kubernetes解读】Network Policy">http://houmin.cc/posts/c425bfaf/</a>
+    <a href="http://houmin.cc/posts/c425bfaf/" title="【Kubernetes】Network Policy">http://houmin.cc/posts/c425bfaf/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -428,16 +428,16 @@
 
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
-                <a href="/posts/8dfd4de5/" rel="next" title="【Kubernetes解读】Ingress">
-                  <i class="fa fa-chevron-left"></i> 【Kubernetes解读】Ingress
+                <a href="/posts/379f6fc5/" rel="next" title="【Kubernetes】Job & CronJob">
+                  <i class="fa fa-chevron-left"></i> 【Kubernetes】Job & CronJob
                 </a>
             </div>
 
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
-                <a href="/posts/353fef53/" rel="prev" title="【Kubernetes】e2e 测试">
-                  【Kubernetes】e2e 测试 <i class="fa fa-chevron-right"></i>
+                <a href="/posts/87e9f747/" rel="prev" title="【Kubernetes】Kube-Proxy">
+                  【Kubernetes】Kube-Proxy <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>
@@ -493,7 +493,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">116</span>
+          <span class="site-state-item-count">142</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -505,7 +505,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">179</span>
+        <span class="site-state-item-count">198</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -573,13 +573,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">1.1m</span>
+    <span title="站点总字数">1.5m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">33:30</span>
+    <span title="站点阅读时长">44:01</span>
 </div>
 
         

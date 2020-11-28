@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="在Kubernetes源码分析— API Server之API Install篇中，我们了解到K8S可以支持多版本的API，但是Rest API的不同版本中接口的输入输出参数的格式是有差别的，Kubernetes是怎么处理这个问题的呢？另外Kubernetes支持yaml、json两个格式的配置，同时又能够支持json、yaml和pb等格式的编解码进行协议传输，那么Kubernetes又是如何实现">
+<meta name="keywords" content="k8s,apiserver,codec">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Kubernetes】ApiServer Codec">
+<meta property="og:url" content="http://houmin.cc/posts/777d3be4/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="在Kubernetes源码分析— API Server之API Install篇中，我们了解到K8S可以支持多版本的API，但是Rest API的不同版本中接口的输入输出参数的格式是有差别的，Kubernetes是怎么处理这个问题的呢？另外Kubernetes支持yaml、json两个格式的配置，同时又能够支持json、yaml和pb等格式的编解码进行协议传输，那么Kubernetes又是如何实现">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-11-27T03:58:58.521Z">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://houmin.cc/posts/777d3be4/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Kubernetes】ApiServer Codec | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/777d3be4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Kubernetes】ApiServer Codec
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-08-15 12:02:30" itemprop="dateCreated datePublished" datetime="2020-08-15T12:02:30+08:00">2020-08-15</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/777d3be4/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/777d3be4/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>22k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>40 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>在Kubernetes源码分析— API Server之API Install篇中，我们了解到K8S可以支持多版本的API，但是Rest API的不同版本中接口的输入输出参数的格式是有差别的，Kubernetes是怎么处理这个问题的呢？另外Kubernetes支持yaml、json两个格式的配置，同时又能够支持json、yaml和pb等格式的编解码进行协议传输，那么Kubernetes又是如何实现各种数据对象的序列化、反序列化的呢？</p>
+<a id="more"></a>
+<h1 id="runtime-Scheme"><a href="#runtime-Scheme" class="headerlink" title="runtime.Scheme"></a>runtime.Scheme</h1><p>为了同时解决数据对象的序列化、反序列化与多版本数据对象的兼容和转换问题，Kubernetes设计了一套复杂的机制，首先，它设计了runtime.Scheme 这个结构体( <code>k8s.io/apimachinery/pkg/runtime/schema.go</code>)，以下是对它的定义。</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">type <span class="type">Scheme</span> <span class="class"><span class="keyword">struct</span> </span>&#123;</span><br><span class="line">    <span class="comment">// versionMap allows one to figure out the go type of an object with</span></span><br><span class="line">    <span class="comment">// the given version and name.</span></span><br><span class="line">    gvkToType <span class="built_in">map</span>[schema.<span class="type">GroupVersionKind</span>]<span class="built_in">reflect</span>.<span class="type">Type</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// typeToGroupVersion allows one to find metadata for a given go object.</span></span><br><span class="line">    <span class="comment">// The reflect.Type we index by should *not* be a pointer.</span></span><br><span class="line">    typeToGVK <span class="built_in">map</span>[<span class="built_in">reflect</span>.<span class="type">Type</span>][]schema.<span class="type">GroupVersionKind</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// unversionedTypes are transformed without conversion in ConvertToVersion.</span></span><br><span class="line">    unversionedTypes <span class="built_in">map</span>[<span class="built_in">reflect</span>.<span class="type">Type</span>]schema.<span class="type">GroupVersionKind</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// unversionedKinds are the names of kinds that can be created in the context of any group</span></span><br><span class="line">    <span class="comment">// or version</span></span><br><span class="line">    <span class="comment">// <span class="doctag">TODO:</span> resolve the status of unversioned types.</span></span><br><span class="line">    unversionedKinds <span class="built_in">map</span>[string]<span class="built_in">reflect</span>.<span class="type">Type</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// Map from version and resource to the corresponding func to convert</span></span><br><span class="line">    <span class="comment">// resource field labels in that version to internal version.</span></span><br><span class="line">    fieldLabelConversionFuncs <span class="built_in">map</span>[string]<span class="built_in">map</span>[string]<span class="type">FieldLabelConversionFunc</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// defaulterFuncs is an array of interfaces to be called with an object to provide defaulting</span></span><br><span class="line">    <span class="comment">// the provided object must be a pointer.</span></span><br><span class="line">    defaulterFuncs <span class="built_in">map</span>[<span class="built_in">reflect</span>.<span class="type">Type</span>]<span class="function"><span class="keyword">func</span><span class="params">(interface&#123;&#125;)</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// converter stores all registered conversion functions. It also has</span></span><br><span class="line">    <span class="comment">// default coverting behavior.</span></span><br><span class="line">    converter *conversion.<span class="type">Converter</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>runtime.Scheme是带版本的API与带版本的配置文件的基础。<br> runtime.Scheme定义了以下内容：</p>
+<ul>
+<li>序列化和反序列化API对象的方法</li>
+<li>类型登记处：用于在不同版本的Go shemas之间转换group 、version和kind信息</li>
+</ul>
+<p>从上述代码中可以看到，typeToGVK与gkvToType属性就是为了解决数据对象的序列化与反序列化问题，converter属性则负责不同版本的数据对象转换问题；unversionedKind用于映射哪些能够在任意group和version情况下的类型，key是一个string，也就是kind；fieldLabelConversionFuncs：用于解决数据对象的属性名称的兼容性转换和检验，比如讲需要兼容Pod的spec.Host属性改为spec.nodeName的情况。</p>
+<p>Kubernetes这个设计思路简单方便地建解决多版本的序列化和数据转换问题，下面是runtime.Scheme里序列化、反序列化的核心方法New()的代码：通过查找gkvToType里匹配的诸恶类型，以反射方法生成一个空的数据对象：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// New returns a new API object of the given version and name, or an error if it hasn't</span></span><br><span class="line"><span class="comment">// been registered. The version and kind fields must be specified.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *Scheme)</span> <span class="title">New</span><span class="params">(kind schema.GroupVersionKind)</span> <span class="params">(Object, error)</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> t, exists := s.gvkToType[kind]; exists &#123;</span><br><span class="line">        <span class="keyword">return</span> reflect.New(t).Interface().(Object), <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> t, exists := s.unversionedKinds[kind.Kind]; exists &#123;</span><br><span class="line">        <span class="keyword">return</span> reflect.New(t).Interface().(Object), <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span>, NewNotRegisteredErrForKind(kind)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>由于这个方法的实现，也让Scheme实现了ObjectCreater接口。</p>
+<p>注意到runtime.Scheme只是实现了一个序列化与类型转换的框架API，提供了注册资源数据类型与转换函数的功能，那么具体的资源数据对象、转换函数又是在哪个包里实现的呢？答案是k8s.io/api/{resource}/{version}/register.go，而核心资源在k8s.io/api/core/v1/register.go中完成注册，以核心资源为例说明一下目录下的关键的代码</p>
+<ul>
+<li>types.go：k8s.io/api/core/v1/types.go<br> 定义了Rest API接口中设计的所有核心的数据类型</li>
+<li>register.go 负责将types.go里定义的数据类型注册到runtime.Scheme里。<br> 在register.go中，我们看到这里可以看到两个定义：</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)</span><br><span class="line">AddToScheme   = SchemeBuilder.AddToScheme</span><br></pre></td></tr></table></figure>
+<p> 但是只提供了注册的方法，其实还没有执行注册的过程。什么时候执行这个过程呢？</p>
+<p>在k8s.io/client-go/kubernetes/scheme/register.go中，有一个 init方法，在引用的时候就会被调用。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">    v1.AddToGroupVersion(Scheme, schema.GroupVersion&#123;Version: <span class="string">"v1"</span>&#125;)</span><br><span class="line">    AddToScheme(Scheme)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>该方法中的AddToScheme方法，会调用各个资源、版本的AddToScheme方法，从而把所有的核心数据资源都注册进了runtime.Scheme实例中了。</p>
+<ul>
+<li>generated.proto<br> 基于genclient自动创建的<a href="https://www.kubernetes.org.cn/1309.html" target="_blank" rel="external nofollow noopener noreferrer">clientsets Go Client</a>，在types.go中，我们可以看到有些对象加了一行注释：“+genclient=true”，那么这些对象，就会被自动genclient工具自动创建出相应的client。</li>
+<li>zz_generated.deepcopy.go<br> 自动创建的资源数据对象的DeepCopy方法，实现资源对象的深度拷贝能力。</li>
+</ul>
+<h1 id="Serializer"><a href="#Serializer" class="headerlink" title="Serializer"></a>Serializer</h1><p>Serializer是用于对象于序列化格式之间进行转的核心接口，它的定义如下所示：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; Encoders write objects to a serialized form</span><br><span class="line">type Encoder interface &#123;</span><br><span class="line">    &#x2F;&#x2F; Encode writes an object to a stream. Implementations may return errors if the versions are</span><br><span class="line">    &#x2F;&#x2F; incompatible, or if no conversion is defined.</span><br><span class="line">    Encode(obj Object, w io.Writer) error</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; Decoders attempt to load an object from data.</span><br><span class="line">type Decoder interface &#123;</span><br><span class="line">    &#x2F;&#x2F; Decode attempts to deserialize the provided data using either the innate typing of the scheme or the</span><br><span class="line">    &#x2F;&#x2F; default kind, group, and version provided. It returns a decoded object as well as the kind, group, and</span><br><span class="line">    &#x2F;&#x2F; version from the serialized data, or an error. If into is non-nil, it will be used as the target type</span><br><span class="line">    &#x2F;&#x2F; and implementations may choose to use it rather than reallocating an object. However, the object is not</span><br><span class="line">    &#x2F;&#x2F; guaranteed to be populated. The returned object is not guaranteed to match into. If defaults are</span><br><span class="line">    &#x2F;&#x2F; provided, they are applied to the data by default. If no defaults or partial defaults are provided, the</span><br><span class="line">    &#x2F;&#x2F; type of the into may be used to guide conversion decisions.</span><br><span class="line">    Decode(data []byte, defaults *schema.GroupVersionKind, into Object) (Object, *schema.GroupVersionKind, error)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; Serializer is the core interface for transforming objects into a serialized format and back.</span><br><span class="line">&#x2F;&#x2F; Implementations may choose to perform conversion of the object, but no assumptions should be made.</span><br><span class="line">type Serializer interface &#123;</span><br><span class="line">    Encoder</span><br><span class="line">    Decoder</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>目前系统支持的序列化格式有三种：json、yaml和protobuf。可以参考下一节CodecFactory，这里描述了三种序列化格式的初始化。</p>
+<ul>
+<li>json与yaml序列化</li>
+</ul>
+<p>json与yaml序列化的代码在k8s.io/apimachinary/pkg/runtime/serializer/json/json.go，他们共享一个结构，如下所示：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">type</span> <span class="title">Serializer</span></span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    meta    MetaFactory</span><br><span class="line">    creater runtime.ObjectCreater       <span class="comment">// 用于创建对应Group、版本、kind的资源数据对象实例，一般来说这里会传入Scheme对象</span></span><br><span class="line">    typer   runtime.ObjectTyper         <span class="comment">// 用于从资源数据对象获取对应的Group、Version和Kind，一般来说这里会传入Scheme对象</span></span><br><span class="line">    yaml    <span class="built_in">bool</span>                        <span class="comment">// 是否yaml</span></span><br><span class="line">    pretty  <span class="built_in">bool</span>                        <span class="comment">// 是否pretty格式，只有josn支持</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过成员 yaml来区分是json还是yaml序列化器；creater和typer成员传入的都是Scheme对象，前面我们分析过Scheme，它可以让我们根据GVK来创建对应的实例，并可以判断一个对象的GVK，这将在我们后续的编解码过程中起到重要作用；而meta成员是一个MetaFactory的对象，它主要用于从序列化数据（这里就是json或者yaml）中获得对象的GroupVersionKind。（下一节也有说明）</p>
+<p>下面我们看看Encode方法，Encode方法比较简单，只需要按需把对象，转换为json或yaml格式即可。代码如下所示：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Encode serializes the provided object to the given writer.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *Serializer)</span> <span class="title">Encode</span><span class="params">(obj runtime.Object, w io.Writer)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    <span class="comment">// 看起来针对yaml和pretty需要用到gitlib下面的jsoniter库来完成</span></span><br><span class="line">    <span class="keyword">if</span> s.yaml &#123;</span><br><span class="line">        json, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(obj)</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> err</span><br><span class="line">        &#125;</span><br><span class="line">        data, err := yaml.JSONToYAML(json)</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> err</span><br><span class="line">        &#125;</span><br><span class="line">        _, err = w.Write(data)</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> s.pretty &#123;</span><br><span class="line">        data, err := jsoniter.ConfigCompatibleWithStandardLibrary.MarshalIndent(obj, <span class="string">""</span>, <span class="string">"  "</span>)</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> err</span><br><span class="line">        &#125;</span><br><span class="line">        _, err = w.Write(data)</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 而针对普通的json序列器，直接通过json.Encoder编码即可</span></span><br><span class="line">    encoder := json.NewEncoder(w)</span><br><span class="line">    <span class="keyword">return</span> encoder.Encode(obj)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Decode比较复杂，它尝试把提供的数据转换成YAML或者JSON，从中提取出其中存储的schema、kind，并合并缺省的gvk，然后在数据加载到对象中，注意该对象满足前面指定的schema、kind。或者也可以指定into字段（这时候会加载到into对象中）。</p>
+<ul>
+<li>如果into为*runtime.Unknown，则不会执行解码操邹，而直接把裸数据提取出来。</li>
+<li>如果into没有在typer(也就是Scheme)中注册，那么对象将会从JSON/YAML中直接解码（unmarshalling）</li>
+<li>如果into为nil或者提供的数据对象的gvk与into的gvk不同，那么将会基于ObjectCreater.New(gvk)创建出一个新的对象<br> 从上面的分析，可以看出：gvk的计算优先级为：originalData &gt; default gvk &gt; into。具体的代码如下所示：</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *Serializer)</span> <span class="title">Decode</span><span class="params">(originalData []<span class="keyword">byte</span>, gvk *schema.GroupVersionKind, into runtime.Object)</span> <span class="params">(runtime.Object, *schema.GroupVersionKind, error)</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> versioned, ok := into.(*runtime.VersionedObjects); ok &#123;</span><br><span class="line">        into = versioned.Last()</span><br><span class="line">        obj, actual, err := s.Decode(originalData, gvk, into)</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">nil</span>, actual, err</span><br><span class="line">        &#125;</span><br><span class="line">        versioned.Objects = []runtime.Object&#123;obj&#125;</span><br><span class="line">        <span class="keyword">return</span> versioned, actual, <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    data := originalData</span><br><span class="line">    <span class="keyword">if</span> s.yaml &#123;</span><br><span class="line">        altered, err := yaml.YAMLToJSON(data)</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">nil</span>, <span class="literal">nil</span>, err</span><br><span class="line">        &#125;</span><br><span class="line">        data = altered</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    actual, err := s.meta.Interpret(data)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, <span class="literal">nil</span>, err</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> gvk != <span class="literal">nil</span> &#123;</span><br><span class="line">        *actual = gvkWithDefaults(*actual, *gvk)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> unk, ok := into.(*runtime.Unknown); ok &amp;&amp; unk != <span class="literal">nil</span> &#123;</span><br><span class="line">        unk.Raw = originalData</span><br><span class="line">        unk.ContentType = runtime.ContentTypeJSON</span><br><span class="line">        unk.GetObjectKind().SetGroupVersionKind(*actual)</span><br><span class="line">        <span class="keyword">return</span> unk, actual, <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> into != <span class="literal">nil</span> &#123;</span><br><span class="line">        _, isUnstructured := into.(runtime.Unstructured)</span><br><span class="line">        types, _, err := s.typer.ObjectKinds(into)</span><br><span class="line">        <span class="keyword">switch</span> &#123;</span><br><span class="line">        <span class="keyword">case</span> runtime.IsNotRegisteredError(err), isUnstructured:</span><br><span class="line">            <span class="keyword">if</span> err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(data, into); err != <span class="literal">nil</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">nil</span>, actual, err</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> into, actual, <span class="literal">nil</span></span><br><span class="line">        <span class="keyword">case</span> err != <span class="literal">nil</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">nil</span>, actual, err</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            *actual = gvkWithDefaults(*actual, types[<span class="number">0</span>])</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">len</span>(actual.Kind) == <span class="number">0</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, actual, runtime.NewMissingKindErr(<span class="keyword">string</span>(originalData))</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">len</span>(actual.Version) == <span class="number">0</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, actual, runtime.NewMissingVersionErr(<span class="keyword">string</span>(originalData))</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// use the target if necessary</span></span><br><span class="line">    obj, err := runtime.UseOrCreateObject(s.typer, s.creater, *actual, into)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, actual, err</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(data, obj); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, actual, err</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> obj, actual, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="CodecFactory"><a href="#CodecFactory" class="headerlink" title="CodecFactory"></a>CodecFactory</h1><p>在这里，我们需要首先说明一下CodecFactory实现的接口StorageSerializer，StorageSerializer是一个接口，用来获取encoders,decoders和serailaizers，通过这些序列化器我们可以基于REST来读写数据。通常被client工具使用，这些客户端工具用于读取文件或者持久化restful对象的server存储接口。</p>
+<p>而CodecFactory就是StorageSerializer的实现类。在BuildStorageFactory中，我们可以看到调用kubeapiserver.NewStorageFactory方法时传入了legacyscheme.Codecs到第三个参数（该参数类型为runtime.StorageSerializer）。</p>
+<p>CodecFactory提供了方法来获取某个指定版本和内容类型的codecs和serializers，它的定义如下所示：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">type</span> <span class="title">CodecFactory</span></span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    scheme      *runtime.Scheme</span><br><span class="line">    serializers []serializerType</span><br><span class="line">    universal   runtime.Decoder</span><br><span class="line">    accepts     []runtime.SerializerInfo</span><br><span class="line"></span><br><span class="line">    legacySerializer runtime.Serializer</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>NewCodecFactory提供了方法来获取序列化对象，这些序列化对象为支持的传输格式进行编解码，也能为首选的内部和外部版本的转换封装。<br> 在将来，内部版本会越来越少使用，调用者可能会使用缺省序列化器来取而代之，然后只需要转回内部共享的对象，如：Status，常用的API对象。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewCodecFactory</span><span class="params">(scheme *runtime.Scheme)</span> <span class="title">CodecFactory</span></span> &#123;</span><br><span class="line">    serializers := newSerializersForScheme(scheme, json.DefaultMetaFactory)</span><br><span class="line">    <span class="keyword">return</span> newCodecFactory(scheme, serializers)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里分为两个步骤：</p>
+<ul>
+<li>第一个步骤：生成所有支持的序列化器<br> 这里会采用一些缺省支持的协议，一般包括：json、yaml、protobuf。从newSerializersForScheme的代码可以看出。</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newSerializersForScheme</span><span class="params">(scheme *runtime.Scheme, mf json.MetaFactory)</span> []<span class="title">serializerType</span></span> &#123;</span><br><span class="line">    jsonSerializer := json.NewSerializer(mf, scheme, scheme, <span class="literal">false</span>)</span><br><span class="line">    jsonPrettySerializer := json.NewSerializer(mf, scheme, scheme, <span class="literal">true</span>)</span><br><span class="line">    yamlSerializer := json.NewYAMLSerializer(mf, scheme, scheme)</span><br><span class="line"></span><br><span class="line">    serializers := []serializerType&#123;</span><br><span class="line">        &#123;</span><br><span class="line">            AcceptContentTypes: []<span class="keyword">string</span>&#123;<span class="string">"application/json"</span>&#125;,</span><br><span class="line">            ContentType:        <span class="string">"application/json"</span>,</span><br><span class="line">            FileExtensions:     []<span class="keyword">string</span>&#123;<span class="string">"json"</span>&#125;,</span><br><span class="line">            EncodesAsText:      <span class="literal">true</span>,</span><br><span class="line">            Serializer:         jsonSerializer,</span><br><span class="line">            PrettySerializer:   jsonPrettySerializer,</span><br><span class="line"></span><br><span class="line">            Framer:           json.Framer,</span><br><span class="line">            StreamSerializer: jsonSerializer,</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            AcceptContentTypes: []<span class="keyword">string</span>&#123;<span class="string">"application/yaml"</span>&#125;,</span><br><span class="line">            ContentType:        <span class="string">"application/yaml"</span>,</span><br><span class="line">            FileExtensions:     []<span class="keyword">string</span>&#123;<span class="string">"yaml"</span>&#125;,</span><br><span class="line">            EncodesAsText:      <span class="literal">true</span>,</span><br><span class="line">            Serializer:         yamlSerializer,</span><br><span class="line">        &#125;,</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> _, fn := <span class="keyword">range</span> serializerExtensions &#123;</span><br><span class="line">        <span class="keyword">if</span> serializer, ok := fn(scheme); ok &#123;</span><br><span class="line">            serializers = <span class="built_in">append</span>(serializers, serializer)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> serializers</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>那么这里没有看到protobuf的身影，但是上面的代码中，用到了serializerExtensions，它是一个全局变量，我们在k8s.io/apimachinenry/pkg/runtime/serializer/protobuf_extension.go文件中，找到了它的身影：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">    serializerExtensions = <span class="built_in">append</span>(serializerExtensions, protobufSerializer)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>另外一个MetaFactory的作用是什么？<br> MetaFactory用于从字符串中解析出version和kind数据。一般是json数据格式的，它有个缺省实现为DefaultMetaFactory，它的实现如下：<br> 输入的二进制数据：{“apiVersion”:”apiextensions.k8s.io/v1beta1”, “kind”: “object”}<br> 那么解析出来的得到:schema.GroupVersionKind{Group:”apiextensions.k8s.io”, Version:”v1beta1”, Kind: “object”}</p>
+</blockquote>
+<ul>
+<li>第二个步骤：生成Codec工厂实例</li>
+</ul>
+<p>newCodeFactory是一个帮助类，用于生成CodecFactory实例，它的主要功能，基于输入的序列化对象集合生成以下几项：</p>
+<blockquote>
+<p>1 统一的decode<br> 2 传统serializer（一般是Json）<br> 3 可接受的编码类型</p>
+</blockquote>
+<p>然后基于这几项数据，生成CodecFactory实例。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newCodecFactory</span><span class="params">(scheme *runtime.Scheme, serializers []serializerType)</span> <span class="title">CodecFactory</span></span> &#123;</span><br><span class="line">    decoders := <span class="built_in">make</span>([]runtime.Decoder, <span class="number">0</span>, <span class="built_in">len</span>(serializers))</span><br><span class="line">    <span class="keyword">var</span> accepts []runtime.SerializerInfo</span><br><span class="line">    alreadyAccepted := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">struct</span>&#123;&#125;)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> legacySerializer runtime.Serializer</span><br><span class="line">    <span class="keyword">for</span> _, d := <span class="keyword">range</span> serializers &#123;</span><br><span class="line">        decoders = <span class="built_in">append</span>(decoders, d.Serializer)</span><br><span class="line">        <span class="keyword">for</span> _, mediaType := <span class="keyword">range</span> d.AcceptContentTypes &#123;</span><br><span class="line">            <span class="keyword">if</span> _, ok := alreadyAccepted[mediaType]; ok &#123;</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">            &#125;</span><br><span class="line">            alreadyAccepted[mediaType] = <span class="keyword">struct</span>&#123;&#125;&#123;&#125;</span><br><span class="line">            info := runtime.SerializerInfo&#123;</span><br><span class="line">                MediaType:        d.ContentType,</span><br><span class="line">                EncodesAsText:    d.EncodesAsText,</span><br><span class="line">                Serializer:       d.Serializer,</span><br><span class="line">                PrettySerializer: d.PrettySerializer,</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> d.StreamSerializer != <span class="literal">nil</span> &#123;</span><br><span class="line">                info.StreamSerializer = &amp;runtime.StreamSerializerInfo&#123;</span><br><span class="line">                    Serializer:    d.StreamSerializer,</span><br><span class="line">                    EncodesAsText: d.EncodesAsText,</span><br><span class="line">                    Framer:        d.Framer,</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            accepts = <span class="built_in">append</span>(accepts, info)</span><br><span class="line">            <span class="keyword">if</span> mediaType == runtime.ContentTypeJSON &#123;</span><br><span class="line">                legacySerializer = d.Serializer</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> legacySerializer == <span class="literal">nil</span> &#123;</span><br><span class="line">        legacySerializer = serializers[<span class="number">0</span>].Serializer</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> CodecFactory&#123;</span><br><span class="line">        scheme:      scheme,</span><br><span class="line">        serializers: serializers,</span><br><span class="line">        universal:   recognizer.NewDecoder(decoders...),</span><br><span class="line"></span><br><span class="line">        accepts: accepts,</span><br><span class="line"></span><br><span class="line">        legacySerializer: legacySerializer,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们先看一下StorageSerializer的定义：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">type StorageSerializer interface &#123;</span><br><span class="line">    &#x2F;&#x2F; SupportedMediaTypes are the media types supported for reading and writing objects.</span><br><span class="line">    SupportedMediaTypes() []SerializerInfo</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; UniversalDeserializer returns a Serializer that can read objects in multiple supported formats</span><br><span class="line">    &#x2F;&#x2F; by introspecting the data at rest.</span><br><span class="line">    UniversalDeserializer() Decoder</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 返回一个encoder，该encoder能够保证写入底层序列化器的对象是指定的GV</span><br><span class="line">    &#x2F;&#x2F; EncoderForVersion returns an encoder that ensures objects being written to the provided</span><br><span class="line">    &#x2F;&#x2F; serializer are in the provided group version.</span><br><span class="line">    EncoderForVersion(serializer Encoder, gv GroupVersioner) Encoder</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 返回一个decoder，该decoder能够保证被底层序列化器的反序列化的对象是指定的GV</span><br><span class="line">    &#x2F;&#x2F; DecoderForVersion returns a decoder that ensures objects being read by the provided</span><br><span class="line">    &#x2F;&#x2F; serializer are in the provided group version by default.</span><br><span class="line">    DecoderToVersion(serializer Decoder, gv GroupVersioner) Decoder</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Encoder是一个接口，它负责把对象序列化写入到io中，但是它不关心具体的对象的GVK，同样Decoder也是如此，从字节码解码出对象出来。</p>
+<p>而K8S在考虑了对多种版本的支撑能力，而它需要在存储时保证写入指定的版本，但是在接口层面程序层面又能够支撑多种版本，所以Codec就应运而生，Codec的定义如下所示：</p>
+<blockquote>
+<p>Codec is a Serializer that deals with the details of versioning objects. It offers the same<br> // interface as Serializer, so this is a marker to consumers that care about the version of the objects<br> // they receive.<br> type Codec Serializer</p>
+</blockquote>
+<p>Codec也是由两部分组成：编码器与解码器，但是它要考虑版本功能，所以StorageSerializer提供了两个方法EncoderForVersion和DecoderToVersion来生成支持按指定版本进行序列化与反序列化的编解码器。我们来看看CodecFactory的这两个函数的具体实现。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// CodecForVersions creates a codec with the provided serializer. If an object is decoded and its group is not in the list,</span></span><br><span class="line"><span class="comment">// it will default to runtime.APIVersionInternal. If encode is not specified for an object's group, the object is not</span></span><br><span class="line"><span class="comment">// converted. If encode or decode are nil, no conversion is performed.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(f CodecFactory)</span> <span class="title">CodecForVersions</span><span class="params">(encoder runtime.Encoder, decoder runtime.Decoder, encode runtime.GroupVersioner, decode runtime.GroupVersioner)</span> <span class="title">runtime</span>.<span class="title">Codec</span></span> &#123;</span><br><span class="line">    <span class="comment">// <span class="doctag">TODO:</span> these are for backcompat, remove them in the future</span></span><br><span class="line">    <span class="keyword">if</span> encode == <span class="literal">nil</span> &#123;</span><br><span class="line">        encode = runtime.DisabledGroupVersioner</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> decode == <span class="literal">nil</span> &#123;</span><br><span class="line">        decode = runtime.InternalGroupVersioner</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> versioning.NewDefaultingCodecForScheme(f.scheme, encoder, decoder, encode, decode)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// DecoderToVersion returns a decoder that targets the provided group version.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(f CodecFactory)</span> <span class="title">DecoderToVersion</span><span class="params">(decoder runtime.Decoder, gv runtime.GroupVersioner)</span> <span class="title">runtime</span>.<span class="title">Decoder</span></span> &#123;</span><br><span class="line">    <span class="keyword">return</span> f.CodecForVersions(<span class="literal">nil</span>, decoder, <span class="literal">nil</span>, gv)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// EncoderForVersion returns an encoder that targets the provided group version.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(f CodecFactory)</span> <span class="title">EncoderForVersion</span><span class="params">(encoder runtime.Encoder, gv runtime.GroupVersioner)</span> <span class="title">runtime</span>.<span class="title">Encoder</span></span> &#123;</span><br><span class="line">    <span class="keyword">return</span> f.CodecForVersions(encoder, <span class="literal">nil</span>, gv, <span class="literal">nil</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从上代码来看，EncoderForVersion与DecodeToVersion都最终调用了同样的方法，如下所示：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewDefaultingCodecForScheme</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    // TODO: I should be a scheme <span class="keyword">interface</span>?</span></span></span><br><span class="line"><span class="function"><span class="params">    scheme *runtime.Scheme,</span></span></span><br><span class="line"><span class="function"><span class="params">    encoder runtime.Encoder,</span></span></span><br><span class="line"><span class="function"><span class="params">    decoder runtime.Decoder,</span></span></span><br><span class="line"><span class="function"><span class="params">    encodeVersion runtime.GroupVersioner,</span></span></span><br><span class="line"><span class="function"><span class="params">    decodeVersion runtime.GroupVersioner,</span></span></span><br><span class="line"><span class="function"><span class="params">)</span> <span class="title">runtime</span>.<span class="title">Codec</span></span> &#123;</span><br><span class="line">    <span class="keyword">return</span> NewCodec(encoder, decoder, runtime.UnsafeObjectConvertor(scheme), scheme, scheme, scheme, encodeVersion, decodeVersion)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>生成对象版本转换实例</p>
+</li>
+<li><p>这里我们首先分析一下UnsafeObjectConverter的调用，它负责把scheme变成一个ObjectConvertor接口，ObjectConvertor负责把一个对象转换为另外一个不同的版本，对应的代码如下所示：</p>
+</li>
+</ul>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">func <span class="title">UnsafeObjectConvertor</span>(<span class="params">scheme *Scheme</span>) ObjectConvertor</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> unsafeObjectConvertor&#123;scheme&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// unsafeObjectConvertor的定义</span></span><br><span class="line">type unsafeObjectConvertor <span class="keyword">struct</span> &#123;</span><br><span class="line">    *Scheme</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">type ObjectConvertor <span class="keyword">interface</span> &#123;</span><br><span class="line">    <span class="comment">// Convert attempts to convert one object into another, or returns an error. This method does</span></span><br><span class="line">    <span class="comment">// not guarantee the in object is not mutated. The context argument will be passed to</span></span><br><span class="line">    <span class="comment">// all nested conversions.</span></span><br><span class="line">    Convert(<span class="keyword">in</span>, <span class="keyword">out</span>, context <span class="keyword">interface</span>&#123;&#125;) error</span><br><span class="line">    <span class="comment">// ConvertToVersion takes the provided object and converts it the provided version. This</span></span><br><span class="line">    <span class="comment">// method does not guarantee that the in object is not mutated. This method is similar to</span></span><br><span class="line">    <span class="comment">// Convert() but handles specific details of choosing the correct output version.</span></span><br><span class="line">    ConvertToVersion(<span class="keyword">in</span> Object, gv GroupVersioner) (<span class="keyword">out</span> Object, err error)</span><br><span class="line">    ConvertFieldLabel(version, kind, label, <span class="keyword">value</span> <span class="keyword">string</span>) (<span class="keyword">string</span>, <span class="keyword">string</span>, error)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>下面分析一下unsafeObjectObject的具体方法的实现，我们在最终变换版本的时候，是如何实现的：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ConvertToVersion converts in to the provided outVersion without copying the input first, which</span></span><br><span class="line"><span class="comment">// is only safe if the output object is not mutated or reused.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c unsafeObjectConvertor)</span> <span class="title">ConvertToVersion</span><span class="params">(in Object, outVersion GroupVersioner)</span> <span class="params">(Object, error)</span></span> &#123;</span><br><span class="line">    <span class="keyword">return</span> c.Scheme.UnsafeConvertToVersion(in, outVersion)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>再次回到Scheme结构负责版本转换的方法，这里调用的UnsafeConvertToVersion方法，Scheme还有一个ConvertToVersion的方法，两者都是调用底层的convertToVersion方法， 只是第一个参数不同。<br> 安全转换在两种情况下会报错：目标版本不包括inKind类型的资源数据，转换不能得到有效的对象。<br> 不安全转换输出的对象不与输入对象共享字段，会尝试以最高效率执行转换操作。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// UnsafeConvertToVersion will convert in to the provided target if such a conversion is possible,</span></span><br><span class="line"><span class="comment">// but does not guarantee the output object does not share fields with the input object. It attempts to be as</span></span><br><span class="line"><span class="comment">// efficient as possible when doing conversion.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *Scheme)</span> <span class="title">UnsafeConvertToVersion</span><span class="params">(in Object, target GroupVersioner)</span> <span class="params">(Object, error)</span></span> &#123;</span><br><span class="line">    <span class="keyword">return</span> s.convertToVersion(<span class="literal">false</span>, in, target)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// convertToVersion handles conversion with an optional copy.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *Scheme)</span> <span class="title">convertToVersion</span><span class="params">(<span class="built_in">copy</span> <span class="keyword">bool</span>, in Object, target GroupVersioner)</span> <span class="params">(Object, error)</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> t reflect.Type</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> u, ok := in.(Unstructured); ok &#123;</span><br><span class="line">        typed, err := s.unstructuredToTyped(u)</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        in = typed</span><br><span class="line">        <span class="comment">// unstructuredToTyped returns an Object, which must be a pointer to a struct.</span></span><br><span class="line">        t = reflect.TypeOf(in).Elem()   <span class="comment">// 从指针转换为一个结构对象</span></span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// determine the incoming kinds with as few allocations as possible.</span></span><br><span class="line">        t = reflect.TypeOf(in)  <span class="comment">// 只有指针对象才能被转换</span></span><br><span class="line">        <span class="keyword">if</span> t.Kind() != reflect.Ptr &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">nil</span>, fmt.Errorf(<span class="string">"only pointer types may be converted: %v"</span>, t)</span><br><span class="line">        &#125;</span><br><span class="line">        t = t.Elem()        <span class="comment">// 得到指针的结构对象</span></span><br><span class="line">        <span class="keyword">if</span> t.Kind() != reflect.Struct &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">nil</span>, fmt.Errorf(<span class="string">"only pointers to struct types may be converted: %v"</span>, t)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    kinds, ok := s.typeToGVK[t]     <span class="comment">// 得到存储在scheme中的GVK数据，可能有多个</span></span><br><span class="line">    <span class="keyword">if</span> !ok || <span class="built_in">len</span>(kinds) == <span class="number">0</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, NewNotRegisteredErrForType(t)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    gvk, ok := target.KindForGroupVersionKinds(kinds)   <span class="comment">// 基于GroupVersioner从源GVKs得到统一的最终目标GVK，</span></span><br><span class="line">                                                        <span class="comment">// 譬如存储到ETCD来说，同时希望按照统一的版本来存储。</span></span><br><span class="line">    <span class="keyword">if</span> !ok &#123;</span><br><span class="line">        <span class="comment">// try to see if this type is listed as unversioned (for legacy support)</span></span><br><span class="line">        <span class="comment">// <span class="doctag">TODO:</span> when we move to server API versions, we should completely remove the unversioned concept</span></span><br><span class="line">        <span class="keyword">if</span> unversionedKind, ok := s.unversionedTypes[t]; ok &#123;</span><br><span class="line">            <span class="keyword">if</span> gvk, ok := target.KindForGroupVersionKinds([]schema.GroupVersionKind&#123;unversionedKind&#125;); ok &#123;</span><br><span class="line">                <span class="keyword">return</span> copyAndSetTargetKind(<span class="built_in">copy</span>, in, gvk)</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> copyAndSetTargetKind(<span class="built_in">copy</span>, in, unversionedKind)</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, NewNotRegisteredErrForTarget(t, target)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// target wants to use the existing type, set kind and return (no conversion necessary)</span></span><br><span class="line">    <span class="keyword">for</span> _, kind := <span class="keyword">range</span> kinds &#123;    <span class="comment">// 如果gvk 是kinds中的一种，那说明版本一致，资源对象结构一致，我们只需要把对象内容拷贝出来，并设置好目标GVK即可。</span></span><br><span class="line">        <span class="keyword">if</span> gvk == kind &#123;</span><br><span class="line">            <span class="keyword">return</span> copyAndSetTargetKind(<span class="built_in">copy</span>, in, gvk)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果类型是unversioned，那么没有转化你的必要</span></span><br><span class="line">    <span class="comment">// type is unversioned, no conversion necessary</span></span><br><span class="line">    <span class="keyword">if</span> unversionedKind, ok := s.unversionedTypes[t]; ok &#123;</span><br><span class="line">        <span class="keyword">if</span> gvk, ok := target.KindForGroupVersionKinds([]schema.GroupVersionKind&#123;unversionedKind&#125;); ok &#123;</span><br><span class="line">            <span class="keyword">return</span> copyAndSetTargetKind(<span class="built_in">copy</span>, in, gvk)</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> copyAndSetTargetKind(<span class="built_in">copy</span>, in, unversionedKind)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    out, err := s.New(gvk)      <span class="comment">// 从Scheme中，按照gvk创建出一个对应的gvk的对象出来。</span></span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// copy 标识是需要安全转换，安全转换会执行DeepCopy，这样就不会存在目标对象于源对象共享 Field的情况了。</span></span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">copy</span> &#123;</span><br><span class="line">        in = in.DeepCopyObject()</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 类型转换，基于converter成员来完成转换工作，这块需要专门分析</span></span><br><span class="line">    flags, meta := s.generateConvertMeta(in)</span><br><span class="line">    meta.Context = target</span><br><span class="line">    <span class="keyword">if</span> err := s.converter.Convert(in, out, flags, meta); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 设置目标GVK</span></span><br><span class="line">    setTargetKind(out, gvk)</span><br><span class="line">    <span class="keyword">return</span> out, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>TODO：具体的converter如何实现不同版本对象的转换，我们分出新的章节来讨论。</p>
+<ul>
+<li>回到NewDefaultingCodecForScheme函数中对NewCodec函数的调用</li>
+</ul>
+<p>前面已经分析了runtime.UnsafeObjectConvertor会生成一个ObjectConvetor，它会负责把对象转换成我们的目标GVK。现在回到NewCodec方法的内容。这里的代码也就不贴出来了，其实他就是生成了一个codec实例。下面是codec结构的定义，它实现了Codec(Serializer)接口：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">type</span> <span class="title">codec</span></span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    encoder   runtime.Encoder</span><br><span class="line">    decoder   runtime.Decoder</span><br><span class="line">    convertor runtime.ObjectConvertor</span><br><span class="line">    creater   runtime.ObjectCreater</span><br><span class="line">    typer     runtime.ObjectTyper</span><br><span class="line">    defaulter runtime.ObjectDefaulter</span><br><span class="line"></span><br><span class="line">    encodeVersion runtime.GroupVersioner</span><br><span class="line">    decodeVersion runtime.GroupVersioner</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>观察一下它的Encode方法，如下所示，它会在有必要的情况调用convertor把源对象转换成目标GVK的对象后，在调用encoder进行序列化。</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Encode ensures the provided object is output in the appropriate group and version, invoking</span></span><br><span class="line"><span class="comment">// conversion if necessary. Unversioned objects (according to the ObjectTyper) are output as is.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(<span class="built_in">c</span> *codec)</span></span> <span class="type">Encode</span>(obj runtime.<span class="type">Object</span>, w io.<span class="type">Writer</span>) error &#123;</span><br><span class="line">    <span class="keyword">switch</span> obj.(type) &#123;</span><br><span class="line">    <span class="keyword">case</span> *runtime.<span class="type">Unknown</span>, runtime.<span class="type">Unstructured</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">c</span>.encoder.<span class="type">Encode</span>(obj, w)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    gvks, isUnversioned, err := <span class="built_in">c</span>.typer.<span class="type">ObjectKinds</span>(obj)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">c</span>.encodeVersion == <span class="literal">nil</span> || isUnversioned &#123;</span><br><span class="line">        <span class="keyword">if</span> e, ok := obj.(runtime.<span class="type">NestedObjectEncoder</span>); ok &#123;</span><br><span class="line">            <span class="keyword">if</span> err := e.<span class="type">EncodeNestedObjects</span>(<span class="type">DirectEncoder</span>&#123;<span class="type">Encoder</span>: <span class="built_in">c</span>.encoder, <span class="type">ObjectTyper</span>: <span class="built_in">c</span>.typer&#125;); err != <span class="literal">nil</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> err</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        objectKind := obj.<span class="type">GetObjectKind</span>()</span><br><span class="line">        old := objectKind.<span class="type">GroupVersionKind</span>()</span><br><span class="line">        objectKind.<span class="type">SetGroupVersionKind</span>(gvks[<span class="number">0</span>])</span><br><span class="line">        err = <span class="built_in">c</span>.encoder.<span class="type">Encode</span>(obj, w)</span><br><span class="line">        objectKind.<span class="type">SetGroupVersionKind</span>(old)</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Perform a conversion if necessary</span></span><br><span class="line">    objectKind := obj.<span class="type">GetObjectKind</span>()</span><br><span class="line">    old := objectKind.<span class="type">GroupVersionKind</span>()</span><br><span class="line">    out, err := <span class="built_in">c</span>.convertor.<span class="type">ConvertToVersion</span>(obj, <span class="built_in">c</span>.encodeVersion)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> e, ok := out.(runtime.<span class="type">NestedObjectEncoder</span>); ok &#123;</span><br><span class="line">        <span class="keyword">if</span> err := e.<span class="type">EncodeNestedObjects</span>(<span class="type">DirectEncoder</span>&#123;<span class="type">Version</span>: <span class="built_in">c</span>.encodeVersion, <span class="type">Encoder</span>: <span class="built_in">c</span>.encoder, <span class="type">ObjectTyper</span>: <span class="built_in">c</span>.typer&#125;); err != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> err</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Conversion is responsible for setting the proper group, version, and kind onto the outgoing object</span></span><br><span class="line">    err = <span class="built_in">c</span>.encoder.<span class="type">Encode</span>(out, w)</span><br><span class="line">    <span class="comment">// restore the old GVK, in case conversion returned the same object</span></span><br><span class="line">    objectKind.<span class="type">SetGroupVersionKind</span>(old)</span><br><span class="line">    <span class="keyword">return</span> err</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer之初识API</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/b4a40ecc/" rel="bookmark">【Kubernetes】Apiserver Api</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/1141907b/" rel="bookmark">【Kubernetes】Apiserver Install</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/783fb758/" rel="bookmark">【Kubernetes】ApiServer与Etcd交互</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/777d3be4/" title="【Kubernetes】ApiServer Codec">http://houmin.cc/posts/777d3be4/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
+              <a href="/tags/apiserver/" rel="tag"><i class="fa fa-tag"></i> apiserver</a>
+              <a href="/tags/codec/" rel="tag"><i class="fa fa-tag"></i> codec</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/1141907b/" rel="next" title="【Kubernetes】Apiserver Install">
+                  <i class="fa fa-chevron-left"></i> 【Kubernetes】Apiserver Install
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/783fb758/" rel="prev" title="【Kubernetes】ApiServer与Etcd交互">
+                  【Kubernetes】ApiServer与Etcd交互 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#runtime-Scheme"><span class="nav-number">1.</span> <span class="nav-text">runtime.Scheme</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Serializer"><span class="nav-number">2.</span> <span class="nav-text">Serializer</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CodecFactory"><span class="nav-number">3.</span> <span class="nav-text">CodecFactory</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">142</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">198</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.4m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">43:55</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

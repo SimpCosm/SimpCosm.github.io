@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="通过前面的一些列笔记，我们对各种容器网络模型的实现原理已经有了基本的认识，然而真正将容器技术发扬光大的是Kubernetes容器编排平台。Kubernetes通过整合规模庞大的容器实例形成集群，这些容器实例可能运行在异构的底层网络环境中，如何保证这些容器间的互通是实际生产环境中首要考虑的问题之一。Kubernetes网络基本要求">
+<meta name="keywords" content="docker,网络,k8s,pod">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Kubernetes】网络模型">
+<meta property="og:url" content="http://houmin.cc/posts/fdbf86e3/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="通过前面的一些列笔记，我们对各种容器网络模型的实现原理已经有了基本的认识，然而真正将容器技术发扬光大的是Kubernetes容器编排平台。Kubernetes通过整合规模庞大的容器实例形成集群，这些容器实例可能运行在异构的底层网络环境中，如何保证这些容器间的互通是实际生产环境中首要考虑的问题之一。Kubernetes网络基本要求">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://i.loli.net/2020/02/06/qjRy3SpGvOfxWIA.png">
+<meta property="og:image" content="https://i.loli.net/2020/02/04/Iz3AwFR6lPdbcmp.jpg">
+<meta property="og:image" content="https://i.loli.net/2020/02/06/oCnKZ1SrV3Fjpzx.jpg">
+<meta property="og:image" content="https://i.loli.net/2020/02/06/GHx9uAwfB1gIZby.gif">
+<meta property="og:image" content="https://i.loli.net/2020/02/06/U4hore5AYECQSpW.gif">
+<meta property="og:image" content="https://i.loli.net/2020/02/06/tl49uMmabT2fXpd.gif">
+<meta property="og:updated_time" content="2020-11-27T03:26:43.641Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/02/06/qjRy3SpGvOfxWIA.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/fdbf86e3/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Kubernetes】网络模型 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/fdbf86e3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Kubernetes】网络模型
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-08-29 20:42:30" itemprop="dateCreated datePublished" datetime="2020-08-29T20:42:30+08:00">2020-08-29</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/fdbf86e3/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/fdbf86e3/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>通过前面的一些列笔记，我们对各种容器网络模型的实现原理已经有了基本的认识，然而真正将容器技术发扬光大的是Kubernetes容器编排平台。Kubernetes通过整合规模庞大的容器实例形成集群，这些容器实例可能运行在异构的底层网络环境中，如何保证这些容器间的互通是实际生产环境中首要考虑的问题之一。</p><h2 id="Kubernetes网络基本要求"><a href="#Kubernetes网络基本要求" class="headerlink" title="Kubernetes网络基本要求"></a>Kubernetes网络基本要求</h2><a id="more"></a>
+<p>Kubernetes对容器技术做了更多的抽象，其中最重要的一点是提出pod的概念，pod是Kubernetes资源调度的基本单元，我们可以简单地认为<a href="https://morven.life/notes/from-container-to-pod/" target="_blank" rel="external nofollow noopener noreferrer">pod是容器的一种延伸扩展</a>，从网络的角度来看，pod必须满足以下条件：</p>
+<ol>
+<li>每一个Pod都有一个独特的IP地址，所有pod都在一个可以直接连通的、扁平的网络空间中</li>
+<li>同一个pod内的所有容器共享同一个netns网络命名空间</li>
+</ol>
+<p><img alt="pod-netns.png" data-src="https://i.loli.net/2020/02/06/qjRy3SpGvOfxWIA.png"></p>
+<p>基于这样的基本要求，我们可以知道：</p>
+<ol>
+<li>同一个pod内的所有容器之间共享端口，可直接通过<code>localhost</code>+<code>端口</code>来访问</li>
+<li>由于每个pod有单独的IP，所以不需要考虑容器端口与主机端口映射以及端口冲突问题</li>
+</ol>
+<p>事实上，Kubernetes进一步确定了对一个合格集群网络的基本要求：</p>
+<ol>
+<li>任意两个pod之间其实是可以直接通信的，无需显式地使用NAT进行地址的转换；</li>
+<li>任意集群节点node与任意pod之间是可以直接通信的，无需使用明显的地址转换，反之亦然；</li>
+<li>任意pod看到自己的IP跟别人看见它所用的IP是一样的，中间不能经过地址转换；</li>
+</ol>
+<p>也就是说，必须同时满足以上三点的网络模型才能适用于kubernetes，事实上，在早期的Kubernetes中，并没有什么网络标准，只是提出了以上基本要求，只有满足这些要求的网络才可以部署Kubernetes，基于这样的底层网络假设，Kubernetes设计了<code>pod-deployment-service</code>的经典三层服务访问机制。直到1.1发布，Kubernetes才开始采用全新的<a href="https://github.com/containernetworking/cni" target="_blank" rel="external nofollow noopener noreferrer">CNI(Container Network Interface)</a>网络标准。</p>
+<h2 id="CNI"><a href="#CNI" class="headerlink" title="CNI"></a>CNI</h2><p>其实，我们在前面介绍容器网络的时候，就提到了CNI网络规范，CNI相对于<a href="https://github.com/docker/libnetwork/blob/master/docs/design.md" target="_blank" rel="external nofollow noopener noreferrer">CNM(Container Network Model)</a>对开发者的约束更少，更开放，不依赖于Docker。事实上，CNI规范确实非常简单，详见：<a href="https://github.com/containernetworking/cni/blob/master/SPEC.md" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/containernetworking/cni/blob/master/SPEC.md</a></p>
+<p><img alt="networking-cni.jpg" data-src="https://i.loli.net/2020/02/04/Iz3AwFR6lPdbcmp.jpg"></p>
+<p>实现一个CNI网络插件只需要<strong>一个配置文件</strong>和<strong>一个可执行的文件</strong>：</p>
+<ul>
+<li>配置文件描述插件的版本、名称、描述等基本信息</li>
+<li>可执行文件会被上层的容器管理平台调用，一个CNI可执行文件自需要实现将容器加入到网络的ADD操作以及将容器从网络中删除的DEL操作（以及一个可选的VERSION查看版本操作）</li>
+</ul>
+<p>Kubernetes使用CNI网络插件的基本工作流程：</p>
+<ol>
+<li>kubelet先创建<code>pause</code>容器生成对应的netns网络命名空间</li>
+<li>根据配置调用具体的CNI插件，可以配置成CNI插件链来进行链式调用</li>
+<li>当CNI插件被调用时，它根据环境变量以及命令行参数来获得网络命名空间netns、容器的网络设备等必要信息，然后执行ADD操作</li>
+<li>CNI插件给pause容器配置正确的网络，pod中其他的容器都是用pause容器的网络</li>
+</ol>
+<p>如果不清楚什么是<code>pause</code>容器，它在pod中处于什么样的位置，请查看之前的笔记：<a href="https://morven.life/notes/from-container-to-pod/" target="_blank" rel="external nofollow noopener noreferrer">https://morven.life/notes/from-container-to-pod/</a></p>
+<h2 id="pod网络模型"><a href="#pod网络模型" class="headerlink" title="pod网络模型"></a>pod网络模型</h2><p>要了解kubernetes网络模型的实现原理，我们就要从单个pod入手，事实上，一旦熟悉了单个pod的网络模型，就会发现kubernetes网络模型基本遵循和容器网络模型一样的原理。</p>
+<p>通过前面的笔记<a href="https://morven.life/notes/from-container-to-pod/" target="_blank" rel="external nofollow noopener noreferrer">从docker容器到pod</a>，我们知道pod启动的时候先创建<code>pause</code>容器生成对应的netns网络命名空间，然后其他容器共享<code>pause</code>容器创建的网络命名空间。而对于单个容器的网络模型我们之前也介绍过，主要就是通过<code>docker0</code>网桥设备与veth设备对连接不同的容器网络命名空间，由此，我们可以得到如下图所示的单个pod网络模型的创建过程：</p>
+<p><img alt="pod-pause-container-netns.jpg" data-src="https://i.loli.net/2020/02/06/oCnKZ1SrV3Fjpzx.jpg"></p>
+<p>可以看到，同一个pod里面的其他容器共享<code>pause</code>容器创建的网络命名空间，也就是说，所有的容器共享相同的网络设备，路由表设置，服务端口等信息，仿佛是在同一台机器上运行的不同进程，所以这些容器之间可以直接通过<code>localhost</code>与对应的端口通信；对于集群外部的请求，则通过<code>docker0</code>网桥设备充当的网关，同时通过iptables做地址转换。我们会发现，这其实就是对当个容器的bridge网络模型的扩展。</p>
+<h2 id="主流kubernetes网络方案"><a href="#主流kubernetes网络方案" class="headerlink" title="主流kubernetes网络方案"></a>主流kubernetes网络方案</h2><p>上一小节我们知道单个pod的网络模型是容器网络模型的扩展，但是pod与pod之间的是怎么相互通信的呢？这其实与容器之间相互通信非常类似，也分为同一个主机上的pod之间与跨主机的pod之间两种。</p>
+<p>如容器网络模型一样，对于统一主机上的pod之间，通过<code>docker0</code>网桥设备直接二层（数据链路层）网络上通过MAC地址直接通信：</p>
+<p><img alt="networking-k8s-pod-single-node.gif" data-src="https://i.loli.net/2020/02/06/GHx9uAwfB1gIZby.gif"></p>
+<p>而跨主机的pod之间的相互通信也主要有以下两个思路：</p>
+<ol>
+<li>修改底层网络设备配置，加入容器网络IP地址的管理，修改路由器网关等，该方式主要和SDN(Software define networking)结合。</li>
+<li>完全不修改底层网络设备配置，复用原有的underlay平面网络，解决容器跨主机通信，主要有如下两种方式:<ul>
+<li>隧道传输(Overlay)： 将容器的数据包封装到原主机网络的三层或者四层数据包中，然后使用主机网络的IP或者TCP/UDP传输到目标主机，目标主机拆包后再转发给目标容器。Overlay隧道传输常见方案包括Vxlan、ipip等，目前使用Overlay隧道传输技术的主流容器网络有Flannel等；</li>
+</ul>
+</li>
+</ol>
+<p><img alt="networking-k8s-vxlan.gif" data-src="https://i.loli.net/2020/02/06/U4hore5AYECQSpW.gif"></p>
+<ul>
+<li>修改主机路由：把容器网络加到主机路由表中，把主机网络设备当作容器网关，通过路由规则转发到指定的主机，实现容器的三层互通。目前通过路由技术实现容器跨主机通信的网络如Flannel host-gw、Calico等；</li>
+</ul>
+<p><img alt="networking-k8s-route.gif" data-src="https://i.loli.net/2020/02/06/tl49uMmabT2fXpd.gif"></p>
+<p>下面简单介绍几种主流的方案：</p>
+<ul>
+<li><strong>Flannel</strong>是目前使用最为普遍的方案，提供了多种网络backend，它支持多种数据路径，也适合于overlay/underlay等多种场景。对于overlay的数据包封装，可以使用用户态的UDP，内核态的Vxlan(性能相对较好)，甚至在集群规模不大，且处于同一个二层域时可以采用host-gw的方式修改主机路由表；</li>
+<li><strong>Weave</strong>工作模式与Flannel很相似的，它最早只提供了UDP（称为sleeve模式）的网络方式，后来又加上了fastpass方式（基于VxLAN），不过Weave消除了Flannel中用来存储网络地址的额外组件，自己集成了高可用的数据存储功能；</li>
+<li><strong>Calico</strong>主要是采用了修改主机路由，节点之间采用BGP的协议去进行路由的同步。但是现实中的网络并不总是支持BGP路由的，因此Calico也支持内核中的IPIP模式，使用overlay的方式来传输数据；</li>
+</ul>
+<p>下表是几种主流Kubernetes网络方案的对比：</p>
+<p>| A | Overlay-Network | Host-RouteTable | NetworkPolicy Support | Decentralized IP Allocation | | – | — | — | — | — | | Flannel | UDP/VXLAN | Host-GW | N | N | | Weave | UDP/VXLAN | N/A | Y | Y | | Calico | IPIP | BGP | Y | N |</p>
+<h2 id="策略控制-Network-Policy"><a href="#策略控制-Network-Policy" class="headerlink" title="策略控制(Network Policy)"></a>策略控制(Network Policy)</h2><p>Network Policy)是Kubernetes提供的基于策略的网络控制，用于隔离应用并提高安全性。它使用Kubernetes中常用的标签选择器模拟传统的分段网络，并通过策略控制它们之间的东西流量以及与外部交流的南北流量。</p>
+<blockquote>
+<p>Note: 确保使用的网络插件支持策略控制(Network Policy)，比如Flannel就没有实现Network Policy；</p>
+</blockquote>
+<p>下面的例子是配置一个典型的Network Policy的实例：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">NetworkPolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">test-network-policy</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">podSelector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">role:</span> <span class="string">db</span></span><br><span class="line">  <span class="attr">policyTypes:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">Ingress</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">Egress</span></span><br><span class="line">  <span class="attr">ingress:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">from:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">ipBlock:</span></span><br><span class="line">        <span class="attr">cidr:</span> <span class="number">172.17</span><span class="number">.0</span><span class="number">.0</span><span class="string">/16</span></span><br><span class="line">        <span class="attr">except:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="number">172.17</span><span class="number">.1</span><span class="number">.0</span><span class="string">/24</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">namespaceSelector:</span></span><br><span class="line">        <span class="attr">matchLabels:</span></span><br><span class="line">          <span class="attr">project:</span> <span class="string">myproject</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">podSelector:</span></span><br><span class="line">        <span class="attr">matchLabels:</span></span><br><span class="line">          <span class="attr">role:</span> <span class="string">frontend</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">6379</span></span><br><span class="line">  <span class="attr">egress:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">to:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">ipBlock:</span></span><br><span class="line">        <span class="attr">cidr:</span> <span class="number">10.0</span><span class="number">.0</span><span class="number">.0</span><span class="string">/24</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">5978</span></span><br></pre></td></tr></table></figure>
+<p>它使用标签选择器<code>namespaceSelector</code>与<code>posSelector</code>控制pod之间的流量，流量的行为模式主要由以下三个对象决定：</p>
+<ol>
+<li>控制对象：通过<code>spec.podSelector</code>筛选</li>
+<li>流量方向：<code>ingress</code>控制入pod流量，<code>egress</code>控制出pod流量</li>
+<li>流量特征：对端-IP-协议-端口</li>
+</ol>
+<p>通过使用Network Policy可以实现对进出流的精确控制，它采用各种选择器（标签或namespace），找到一组满足条件的pod，或者找到相当于通信的两端，然后通过流量的特征描述来决定它们之间是不是可以连通，可以理解为一个白名单的机制。</p>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/574111db/" rel="bookmark">【Kubernetes】在Docker中使用GPU</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/87e9f747/" rel="bookmark">【Kubernetes】Kube-Proxy</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/8dfd4de5/" rel="bookmark">【Kubernetes】Ingress</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/c425bfaf/" rel="bookmark">【Kubernetes】Network Policy</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer之初识API</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/fdbf86e3/" title="【Kubernetes】网络模型">http://houmin.cc/posts/fdbf86e3/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/docker/" rel="tag"><i class="fa fa-tag"></i> docker</a>
+              <a href="/tags/%E7%BD%91%E7%BB%9C/" rel="tag"><i class="fa fa-tag"></i> 网络</a>
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
+              <a href="/tags/pod/" rel="tag"><i class="fa fa-tag"></i> pod</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/8dfd4de5/" rel="next" title="【Kubernetes】Ingress">
+                  <i class="fa fa-chevron-left"></i> 【Kubernetes】Ingress
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/d3e0e7a2/" rel="prev" title="【Kubernetes】Scheduler">
+                  【Kubernetes】Scheduler <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Kubernetes网络基本要求"><span class="nav-number">1.</span> <span class="nav-text">Kubernetes网络基本要求</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CNI"><span class="nav-number">2.</span> <span class="nav-text">CNI</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#pod网络模型"><span class="nav-number">3.</span> <span class="nav-text">pod网络模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#主流kubernetes网络方案"><span class="nav-number">4.</span> <span class="nav-text">主流kubernetes网络方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#策略控制-Network-Policy"><span class="nav-number">5.</span> <span class="nav-text">策略控制(Network Policy)</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">142</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">198</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.5m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">44:01</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>
