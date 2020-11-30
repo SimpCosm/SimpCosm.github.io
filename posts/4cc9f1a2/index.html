@@ -56,13 +56,14 @@
 </script>
 
   <meta name="description" content="当你使用kubernetes的时候，有没有遇到过Pod在启动后一会就挂掉然后又重新启动这样的恶性循环？你有没有想过kubernetes是如何检测pod是否还存活？虽然容器已经启动，但是kubernetes如何知道容器的进程是否准备好对外提供服务了呢？让我们通过kubernetes官网的这篇文章Configure Liveness and Readiness Probes，来一探究竟。">
+<meta name="keywords" content="k8s,kubelet">
 <meta property="og:type" content="article">
-<meta property="og:title" content="2020-09-15-k8s-liveness-readiness-probe">
+<meta property="og:title" content="【Kubernetes】Liveness&#x2F;Readiness Probe">
 <meta property="og:url" content="http://houmin.cc/posts/4cc9f1a2/index.html">
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="当你使用kubernetes的时候，有没有遇到过Pod在启动后一会就挂掉然后又重新启动这样的恶性循环？你有没有想过kubernetes是如何检测pod是否还存活？虽然容器已经启动，但是kubernetes如何知道容器的进程是否准备好对外提供服务了呢？让我们通过kubernetes官网的这篇文章Configure Liveness and Readiness Probes，来一探究竟。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-11-27T03:14:11.199Z">
+<meta property="og:updated_time" content="2020-11-30T11:13:10.948Z">
 <meta name="twitter:card" content="summary">
 
 <link rel="canonical" href="http://houmin.cc/posts/4cc9f1a2/">
@@ -79,7 +80,7 @@
   };
 </script>
 
-  <title>2020-09-15-k8s-liveness-readiness-probe | Houmin</title>
+  <title>【Kubernetes】Liveness/Readiness Probe | Houmin</title>
   
 
 
@@ -247,7 +248,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          2020-09-15-k8s-liveness-readiness-probe
+          【Kubernetes】Liveness/Readiness Probe
         </h2>
 
         <div class="post-meta">
@@ -317,7 +318,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>当你使用kubernetes的时候，有没有遇到过Pod在启动后一会就挂掉然后又重新启动这样的恶性循环？你有没有想过kubernetes是如何检测pod是否还存活？虽然容器已经启动，但是kubernetes如何知道容器的进程是否准备好对外提供服务了呢？让我们通过kubernetes官网的这篇文章<a href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/" target="_blank" rel="external nofollow noopener noreferrer">Configure Liveness and Readiness Probes</a>，来一探究竟。</p><a id="more"></a>
+        <p>当你使用kubernetes的时候，有没有遇到过Pod在启动后一会就挂掉然后又重新启动这样的恶性循环？你有没有想过kubernetes是如何检测pod是否还存活？虽然容器已经启动，但是kubernetes如何知道容器的进程是否准备好对外提供服务了呢？让我们通过kubernetes官网的这篇文章<a href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/" target="_blank" rel="external nofollow noopener noreferrer">Configure Liveness and Readiness Probes</a>，来一探究竟。</p>
+<a id="more"></a>
 <p>本文将展示如何配置容器的存活和可读性探针。</p>
 <p>Kubelet使用liveness probe（存活探针）来确定何时重启容器。例如，当应用程序处于运行状态但无法做进一步操作，liveness探针将捕获到deadlock，重启处于该状态下的容器，使应用程序在存在bug的情况下依然能够继续运行下去（谁的程序还没几个bug呢）。</p>
 <p>Kubelet使用readiness probe（就绪探针）来确定容器是否已经就绪可以接受流量。只有当Pod中的容器都处于就绪状态时kubelet才会认定该Pod处于就绪状态。该信号的作用是控制哪些Pod应该作为service的后端。如果Pod处于非就绪状态，那么它们将会被从service的load balancer中移除。</p>
@@ -392,6 +394,24 @@
     
     
       
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer 启动分析</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/fb705539/" rel="bookmark">【Kubernetes】Kubelet</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/b4a40ecc/" rel="bookmark">【Kubernetes】Apiserver Api</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/1141907b/" rel="bookmark">【Kubernetes】Apiserver Install</a></div>
+    </li>
+  </ul>
 
       
         <div class="reward-container">
@@ -423,7 +443,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://houmin.cc/posts/4cc9f1a2/" title="2020-09-15-k8s-liveness-readiness-probe">http://houmin.cc/posts/4cc9f1a2/</a>
+    <a href="http://houmin.cc/posts/4cc9f1a2/" title="【Kubernetes】Liveness&#x2F;Readiness Probe">http://houmin.cc/posts/4cc9f1a2/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -433,6 +453,11 @@
 
 
       <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
+              <a href="/tags/kubelet/" rel="tag"><i class="fa fa-tag"></i> kubelet</a>
+          </div>
 
         
 
@@ -515,7 +540,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">198</span>
+        <span class="site-state-item-count">200</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -589,7 +614,7 @@
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">44:01</span>
+    <span title="站点阅读时长">44:04</span>
 </div>
 
         

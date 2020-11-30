@@ -56,7 +56,7 @@
 </script>
 
   <meta name="description" content="原生的 k8s 基于 Device Plugin 和 Extended Resource 机制实现了在容器中使用GPU，但是只支持GPU的独占使用，不允许在Pod间共享GPU，这大大降低了对集群中GPU的利用率。为了在集群层面共享GPU，我们需要实现GPU资源的隔离与调度，本文将依次介绍阿里的 GPUShare 与腾讯的 GPUManager，分析其实现机制。">
-<meta name="keywords" content="k8s,GPU,device plugin,资源隔离,scheduler extender">
+<meta name="keywords" content="k8s,device plugin,GPU,资源隔离,scheduler extender">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Kubernetes】GPU 共享">
 <meta property="og:url" content="http://houmin.cc/posts/cf391335/index.html">
@@ -572,7 +572,7 @@
       <div class="popular-posts-title"><a href="/posts/3f069334/" rel="bookmark">【Kubernetes】Device Plugin</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer之初识API</a></div>
+      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer 启动分析</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/574111db/" rel="bookmark">【Kubernetes】在Docker中使用GPU</a></div>
@@ -628,8 +628,8 @@
           
           <div class="post-tags">
               <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
-              <a href="/tags/GPU/" rel="tag"><i class="fa fa-tag"></i> GPU</a>
               <a href="/tags/device-plugin/" rel="tag"><i class="fa fa-tag"></i> device plugin</a>
+              <a href="/tags/GPU/" rel="tag"><i class="fa fa-tag"></i> GPU</a>
               <a href="/tags/%E8%B5%84%E6%BA%90%E9%9A%94%E7%A6%BB/" rel="tag"><i class="fa fa-tag"></i> 资源隔离</a>
               <a href="/tags/scheduler-extender/" rel="tag"><i class="fa fa-tag"></i> scheduler extender</a>
           </div>
@@ -715,7 +715,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">198</span>
+        <span class="site-state-item-count">200</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -783,13 +783,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">1.4m</span>
+    <span title="站点总字数">1.5m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">43:55</span>
+    <span title="站点阅读时长">44:04</span>
 </div>
 
         
