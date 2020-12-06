@@ -64,11 +64,11 @@
 <meta property="og:description" content="Prometheus是一套开源的监控、报警、时间序列数据库的组合，起始是由SoundCloud公司开发的。从2016年加入CNCF，2016年6月正式发布1.0版本，2017年底发布了基于全新存储层的2.0版本，能更好地与容器平台、云平台配合，到2018年8月毕业，现在已经成为Kubernetes的官方监控方案，社区活跃，第三方集成非常丰富。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-16_prometheus-architecture.png">
-<meta property="og:image" content="http://www.xuyasong.com/wp-content/uploads/2019/03/15502975113235.jpg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-23_push-pull.jpg">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-16_prometheus-cadvisor-network.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-17_prometheus-rules.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-17_prometheus-alerts.png">
-<meta property="og:updated_time" content="2020-11-18T12:13:12.226Z">
+<meta property="og:updated_time" content="2020-12-02T11:33:45.163Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-16_prometheus-architecture.png">
 
@@ -380,7 +380,7 @@
 <p>拉的代表，主要代表就是 Prometheus，让我们不用担心监控应用本身的状态。而且，可以利用 DNS-SRV 或者 Consul 等服务发现功能就可以自动添加监控。</p>
 <p>当然，InfluxDB 加上 collector，或者 ES 加上 metricbeat 也可以变为 『拉』，而 Prometheus 加上 Push Gateway 也可以变为 『推』。</p>
 <p>更多区别可以参考下图：</p>
-<p><img alt="img" data-src="http://www.xuyasong.com/wp-content/uploads/2019/03/15502975113235.jpg"></p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-23_push-pull.jpg"></p>
 <h3 id="存储机制"><a href="#存储机制" class="headerlink" title="存储机制"></a>存储机制</h3><p>Prometheus有着非常高效的时间序列数据存储方法，每个采样数据仅仅占用3.5byte左右空间，上百万条时间序列，30秒间隔，保留60天，大概花了200多G（引用官方PPT）。</p>
 <p>Prometheus内部主要分为三大块，Retrieval是负责定时去暴露的目标页面上去抓取采样指标数据，Storage是负责将采样数据写磁盘，PromQL是Prometheus提供的查询语言模块。</p>
 <p>Prometheus内置了一个基于本地存储的时间序列数据库。在Prometheus设计上，使用本地存储可以降低Prometheus部署和管理的复杂度同时减少高可用（HA）带来的复杂性。 在默认情况下，用户只需要部署多套Prometheus，采集相同的Targets即可实现基本的HA。同时由于Promethus高效的数据处理能力，单个Prometheus Server基本上能够应对大部分用户监控规模的需求。</p>
@@ -726,7 +726,7 @@
       <div class="popular-posts-title"><a href="/posts/703a5727/" rel="bookmark">【系统监控】cAdvisor</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/58272b06/" rel="bookmark">【Kubernetes】监控的可观测性</a></div>
+      <div class="popular-posts-title"><a href="/posts/9bd76ed5/" rel="bookmark">【系统监控】kube-state-metrics</a></div>
     </li>
   </ul>
 
@@ -846,7 +846,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">142</span>
+          <span class="site-state-item-count">145</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -858,7 +858,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">200</span>
+        <span class="site-state-item-count">206</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -932,7 +932,7 @@
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">44:04</span>
+    <span title="站点阅读时长">44:58</span>
 </div>
 
         

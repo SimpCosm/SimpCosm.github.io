@@ -56,17 +56,16 @@
 </script>
 
   <meta name="description" content="API Server的启动中，我们直到介绍了三种服务Master、CustomResourceDefinitions、Aggrator的创建，但是具体的API的创建部分没有介绍。 本文旨在把这块说清楚，让我们了解整个API Server对外提供了哪些API，这些API是在怎样被注册到服务中去的。我们知道，API Server对外提供的Http&#x2F;Https服务，这都是基于go http服务框架来实现">
-<meta name="keywords" content="k8s,apiserver">
-<meta property="og:type" content="article">
-<meta property="og:title" content="【Kubernetes】Apiserver Api">
-<meta property="og:url" content="http://houmin.cc/posts/b4a40ecc/index.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Houmin">
+<meta property="og:url" content="http://houmin.cc/test.html">
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="API Server的启动中，我们直到介绍了三种服务Master、CustomResourceDefinitions、Aggrator的创建，但是具体的API的创建部分没有介绍。 本文旨在把这块说清楚，让我们了解整个API Server对外提供了哪些API，这些API是在怎样被注册到服务中去的。我们知道，API Server对外提供的Http&#x2F;Https服务，这都是基于go http服务框架来实现">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-11-27T04:00:54.863Z">
+<meta property="og:updated_time" content="2020-12-03T08:01:24.022Z">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://houmin.cc/posts/b4a40ecc/">
+<link rel="canonical" href="http://houmin.cc/test">
 
 
 <script id="page-configurations">
@@ -74,13 +73,14 @@
   CONFIG.page = {
     sidebar: "",
     isHome: false,
-    isPost: true,
-    isPage: false,
+    isPost: false,
+    isPage: true,
     isArchive: false
   };
 </script>
 
-  <title>【Kubernetes】Apiserver Api | Houmin</title>
+  <title> | Houmin
+  </title>
   
 
 
@@ -226,101 +226,35 @@
       <div class="main-inner">
         <div class="content-wrap">
           
+  
+  
 
           <div class="content">
             
 
   <div class="posts-expand">
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/b4a40ecc/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
-      <meta itemprop="name" content="Houmin">
-      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Houmin">
-    </span>
+    
+    
+    
+    <div class="post-block" lang="zh-CN">
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          【Kubernetes】Apiserver Api
-        </h2>
 
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
+<h2 class="post-title" itemprop="name headline">
+</h2>
 
-              <time title="创建时间：2020-08-12 12:06:11" itemprop="dateCreated datePublished" datetime="2020-08-12T12:06:11+08:00">2020-08-12</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
-                    <span itemprop="name">术业专攻</span>
-                  </a>
-                </span>
-            </span>
-
-          
-            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-eye"></i>
-              </span>
-              <span class="post-meta-item-text">阅读次数：</span>
-              <span id="busuanzi_value_page_pv"></span>
-            </span>
+<div class="post-meta">
   
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="fa fa-comment-o"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/posts/b4a40ecc/#comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/posts/b4a40ecc/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>35k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1:03</span>
-            </span>
 
-        </div>
-      </header>
+</div>
 
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
+</header>
 
       
-        <p>API Server的启动中，我们直到介绍了三种服务Master、CustomResourceDefinitions、Aggrator的创建，但是具体的API的创建部分没有介绍。<br> 本文旨在把这块说清楚，让我们了解整个API Server对外提供了哪些API，这些API是在怎样被注册到服务中去的。我们知道，API Server对外提供的Http/Https服务，这都是基于go http服务框架来实现。</p>
+      
+      
+      <div class="post-body">
+          <p>API Server的启动中，我们直到介绍了三种服务Master、CustomResourceDefinitions、Aggrator的创建，但是具体的API的创建部分没有介绍。<br> 本文旨在把这块说清楚，让我们了解整个API Server对外提供了哪些API，这些API是在怎样被注册到服务中去的。我们知道，API Server对外提供的Http/Https服务，这都是基于go http服务框架来实现。</p><a id="more"></a>
 <p>API Server支持的HTTP服务采用了go-restful与非go-restful混和的方式，主要是因为go-restful的一些标准无法完全满足需求，而且API Server要兼容旧版本的需要，所以引入了这种混杂模式。</p>
-<a id="more"></a>
 <p>go-restful是第三方的REST框架，在GitHub上有多个贡献者，采用了“路由”映射的设计思想，并且在API设计中使用了流行的Fluent Style风格，试用起来酣畅淋漓，也难怪Kubernetes选择了它。下面是go-restful的优良特性。</p>
 <ul>
 <li>Ruby on Rails风格的Rest路由映射，例如/people/{person_id}/groups/{group_id}。</li>
@@ -447,101 +381,16 @@
 <p>这里也列举了createHandler中的代码片段，如下所示：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">gv := scope.Kind.GroupVersion()</span><br><span class="line">        <span class="comment">// 得到合适的SerializerInfo</span></span><br><span class="line">s, err := negotiation.NegotiateInputSerializer(req, <span class="literal">false</span>, scope.Serializer)</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    scope.err(err, w, req)</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line">        <span class="comment">// 找到合适的decoder</span></span><br><span class="line">decoder := scope.Serializer.DecoderToVersion(s.Serializer, schema.GroupVersion&#123;Group: gv.Group, Version: runtime.APIVersionInternal&#125;)</span><br><span class="line"></span><br><span class="line">body, err := readBody(req)</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    scope.err(err, w, req)</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line">defaultGVK := scope.Kind</span><br><span class="line">original := r.New()</span><br><span class="line">trace.Step(<span class="string">"About to convert to expected version"</span>)</span><br><span class="line">        <span class="comment">//  采用decoder解码</span></span><br><span class="line">obj, gvk, err := decoder.Decode(body, &amp;defaultGVK, original)</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    err = transformDecodeError(typer, err, original, gvk, body)</span><br><span class="line">    scope.err(err, w, req)</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+      </div>
+      
+      
+      
     </div>
+    
 
     
     
     
-      
-  <div class="popular-posts-header">相关文章推荐</div>
-  <ul class="popular-posts">
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer 启动分析</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/1141907b/" rel="bookmark">【Kubernetes】Apiserver Install</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/777d3be4/" rel="bookmark">【Kubernetes】ApiServer Codec</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/783fb758/" rel="bookmark">【Kubernetes】ApiServer与Etcd交互</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
-    </li>
-  </ul>
-
-      
-        <div class="reward-container">
-  <div></div>
-  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
-    打赏
-  </button>
-  <div id="qr" style="display: none;">
-      
-      <div style="display: inline-block;">
-        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
-        <p>微信支付</p>
-      </div>
-      
-      <div style="display: inline-block;">
-        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
-        <p>支付宝</p>
-      </div>
-
-  </div>
-</div>
-
-        
-
-<div>
-<ul class="post-copyright">
-  <li class="post-copyright-author">
-    <strong>本文作者： </strong>Houmin
-  </li>
-  <li class="post-copyright-link">
-    <strong>本文链接：</strong>
-    <a href="http://houmin.cc/posts/b4a40ecc/" title="【Kubernetes】Apiserver Api">http://houmin.cc/posts/b4a40ecc/</a>
-  </li>
-  <li class="post-copyright-license">
-    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
-  </li>
-</ul>
-</div>
-
-
-      <footer class="post-footer">
-          
-          <div class="post-tags">
-              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
-              <a href="/tags/apiserver/" rel="tag"><i class="fa fa-tag"></i> apiserver</a>
-          </div>
-
-        
-
-          <div class="post-nav">
-            <div class="post-nav-next post-nav-item">
-                <a href="/posts/3bc1a603/" rel="next" title="【Kubernetes】ApiServer之初识API">
-                  <i class="fa fa-chevron-left"></i> 【Kubernetes】ApiServer之初识API
-                </a>
-            </div>
-
-            <span class="post-nav-divider"></span>
-
-            <div class="post-nav-prev post-nav-item">
-                <a href="/posts/3bc1a603/" rel="prev" title="【Kubernetes】ApiServer 启动分析">
-                  【Kubernetes】ApiServer 启动分析 <i class="fa fa-chevron-right"></i>
-                </a>
-            </div>
-          </div>
-      </footer>
-    
-  </article>
-  
-  
-  
-
   </div>
 
 
@@ -587,7 +436,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">142</span>
+          <span class="site-state-item-count">145</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -599,7 +448,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">200</span>
+        <span class="site-state-item-count">206</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -673,7 +522,7 @@
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">44:04</span>
+    <span title="站点阅读时长">44:58</span>
 </div>
 
         

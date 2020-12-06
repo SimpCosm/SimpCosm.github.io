@@ -56,7 +56,7 @@
 </script>
 
   <meta name="description" content="流量控制是指对系统流量的管控，包括了对网格入口的流量、网格出口的流量以及在网格内部微服务间相互调用流量的控制。在 Istio 入门 中我们知道，Istio 架构在逻辑上分为 Control plane 和 Data plane，Control plane 负责整体管理和配置代理， Data plane 负责网格内所有微服务间的网络通信，同时还收集报告网络请求的遥测数据等。流量控制是在 Data p">
-<meta name="keywords" content="网络,service mesh,istio,envoy">
+<meta name="keywords" content="网络,service mesh,envoy,istio">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Service Mesh】Istio 流量控制">
 <meta property="og:url" content="http://houmin.cc/posts/151719f0/index.html">
@@ -64,11 +64,11 @@
 <meta property="og:description" content="流量控制是指对系统流量的管控，包括了对网格入口的流量、网格出口的流量以及在网格内部微服务间相互调用流量的控制。在 Istio 入门 中我们知道，Istio 架构在逻辑上分为 Control plane 和 Data plane，Control plane 负责整体管理和配置代理， Data plane 负责网格内所有微服务间的网络通信，同时还收集报告网络请求的遥测数据等。流量控制是在 Data p">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_istio-arch.svg">
-<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/concept-feature-routing.png">
-<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/concept-feature-gateway.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-20_istio-routing.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-20_istio-gateway.png">
 <meta property="og:image" content="https://www.servicemesher.com/istio-handbook/images/concepts-traffic-shadow-request.png">
 <meta property="og:image" content="https://www.servicemesher.com/istio-handbook/images/concepts-traffic-shadow-header.png">
-<meta property="og:updated_time" content="2020-11-27T02:47:40.014Z">
+<meta property="og:updated_time" content="2020-12-02T11:40:50.219Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_istio-arch.svg">
 
@@ -335,9 +335,9 @@
 </ul>
 <p>通过版本标签，Istio 就可以定义灵活的路由规则来控制流量，上面提到的金丝雀发布这类应用场景就很容易实现了。</p>
 <p>下图展示了使用服务版本实现路由分配的例子。服务版本定义了版本号（v1.5、v2.0-alpha）和环境（us-prod、us-staging）两种信息。服务 B 包含了 4 个 Pod，其中 3 个是部署在生产环境的 v1.5 版本，而 Pod4 是部署在预生产环境的 v2.0-alpha 版本。运维人员可以根据服务版本来指定路由规则，使 99% 的流量流向 v1.5 版本，而 1% 的流量进入 v2.0-alpha 版本。</p>
-<p><img alt="路由" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/concept-feature-routing.png"></p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-20_istio-routing.png"></p>
 <p>除了上面介绍的服务间流量控制外，还能控制与网格边界交互的流量。可以在系统的入口和出口处部署 Sidecar 代理，让所有流入和流出的流量都由代理进行转发。负责入和出的代理就叫做入口网关和出口网关，它们把守着进入和流出网格的流量。下图展示了 Ingress 和 Egress 在请求流中的位置，有了他们俩，也就可以控制出入网格的流量了。</p>
-<p><img alt="入口和出口网关" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/concept-feature-gateway.png"></p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-20_istio-gateway.png"></p>
 <p>Istio 还能设置流量策略。比如可以对连接池相关的属性进行设置，通过修改最大连接等参数，实现对请求负载的控制。还可以对负载均衡策略进行设置，在轮询、随机、最少访问等方式之间进行切换。还能设置异常探测策略，将满足异常条件的实例从负载均衡池中摘除，以保证服务的稳定性。</p>
 <hr>
 <p>Istio 的流量路由规则可以让您很容易的控制服务之间的流量和 API 调用。Istio 在服务层面提供了断路器，超时，重试等功能，通过这些功能可以简单地实现 A/B 测试，金丝雀发布，基于百分比的流量分割等，此外还提供了开箱即用的故障恢复功能，用于增加应用的健壮性，以应对服务故障或网络故障。这些功能都可以通过 Istio 的流量管理 API 添加流量配置来实现。</p>
@@ -537,13 +537,13 @@ end</pre>
       <div class="popular-posts-title"><a href="/posts/22cae0b8/" rel="bookmark">【Service Mesh】Istio 入门</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/941301e/" rel="bookmark">Linux网络包收发流程</a></div>
+      <div class="popular-posts-title"><a href="/posts/f07e2cff/" rel="bookmark">网络虚拟化</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/3675eff/" rel="bookmark">virtio</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/f07e2cff/" rel="bookmark">网络虚拟化</a></div>
+      <div class="popular-posts-title"><a href="/posts/941301e/" rel="bookmark">Linux网络包收发流程</a></div>
     </li>
   </ul>
 
@@ -591,8 +591,8 @@ end</pre>
           <div class="post-tags">
               <a href="/tags/%E7%BD%91%E7%BB%9C/" rel="tag"><i class="fa fa-tag"></i> 网络</a>
               <a href="/tags/service-mesh/" rel="tag"><i class="fa fa-tag"></i> service mesh</a>
-              <a href="/tags/istio/" rel="tag"><i class="fa fa-tag"></i> istio</a>
               <a href="/tags/envoy/" rel="tag"><i class="fa fa-tag"></i> envoy</a>
+              <a href="/tags/istio/" rel="tag"><i class="fa fa-tag"></i> istio</a>
           </div>
 
         
@@ -664,7 +664,7 @@ end</pre>
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">142</span>
+          <span class="site-state-item-count">145</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -676,7 +676,7 @@ end</pre>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">200</span>
+        <span class="site-state-item-count">206</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -750,7 +750,7 @@ end</pre>
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">44:04</span>
+    <span title="站点阅读时长">44:58</span>
 </div>
 
         

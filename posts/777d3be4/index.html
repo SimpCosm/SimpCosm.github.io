@@ -63,7 +63,7 @@
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="在Kubernetes源码分析— API Server之API Install篇中，我们了解到K8S可以支持多版本的API，但是Rest API的不同版本中接口的输入输出参数的格式是有差别的，Kubernetes是怎么处理这个问题的呢？另外Kubernetes支持yaml、json两个格式的配置，同时又能够支持json、yaml和pb等格式的编解码进行协议传输，那么Kubernetes又是如何实现">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-11-27T03:58:58.521Z">
+<meta property="og:updated_time" content="2020-12-02T13:13:13.263Z">
 <meta name="twitter:card" content="summary">
 
 <link rel="canonical" href="http://houmin.cc/posts/777d3be4/">
@@ -299,14 +299,14 @@
                 <i class="fa fa-file-word-o"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>22k</span>
+              <span>19k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>40 分钟</span>
+              <span>34 分钟</span>
             </span>
 
         </div>
@@ -320,32 +320,10 @@
       
         <p>在Kubernetes源码分析— API Server之API Install篇中，我们了解到K8S可以支持多版本的API，但是Rest API的不同版本中接口的输入输出参数的格式是有差别的，Kubernetes是怎么处理这个问题的呢？另外Kubernetes支持yaml、json两个格式的配置，同时又能够支持json、yaml和pb等格式的编解码进行协议传输，那么Kubernetes又是如何实现各种数据对象的序列化、反序列化的呢？</p>
 <a id="more"></a>
-<h1 id="runtime-Scheme"><a href="#runtime-Scheme" class="headerlink" title="runtime.Scheme"></a>runtime.Scheme</h1><p>为了同时解决数据对象的序列化、反序列化与多版本数据对象的兼容和转换问题，Kubernetes设计了一套复杂的机制，首先，它设计了runtime.Scheme 这个结构体( <code>k8s.io/apimachinery/pkg/runtime/schema.go</code>)，以下是对它的定义。</p>
-<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">type <span class="type">Scheme</span> <span class="class"><span class="keyword">struct</span> </span>&#123;</span><br><span class="line">    <span class="comment">// versionMap allows one to figure out the go type of an object with</span></span><br><span class="line">    <span class="comment">// the given version and name.</span></span><br><span class="line">    gvkToType <span class="built_in">map</span>[schema.<span class="type">GroupVersionKind</span>]<span class="built_in">reflect</span>.<span class="type">Type</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// typeToGroupVersion allows one to find metadata for a given go object.</span></span><br><span class="line">    <span class="comment">// The reflect.Type we index by should *not* be a pointer.</span></span><br><span class="line">    typeToGVK <span class="built_in">map</span>[<span class="built_in">reflect</span>.<span class="type">Type</span>][]schema.<span class="type">GroupVersionKind</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// unversionedTypes are transformed without conversion in ConvertToVersion.</span></span><br><span class="line">    unversionedTypes <span class="built_in">map</span>[<span class="built_in">reflect</span>.<span class="type">Type</span>]schema.<span class="type">GroupVersionKind</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// unversionedKinds are the names of kinds that can be created in the context of any group</span></span><br><span class="line">    <span class="comment">// or version</span></span><br><span class="line">    <span class="comment">// <span class="doctag">TODO:</span> resolve the status of unversioned types.</span></span><br><span class="line">    unversionedKinds <span class="built_in">map</span>[string]<span class="built_in">reflect</span>.<span class="type">Type</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// Map from version and resource to the corresponding func to convert</span></span><br><span class="line">    <span class="comment">// resource field labels in that version to internal version.</span></span><br><span class="line">    fieldLabelConversionFuncs <span class="built_in">map</span>[string]<span class="built_in">map</span>[string]<span class="type">FieldLabelConversionFunc</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// defaulterFuncs is an array of interfaces to be called with an object to provide defaulting</span></span><br><span class="line">    <span class="comment">// the provided object must be a pointer.</span></span><br><span class="line">    defaulterFuncs <span class="built_in">map</span>[<span class="built_in">reflect</span>.<span class="type">Type</span>]<span class="function"><span class="keyword">func</span><span class="params">(interface&#123;&#125;)</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// converter stores all registered conversion functions. It also has</span></span><br><span class="line">    <span class="comment">// default coverting behavior.</span></span><br><span class="line">    converter *conversion.<span class="type">Converter</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>runtime.Scheme是带版本的API与带版本的配置文件的基础。<br> runtime.Scheme定义了以下内容：</p>
-<ul>
-<li>序列化和反序列化API对象的方法</li>
-<li>类型登记处：用于在不同版本的Go shemas之间转换group 、version和kind信息</li>
+<h1 id="runtime-Scheme"><a href="#runtime-Scheme" class="headerlink" title="runtime.Scheme"></a>runtime.Scheme</h1><ul>
+<li><h1 id="Serializer"><a href="#Serializer" class="headerlink" title="Serializer"></a>Serializer</h1></li>
 </ul>
-<p>从上述代码中可以看到，typeToGVK与gkvToType属性就是为了解决数据对象的序列化与反序列化问题，converter属性则负责不同版本的数据对象转换问题；unversionedKind用于映射哪些能够在任意group和version情况下的类型，key是一个string，也就是kind；fieldLabelConversionFuncs：用于解决数据对象的属性名称的兼容性转换和检验，比如讲需要兼容Pod的spec.Host属性改为spec.nodeName的情况。</p>
-<p>Kubernetes这个设计思路简单方便地建解决多版本的序列化和数据转换问题，下面是runtime.Scheme里序列化、反序列化的核心方法New()的代码：通过查找gkvToType里匹配的诸恶类型，以反射方法生成一个空的数据对象：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// New returns a new API object of the given version and name, or an error if it hasn't</span></span><br><span class="line"><span class="comment">// been registered. The version and kind fields must be specified.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *Scheme)</span> <span class="title">New</span><span class="params">(kind schema.GroupVersionKind)</span> <span class="params">(Object, error)</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> t, exists := s.gvkToType[kind]; exists &#123;</span><br><span class="line">        <span class="keyword">return</span> reflect.New(t).Interface().(Object), <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> t, exists := s.unversionedKinds[kind.Kind]; exists &#123;</span><br><span class="line">        <span class="keyword">return</span> reflect.New(t).Interface().(Object), <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span>, NewNotRegisteredErrForKind(kind)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>由于这个方法的实现，也让Scheme实现了ObjectCreater接口。</p>
-<p>注意到runtime.Scheme只是实现了一个序列化与类型转换的框架API，提供了注册资源数据类型与转换函数的功能，那么具体的资源数据对象、转换函数又是在哪个包里实现的呢？答案是k8s.io/api/{resource}/{version}/register.go，而核心资源在k8s.io/api/core/v1/register.go中完成注册，以核心资源为例说明一下目录下的关键的代码</p>
-<ul>
-<li>types.go：k8s.io/api/core/v1/types.go<br> 定义了Rest API接口中设计的所有核心的数据类型</li>
-<li>register.go 负责将types.go里定义的数据类型注册到runtime.Scheme里。<br> 在register.go中，我们看到这里可以看到两个定义：</li>
-</ul>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)</span><br><span class="line">AddToScheme   = SchemeBuilder.AddToScheme</span><br></pre></td></tr></table></figure>
-<p> 但是只提供了注册的方法，其实还没有执行注册的过程。什么时候执行这个过程呢？</p>
-<p>在k8s.io/client-go/kubernetes/scheme/register.go中，有一个 init方法，在引用的时候就会被调用。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">    v1.AddToGroupVersion(Scheme, schema.GroupVersion&#123;Version: <span class="string">"v1"</span>&#125;)</span><br><span class="line">    AddToScheme(Scheme)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>该方法中的AddToScheme方法，会调用各个资源、版本的AddToScheme方法，从而把所有的核心数据资源都注册进了runtime.Scheme实例中了。</p>
-<ul>
-<li>generated.proto<br> 基于genclient自动创建的<a href="https://www.kubernetes.org.cn/1309.html" target="_blank" rel="external nofollow noopener noreferrer">clientsets Go Client</a>，在types.go中，我们可以看到有些对象加了一行注释：“+genclient=true”，那么这些对象，就会被自动genclient工具自动创建出相应的client。</li>
-<li>zz_generated.deepcopy.go<br> 自动创建的资源数据对象的DeepCopy方法，实现资源对象的深度拷贝能力。</li>
-</ul>
-<h1 id="Serializer"><a href="#Serializer" class="headerlink" title="Serializer"></a>Serializer</h1><p>Serializer是用于对象于序列化格式之间进行转的核心接口，它的定义如下所示：</p>
+<p>Serializer是用于对象于序列化格式之间进行转的核心接口，它的定义如下所示：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; Encoders write objects to a serialized form</span><br><span class="line">type Encoder interface &#123;</span><br><span class="line">    &#x2F;&#x2F; Encode writes an object to a stream. Implementations may return errors if the versions are</span><br><span class="line">    &#x2F;&#x2F; incompatible, or if no conversion is defined.</span><br><span class="line">    Encode(obj Object, w io.Writer) error</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; Decoders attempt to load an object from data.</span><br><span class="line">type Decoder interface &#123;</span><br><span class="line">    &#x2F;&#x2F; Decode attempts to deserialize the provided data using either the innate typing of the scheme or the</span><br><span class="line">    &#x2F;&#x2F; default kind, group, and version provided. It returns a decoded object as well as the kind, group, and</span><br><span class="line">    &#x2F;&#x2F; version from the serialized data, or an error. If into is non-nil, it will be used as the target type</span><br><span class="line">    &#x2F;&#x2F; and implementations may choose to use it rather than reallocating an object. However, the object is not</span><br><span class="line">    &#x2F;&#x2F; guaranteed to be populated. The returned object is not guaranteed to match into. If defaults are</span><br><span class="line">    &#x2F;&#x2F; provided, they are applied to the data by default. If no defaults or partial defaults are provided, the</span><br><span class="line">    &#x2F;&#x2F; type of the into may be used to guide conversion decisions.</span><br><span class="line">    Decode(data []byte, defaults *schema.GroupVersionKind, into Object) (Object, *schema.GroupVersionKind, error)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; Serializer is the core interface for transforming objects into a serialized format and back.</span><br><span class="line">&#x2F;&#x2F; Implementations may choose to perform conversion of the object, but no assumptions should be made.</span><br><span class="line">type Serializer interface &#123;</span><br><span class="line">    Encoder</span><br><span class="line">    Decoder</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>目前系统支持的序列化格式有三种：json、yaml和protobuf。可以参考下一节CodecFactory，这里描述了三种序列化格式的初始化。</p>
 <ul>
@@ -432,7 +410,7 @@
       <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer 启动分析</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b4a40ecc/" rel="bookmark">【Kubernetes】Apiserver Api</a></div>
+      <div class="popular-posts-title"><a href="/posts/b0614056/" rel="bookmark">【Kubernetes】API Install</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/1141907b/" rel="bookmark">【Kubernetes】Apiserver Install</a></div>
@@ -561,7 +539,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">142</span>
+          <span class="site-state-item-count">145</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -573,7 +551,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">200</span>
+        <span class="site-state-item-count">206</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -647,7 +625,7 @@
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">44:04</span>
+    <span title="站点阅读时长">44:58</span>
 </div>
 
         
