@@ -56,7 +56,6 @@
 </script>
 
   <meta name="description" content="原生的 k8s 基于 Device Plugin 和 Extended Resource 机制实现了在容器中使用GPU，但是只支持GPU的独占使用，不允许在Pod间共享GPU，这大大降低了对集群中GPU的利用率。为了在集群层面共享GPU，我们需要实现GPU资源的隔离与调度，本文将依次介绍阿里的 GPUShare 与腾讯的 GPUManager，分析其实现机制。">
-<meta name="keywords" content="k8s,device plugin,GPU,资源隔离,scheduler extender">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Kubernetes】GPU 共享">
 <meta property="og:url" content="http://houmin.cc/posts/cf391335/index.html">
@@ -269,17 +268,6 @@
               <span class="post-meta-item-text">发表于</span>
 
               <time title="创建时间：2020-11-18 11:11:07" itemprop="dateCreated datePublished" datetime="2020-11-18T11:11:07+08:00">2020-11-18</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
-                    <span itemprop="name">术业专攻</span>
-                  </a>
-                </span>
             </span>
 
           
@@ -566,24 +554,6 @@
     
     
       
-  <div class="popular-posts-header">相关文章推荐</div>
-  <ul class="popular-posts">
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/3f069334/" rel="bookmark">【Kubernetes】Device Plugin</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer 启动分析</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/574111db/" rel="bookmark">【Kubernetes】在Docker中使用GPU</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b0614056/" rel="bookmark">【Kubernetes】API Install</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
-    </li>
-  </ul>
 
       
         <div class="reward-container">
@@ -625,14 +595,6 @@
 
 
       <footer class="post-footer">
-          
-          <div class="post-tags">
-              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
-              <a href="/tags/device-plugin/" rel="tag"><i class="fa fa-tag"></i> device plugin</a>
-              <a href="/tags/GPU/" rel="tag"><i class="fa fa-tag"></i> GPU</a>
-              <a href="/tags/%E8%B5%84%E6%BA%90%E9%9A%94%E7%A6%BB/" rel="tag"><i class="fa fa-tag"></i> 资源隔离</a>
-              <a href="/tags/scheduler-extender/" rel="tag"><i class="fa fa-tag"></i> scheduler extender</a>
-          </div>
 
         
 
@@ -706,17 +668,6 @@
           <span class="site-state-item-count">145</span>
           <span class="site-state-item-name">日志</span>
         </a>
-      </div>
-      <div class="site-state-item site-state-categories">
-            <a href="/categories/">
-        <span class="site-state-item-count">8</span>
-        <span class="site-state-item-name">分类</span></a>
-      </div>
-      <div class="site-state-item site-state-tags">
-            <a href="/tags/">
-          
-        <span class="site-state-item-count">206</span>
-        <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>

@@ -56,7 +56,6 @@
 </script>
 
   <meta name="description" content="本节将分析两个经常成对出现的关键字 panic 和 recover。这两个关键字都与 defer 有千丝万缕的联系，也都是 Go 语言中的内置函数，但是提供的功能却是互补的：  panic 能够改变程序的控制流，函数调用panic 时会立刻停止执行函数的其他代码，并在执行结束后在当前 Goroutine 中递归执行调用方的延迟函数调用 defer； recover 可以中止 panic 造成的程序">
-<meta name="keywords" content="Go,源码阅读,panic,recover">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Go语言设计与实现】Panic&#x2F;Recover">
 <meta property="og:url" content="http://houmin.cc/posts/ecc392db/index.html">
@@ -263,17 +262,6 @@
 
               <time title="创建时间：2020-08-02 12:15:58" itemprop="dateCreated datePublished" datetime="2020-08-02T12:15:58+08:00">2020-08-02</time>
             </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
-                    <span itemprop="name">术业专攻</span>
-                  </a>
-                </span>
-            </span>
 
           
             <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
@@ -443,24 +431,6 @@
     
     
       
-  <div class="popular-posts-header">相关文章推荐</div>
-  <ul class="popular-posts">
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/e87a4e07/" rel="bookmark">【Go语言设计与实现】String</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/c3c43baa/" rel="bookmark">【Go语言设计与实现】Hash Table</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/bf9c845a/" rel="bookmark">【Go语言设计与实现】Reflect</a></div>
-    </li>
-  </ul>
 
       
         <div class="reward-container">
@@ -502,13 +472,6 @@
 
 
       <footer class="post-footer">
-          
-          <div class="post-tags">
-              <a href="/tags/Go/" rel="tag"><i class="fa fa-tag"></i> Go</a>
-              <a href="/tags/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码阅读</a>
-              <a href="/tags/panic/" rel="tag"><i class="fa fa-tag"></i> panic</a>
-              <a href="/tags/recover/" rel="tag"><i class="fa fa-tag"></i> recover</a>
-          </div>
 
         
 
@@ -582,17 +545,6 @@
           <span class="site-state-item-count">145</span>
           <span class="site-state-item-name">日志</span>
         </a>
-      </div>
-      <div class="site-state-item site-state-categories">
-            <a href="/categories/">
-        <span class="site-state-item-count">8</span>
-        <span class="site-state-item-name">分类</span></a>
-      </div>
-      <div class="site-state-item site-state-tags">
-            <a href="/tags/">
-          
-        <span class="site-state-item-count">206</span>
-        <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>

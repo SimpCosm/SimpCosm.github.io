@@ -56,7 +56,6 @@
 </script>
 
   <meta name="description" content="Pod 是 Kubernetes 集群中能够被创建、调度和管理的最小部署单元，是一组容器的集合，是 k8s 中最简单的对象，也是 k8s 中最为基础的概念。同一个 Pod 中的容器可以共享同一个网络命名空间，IP地址和端口空间。从生命周期上来讲，Pod是短暂而不是长久的应用。Pod被调度到节点，保持在这个节点直到被摧毁。 本文将分两个部分对 Pod 解读，第一个部分介绍 Pod 的基本概念和常见特">
-<meta name="keywords" content="源码阅读,k8s,pod">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Kubernetes】Pod">
 <meta property="og:url" content="http://houmin.cc/posts/b88b921f/index.html">
@@ -267,17 +266,6 @@
 
               <time title="创建时间：2020-09-07 19:57:14" itemprop="dateCreated datePublished" datetime="2020-09-07T19:57:14+08:00">2020-09-07</time>
             </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
-                    <span itemprop="name">术业专攻</span>
-                  </a>
-                </span>
-            </span>
 
           
             <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
@@ -403,24 +391,6 @@
     
     
       
-  <div class="popular-posts-header">相关文章推荐</div>
-  <ul class="popular-posts">
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/76a404e7/" rel="bookmark">【Kubernetes】Controller Manager</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/d3e0e7a2/" rel="bookmark">【Kubernetes】Scheduler</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer 启动分析</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/fdbf86e3/" rel="bookmark">【Kubernetes】网络模型</a></div>
-    </li>
-  </ul>
 
       
         <div class="reward-container">
@@ -462,12 +432,6 @@
 
 
       <footer class="post-footer">
-          
-          <div class="post-tags">
-              <a href="/tags/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码阅读</a>
-              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
-              <a href="/tags/pod/" rel="tag"><i class="fa fa-tag"></i> pod</a>
-          </div>
 
         
 
@@ -541,17 +505,6 @@
           <span class="site-state-item-count">145</span>
           <span class="site-state-item-name">日志</span>
         </a>
-      </div>
-      <div class="site-state-item site-state-categories">
-            <a href="/categories/">
-        <span class="site-state-item-count">8</span>
-        <span class="site-state-item-name">分类</span></a>
-      </div>
-      <div class="site-state-item site-state-tags">
-            <a href="/tags/">
-          
-        <span class="site-state-item-count">206</span>
-        <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>

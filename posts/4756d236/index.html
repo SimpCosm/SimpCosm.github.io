@@ -56,7 +56,6 @@
 </script>
 
   <meta name="description" content="Deployment 是 Kubernetes 中用于处理无状态服务的资源，而 StatefulSet 是用于支持有状态服务的资源，这两种不同的资源从状态的角度对服务进行了划分，而 DaemonSet 从不同的维度解决了集群中的问题 — 如何同时在集群中的所有节点上提供基础服务和守护进程。我们在这里将介绍 DaemonSet 如何进行状态的同步、Pod 与节点（Node）之间的调度方式和滚动更新的">
-<meta name="keywords" content="k8s,daemonset">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Kubernetes】DaemonSet">
 <meta property="og:url" content="http://houmin.cc/posts/4756d236/index.html">
@@ -263,17 +262,6 @@
 
               <time title="创建时间：2020-08-19 17:14:16" itemprop="dateCreated datePublished" datetime="2020-08-19T17:14:16+08:00">2020-08-19</time>
             </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
-                    <span itemprop="name">术业专攻</span>
-                  </a>
-                </span>
-            </span>
 
           
             <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
@@ -385,24 +373,6 @@
     
     
       
-  <div class="popular-posts-header">相关文章推荐</div>
-  <ul class="popular-posts">
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer 启动分析</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b0614056/" rel="bookmark">【Kubernetes】API Install</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/1141907b/" rel="bookmark">【Kubernetes】Apiserver Install</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/777d3be4/" rel="bookmark">【Kubernetes】ApiServer Codec</a></div>
-    </li>
-  </ul>
 
       
         <div class="reward-container">
@@ -444,11 +414,6 @@
 
 
       <footer class="post-footer">
-          
-          <div class="post-tags">
-              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
-              <a href="/tags/daemonset/" rel="tag"><i class="fa fa-tag"></i> daemonset</a>
-          </div>
 
         
 
@@ -522,17 +487,6 @@
           <span class="site-state-item-count">145</span>
           <span class="site-state-item-name">日志</span>
         </a>
-      </div>
-      <div class="site-state-item site-state-categories">
-            <a href="/categories/">
-        <span class="site-state-item-count">8</span>
-        <span class="site-state-item-name">分类</span></a>
-      </div>
-      <div class="site-state-item site-state-tags">
-            <a href="/tags/">
-          
-        <span class="site-state-item-count">206</span>
-        <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>

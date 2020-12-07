@@ -56,7 +56,6 @@
 </script>
 
   <meta name="description" content="Kubernetes 原生支持对于CPU和内存资源的发现，但是有很多其他的设备 kubelet不能原生处理，比如GPU、FPGA、RDMA、存储设备和其他类似的异构计算资源设备。为了能够使用这些设备资源，我们需要进行各个设备的初始化和设置。按照 Kubernetes 的 OutOfTree 的哲学理念，我们不应该把各个厂商的设备初始化设置相关代码与 Kubernetes 核心代码放在一起。与之相反">
-<meta name="keywords" content="k8s,device plugin,GPU,RDMA,FPGA">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Kubernetes】Device Plugin">
 <meta property="og:url" content="http://houmin.cc/posts/3f069334/index.html">
@@ -263,17 +262,6 @@
 
               <time title="创建时间：2020-11-16 15:31:42" itemprop="dateCreated datePublished" datetime="2020-11-16T15:31:42+08:00">2020-11-16</time>
             </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
-                    <span itemprop="name">术业专攻</span>
-                  </a>
-                </span>
-            </span>
 
           
             <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
@@ -391,24 +379,6 @@
     
     
       
-  <div class="popular-posts-header">相关文章推荐</div>
-  <ul class="popular-posts">
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/cf391335/" rel="bookmark">【Kubernetes】GPU 共享</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer 启动分析</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/574111db/" rel="bookmark">【Kubernetes】在Docker中使用GPU</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b0614056/" rel="bookmark">【Kubernetes】API Install</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
-    </li>
-  </ul>
 
       
         <div class="reward-container">
@@ -450,14 +420,6 @@
 
 
       <footer class="post-footer">
-          
-          <div class="post-tags">
-              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
-              <a href="/tags/device-plugin/" rel="tag"><i class="fa fa-tag"></i> device plugin</a>
-              <a href="/tags/GPU/" rel="tag"><i class="fa fa-tag"></i> GPU</a>
-              <a href="/tags/RDMA/" rel="tag"><i class="fa fa-tag"></i> RDMA</a>
-              <a href="/tags/FPGA/" rel="tag"><i class="fa fa-tag"></i> FPGA</a>
-          </div>
 
         
 
@@ -531,17 +493,6 @@
           <span class="site-state-item-count">145</span>
           <span class="site-state-item-name">日志</span>
         </a>
-      </div>
-      <div class="site-state-item site-state-categories">
-            <a href="/categories/">
-        <span class="site-state-item-count">8</span>
-        <span class="site-state-item-name">分类</span></a>
-      </div>
-      <div class="site-state-item site-state-tags">
-            <a href="/tags/">
-          
-        <span class="site-state-item-count">206</span>
-        <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>
