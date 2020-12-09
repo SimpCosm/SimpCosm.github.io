@@ -56,7 +56,7 @@
 </script>
 
   <meta name="description" content="原生的 k8s 基于 Device Plugin 和 Extended Resource 机制实现了在容器中使用GPU，但是只支持GPU的独占使用，不允许在Pod间共享GPU，这大大降低了对集群中GPU的利用率。为了在集群层面共享GPU，我们需要实现GPU资源的隔离与调度，本文将依次介绍阿里的 GPUShare 与腾讯的 GPUManager，分析其实现机制。">
-<meta name="keywords" content="k8s,device plugin,GPU,资源隔离,scheduler extender">
+<meta name="keywords" content="k8s,GPU,device plugin,资源隔离,scheduler extender">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Kubernetes】GPU 共享">
 <meta property="og:url" content="http://houmin.cc/posts/cf391335/index.html">
@@ -72,7 +72,7 @@
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-19_gpu-manager-predicate.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-22_gaia-device-plugin.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-22_gaia-vcuda.png">
-<meta property="og:updated_time" content="2020-11-24T13:28:16.743Z">
+<meta property="og:updated_time" content="2020-12-08T02:24:52.471Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-21_aliyun-gpu-share.jpg">
 
@@ -525,7 +525,7 @@
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">ctntResp.Annotations[types.VDeviceAnnotation] = vDeviceAnnotationStr(nodes)</span><br><span class="line"><span class="keyword">if</span> !allocated &#123;</span><br><span class="line">	ta.allocatedPod.Insert(<span class="keyword">string</span>(pod.UID), container.Name, &amp;cache.Info&#123;</span><br><span class="line">		Devices: allocatedDevices.UnsortedList(),</span><br><span class="line">		Cores:   needCores,</span><br><span class="line">		Memory:  needMemory,</span><br><span class="line">	&#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>然后是 <code>Envs</code> 字段</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// LD_LIBRARY_PATH</span></span><br><span class="line">ctntResp.Envs[<span class="string">"LD_LIBRARY_PATH"</span>] = <span class="string">"/usr/local/nvidia/lib64"</span></span><br><span class="line"><span class="keyword">for</span> _, env := <span class="keyword">range</span> container.Env &#123;</span><br><span class="line">	<span class="keyword">if</span> env.Name == <span class="string">"compat32"</span> &amp;&amp; strings.ToLower(env.Value) == <span class="string">"true"</span> &#123;</span><br><span class="line">		ctntResp.Envs[<span class="string">"LD_LIBRARY_PATH"</span>] = <span class="string">"/usr/local/nvidia/lib"</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// NVIDIA_VISIBLE_DEVICES</span></span><br><span class="line">ctntResp.Envs[<span class="string">"NVIDIA_VISIBLE_DEVICES"</span>] = strings.Join(deviceList, <span class="string">","</span>)</span><br></pre></td></tr></table></figure>
-<p>最后是 <code>Mounts</code> 字段，这里给GPU容器配置一个volume挂载点来提供CUDA Library以及配置环境变量<code>LD_LIBRARY_PATH</code> 告诉应用哪里去找到 `CUDA Library。</p>
+<p>最后是 <code>Mounts</code> 字段，这里给GPU容器配置一个volume挂载点来提供CUDA Library以及配置环境变量<code>LD_LIBRARY_PATH</code> 告诉应用哪里去找到 <code>CUDA Library</code>。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> shareMode &#123;</span><br><span class="line">	ctntResp.Mounts = <span class="built_in">append</span>(ctntResp.Mounts, &amp;pluginapi.Mount&#123;</span><br><span class="line">		ContainerPath: <span class="string">"/usr/local/nvidia"</span>,</span><br><span class="line">		HostPath:      types.DriverLibraryPath,</span><br><span class="line">		ReadOnly:      <span class="literal">true</span>,</span><br><span class="line">	&#125;)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	ctntResp.Mounts = <span class="built_in">append</span>(ctntResp.Mounts, &amp;pluginapi.Mount&#123;</span><br><span class="line">		ContainerPath: <span class="string">"/usr/local/nvidia"</span>,</span><br><span class="line">		HostPath:      types.DriverOriginLibraryPath,</span><br><span class="line">		ReadOnly:      <span class="literal">true</span>,</span><br><span class="line">	&#125;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">ctntResp.Mounts = <span class="built_in">append</span>(ctntResp.Mounts, &amp;pluginapi.Mount&#123;</span><br><span class="line">	ContainerPath: types.VCUDA_MOUNTPOINT,</span><br><span class="line">	HostPath:      filepath.Join(ta.config.VirtualManagerPath, <span class="keyword">string</span>(pod.UID)),</span><br><span class="line">	ReadOnly:      <span class="literal">true</span>,</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
 <h4 id="vGPU-Manager"><a href="#vGPU-Manager" class="headerlink" title="vGPU Manager"></a>vGPU Manager</h4><p><code>vGPU Manager</code> 作为 <code>GPU Manager</code> 这个 <code>DaemonSet</code> 的一部分，负责下发容器配置和监控容器分配的vGPU。上一步在拓扑分配器确定好每个容器的资源配置之后，<code>vGPU Manager</code> 负责为每个容器在 host 上创建一个独立的目录，这个目录以容器的名称命名，并且会被包括在 <code>AllocateResponse</code> 中返回给 kubelet，对就是上面那段代码做的事情。</p>
 <p><code>vGPU Manager</code> 会维护一个使用了GPU的并且仍然活着的容器列表，还会去周期性的检查他们。一旦有容器挂掉，就会将这个容器移出列表并且删去目录。</p>
@@ -578,10 +578,10 @@
       <div class="popular-posts-title"><a href="/posts/574111db/" rel="bookmark">【Kubernetes】在Docker中使用GPU</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b0614056/" rel="bookmark">【Kubernetes】API Install</a></div>
+      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/1141907b/" rel="bookmark">【Kubernetes】Apiserver Install</a></div>
+      <div class="popular-posts-title"><a href="/posts/b0614056/" rel="bookmark">【Kubernetes】API Install</a></div>
     </li>
   </ul>
 
@@ -628,8 +628,8 @@
           
           <div class="post-tags">
               <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
-              <a href="/tags/device-plugin/" rel="tag"><i class="fa fa-tag"></i> device plugin</a>
               <a href="/tags/GPU/" rel="tag"><i class="fa fa-tag"></i> GPU</a>
+              <a href="/tags/device-plugin/" rel="tag"><i class="fa fa-tag"></i> device plugin</a>
               <a href="/tags/%E8%B5%84%E6%BA%90%E9%9A%94%E7%A6%BB/" rel="tag"><i class="fa fa-tag"></i> 资源隔离</a>
               <a href="/tags/scheduler-extender/" rel="tag"><i class="fa fa-tag"></i> scheduler extender</a>
           </div>
@@ -789,7 +789,7 @@
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">44:43</span>
+    <span title="站点阅读时长">45:57</span>
 </div>
 
         
