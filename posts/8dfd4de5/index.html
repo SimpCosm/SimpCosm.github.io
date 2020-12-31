@@ -71,7 +71,7 @@
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_traefik-bear.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_traefik-hare.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_traefik-moose.png">
-<meta property="og:updated_time" content="2020-11-27T03:26:55.069Z">
+<meta property="og:updated_time" content="2020-12-15T02:40:56.298Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-08-31_k8s-ingress.png">
 
@@ -308,14 +308,14 @@
                 <i class="fa fa-file-word-o"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>8.8k</span>
+              <span>9.7k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>16 分钟</span>
+              <span>18 分钟</span>
             </span>
 
         </div>
@@ -413,6 +413,13 @@
 <p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_traefik-bear.png"></p>
 <p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_traefik-hare.png"></p>
 <p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-10_traefik-moose.png"></p>
+<h2 id="Ingress-Class"><a href="#Ingress-Class" class="headerlink" title="Ingress Class"></a>Ingress Class</h2><p>Ingress 资源的设计初衷就是易用性，尝试使用简单的字段为所有应用提供支持。随着应用场景的不断增加，为了适应更广泛的需求，越来越多的 Ingress 控制器要靠大量的自定义注解来完成更复杂的配置。<code>IngressClass</code> 资源提供了一种替换部分注解的思路。</p>
+<p>每个 <code>IngressClass</code> 中都指明了用于实现 Ingress 的控制器类型，并且可以引用自定义资源来使用更多参数。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">IngressClass</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">external-lb</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">controller:</span> <span class="string">example.com/ingress-controller</span></span><br><span class="line">  <span class="attr">parameters:</span></span><br><span class="line">    <span class="attr">apiGroup:</span> <span class="string">k8s.example.com</span></span><br><span class="line">    <span class="attr">kind:</span> <span class="string">IngressParameters</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">external-lb</span></span><br></pre></td></tr></table></figure>
+<p>Ingress 规范中加入了 <code>ingressClassName</code> 字段，用来指定实现这个 Ingress 资源的的 <code>IngressClass</code>。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Ingress</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">example-ingress</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">ingressClassName:</span> <span class="string">external-lb</span></span><br><span class="line">  <span class="attr">rules:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">host:</span> <span class="string">*.example.com</span></span><br><span class="line">    <span class="attr">http:</span></span><br><span class="line">      <span class="attr">paths:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">path:</span> <span class="string">/example</span></span><br><span class="line">        <span class="attr">pathType:</span> <span class="string">Prefix</span></span><br><span class="line">        <span class="attr">backend:</span></span><br><span class="line">          <span class="attr">serviceName:</span> <span class="string">example-service</span></span><br><span class="line">          <span class="attr">servicePort:</span> <span class="number">80</span></span><br></pre></td></tr></table></figure>
+<p>在 1.18 加入 <code>IngressClass</code> 之前，需要在 Ingess 资源中使用 <code>kubernetes.io/ingress.class</code> 注解来指定 Ingress 控制器。在没有官方定义的情况下，这个注解被大量的 Ingress 控制器所支持。现在是时候淘汰他了。</p>
+<p>可以使用 <code>ingressclass.kubernetes.io/is-default-class</code> 注解，将其设置为 <code>True</code>，就代表所在的 <code>IngressClass</code> 为缺省控制器。没有显示指定 <code>IngressClassName</code> 的新的 Ingress 资源都会使用该控制器。</p>
 
     </div>
 
@@ -541,7 +548,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Background"><span class="nav-number">1.</span> <span class="nav-text">Background</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Ingress"><span class="nav-number">2.</span> <span class="nav-text">Ingress</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#组成模块"><span class="nav-number">2.1.</span> <span class="nav-text">组成模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#语法详解"><span class="nav-number">2.2.</span> <span class="nav-text">语法详解</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Ingress-Rules"><span class="nav-number">2.2.1.</span> <span class="nav-text">Ingress Rules</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#DefaultBackend"><span class="nav-number">2.2.2.</span> <span class="nav-text">DefaultBackend</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Path-Types"><span class="nav-number">2.3.</span> <span class="nav-text">Path Types</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Traefik实战"><span class="nav-number">3.</span> <span class="nav-text">Traefik实战</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#前期准备"><span class="nav-number">3.1.</span> <span class="nav-text">前期准备</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#启用RBAC"><span class="nav-number">3.2.</span> <span class="nav-text">启用RBAC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#部署Traefik"><span class="nav-number">3.3.</span> <span class="nav-text">部署Traefik</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为外部访问创建NodePorts"><span class="nav-number">3.4.</span> <span class="nav-text">为外部访问创建NodePorts</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实现按域名的路由"><span class="nav-number">3.5.</span> <span class="nav-text">实现按域名的路由</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Background"><span class="nav-number">1.</span> <span class="nav-text">Background</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Ingress"><span class="nav-number">2.</span> <span class="nav-text">Ingress</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#组成模块"><span class="nav-number">2.1.</span> <span class="nav-text">组成模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#语法详解"><span class="nav-number">2.2.</span> <span class="nav-text">语法详解</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Ingress-Rules"><span class="nav-number">2.2.1.</span> <span class="nav-text">Ingress Rules</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#DefaultBackend"><span class="nav-number">2.2.2.</span> <span class="nav-text">DefaultBackend</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Path-Types"><span class="nav-number">2.3.</span> <span class="nav-text">Path Types</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Traefik实战"><span class="nav-number">3.</span> <span class="nav-text">Traefik实战</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#前期准备"><span class="nav-number">3.1.</span> <span class="nav-text">前期准备</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#启用RBAC"><span class="nav-number">3.2.</span> <span class="nav-text">启用RBAC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#部署Traefik"><span class="nav-number">3.3.</span> <span class="nav-text">部署Traefik</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为外部访问创建NodePorts"><span class="nav-number">3.4.</span> <span class="nav-text">为外部访问创建NodePorts</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实现按域名的路由"><span class="nav-number">3.5.</span> <span class="nav-text">实现按域名的路由</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Ingress-Class"><span class="nav-number">4.</span> <span class="nav-text">Ingress Class</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -556,7 +563,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">146</span>
+          <span class="site-state-item-count">153</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -568,7 +575,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">207</span>
+        <span class="site-state-item-count">212</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -636,13 +643,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">1.5m</span>
+    <span title="站点总字数">1.6m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">46:02</span>
+    <span title="站点阅读时长">49:11</span>
 </div>
 
         

@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Service Mesh 中 Sidecar 运维一直是一个比较棘手的问题，数据平面的 Sidecar 升级是常有的事情，如何在升级 Sidecar（MOSN）的时候而不影响业务，对于存量的长连接如何迁移，本文将为你介绍 MOSN 的解决之道。">
+<meta name="keywords" content="envoy,service mesh,sidecar,hot restart">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Service Mesh】Sidecar Hot Restart">
+<meta property="og:url" content="http://houmin.cc/posts/dc2ceb3/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="Service Mesh 中 Sidecar 运维一直是一个比较棘手的问题，数据平面的 Sidecar 升级是常有的事情，如何在升级 Sidecar（MOSN）的时候而不影响业务，对于存量的长连接如何迁移，本文将为你介绍 MOSN 的解决之道。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/reqeust-smooth-upgrade-process.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/normal-process.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/interaction-process.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/interaction-process-timeline.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/long-connection-migrating-process.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/remaining-responses-migrating-process.png">
+<meta property="og:updated_time" content="2020-12-15T11:35:01.273Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/reqeust-smooth-upgrade-process.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/dc2ceb3/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Service Mesh】Sidecar Hot Restart | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/dc2ceb3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Service Mesh】Sidecar Hot Restart
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-26 15:25:42" itemprop="dateCreated datePublished" datetime="2020-11-26T15:25:42+08:00">2020-11-26</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/dc2ceb3/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/dc2ceb3/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>9.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>18 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Service Mesh 中 Sidecar 运维一直是一个比较棘手的问题，数据平面的 Sidecar 升级是常有的事情，如何在升级 Sidecar（MOSN）的时候而不影响业务，对于存量的长连接如何迁移，本文将为你介绍 MOSN 的解决之道。</p>
+<a id="more"></a>
+<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>本文介绍 MOSN 支持平滑升级的原因和解决方案，对于平滑升级的一些基础概念，大家可以通过 <a href="https://ms2008.github.io/2019/12/28/hot-upgrade/" target="_blank" rel="external nofollow noopener noreferrer">Nginx vs Enovy vs Mosn 平滑升级原理解析</a>了解。</p>
+<p>先简单介绍一下为什么 Nginx 和 Envoy 不需要具备 MOSN 这样的连接无损迁移方案，主要还是跟业务场景相关，Nginx 和 Envoy 主要支持的是 HTTP1 和 HTTP2 协议，HTTP1使用 connection: Close，HTTP2 使用 Goaway Frame 都可以让 Client 端主动断链接，然后新建链接到新的 New process，但是针对 Dubbo、SOFA PRC 等常见的多路复用协议，它们是没有控制帧，Old process 的链接如果断了就会影响请求的。</p>
+<p>一般的升级做法就是切走应用的流量，比如自己UnPub掉服务，等待一段时间没有请求之后，升级MOSN，升级好之后再Pub服务，整个过程比较耗时，并且会有一段时间是不提供服务的，还要考虑应用的水位，在大规模场景下，就很难兼顾评估。MOSN 为了满足自身业务场景，开发了长连接迁移方案，把这条链接迁移到 New process 上，整个过程对 Client 透明，不需要重新建链接，达到请求无损的平滑升级。</p>
+<p><img alt="MOSN 的请求无损的平滑升级过程" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/reqeust-smooth-upgrade-process.png"></p>
+<h2 id="正常流程"><a href="#正常流程" class="headerlink" title="正常流程"></a>正常流程</h2><p><img alt="正常流程" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/normal-process.png"></p>
+<ol>
+<li>Client 发送请求 Request 到 MOSN</li>
+<li>MOSN 转发请求 Request 到 Server</li>
+<li>Server 回复响应 Response 到 MOSN</li>
+<li>MOSN 回复响应 Response 到 Client</li>
+</ol>
+<p>上图简单介绍了一个请求的正常流程，我们后面需要迁移的是 TCP1 链接，也就是 Client 到 MOSN 的连接，MOSN 到 Server 的链接 TCP2 不需要迁移，因为 MOSN 访问 Server 是根据 LoadBalance 选择，我们可以主动控制断链建链。</p>
+<h2 id="平滑升级流程"><a href="#平滑升级流程" class="headerlink" title="平滑升级流程"></a>平滑升级流程</h2><h3 id="触发条件"><a href="#触发条件" class="headerlink" title="触发条件"></a>触发条件</h3><p>有两个方式可以触发平滑升级流程：</p>
+<ol>
+<li>MOSN 对 SIGHUP 做了监听，发送 SIGHUP 信号给 MOSN 进程，通过 ForkExec 生成一个新的 MOSN 进程。</li>
+<li>直接重新启动一个新 MOSN 进程。</li>
+</ol>
+<p>为什么提供两种方式？最开始我们支持的是方法1，也就是 nginx 和 Envoy 使用的方式，这个在虚拟机或者容器内替换 MOSN 二级制来升级是可行的，但是我们的场景需要满足容器间的升级，所以需要新拉起一个容器，就需要重新启动一个新的 MOSN 进程来做平滑升级，所以后续又支持了方法2。容器间升级还需要 operator 的支持，本文不展开叙述。</p>
+<h3 id="交互流程"><a href="#交互流程" class="headerlink" title="交互流程"></a>交互流程</h3><p><img alt="交互流程" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/interaction-process.png"></p>
+<p><img alt="交互流程时序图" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/interaction-process-timeline.png"></p>
+<p>首先，老的 MOSN 在启动最后阶段会启动一个协程运行 <code>ReconfigureHandler()</code> 函数监听一个 Domain Socket（<code>reconfig.sock</code>）, 该接口的作用是让新的 MOSN 来感知是否存在老的 MOSN。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">ReconfigureHandler</span><span class="params">()</span></span> &#123;</span><br><span class="line">    l, err := net.Listen(<span class="string">"unix"</span>, types.ReconfigureDomainSocket)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        uc, err := ul.AcceptUnix()</span><br><span class="line">        _, err = uc.Write([]<span class="keyword">byte</span>&#123;<span class="number">0</span>&#125;)</span><br><span class="line">        reconfigure(<span class="literal">false</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>触发平滑升级流程的两种方式最终都是启动一个新的 MOSN 进程，然后调用<code>GetInheritListeners()</code>，通过 <code>isReconfigure()</code> 函数来判断本机是否存在一个老的 MOSN（就是判断是否存在 <code>reconfig.sock</code> 监听），如果存在一个老的 MOSN，就进入迁移流程，反之就是正常的启动流程。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 保留了核心流程</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GetInheritListeners</span><span class="params">()</span> <span class="params">([]net.Listener, net.Conn, error)</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> !isReconfigure() &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, <span class="literal">nil</span>, <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    l, err := net.Listen(<span class="string">"unix"</span>, types.TransferListenDomainSocket)</span><br><span class="line">    uc, err := ul.AcceptUnix()</span><br><span class="line">    _, oobn, _, _, err := uc.ReadMsgUnix(buf, oob)</span><br><span class="line">    file := os.NewFile(fd, <span class="string">""</span>)</span><br><span class="line">    fileListener, err := net.FileListener(file)</span><br><span class="line">    <span class="keyword">return</span> listeners, uc, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果进入迁移流程，新的 MOSN 将监听一个新的 Domain Socket（<code>listen.sock</code>），用于老的 MOSN 传递 listen FD 到新的 MOSN。FD 的传递使用了sendMsg 和 recvMsg。在收到 listen FD 之后，调用 <code>net.FileListener()</code> 函数生产一个 Listener。此时，新老 MOSN 都同时拥有了相同的 Listen 套接字。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// FileListener returns a copy of the network listener corresponding</span></span><br><span class="line"><span class="comment">// to the open file f.</span></span><br><span class="line"><span class="comment">// It is the caller's responsibility to close ln when finished.</span></span><br><span class="line"><span class="comment">// Closing ln does not affect f, and closing f does not affect ln.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">FileListener</span><span class="params">(f *os.File)</span> <span class="params">(ln Listener, err error)</span></span> &#123;</span><br><span class="line">    ln, err = fileListener(f)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        err = &amp;OpError&#123;Op: <span class="string">"file"</span>, Net: <span class="string">"file+net"</span>, Source: <span class="literal">nil</span>, Addr: fileAddr(f.Name()), Err: err&#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里的迁移和 Nginx 还是有一些区别，Nginx 是 fork 的方式，子进程自动就继承了 listen FD，MOSN 是新启动的进程，不存在父子关系，所以需要通过 sendMsg 的方式来传递。</p>
+<p>在进入迁移流程和 Listen 的迁移过程中，一共使用了两个 Domain Socket：</p>
+<ul>
+<li><code>reconfig.sock</code> 是 Old MOSN 监听，用于 New MOSN 来判断是否存在</li>
+<li><code>listen.sock</code> 是 New MOSN 监听，用于 Old MOSN 传递 listen FD</li>
+</ul>
+<p>两个 sock 其实是可以复用的，也可以用 <code>reconfig.sock</code> 进行 listen 的传递，由于一些历史原因搞了两个，后续可以优化为一个，让代码更精简易读。</p>
+<p>这儿再看看 Old MOSN 的处理，在收到 New MOSN 的通知之后，将进入<code>reconfigure(false)</code> 流程，首先就是调用 <code>sendInheritListeners()</code> 传递 listen FD，原因上面内容已经描述，最后调用 <code>WaitConnectionsDone()</code> 进入存量长链接的迁移流程。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 保留了核心流程</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reconfigure</span><span class="params">(start <span class="keyword">bool</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> start &#123;</span><br><span class="line">        startNewMosn()</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// transfer listen fd</span></span><br><span class="line">    <span class="keyword">if</span> notify, err = sendInheritListeners(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Wait for all connections to be finished</span></span><br><span class="line">    WaitConnectionsDone(GracefulTimeout)</span><br><span class="line"></span><br><span class="line">    os.Exit(<span class="number">0</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在 Listen FD 迁移之后，New MOSN 通过配置启动，然后在最后启动一个协程运行<code>TransferServer()</code>，将监听一个新的 <code>DomainSocket（conn.sock）</code>，用于后续接收 Old MOSN 的长连接迁移。迁移的函数是 <code>transferHandler()</code></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TransferServer</span><span class="params">(handler types.ConnectionHandler)</span></span> &#123;</span><br><span class="line">    l, err := net.Listen(<span class="string">"unix"</span>, types.TransferConnDomainSocket)</span><br><span class="line"></span><br><span class="line">    utils.GoWithRecover(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="keyword">for</span> &#123;</span><br><span class="line">            c, err := l.Accept()</span><br><span class="line">            <span class="keyword">go</span> transferHandler(c, handler, &amp;transferMap)</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;, <span class="literal">nil</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Old MOSN 将通过 <code>transferRead()</code> 和 <code>transferWrite()</code> 进入最后的长链接迁移流程，下面主要分析这块内容。</p>
+<h3 id="长连接迁移流程"><a href="#长连接迁移流程" class="headerlink" title="长连接迁移流程"></a>长连接迁移流程</h3><p><img alt="长连接迁移过程" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/long-connection-migrating-process.png"></p>
+<p>首先先粗略看一下新请求的迁移流程。</p>
+<ol>
+<li>Client 发送请求到 MOSN</li>
+<li>MOSN 通过 domain socket(conn.sock) 把 TCP1 的 FD 和连接的状态数据发送给 New MOSN</li>
+<li>New MOSN 接受 FD 和请求数据创建新的 Conection 结构，然后把 Connection id 传给 MOSN，New MOSN 此时就拥有了 TCP1 的一个拷贝。</li>
+<li>New MOSN 通过 LB 选取一个新的 Server，建立 TCP3 连接，转发请求到 Server</li>
+<li>Server 回复响应到 New MOSN</li>
+<li>New MOSN 通过 MOSN 传递来的 TCP1 的拷贝，回复响应到 Client</li>
+</ol>
+<p>之前的 <code>WaitConnectionsDone()</code> 函数中，<code>s.stopChan</code> 已经关闭，在链接的 ReadLoop 中，将设置一个 <code>[TransferTimeout, 2 * TransferTimeout]</code> 的随机时间进入迁移流程，随机数主要是为了打散每个 Client 的 TCP 连接迁移时机，让迁移更平滑。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *connection)</span> <span class="title">startReadLoop</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> transferTime time.Time</span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        <span class="keyword">select</span> &#123;</span><br><span class="line">        <span class="keyword">case</span> &lt;-c.stopChan:</span><br><span class="line">            <span class="keyword">if</span> transferTime.IsZero() &#123;</span><br><span class="line">                <span class="keyword">if</span> c.transferCallbacks != <span class="literal">nil</span> &amp;&amp; c.transferCallbacks() &#123;</span><br><span class="line">                    randTime := time.Duration(rand.Intn(<span class="keyword">int</span>(TransferTimeout.Nanoseconds())))</span><br><span class="line">                    transferTime = time.Now().Add(TransferTimeout).Add(randTime)</span><br><span class="line">                    log.DefaultLogger.Infof(<span class="string">"[network] [read loop] transferTime: Wait %d Second"</span>, (TransferTimeout+randTime)/<span class="number">1e9</span>)</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    <span class="comment">// set a long time, not transfer connection, wait mosn exit.</span></span><br><span class="line">                    transferTime = time.Now().Add(<span class="number">10</span> * TransferTimeout)</span><br><span class="line">                    log.DefaultLogger.Infof(<span class="string">"[network] [read loop] not support transfer connection, Connection = %d, Local Address = %+v, Remote Address = %+v"</span>,</span><br><span class="line">                        c.id, c.rawConnection.LocalAddr(), c.RemoteAddr())</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> transferTime.Before(time.Now()) &#123;</span><br><span class="line">                    c.transfer()</span><br><span class="line">                    <span class="keyword">return</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br></pre></td></tr></table></figure>
+<p>在等待一个随机时间之后，<code>c.tranfer()</code> 将进入迁移流程，<code>c.notifyTransfer()</code> 的作用是暂停 write 操作，在迁移 read 操作的时候，不能有 write 操作，因为两个进程 MOSN 同时都做 write，会导致数据错乱。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *connection)</span> <span class="title">transfer</span><span class="params">()</span></span> &#123;</span><br><span class="line">    c.notifyTransfer()</span><br><span class="line">    id, _ := transferRead(c)</span><br><span class="line">    c.transferWrite(id)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后进入的是 <code>transferRead()</code>，这个函数的作用就是把连接的 FD 和状态数据通过 <code>conn.sock</code>传递给 New MOSN，跟之前迁移 Listen FD 时方式一样，NEW MOSN 在成功处理之后会返回一个 ID，这个 ID 是 NEW MOSN 新建立的 Connection ID，这个 ID 后面会用到。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// old mosn transfer readloop</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">transferRead</span><span class="params">(c *connection)</span> <span class="params">(<span class="keyword">uint64</span>, error)</span></span> &#123;</span><br><span class="line">    unixConn, err := net.Dial(<span class="string">"unix"</span>, types.TransferConnDomainSocket)</span><br><span class="line"></span><br><span class="line">    file, tlsConn, err := transferGetFile(c)</span><br><span class="line"></span><br><span class="line">    uc := unixConn.(*net.UnixConn)</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// send type and TCP FD</span></span><br><span class="line">    err = transferSendType(uc, file)</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// send header + buffer + TLS</span></span><br><span class="line">    err = transferReadSendData(uc, tlsConn, c.readBuffer, log.DefaultLogger)</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// recv ID</span></span><br><span class="line">    id := transferRecvID(uc)</span><br><span class="line">    <span class="keyword">return</span> id, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们构造了一个简单的读迁移协议, 主要包括了 TCP 原始数据长度，TLS 数据长度，TCP 原始数据，TLS 数据。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> *  transfer read protocol</span></span><br><span class="line"><span class="comment"> *  header (8 bytes) + (readBuffer data) + TLS</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * 0                       4                       8</span></span><br><span class="line"><span class="comment"> * +-----+-----+-----+-----+-----+-----+-----+-----+</span></span><br><span class="line"><span class="comment"> * |      data length      |     TLS length        |</span></span><br><span class="line"><span class="comment"> * +-----+-----+-----+-----+-----+-----+-----+-----+</span></span><br><span class="line"><span class="comment"> * |                     data                      |</span></span><br><span class="line"><span class="comment"> * +-----+-----+-----+-----+-----+-----+-----+-----+</span></span><br><span class="line"><span class="comment"> * |                     TLS                       |</span></span><br><span class="line"><span class="comment"> * +-----+-----+-----+-----+-----+-----+-----+-----+</span></span><br><span class="line"><span class="comment"> *</span></span><br></pre></td></tr></table></figure>
+<p>现在看下 New MOSN 收到迁移请求之后的处理，它会针对每个迁移请求会启动一个协程运行 <code>transferHandler()</code> 函数, 函数会根据读取的协议判断是读迁移还是写迁移，我们这儿先介绍读迁移，New MOSN 会调用 transferNewConn 把 Old MOSN 传递过来的 FD 和数据包重新生成一个新的 Connection 结构体，并把生成的新的 connection ID 传递给 Old MOSN。</p>
+<p>此后，New MOSN 将从该 TCP 连接读取数据，开始正常的业务请求流程。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">transferHandler</span><span class="params">(c net.Conn, handler types.ConnectionHandler, transferMap *sync.Map)</span></span> &#123;</span><br><span class="line">    <span class="comment">// recv type</span></span><br><span class="line">    conn, err := transferRecvType(uc)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        log.DefaultLogger.Errorf(<span class="string">"[network] [transfer] [handler] transferRecvType error :%v"</span>, err)</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> conn != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="comment">// transfer read</span></span><br><span class="line">        <span class="comment">// recv header + buffer</span></span><br><span class="line">        dataBuf, tlsBuf, err := transferReadRecvData(uc)</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            log.DefaultLogger.Errorf(<span class="string">"[network] [transfer] [handler] transferRecvData error :%v"</span>, err)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">        connection := transferNewConn(conn, dataBuf, tlsBuf, handler, transferMap)</span><br><span class="line">        <span class="keyword">if</span> connection != <span class="literal">nil</span> &#123;</span><br><span class="line">            transferSendID(uc, connection.id)</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            transferSendID(uc, transferErr)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// transfer write</span></span><br><span class="line">        <span class="comment">// recv header + buffer</span></span><br><span class="line">        id, buf, err := transferWriteRecvData(uc)</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            log.DefaultLogger.Errorf(<span class="string">"[network] [transfer] [handler] transferRecvData error :%v"</span>, err)</span><br><span class="line">        &#125;</span><br><span class="line">        connection := transferFindConnection(transferMap, <span class="keyword">uint64</span>(id))</span><br><span class="line">        <span class="keyword">if</span> connection == <span class="literal">nil</span> &#123;</span><br><span class="line">            log.DefaultLogger.Errorf(<span class="string">"[network] [transfer] [handler] transferFindConnection failed, id = %d"</span>, id)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">        err = transferWriteBuffer(connection, buf)</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            log.DefaultLogger.Errorf(<span class="string">"[network] [transfer] [handler] transferWriteBuffer error :%v"</span>, err)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>此后，Old MOSN 不再读取该 TCP1 连接上的数据，全部由 New MOSN 来读取 TCP1 上的数据并处理，对于新的请求，整个迁移过程就已经完成。</p>
+<h3 id="残留响应迁移流程"><a href="#残留响应迁移流程" class="headerlink" title="残留响应迁移流程"></a>残留响应迁移流程</h3><p><img alt="残留响应迁移过程" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/remaining-responses-migrating-process.png"></p>
+<p>大家想想为什么还有残留响应的迁移流程？因为多路复用协议，在之前读连接迁移流程的时候，TCP2 上还有之前残留的响应需要回复给Client，如果同时 MOSN 和 New MOSN 都进行 Write 操作 TCP1，数据可能会乱序，所以需要让New MOSN来统一处理之前 TCP2 上残留的响应。</p>
+<ol>
+<li>Server 回复残留的响应到 MOSN</li>
+<li>MOSN 把之前从 New MOSN 获取的 Connection id 和响应数据，通过 domain socket(conn.sock) 传递给 New MOSN</li>
+<li>New MOSN 通过 id 查询 TCP1 连接，回复响应到 Client</li>
+</ol>
+<p>在 <code>transferRead()</code> 之后，就进入了 <code>transferWrite()</code> 阶段，该阶段会把需要 write 的数据包和之前 New MOSN 传回来的 Connection ID 一并传给 New MOSN。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// old mosn transfer writeloop</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">transferWrite</span><span class="params">(c *connection, id <span class="keyword">uint64</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    unixConn, err := net.Dial(<span class="string">"unix"</span>, types.TransferConnDomainSocket)</span><br><span class="line"></span><br><span class="line">    uc := unixConn.(*net.UnixConn)</span><br><span class="line">    err = transferSendType(uc, <span class="literal">nil</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// build net.Buffers to IoBuffer</span></span><br><span class="line">    buf := transferBuildIoBuffer(c)</span><br><span class="line">    <span class="comment">// send header + buffer</span></span><br><span class="line">    err = transferWriteSendData(uc, <span class="keyword">int</span>(id), buf)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        log.DefaultLogger.Errorf(<span class="string">"[network] [transfer] [write] transferWrite failed: %v"</span>, err)</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们构造了一个简单的写迁移协议, 主要包括了TCP原始数据长度, connection ID，TCP原始数据。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> *  transfer write protocol</span></span><br><span class="line"><span class="comment"> *  header (8 bytes) + (writeBuffer data)</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * 0                       4                       8</span></span><br><span class="line"><span class="comment"> * +-----+-----+-----+-----+-----+-----+-----+-----+</span></span><br><span class="line"><span class="comment"> * |      data length      |    connection  ID     |</span></span><br><span class="line"><span class="comment"> * +-----+-----+-----+-----+-----+-----+-----+-----+</span></span><br><span class="line"><span class="comment"> * |                     data                      |</span></span><br><span class="line"><span class="comment"> * +-----+-----+-----+-----+-----+-----+-----+-----+</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment">**/</span></span><br></pre></td></tr></table></figure>
+<p>在New MOSN的transferHandler()函数中，会判断出写迁移协议，然后 <code>transferFindConnection()</code> 函数通过 connection ID 找到 TCP1 连接，然后直接把数据写入即可。</p>
+<p>这儿需要说明一点，新请求Request的转发已经使用了 TCP3，TCP2 上只会有之前请求的 Response 响应，如果在整个迁移期间 2 * TransferTimeout 都没有回复响应，那么这个请求将会超时失败。</p>
+<h3 id="连接状态数据"><a href="#连接状态数据" class="headerlink" title="连接状态数据"></a>连接状态数据</h3><p>在连接迁移时，除了TCP FD的迁移，还有连接状态的迁移，这样New MOSN才知道怎样去初始化这个新的连接。</p>
+<p>主要有如下几个状态：</p>
+<p><strong>读缓存</strong></p>
+<p>表示在迁移时，已经从 TCP 读取的数据，还没有被应用层处理的数据。</p>
+<p><strong>写数据</strong></p>
+<p>在迁移之后，MOSN 收到的响应数据。</p>
+<p><strong>TLS状态迁移</strong></p>
+<p>如果是 TLS 加密请求，需要迁移 TLS 的状态，有如下状态需要迁移：</p>
+<ol>
+<li>加密秘钥</li>
+<li>Seq序列</li>
+<li>读缓存数据（加密和未加密）</li>
+<li>cipher类型</li>
+<li>TLS版本</li>
+</ol>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> TransferTLSInfo <span class="keyword">struct</span> &#123;</span><br><span class="line">    Vers         <span class="keyword">uint16</span></span><br><span class="line">    CipherSuite  <span class="keyword">uint16</span></span><br><span class="line">    MasterSecret []<span class="keyword">byte</span></span><br><span class="line">    ClientRandom []<span class="keyword">byte</span></span><br><span class="line">    ServerRandom []<span class="keyword">byte</span></span><br><span class="line">    InSeq        [<span class="number">8</span>]<span class="keyword">byte</span></span><br><span class="line">    OutSeq       [<span class="number">8</span>]<span class="keyword">byte</span></span><br><span class="line">    RawInput     []<span class="keyword">byte</span></span><br><span class="line">    Input        []<span class="keyword">byte</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>长连接的 FD 迁移是比较常规的操作，sendMsg 和 connection repair 都可以。</p>
+<p>在整个过程中最麻烦的是应用层数据的迁移，一般想法就是把应用层的数据结构等都迁移到新的进程，比如已经读取的协议 HEAD 等结构体，但这就导致你的迁移过程会很复杂，每个协议都需要单独处理。</p>
+<p>MOSN 的方案是把迁移放到了 IO 层，不关心应用层具体是什么协议，我们迁移最原始的 TCP 数据包，然后让 New MOSN 来 codec 这个数据包来拼装 HEAD 等结构体，这个过程是标准的处理流程了，这样就保证迁移对整个协议解析是透明的，只要这个协议是无状态的，这个迁移框架就可以自动支持。</p>
+<p>最后的残留响应迁移流程可能不太好理解，为什么不等所有响应完成之后才开始迁移，就不需要这个流程了？是因为在多路复用协议场景下，请求一直在发送，你不能总是找到一个时间点所有响应都完成了。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://mosn.io/docs/concept/smooth-upgrade/" target="_blank" rel="external nofollow noopener noreferrer">https://mosn.io/docs/concept/smooth-upgrade/</a></li>
+<li><a href="https://blog.envoyproxy.io/envoy-hot-restart-1d16b14555b5" target="_blank" rel="external nofollow noopener noreferrer">https://blog.envoyproxy.io/envoy-hot-restart-1d16b14555b5</a></li>
+<li><a href="https://segmentfault.com/a/1190000018182418" target="_blank" rel="external nofollow noopener noreferrer">https://segmentfault.com/a/1190000018182418</a></li>
+<li><a href="https://mp.weixin.qq.com/s/lo23CB0Ibp2VEkBT_VgPsg" target="_blank" rel="external nofollow noopener noreferrer">https://mp.weixin.qq.com/s/lo23CB0Ibp2VEkBT_VgPsg</a></li>
+<li><a href="https://iwiki.woa.com/pages/viewpage.action?pageId=310748830" target="_blank" rel="external nofollow noopener noreferrer">https://iwiki.woa.com/pages/viewpage.action?pageId=310748830</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/1f0c8567/" rel="bookmark">【Service Mesh】Envoy Sidecar 流量劫持</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/151719f0/" rel="bookmark">【Service Mesh】Istio 流量控制</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/ac3e3d15/" rel="bookmark">【Service Mesh】开篇</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/8607f22d/" rel="bookmark">【Service Mesh】Istio Sidecar Injector</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/7beb34d2/" rel="bookmark">【Service Mesh】Envoy 入门</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/dc2ceb3/" title="【Service Mesh】Sidecar Hot Restart">http://houmin.cc/posts/dc2ceb3/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/envoy/" rel="tag"><i class="fa fa-tag"></i> envoy</a>
+              <a href="/tags/service-mesh/" rel="tag"><i class="fa fa-tag"></i> service mesh</a>
+              <a href="/tags/sidecar/" rel="tag"><i class="fa fa-tag"></i> sidecar</a>
+              <a href="/tags/hot-restart/" rel="tag"><i class="fa fa-tag"></i> hot restart</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/7beb34d2/" rel="next" title="【Service Mesh】Envoy 入门">
+                  <i class="fa fa-chevron-left"></i> 【Service Mesh】Envoy 入门
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/1f0c8567/" rel="prev" title="【Service Mesh】Envoy Sidecar 流量劫持">
+                  【Service Mesh】Envoy Sidecar 流量劫持 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#正常流程"><span class="nav-number">2.</span> <span class="nav-text">正常流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#平滑升级流程"><span class="nav-number">3.</span> <span class="nav-text">平滑升级流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#触发条件"><span class="nav-number">3.1.</span> <span class="nav-text">触发条件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#交互流程"><span class="nav-number">3.2.</span> <span class="nav-text">交互流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#长连接迁移流程"><span class="nav-number">3.3.</span> <span class="nav-text">长连接迁移流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#残留响应迁移流程"><span class="nav-number">3.4.</span> <span class="nav-text">残留响应迁移流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#连接状态数据"><span class="nav-number">3.5.</span> <span class="nav-text">连接状态数据</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">5.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">153</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">212</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.6m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">49:11</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

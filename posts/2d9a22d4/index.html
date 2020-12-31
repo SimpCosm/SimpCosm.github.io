@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="pilot-agent 是什么？ 　当我们执行 kubectl apply -f &amp;lt;(~istioctl kube-inject -f sleep.yaml)的时候，k8s就会帮我们建立3个容器。 1234[root@izwz9cffi0prthtem44cp9z ~]# docker ps |grep sleep8e0de7294922        istio&#x2F;proxy">
+<meta name="keywords" content="service mesh,istio,pilot">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Service Mesh】Istio Pilot Agent">
+<meta property="og:url" content="http://houmin.cc/posts/2d9a22d4/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="pilot-agent 是什么？ 　当我们执行 kubectl apply -f &amp;lt;(~istioctl kube-inject -f sleep.yaml)的时候，k8s就会帮我们建立3个容器。 1234[root@izwz9cffi0prthtem44cp9z ~]# docker ps |grep sleep8e0de7294922        istio&#x2F;proxy">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://segmentfault.com/img/remote/1460000015171628?w=1069&amp;h=416">
+<meta property="og:image" content="https://segmentfault.com/img/remote/1460000015171629?w=778&amp;h=294">
+<meta property="og:image" content="https://qiankunli.github.io/public/upload/mesh/pilot_agent.png">
+<meta property="og:updated_time" content="2020-12-15T12:34:34.809Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://segmentfault.com/img/remote/1460000015171628?w=1069&amp;h=416">
+
+<link rel="canonical" href="http://houmin.cc/posts/2d9a22d4/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Service Mesh】Istio Pilot Agent | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/2d9a22d4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Service Mesh】Istio Pilot Agent
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-29 19:43:44" itemprop="dateCreated datePublished" datetime="2020-11-29T19:43:44+08:00">2020-11-29</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/2d9a22d4/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/2d9a22d4/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>13k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>24 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <a id="more"></a><h2 id="pilot-agent-是什么？"><a href="#pilot-agent-是什么？" class="headerlink" title="pilot-agent 是什么？"></a>pilot-agent 是什么？</h2><blockquote>
+<p>　当我们执行 <code>kubectl apply -f &lt;(~istioctl kube-inject -f sleep.yaml)</code>的时候，k8s就会帮我们建立3个容器。</p>
+</blockquote><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[root@izwz9cffi0prthtem44cp9z ~]# docker ps |grep sleep</span><br><span class="line">8e0de7294922        istio<span class="built_in">/proxy </span>                                                              </span><br><span class="line">ccddc800b2a2        registry.cn-shenzhen.aliyuncs.com/jukylin/sleep                          </span><br><span class="line">990868aa4a42        registry-vpc.cn-shenzhen.aliyuncs.com/acs/pause-amd64:3.0</span><br></pre></td></tr></table></figure><a id="more"></a>
+
+
+<blockquote>
+<p>在这3个容器中，我们关注<code>istio/proxy</code>。这个容器运行着2个服务。<code>pilot-agent</code>就是接下来介绍的：如何管理envoy的生命周期。</p>
+</blockquote>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[<span class="symbol">root@</span>izwz9cffi0prthtem44cp9z ~]# docker exec -it <span class="number">8e0</span>de7294922 ps -ef</span><br><span class="line">UID        PID  PPID  C STIME TTY          TIME CMD</span><br><span class="line"><span class="number">1337</span>         <span class="number">1</span>     <span class="number">0</span>  <span class="number">0</span> May09 ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">49</span> /usr/local/bin/pilot-agent proxy</span><br><span class="line"><span class="number">1337</span>       <span class="number">567</span>     <span class="number">1</span>  <span class="number">1</span> <span class="number">09</span>:<span class="number">18</span> ?        <span class="number">00</span>:<span class="number">04</span>:<span class="number">42</span> /usr/local/bin/envoy -c /etc/ist</span><br></pre></td></tr></table></figure>
+<h2 id="为什么要用pilot-agent？"><a href="#为什么要用pilot-agent？" class="headerlink" title="为什么要用pilot-agent？"></a>为什么要用pilot-agent？</h2><blockquote>
+<p>envoy不直接和k8s，Consul，Eureka等这些平台交互，所以需要其他服务与它们对接，管理配置，pilot-agent就是其中一个 <strong>【控制面板】</strong>。</p>
+</blockquote>
+<h2 id="启动envoy"><a href="#启动envoy" class="headerlink" title="启动envoy"></a>启动envoy</h2><h4 id="加载配置"><a href="#加载配置" class="headerlink" title="加载配置"></a>加载配置</h4><blockquote>
+<p>在启动前 pilot-agent 会生成一个配置文件：/etc/istio/proxy/envoy-rev0.json：</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">istio.io/istio/pilot/pkg/proxy/envoy/v1/config.<span class="keyword">go</span> #<span class="number">88</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">BuildConfig</span><span class="params">(config meshconfig.ProxyConfig, pilotSAN []<span class="keyword">string</span>)</span> *<span class="title">Config</span></span> &#123;</span><br><span class="line">    ......</span><br><span class="line">    <span class="keyword">return</span> out</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>文件的具体内容可以直接查看容器里面的文件</p>
+</blockquote>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker exec -it <span class="number">8</span>e0de7294922 cat <span class="regexp">/etc/i</span>stio<span class="regexp">/proxy/</span>envoy-rev0.json</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>关于配置内容的含义可以看<a href="https://www.envoyproxy.io/docs/envoy/latest/configuration/overview/v2_overview" target="_blank" rel="external nofollow noopener noreferrer">官方的文档</a></p>
+</blockquote>
+<h4 id="启动参数"><a href="#启动参数" class="headerlink" title="启动参数"></a>启动参数</h4><blockquote>
+<p>一个二进制文件启动总会需要一些参数，envoy也不例外。</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">istio.io/istio/pilot/pkg/proxy/envoy/v1/watcher.<span class="keyword">go</span> #<span class="number">274</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(proxy envoy)</span> <span class="title">args</span><span class="params">(fname <span class="keyword">string</span>, epoch <span class="keyword">int</span>)</span> []<span class="title">string</span></span> &#123;</span><br><span class="line">    ......</span><br><span class="line">    <span class="keyword">return</span> startupArgs</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>envoy启动参数可以通过 <code>docker logs 8e0de7294922</code> 查看，下面是从终端截取envoy的参数。了解具体的参数含义<a href="https://www.envoyproxy.io/docs/envoy/latest/operations/cli" target="_blank" rel="external nofollow noopener noreferrer">官网文档</a>。</p>
+</blockquote>
+<figure class="highlight maxima"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">-c /etc/istio/proxy/envoy-rev0.json --<span class="built_in">restart</span>-epoch <span class="number">0</span></span><br><span class="line">--drain-<span class="built_in">time</span>-s <span class="number">45</span> --parent-shutdown-<span class="built_in">time</span>-s <span class="number">60</span></span><br><span class="line">--service-cluster sleep </span><br><span class="line">--service-node sidecar~<span class="number">172.00</span><span class="number">.00</span><span class="number">.000</span>~sleep-<span class="number">55b5877479</span>-rwcct.default~default.svc.cluster.<span class="built_in">local</span> </span><br><span class="line">--<span class="built_in">max</span>-obj-name-len <span class="number">189</span> -l info --v2-config-only</span><br></pre></td></tr></table></figure>
+<h4 id="启动envoy-1"><a href="#启动envoy-1" class="headerlink" title="启动envoy"></a>启动envoy</h4><blockquote>
+<p>pilot-agent 使用</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">exec.<span class="keyword">Command</span></span><br></pre></td></tr></table></figure>
+<p>启动envoy，并且会监听envoy的运行状态（如果envoy非正常退出，status 返回非nil，pilot-agent会有策略把envoy重新启动）。</p>
+<p><code>proxy.config.BinaryPath</code> 为envoy二进制文件路径：/usr/local/bin/envoy。</p>
+<p><code>args</code> 为上面介绍的envoy启动参数。</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">istio.io/istio/pilot/pkg/proxy/envoy/v1/watcher.<span class="keyword">go</span> #<span class="number">353</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(proxy envoy)</span> <span class="title">Run</span><span class="params">(config <span class="keyword">interface</span>&#123;&#125;, epoch <span class="keyword">int</span>, abort &lt;-<span class="keyword">chan</span> error)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    ......</span><br><span class="line">    <span class="comment">/* #nosec */</span></span><br><span class="line">    cmd := exec.Command(proxy.config.BinaryPath, args...)</span><br><span class="line">    cmd.Stdout = os.Stdout</span><br><span class="line">    cmd.Stderr = os.Stderr</span><br><span class="line">    <span class="keyword">if</span> err := cmd.Start(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    ......</span><br><span class="line">    done := <span class="built_in">make</span>(<span class="keyword">chan</span> error, <span class="number">1</span>)</span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      done &lt;- cmd.Wait()</span><br><span class="line">    &#125;()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">select</span> &#123;</span><br><span class="line">    <span class="keyword">case</span> err := &lt;-abort:</span><br><span class="line">      ......</span><br><span class="line">    <span class="keyword">case</span> err := &lt;-done:</span><br><span class="line">      <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="热更新envoy"><a href="#热更新envoy" class="headerlink" title="热更新envoy"></a>热更新envoy</h2><blockquote>
+<p>在这里我们只讨论pilot-agent如何让envoy热更新，至于如何去触发这步会在后面的文章介绍。</p>
+</blockquote>
+<h4 id="envoy热更新策略"><a href="#envoy热更新策略" class="headerlink" title="envoy热更新策略"></a>envoy热更新策略</h4><p><img alt="image" data-src="https://segmentfault.com/img/remote/1460000015171628?w=1069&amp;h=416"></p>
+<blockquote>
+<p>想详细了解envoy的热更新策略可以看官网博客</p>
+<p>Envoy hot restart</p>
+<p>。</p>
+<p>简单介绍下envoy热更新步骤：</p>
+</blockquote>
+<ol>
+<li>启动另外一个envoy2进程（Secondary process）</li>
+<li>envoy2通知envoy1（Primary process）关闭其管理的端口，由envoy2接管</li>
+<li>通过UDS把envoy1可用的listen sockets拿过来</li>
+<li>envoy2初始化成功，通知envoy1在一段时间内（<code>drain-time-s</code>）优雅关闭正在工作的请求</li>
+<li>到了时间（<code>parent-shutdown-time-s</code>），envoy2通知envoy1自行关闭</li>
+<li>envoy2升级为envoy1</li>
+</ol>
+<blockquote>
+<p>从上面的执行步骤来看，poilt-agent只负责启动另一个envoy进程，其他由envoy自行处理。</p>
+</blockquote>
+<h4 id="什么时候进行热更新？"><a href="#什么时候进行热更新？" class="headerlink" title="什么时候进行热更新？"></a>什么时候进行热更新？</h4><blockquote>
+<p>在poilt-agent启动的时候，会监听<code>/etc/certs/</code>目录下的文件，如果这个目录下的文件被修改或删除，poilt-agent就会通知envoy进行热更新。至于如何触发对这些文件进行修改和删除会在接下来的文章介绍。</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">istio.io/istio/pilot/pkg/proxy/envoy/v1/watcher.<span class="keyword">go</span> #<span class="number">177</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">watchCerts</span><span class="params">(ctx context.Context, certsDirs []<span class="keyword">string</span>, watchFileEventsFn watchFileEventsFn,</span></span></span><br><span class="line"><span class="function"><span class="params">    minDelay time.Duration, updateFunc <span class="keyword">func</span>()</span>)</span> &#123;</span><br><span class="line">    fw, err := fsnotify.NewWatcher()</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        log.Warnf(<span class="string">"failed to create a watcher for certificate files: %v"</span>, err)</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="keyword">if</span> err := fw.Close(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">            log.Warnf(<span class="string">"closing watcher encounters an error %v"</span>, err)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;()</span><br><span class="line"></span><br><span class="line">    <span class="comment">// watch all directories</span></span><br><span class="line">    <span class="keyword">for</span> _, d := <span class="keyword">range</span> certsDirs &#123;</span><br><span class="line">        <span class="keyword">if</span> err := fw.Watch(d); err != <span class="literal">nil</span> &#123;</span><br><span class="line">            log.Warnf(<span class="string">"watching %s encounters an error %v"</span>, d, err)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    watchFileEventsFn(ctx, fw.Event, minDelay, updateFunc)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="热更新启动参数"><a href="#热更新启动参数" class="headerlink" title="热更新启动参数"></a>热更新启动参数</h4><figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">-c /etc/istio/proxy/envoy-rev1.json --restart-epoch <span class="number">1</span></span><br><span class="line">--drain-time-s <span class="number">45</span> --parent-shutdown-time-s <span class="number">60</span></span><br><span class="line">--service-cluster sleep --service-node</span><br><span class="line">sidecar~<span class="number">172.00</span><span class="number">.00</span><span class="number">.000</span>~sleep<span class="number">-898</span>b65f84-pnsxr.<span class="section">default</span>~<span class="section">default</span>.svc.cluster.local </span><br><span class="line">--max-obj-name-len <span class="number">189</span> -l info</span><br><span class="line">--v2-config-only</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>热更新启动参数和第一次启动参数的不同的地方是 -c 和 —restart-epoch，其实-c 只是配置文件名不同，它们的内容是一样的。—restart-epoch 每次进行热更新的时候都会自增1，用于判断是进行热更新还是打开一个存在的envoy（这里的意思应该是第一次打开envoy）<br><a href="https://www.envoyproxy.io/docs/envoy/latest/operations/cli#cmdoption-restart-epoch" target="_blank" rel="external nofollow noopener noreferrer">具体看官方描述</a></p>
+</blockquote>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">istio.io/istio/pilot/pkg/proxy/agent<span class="selector-class">.go</span> <span class="number">#258</span></span><br><span class="line">func (<span class="selector-tag">a</span> *agent) reconcile() &#123;</span><br><span class="line">    ......</span><br><span class="line">    <span class="comment">// discover and increment the latest running epoch</span></span><br><span class="line">    epoch := <span class="selector-tag">a</span>.latestEpoch() + <span class="number">1</span></span><br><span class="line">    <span class="comment">// buffer aborts to prevent blocking on failing proxy</span></span><br><span class="line">    abortCh := make(chan error, MaxAborts)</span><br><span class="line">    <span class="selector-tag">a</span><span class="selector-class">.epochs</span>[epoch] = <span class="selector-tag">a</span>.desiredConfig</span><br><span class="line">    <span class="selector-tag">a</span><span class="selector-class">.abortCh</span>[epoch] = abortCh</span><br><span class="line">    <span class="selector-tag">a</span><span class="selector-class">.currentConfig</span> = <span class="selector-tag">a</span>.desiredConfig</span><br><span class="line">    go <span class="selector-tag">a</span>.waitForExit(<span class="selector-tag">a</span><span class="selector-class">.desiredConfig</span>, epoch, abortCh)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="从终端截取触发热更新的日志"><a href="#从终端截取触发热更新的日志" class="headerlink" title="从终端截取触发热更新的日志"></a>从终端截取触发热更新的日志</h4><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">2018</span><span class="number">-04</span><span class="number">-24</span>T13:<span class="number">59</span>:<span class="number">35.513160</span>Z    info    watchFileEvents: <span class="string">"/etc/certs//..2018_04_24_13_59_35.824521609"</span>: CREATE</span><br><span class="line"><span class="number">2018</span><span class="number">-04</span><span class="number">-24</span>T13:<span class="number">59</span>:<span class="number">35.513228</span>Z    info    watchFileEvents: <span class="string">"/etc/certs//..2018_04_24_13_59_35.824521609"</span>: MODIFY|ATTRIB</span><br><span class="line"><span class="number">2018</span><span class="number">-04</span><span class="number">-24</span>T13:<span class="number">59</span>:<span class="number">35.513283</span>Z    info    watchFileEvents: <span class="string">"/etc/certs//..data_tmp"</span>: RENAME</span><br><span class="line"><span class="number">2018</span><span class="number">-04</span><span class="number">-24</span>T13:<span class="number">59</span>:<span class="number">35.513347</span>Z    info    watchFileEvents: <span class="string">"/etc/certs//..data"</span>: CREATE</span><br><span class="line"><span class="number">2018</span><span class="number">-04</span><span class="number">-24</span>T13:<span class="number">59</span>:<span class="number">35.513372</span>Z    info    watchFileEvents: <span class="string">"/etc/certs//..2018_04_24_04_30_11.964751916"</span>: DELETE</span><br></pre></td></tr></table></figure>
+<h2 id="抢救envoy"><a href="#抢救envoy" class="headerlink" title="抢救envoy"></a>抢救envoy</h2><blockquote>
+<p>envoy是一个服务，既然是服务都不可能保证100%的可用，如果envoy不幸运宕掉了，那么pilot-agent如何进行抢救，保证envoy高可用？</p>
+</blockquote>
+<h4 id="获取退出状态"><a href="#获取退出状态" class="headerlink" title="获取退出状态"></a>获取退出状态</h4><blockquote>
+<p>在上面提到pilot-agent启动envoy后，会监听envoy的退出状态，发现非正常退出状态，就会抢救envoy。</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(proxy envoy)</span> <span class="title">Run</span><span class="params">(config <span class="keyword">interface</span>&#123;&#125;, epoch <span class="keyword">int</span>, abort &lt;-<span class="keyword">chan</span> error)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    ......</span><br><span class="line">    <span class="comment">// Set if the caller is monitoring envoy, for example in tests or if envoy runs in same</span></span><br><span class="line">    <span class="comment">// container with the app.</span></span><br><span class="line">    <span class="keyword">if</span> proxy.errChan != <span class="literal">nil</span> &#123;</span><br><span class="line">      <span class="comment">// Caller passed a channel, will wait itself for termination</span></span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        proxy.errChan &lt;- cmd.Wait()</span><br><span class="line">      &#125;()</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    done := <span class="built_in">make</span>(<span class="keyword">chan</span> error, <span class="number">1</span>)</span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      done &lt;- cmd.Wait()</span><br><span class="line">    &#125;()</span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="抢救envoy-1"><a href="#抢救envoy-1" class="headerlink" title="抢救envoy"></a>抢救envoy</h4><blockquote>
+<p>使用 kill -9 可以模拟envoy非正常退出状态。当出现非正常退出，pilot-agent的抢救机制会被触发。如果第一次抢救成功，那当然是好，如果失败了，pilot-agent会继续抢救，最多抢救10次，每次间隔时间为 2 n <em>100</em> time.Millisecond。超过10次都没有救活，pilit-agent就会放弃抢救，宣布死亡，并且退出istio/proxy，让k8s重新启动一个新容器。</p>
+</blockquote>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line">istio.io/istio/pilot/pkg/proxy/agent.go #164</span><br><span class="line">func (a *agent) Run(ctx context.Context) &#123;</span><br><span class="line">  <span class="params">...</span><span class="params">...</span></span><br><span class="line">  for &#123;</span><br><span class="line">    <span class="params">...</span><span class="params">...</span></span><br><span class="line">    <span class="keyword">select</span> &#123;</span><br><span class="line">        <span class="params">...</span><span class="params">...</span></span><br><span class="line">    <span class="keyword">case</span> status := &lt;<span class="params">-a.statusCh</span>:</span><br><span class="line">        <span class="params">...</span><span class="params">...</span></span><br><span class="line">      <span class="keyword">if</span> status.err == errAbort &#123;</span><br><span class="line">        <span class="comment">//pilot-agent通知退出 或 envoy非正常退出</span></span><br><span class="line">        <span class="keyword">log</span>.Infof(<span class="string">"Epoch %d aborted"</span>, status.epoch)</span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> status.err != nil &#123;</span><br><span class="line">        <span class="comment">//envoy非正常退出</span></span><br><span class="line">        <span class="keyword">log</span>.Warnf(<span class="string">"Epoch %d terminated with an error: %v"</span>, status.epoch, status.err)</span><br><span class="line">                <span class="params">...</span><span class="params">...</span></span><br><span class="line">        a.abortAll()</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">//正常退出</span></span><br><span class="line">        <span class="keyword">log</span>.Infof(<span class="string">"Epoch %d exited normally"</span>, status.epoch)</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="params">...</span><span class="params">...</span></span><br><span class="line">    <span class="keyword">if</span> status.err != nil &#123;</span><br><span class="line">      <span class="comment">// skip retrying twice by checking retry restart delay</span></span><br><span class="line">      <span class="keyword">if</span> a.retry.restart == nil &#123;</span><br><span class="line">        <span class="keyword">if</span> a.retry.budget &gt; <span class="number">0</span> &#123;</span><br><span class="line">          delayDuration := a.retry.InitialInterval * (<span class="number">1</span> &lt;&lt; uint(a.retry.MaxRetries<span class="params">-a.retry.budget</span>))</span><br><span class="line">          restart := time.Now().Add(delayDuration)</span><br><span class="line">          a.retry.restart = &amp;restart</span><br><span class="line">          a.retry.budget = a.retry.budget - <span class="number">1</span></span><br><span class="line">          <span class="keyword">log</span>.Infof(<span class="string">"Epoch %d: set retry delay to %v, budget to %d"</span>, status.epoch, delayDuration, a.retry.budget)</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="comment">//宣布死亡，退出istio/proxy</span></span><br><span class="line">          <span class="keyword">log</span>.Error(<span class="string">"Permanent error: budget exhausted trying to fulfill the desired configuration"</span>)</span><br><span class="line">          a.proxy.Panic(a.desiredConfig)</span><br><span class="line">          <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">log</span>.Debugf(<span class="string">"Epoch %d: restart already scheduled"</span>, status.epoch)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">case</span> &lt;<span class="params">-time.After</span>(delay):</span><br><span class="line">        <span class="params">...</span><span class="params">...</span></span><br><span class="line">    <span class="keyword">case</span> _, more := &lt;<span class="params">-ctx.Done</span>():</span><br><span class="line">        <span class="params">...</span><span class="params">...</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">istio.io/istio/pilot/pkg/proxy/agent.go #72</span><br><span class="line"><span class="built_in">var</span> (</span><br><span class="line">  errAbort = errors.<span class="literal">New</span>(<span class="string">"epoch aborted"</span>)</span><br><span class="line">  <span class="comment">// DefaultRetry configuration for proxies</span></span><br><span class="line">  DefaultRetry = Retry&#123;</span><br><span class="line">    MaxRetries:      <span class="number">10</span>,</span><br><span class="line">    InitialInterval: <span class="number">200</span> * time.Millisecond,</span><br><span class="line">  &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<h4 id="抢救日志"><a href="#抢救日志" class="headerlink" title="抢救日志"></a>抢救日志</h4><figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Epoch <span class="number">6</span>: <span class="keyword">set</span> retry <span class="built_in">delay</span> <span class="keyword">to</span> <span class="number">200</span>ms, budget <span class="keyword">to</span> <span class="number">9</span></span><br><span class="line">Epoch <span class="number">6</span>: <span class="keyword">set</span> retry <span class="built_in">delay</span> <span class="keyword">to</span> <span class="number">400</span>ms, budget <span class="keyword">to</span> <span class="number">8</span></span><br><span class="line">Epoch <span class="number">6</span>: <span class="keyword">set</span> retry <span class="built_in">delay</span> <span class="keyword">to</span> <span class="number">800</span>ms, budget <span class="keyword">to</span> <span class="number">7</span></span><br></pre></td></tr></table></figure>
+<h2 id="优雅关闭envoy"><a href="#优雅关闭envoy" class="headerlink" title="优雅关闭envoy"></a>优雅关闭envoy</h2><p><img alt="image" data-src="https://segmentfault.com/img/remote/1460000015171629?w=778&amp;h=294"></p>
+<blockquote>
+<p>服务下线或升级我们都希望它们能很平缓的进行，让用户无感知 ，避免打扰用户。这就要服务收到退出通知后，处理完正在执行的任务才关闭，而不是直接关闭。envoy是否支持优雅关闭？这需要k8s，pilot-agent也支持这种玩法。因为这存在一种关联关系k8s管理pilot-agent，pilot-agent管理envoy。</p>
+</blockquote>
+<h4 id="k8s让服务优雅退出"><a href="#k8s让服务优雅退出" class="headerlink" title="k8s让服务优雅退出"></a>k8s让服务优雅退出</h4><blockquote>
+<p>网上有篇博客总结了<a href="https://pracucci.com/graceful-shutdown-of-kubernetes-pods.html" target="_blank" rel="external nofollow noopener noreferrer">k8s优雅关闭pods</a>，我这边简单介绍下优雅关闭流程：</p>
+</blockquote>
+<ol>
+<li>k8s 发送 <strong>SIGTERM</strong> 信号到pods下所有服务的1号进程</li>
+<li>服务接收到信号后，优雅关闭任务，并退出</li>
+<li>过了一段时间（default 30s）,如果服务没有退出，k8s会发送 <strong>SIGKILL</strong> 信号，让容器强制退出。</li>
+</ol>
+<h4 id="pilot-agent-让envoy优雅退出"><a href="#pilot-agent-让envoy优雅退出" class="headerlink" title="pilot-agent 让envoy优雅退出"></a>pilot-agent 让envoy优雅退出</h4><ul>
+<li>pilot-agent接收k8s信号</li>
+</ul>
+<blockquote>
+<p>pilot-agent会接收syscall.SIGINT, syscall.SIGTERM，这2个信号都可以达到优雅关闭envoy的效果。</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">istio.io/istio/pkg/cmd/cmd.<span class="keyword">go</span> #<span class="number">29</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WaitSignal</span><span class="params">(stop <span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">    sigs := <span class="built_in">make</span>(<span class="keyword">chan</span> os.Signal, <span class="number">1</span>)</span><br><span class="line">    signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)</span><br><span class="line">    &lt;-sigs</span><br><span class="line">    <span class="built_in">close</span>(stop)</span><br><span class="line">    _ = log.Sync()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>通知子服务关闭envoy</li>
+</ul>
+<blockquote>
+<p>在golang有一个上下文管理包 <code>context</code>，这个包通过广播的方式通知各子服务执行关闭操作。</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">istio.io/istio/pilot/cmd/pilot-agent/main.<span class="keyword">go</span> #<span class="number">242</span></span><br><span class="line">ctx, cancel := context.WithCancel(context.Background())</span><br><span class="line"><span class="keyword">go</span> watcher.Run(ctx)</span><br><span class="line">stop := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span><br><span class="line">cmd.WaitSignal(stop)</span><br><span class="line">&lt;-stop</span><br><span class="line"><span class="comment">//通知子服务</span></span><br><span class="line">cancel()</span><br><span class="line"></span><br><span class="line">istio.io/istio/pilot/pkg/proxy/agent.<span class="keyword">go</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(a *agent)</span> <span class="title">Run</span><span class="params">(ctx context.Context)</span></span> &#123;</span><br><span class="line">  ......</span><br><span class="line">  <span class="keyword">for</span> &#123;</span><br><span class="line">    ......</span><br><span class="line">    <span class="keyword">select</span> &#123;</span><br><span class="line">    ......</span><br><span class="line">    <span class="comment">//接收到主服务信息通知envoy退出</span></span><br><span class="line">    <span class="keyword">case</span> _, more := &lt;-ctx.Done():</span><br><span class="line">      <span class="keyword">if</span> !more &#123;</span><br><span class="line">        a.terminate()</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">istio.io/istio/pilot/pkg/proxy/envoy/v1/watcher.<span class="keyword">go</span> #<span class="number">297</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(proxy envoy)</span> <span class="title">Run</span><span class="params">(config <span class="keyword">interface</span>&#123;&#125;, epoch <span class="keyword">int</span>, abort &lt;-<span class="keyword">chan</span> error)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    ......</span><br><span class="line">    <span class="keyword">select</span> &#123;</span><br><span class="line">    <span class="keyword">case</span> err := &lt;-abort:</span><br><span class="line">      log.Warnf(<span class="string">"Aborting epoch %d"</span>, epoch)</span><br><span class="line">      <span class="comment">//发送 KILL信号给envoy</span></span><br><span class="line">      <span class="keyword">if</span> errKill := cmd.Process.Kill(); errKill != <span class="literal">nil</span> &#123;</span><br><span class="line">        log.Warnf(<span class="string">"killing epoch %d caused an error %v"</span>, epoch, errKill)</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">return</span> err</span><br><span class="line">      ......</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>上面展示了pilot-agent从k8s接收信号到通知envoy关闭的过程，这个过程说明了poilt-agent也是支持优雅关闭。但最终envoy并不能进行优雅关闭，这和pilot-agent发送KILL信号没关系，这是因为envoy本身就不支持。</p>
+</blockquote>
+<h4 id="envoy优雅关闭"><a href="#envoy优雅关闭" class="headerlink" title="envoy优雅关闭"></a>envoy优雅关闭</h4><ul>
+<li>遗憾通知</li>
+</ul>
+<blockquote>
+<p>来到这里很遗憾通知你envoy自己不能进行优雅关闭，envoy会接收SIGTERM，SIGHUP，SIGCHLD，SIGUSR1这4个信号，但是这4个都与优雅无关，这4个信号的作用可看<a href="https://www.envoyproxy.io/docs/envoy/latest/operations/hot_restarter" target="_blank" rel="external nofollow noopener noreferrer">官方文档</a>。当然官方也注意到这个问题，可以到github了解一下<a href="https://github.com/envoyproxy/envoy/issues/2920" target="_blank" rel="external nofollow noopener noreferrer">2920</a> <a href="https://github.com/envoyproxy/envoy/pull/3307" target="_blank" rel="external nofollow noopener noreferrer">3307</a>。</p>
+</blockquote>
+<ul>
+<li>替代方案</li>
+</ul>
+<blockquote>
+<p>其实使用优雅关闭想达到的目的是：让服务平滑升级，减少对用户的影响。所以我们可以用<a href="https://kubernetes.feisky.xyz/zh/apps/istio-traffic-management.html#金丝雀部署" target="_blank" rel="external nofollow noopener noreferrer">金丝雀部署</a>来实现，并非一定要envoy实现。大致的流程：</p>
+</blockquote>
+<ol>
+<li>定义服务的旧版本（v1），新版本（v2）</li>
+<li>发布新版本</li>
+<li>将流量按照梯度的方式，慢慢迁移到v2</li>
+<li>迁移完成，运行一段时间，没问题就关闭v1</li>
+</ol>
+<ul>
+<li>golang 优雅退出HTTP服务</li>
+</ul>
+<blockquote>
+<p>借此机会了解下golang的优雅关闭，golang在1.8版本的时候就支持这个特性</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">net/http/server.<span class="keyword">go</span> #<span class="number">2487</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(srv *Server)</span> <span class="title">Shutdown</span><span class="params">(ctx context.Context)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">  atomic.AddInt32(&amp;srv.inShutdown, <span class="number">1</span>)</span><br><span class="line">  <span class="keyword">defer</span> atomic.AddInt32(&amp;srv.inShutdown, <span class="number">-1</span>)</span><br><span class="line"></span><br><span class="line">  srv.mu.Lock()</span><br><span class="line">  <span class="comment">// 把监听者关掉</span></span><br><span class="line">  lnerr := srv.closeListenersLocked()</span><br><span class="line">  srv.closeDoneChanLocked()</span><br><span class="line">    <span class="comment">//执行开发定义的函数如果有</span></span><br><span class="line">  <span class="keyword">for</span> _, f := <span class="keyword">range</span> srv.onShutdown &#123;</span><br><span class="line">    <span class="keyword">go</span> f()</span><br><span class="line">  &#125;</span><br><span class="line">    srv.mu.Unlock()</span><br><span class="line"></span><br><span class="line">  <span class="comment">//定时查询是否有未关闭的链接</span></span><br><span class="line">  ticker := time.NewTicker(shutdownPollInterval)</span><br><span class="line">  <span class="keyword">defer</span> ticker.Stop()</span><br><span class="line">  <span class="keyword">for</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> srv.closeIdleConns() &#123;</span><br><span class="line">      <span class="keyword">return</span> lnerr</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">select</span> &#123;</span><br><span class="line">    <span class="keyword">case</span> &lt;-ctx.Done():</span><br><span class="line">      <span class="keyword">return</span> ctx.Err()</span><br><span class="line">    <span class="keyword">case</span> &lt;-ticker.C:</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>其实golang的关闭机制和envoy在github上讨论优雅关闭机制很相似：</p>
+</blockquote>
+<h6 id="golang机制"><a href="#golang机制" class="headerlink" title="golang机制"></a>golang机制</h6><ol>
+<li>关闭监听者（<code>ln, err := net.Listen(&quot;tcp&quot;, addr)</code>，向ln赋nil）</li>
+<li>定时查询是否有未关闭的链接</li>
+<li>所有链接都是退出，服务退出</li>
+</ol>
+<h6 id="envoy机制："><a href="#envoy机制：" class="headerlink" title="envoy机制："></a>envoy机制：</h6><ol>
+<li>ingress listeners stop accepting new connections (clients see TCP connection refused) but continues to service existing connections. egress listeners are completely unaffected</li>
+<li>configurable delay to allow workload to finish servicing existing connections</li>
+<li>envoy (and workload) both terminate</li>
+</ol>
+<h3 id="生成-sidecar-配置"><a href="#生成-sidecar-配置" class="headerlink" title="生成 sidecar 配置"></a>生成 sidecar 配置</h3><p>sidecar 的配置主要在 pilot-agent 的 init 方法与 proxy 命令处理流程的前半部分生成。其中 init 方法为 pilot-agent 二进制的命令行配置大量的 flag 与默认值，而 proxy 命令处理流程则负责将这些 flag 组装成为 ProxyConfig 对象以启动 <code>Envoy</code>。下面分析几个相对重要的配置。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//go 语言，源码摘自 pilot-agent，role 角色定义</span></span><br><span class="line">role = &amp;model.Proxy&#123;&#125;</span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Proxy <span class="keyword">struct</span> &#123;</span><br><span class="line">    <span class="comment">// ClusterID 用于指代 proxy 所在集群名称</span></span><br><span class="line">    ClusterID <span class="keyword">string</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// Type 用于标记 proxy 运行模式</span></span><br><span class="line">    Type NodeType</span><br><span class="line"></span><br><span class="line">    IPAddresses []<span class="keyword">string</span></span><br><span class="line">    ID <span class="keyword">string</span></span><br><span class="line">    DNSDomain <span class="keyword">string</span></span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>role 默认的对象为 proxy，关键参数如下：</p>
+<ul>
+<li>Type：pilot-agent 的 <code>role</code> 有两种运行模式。根据 <code>role.Type</code> 变量定义，最新版本有2个类型， <code>sidecar</code>、<code>router</code> 。默认是 <code>sidecar</code>。</li>
+<li>IPAddress， ID：可以接受参数，依据注册中心的类型，给予默认值。默认处理方式是 Kubernetes。在 Kubernetes 默认值下，IPAddress 默认为 <code>INSTANCE_IP</code>，ID 默认为 <code>POD_NAME</code>，DNSDomain 默认为 <code>default.svc.cluster.local</code>。</li>
+<li><code>istio</code>可以对接的第三方注册中心有 Kubernetes、Consul、MCP、Mock。</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//go 语言，源码摘自 pilot-agent ，envoy 启动代理及监听器</span></span><br><span class="line">envoyProxy := envoy.NewProxy(envoy.ProxyConfig&#123;</span><br><span class="line">                Config:              proxyConfig,            <span class="comment">//Envoy 的配置，如目录等</span></span><br><span class="line">                Node:                role.ServiceNode(),    <span class="comment">//role 的字符串拼接 node.Type~ip~ID~DNSDomain 格式</span></span><br><span class="line">                NodeIPs:             role.IPAddresses,</span><br><span class="line">                PodName:             podName,</span><br><span class="line">                PodNamespace:        podNamespace,</span><br><span class="line">                PodIP:               podIP,</span><br><span class="line">                ...</span><br><span class="line">            &#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">// envoy 的代理</span></span><br><span class="line">agent := envoy.NewAgent(envoyProxy, features.TerminationDrainDuration())</span><br><span class="line"></span><br><span class="line"><span class="comment">// envoy 的监控和程序，会监听证书变化和启动 envoy </span></span><br><span class="line">watcher := envoy.NewWatcher(tlsCerts, agent.Restart)</span><br><span class="line"><span class="keyword">go</span> watcher.Run(ctx)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 监听停止信号</span></span><br><span class="line"><span class="keyword">go</span> cmd.WaitSignalFunc(cancel)</span><br><span class="line"></span><br><span class="line"><span class="comment">// envoy 主循环，阻塞等待停止信号</span></span><br><span class="line"><span class="keyword">return</span> agent.Run(ctx)</span><br></pre></td></tr></table></figure>
+<p><code>Envoy</code>配置文件及命令行参数主要有2个：</p>
+<ul>
+<li><code>Envoy</code>的启动目录默认为<code>/usr/local/bin/envoy</code></li>
+<li><code>Envoy</code>的启动参数相关代码在<code>func (e *envoy) args</code>中。</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//go 语言，源码摘自 pilot-agent ，envoy 启动参数</span></span><br><span class="line">startupArgs := []<span class="keyword">string</span>&#123;<span class="string">"-c"</span>, fname,</span><br><span class="line">        <span class="string">"--restart-epoch"</span>, fmt.Sprint(epoch),</span><br><span class="line">        <span class="string">"--drain-time-s"</span>, fmt.Sprint(<span class="keyword">int</span>(convertDuration(e.Config.DrainDuration) / time.Second)),</span><br><span class="line">        <span class="string">"--parent-shutdown-time-s"</span>, fmt.Sprint(<span class="keyword">int</span>(convertDuration(e.Config.ParentShutdownDuration) / time.Second)),</span><br><span class="line">        <span class="string">"--service-cluster"</span>, e.Config.ServiceCluster,</span><br><span class="line">        <span class="string">"--service-node"</span>, e.Node,</span><br><span class="line">        <span class="string">"--max-obj-name-len"</span>, fmt.Sprint(e.Config.StatNameLength),</span><br><span class="line">        <span class="string">"--local-address-ip-version"</span>, proxyLocalAddressType,</span><br><span class="line">        <span class="string">"--log-format"</span>, fmt.Sprintf(<span class="string">"[Envoy (Epoch %d)] "</span>, epoch) + <span class="string">"[%Y-%m-%d %T.%e][%t][%l][%n] %v"</span>,</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p><code>Envoy</code>启动参数关键释义：</p>
+<ul>
+<li><code>–restart-epoch</code>：<code>epoch</code> 决定了<code>Envoy</code>热重启的顺序，第一个 <code>Envoy</code>进程对应的 <code>epoch</code> 为0，后面新建的 <code>Envoy</code>进程对应 <code>epoch</code> 顺序递增1</li>
+<li><code>–drain-time-s</code>：在 <code>pilot-agent init</code> 函数中指定默认值为2秒，可通过 <code>pilot-agent proxy</code> 命令的 <code>drainDuration flag</code> 指定</li>
+<li><code>–parent-shutdown-time-s</code>：在 <code>pilot-agent init</code> 函数中指定默认值为3秒，可通过 <code>pilot-agent proxy</code> 命令的 <code>parentShutdownDuration flag</code> 指定</li>
+<li><code>–service-cluster</code>：在 <code>pilot-agent init</code> 函数中指定默认值为 <code>istio-proxy</code> ，可通 <code>pilot-agent proxy</code> 命令的 <code>serviceCluster flag</code> 指定</li>
+<li><code>–service-node</code>：将 <code>role</code> 的字符串拼接成 <code>node.Type~ip~ID~DNSDomain</code> 格式</li>
+</ul>
+<h3 id="Sidecar-的启动与监控"><a href="#Sidecar-的启动与监控" class="headerlink" title="Sidecar 的启动与监控"></a>Sidecar 的启动与监控</h3><ul>
+<li>创建 <code>envoy</code> 对象，结构体包含 <code>proxyConfig</code>、<code>role.serviceNode</code>、<code>loglevel</code> 和 <code>pilotSAN（service account name）</code>等。</li>
+<li>创建 <code>agent</code> 对象，包含前面创建的 <code>envoy</code> 结构体，一个 <code>epochs</code> 的 <code>map</code>，1个 <code>channel</code>：<code>statusCh</code>。</li>
+<li>创建 <code>watcher</code> ，包含证书和 <code>agent.Restart</code> 方法并启动协程执行 <code>watcher.Run</code>。</li>
+<li><code>watcher.Run</code> 首先执行 <code>agent.Restart</code>，启动 <code>Envoy</code>。然后启动协程调用 <code>watchCerts</code> ，用于监控各种证书，如果证书文件发生变化，则重新生成证书签名并重启 Envoy。</li>
+<li>创建 <code>context</code>，启动协程调用 <code>cmd.WaitSignalFunc</code> 以等待进程接收到 <code>SIGINT, SIGTERM</code> 信号，接受到信号之后通过 <code>context</code> 通知 <code>agent</code>，<code>agent</code> 接到通知后调用 <code>terminate</code> 来 kill 所有 <code>Envoy</code>进程，并退出 <code>agent</code> 进程</li>
+<li><code>agent.Run</code> 主进程堵塞，监听 <code>statusCh</code>，这里的 <code>status</code> 其实就是 <code>exitStatus</code>，在监听到 <code>exitStatus</code> 后，会删除当前 <code>epochs</code> 中的 <code>channel</code> 资源。</li>
+</ul>
+<h2 id="pilot-agent"><a href="#pilot-agent" class="headerlink" title="pilot-agent"></a>pilot-agent</h2><p><img alt="img" data-src="https://qiankunli.github.io/public/upload/mesh/pilot_agent.png"></p>
+<ol>
+<li><p>所谓sidecar 容器， 不是直接基于envoy 制作镜像，容器启动后，entrypoint 也是envoy 命令</p>
+</li>
+<li><p>sidecar 容器的entrypoint 是 <code>/usr/local/bin/pilot-agent proxy</code>，首先生成 一个envoyxx.json 文件，然后 使用 exec.Command启动envoy</p>
+</li>
+<li><p>进入sidecar 容器，<code>ps -ef</code> 一下， 是两个进程</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">## 具体明令参数 未展示</span><br><span class="line">UID        PID  PPID  C STIME TTY          TIME CMD</span><br><span class="line"><span class="number">1337</span>         <span class="number">1</span>     <span class="number">0</span>  <span class="number">0</span> May09 ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">49</span> /usr/local/bin/pilot-agent proxy</span><br><span class="line"><span class="number">1337</span>       <span class="number">567</span>     <span class="number">1</span>  <span class="number">1</span> <span class="number">09</span>:<span class="number">18</span> ?        <span class="number">00</span>:<span class="number">04</span>:<span class="number">42</span> /usr/local/bin/envoy -c envoyxx.json</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>为什么要用pilot-agent？负责Envoy的生命周期管理（生老病死）</p>
+<ol>
+<li>启动envoy</li>
+<li>热更新envoy，poilt-agent只负责启动另一个envoy进程，其他由新旧两个envoy自行处理</li>
+<li>抢救envoy</li>
+<li>优雅关闭envoy</li>
+</ol>
+<h2 id><a href="#" class="headerlink" title=" "></a> </h2><h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://segmentfault.com/a/1190000015171622" target="_blank" rel="external nofollow noopener noreferrer">https://segmentfault.com/a/1190000015171622</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/b9ef321a/" rel="bookmark">【Service Mesh】Istio Pilot Discovery</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/df7a23a6/" rel="bookmark">【Service Mesh】Istio Pilot</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/22cae0b8/" rel="bookmark">【Service Mesh】Istio 入门</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/151719f0/" rel="bookmark">【Service Mesh】Istio 流量控制</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/8607f22d/" rel="bookmark">【Service Mesh】Istio Sidecar Injector</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/2d9a22d4/" title="【Service Mesh】Istio Pilot Agent">http://houmin.cc/posts/2d9a22d4/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/service-mesh/" rel="tag"><i class="fa fa-tag"></i> service mesh</a>
+              <a href="/tags/istio/" rel="tag"><i class="fa fa-tag"></i> istio</a>
+              <a href="/tags/pilot/" rel="tag"><i class="fa fa-tag"></i> pilot</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/b9ef321a/" rel="next" title="【Service Mesh】Istio Pilot Discovery">
+                  <i class="fa fa-chevron-left"></i> 【Service Mesh】Istio Pilot Discovery
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/36fc760d/" rel="prev" title="远离他们">
+                  远离他们 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#pilot-agent-是什么？"><span class="nav-number">1.</span> <span class="nav-text">pilot-agent 是什么？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么要用pilot-agent？"><span class="nav-number">2.</span> <span class="nav-text">为什么要用pilot-agent？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#启动envoy"><span class="nav-number">3.</span> <span class="nav-text">启动envoy</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#加载配置"><span class="nav-number">3.0.1.</span> <span class="nav-text">加载配置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#启动参数"><span class="nav-number">3.0.2.</span> <span class="nav-text">启动参数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#启动envoy-1"><span class="nav-number">3.0.3.</span> <span class="nav-text">启动envoy</span></a></li></ol></li></ol><li class="nav-item nav-level-2"><a class="nav-link" href="#热更新envoy"><span class="nav-number">4.</span> <span class="nav-text">热更新envoy</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#envoy热更新策略"><span class="nav-number">4.0.1.</span> <span class="nav-text">envoy热更新策略</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#什么时候进行热更新？"><span class="nav-number">4.0.2.</span> <span class="nav-text">什么时候进行热更新？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#热更新启动参数"><span class="nav-number">4.0.3.</span> <span class="nav-text">热更新启动参数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#从终端截取触发热更新的日志"><span class="nav-number">4.0.4.</span> <span class="nav-text">从终端截取触发热更新的日志</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#抢救envoy"><span class="nav-number">5.</span> <span class="nav-text">抢救envoy</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#获取退出状态"><span class="nav-number">5.0.1.</span> <span class="nav-text">获取退出状态</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#抢救envoy-1"><span class="nav-number">5.0.2.</span> <span class="nav-text">抢救envoy</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#抢救日志"><span class="nav-number">5.0.3.</span> <span class="nav-text">抢救日志</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#优雅关闭envoy"><span class="nav-number">6.</span> <span class="nav-text">优雅关闭envoy</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#k8s让服务优雅退出"><span class="nav-number">6.0.1.</span> <span class="nav-text">k8s让服务优雅退出</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#pilot-agent-让envoy优雅退出"><span class="nav-number">6.0.2.</span> <span class="nav-text">pilot-agent 让envoy优雅退出</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#envoy优雅关闭"><span class="nav-number">6.0.3.</span> <span class="nav-text">envoy优雅关闭</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#golang机制"><span class="nav-number">6.0.3.0.1.</span> <span class="nav-text">golang机制</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#envoy机制："><span class="nav-number">6.0.3.0.2.</span> <span class="nav-text">envoy机制：</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#生成-sidecar-配置"><span class="nav-number">6.1.</span> <span class="nav-text">生成 sidecar 配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Sidecar-的启动与监控"><span class="nav-number">6.2.</span> <span class="nav-text">Sidecar 的启动与监控</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#pilot-agent"><span class="nav-number">7.</span> <span class="nav-text">pilot-agent</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#null"><span class="nav-number">8.</span> <span class="nav-text"> </span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">9.</span> <span class="nav-text">参考资料</span></a></li></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">153</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">212</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.6m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">49:11</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

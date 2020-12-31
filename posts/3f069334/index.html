@@ -65,7 +65,7 @@
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-21_k8s-device-plugin.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-21_k8s-device-plugin-protocol.png">
-<meta property="og:updated_time" content="2020-12-08T02:25:11.973Z">
+<meta property="og:updated_time" content="2020-12-17T03:27:17.835Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-21_k8s-device-plugin.png">
 
@@ -428,7 +428,7 @@
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(m *NvidiaDevicePlugin)</span> <span class="title">apiDevices</span><span class="params">()</span> []*<span class="title">pluginapi</span>.<span class="title">Device</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> pdevs []*pluginapi.Device</span><br><span class="line">    <span class="keyword">for</span> _, d := <span class="keyword">range</span> m.cachedDevices &#123;</span><br><span class="line">        pdevs = <span class="built_in">append</span>(pdevs, &amp;d.Device)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> pdevs</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>这里的 <code>cachedDevices</code> 是通过 <code>ResourceManager</code> 获得的 <code>Device</code> 信息，其具体通过 <code>GpuDeviceManager</code> 结构来实现，可以看到它们是调用了 <code>nvml</code> 库而实现的。这里还有一个 <code>MigDeviceManager</code> 本质上相同，不再概述。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(g *GpuDeviceManager)</span> <span class="title">Devices</span><span class="params">()</span> []*<span class="title">Device</span></span> &#123;</span><br><span class="line">    n, err := nvml.GetDeviceCount()</span><br><span class="line">    check(err)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> devs []*Device</span><br><span class="line">    <span class="keyword">for</span> i := <span class="keyword">uint</span>(<span class="number">0</span>); i &lt; n; i++ &#123;</span><br><span class="line">        d, err := nvml.NewDeviceLite(i)</span><br><span class="line">        check(err)</span><br><span class="line"></span><br><span class="line">        migEnabled, err := d.IsMigEnabled()</span><br><span class="line">        check(err)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> migEnabled &amp;&amp; g.skipMigEnabledGPUs &#123;</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        devs = <span class="built_in">append</span>(devs, buildDevice(d))</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> devs</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="Allocation"><a href="#Allocation" class="headerlink" title="Allocation"></a>Allocation</h3><p><code>kubelet</code> 接收到被调度到本节点的pods后，</p>
+<h3 id="Allocation"><a href="#Allocation" class="headerlink" title="Allocation"></a>Allocation</h3><p><code>kubelet</code> 接收到被调度到本节点的pods后</p>
 <h4 id="HandlePodAdditions"><a href="#HandlePodAdditions" class="headerlink" title="HandlePodAdditions"></a>HandlePodAdditions</h4><p>当 Node 上的 <code>Kubelet</code> 监听到有新的 <code>Pod</code> 创建时，会调用 <code>HandlerPodAdditions</code> 来处理 <code>Pod</code> 创建的事件。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(kl *Kubelet)</span> <span class="title">syncLoopIteration</span><span class="params">(configCh &lt;-<span class="keyword">chan</span> kubetypes.PodUpdate, handler SyncHandler,</span></span></span><br><span class="line"><span class="function"><span class="params">    syncCh &lt;-<span class="keyword">chan</span> time.Time, housekeepingCh &lt;-<span class="keyword">chan</span> time.Time, plegCh &lt;-<span class="keyword">chan</span> *pleg.PodLifecycleEvent)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">    <span class="keyword">select</span> &#123;</span><br><span class="line">    <span class="keyword">case</span> u, open := &lt;-configCh:</span><br><span class="line">        <span class="keyword">switch</span> u.Op &#123;</span><br><span class="line">        <span class="keyword">case</span> kubetypes.ADD:</span><br><span class="line">            klog.V(<span class="number">2</span>).Infof(<span class="string">"SyncLoop (ADD, %q): %q"</span>, u.Source, format.Pods(u.Pods))</span><br><span class="line">            handler.HandlePodAdditions(u.Pods)</span><br><span class="line">        <span class="keyword">case</span> kubetypes.UPDATE:</span><br><span class="line">            klog.V(<span class="number">2</span>).Infof(<span class="string">"SyncLoop (UPDATE, %q): %q"</span>, u.Source, format.PodsWithDeletionTimestamps(u.Pods))</span><br><span class="line">            handler.HandlePodUpdates(u.Pods)</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">        &#125;</span><br><span class="line">    <span class="keyword">case</span> e := &lt;-plegCh:</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>接下来进一步看下 <code>HandlerPodAdditions</code> 的实现，对于传入的每一个 <code>Pod</code> ，如果它没有被 <code>terminate</code>，则通过 <code>canAdmitPod</code> 检查是否可以允许该 <code>Pod</code> 创建。</p>
@@ -644,7 +644,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">146</span>
+          <span class="site-state-item-count">153</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -656,7 +656,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">207</span>
+        <span class="site-state-item-count">212</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -724,13 +724,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">1.5m</span>
+    <span title="站点总字数">1.6m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">46:02</span>
+    <span title="站点阅读时长">49:11</span>
 </div>
 
         

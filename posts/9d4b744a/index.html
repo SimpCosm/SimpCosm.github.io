@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="当写下 2019 未来へ 的时候，我没有意识到2020年将会发生什么。那时的我是轻松惬意的，文字里透露着面向未来的自信，期冀着能够做出自己的改变。一年过去了，咻的一下，很快，生活中的种种已经发生了改变。2020 年发生的种种让我更加意识到到自身的渺小与浅陋，绝大多数时候你改变不了什么，你能确定改变的只能是自己，尽管这并不简单。 这里是 「岁末围炉」系列的第二篇 2020 渺小，主题曲选择的是田馥甄">
+<meta name="keywords" content="年终总结">
+<meta property="og:type" content="article">
+<meta property="og:title" content="2020 渺小">
+<meta property="og:url" content="http://houmin.cc/posts/9d4b744a/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="当写下 2019 未来へ 的时候，我没有意识到2020年将会发生什么。那时的我是轻松惬意的，文字里透露着面向未来的自信，期冀着能够做出自己的改变。一年过去了，咻的一下，很快，生活中的种种已经发生了改变。2020 年发生的种种让我更加意识到到自身的渺小与浅陋，绝大多数时候你改变不了什么，你能确定改变的只能是自己，尽管这并不简单。 这里是 「岁末围炉」系列的第二篇 2020 渺小，主题曲选择的是田馥甄">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-14_time-2020-cover.jpg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-19_hexo-drafts.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-31_site-google-search.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-31_invest-return.jpg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-31_gwm.jpg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-31_byd.jpg">
+<meta property="og:updated_time" content="2020-12-31T15:54:36.389Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-14_time-2020-cover.jpg">
+
+<link rel="canonical" href="http://houmin.cc/posts/9d4b744a/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>2020 渺小 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+<link rel="stylesheet" href="/assets/css/APlayer.min.css" class="aplayer-style-marker">
+<script src="/assets/js/APlayer.min.js" class="aplayer-script-marker"></script>
+<script src="/assets/js/Meting.min.js" class="meting-script-marker"></script>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/9d4b744a/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          2020 渺小
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-12-31 22:47:19" itemprop="dateCreated datePublished" datetime="2020-12-31T22:47:19+08:00">2020-12-31</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B2%81%E6%9C%AB%E5%9B%B4%E7%82%89/" itemprop="url" rel="index">
+                    <span itemprop="name">岁末围炉</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/9d4b744a/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/9d4b744a/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>8.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>15 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>当写下 <a href="https://houmin.cc/posts/2ecc368">2019 未来へ</a> 的时候，我没有意识到2020年将会发生什么。那时的我是轻松惬意的，文字里透露着面向未来的自信，期冀着能够做出自己的改变。一年过去了，咻的一下，很快，生活中的种种已经发生了改变。2020 年发生的种种让我更加意识到到自身的渺小与浅陋，绝大多数时候你改变不了什么，你能确定改变的只能是自己，尽管这并不简单。</p>
+<p>这里是 「岁末围炉」系列的第二篇 <code>2020 渺小</code>，主题曲选择的是田馥甄的渺小，封面图来自冬日的雍和宫。 2020 年结束了，渺小的我依然在构建自己的框架，向着生命，向着未来。</p>
+
+    <div id="aplayer-UMydVDDJ" class="aplayer aplayer-tag-marker meting-tag-marker" data-id="27968284" data-server="netease" data-type="song" data-mode="circulation" data-autoplay="false" data-mutex="true" data-listmaxheight="340px" data-preload="auto" data-theme="#555"></div>
+<a id="more"></a>
+<h2 id="世界你好"><a href="#世界你好" class="headerlink" title="世界你好"></a>世界你好</h2><p>有人说，2020 年是这些年来最糟糕的一年，2020年是见证历史的一年，正如时代周刊在年底的一期杂志封面所提到的一样：</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-14_time-2020-cover.jpg"></p>
+<ul>
+<li>年初，美军定点清除伊朗名将之花苏莱曼尼，美伊爆发克制性冲突，伊朗导弹误击乌克兰民航客机，176人死亡</li>
+<li>年初，新冠疫情在武汉爆发，李文亮之死引发全国震动，武汉封城，全国驰援下湖北控制住疫情，中国控制住疫情</li>
+<li>然而，疫情继续在全球爆发，截止2020年底全球累计确诊人数到达8000万人，累计死亡人数180万人，东京奥运会延期</li>
+<li>因为新冠疫情的爆发，全球经济衰退，年初美股四次熔断，历史罕见负油价，在美联储持续降息放水下，美股在下半年一路长红</li>
+<li>美国黑人佛洛伊德被警察跪杀，引发美国几十年来规模最大的反种族歧视、反暴力执法抗议，BLM运动下，众多历史雕像被摧毁</li>
+<li>美国2020年大选跌宕起伏，拜登最终赢得大选，但特朗普所代表的群众依然广泛，美国党派冲突、阶层冲突矛盾进一步激化</li>
+<li>中美贸易冲突进一步加剧，美国封杀TikTok、微信等企业，中美互关总领事馆</li>
+<li>互联网行业整治监管趋紧，蚂蚁金服暂停上市，阿里、腾讯、顺丰被罚，巨头入局社区团购引发争议，蛋壳公寓暴雷</li>
+<li>……</li>
+</ul>
+<p>所有的这些事件中，新冠疫情是影响最大的因素。事实证明，与非典不同，我们已经不能指望它在夏天凭空消失，我们所能依靠的只有疫苗。尽管在国内疫情已经得到了控制，但是全球疫情仍然严重，在未来的两年里，它仍将一直围绕着我们，各国之间仍然不能自由通航，以前的那种人员自由流动已经成为一种奢望。伴随着疫情，全球经济持续衰退，有可能造成甚于2008年的全球经济大危机，贫富差距加大，阶层矛盾进一步激化，民粹主义进一步发展。</p>
+<p>显而易见的是，这个世界的情况没有在变好，而在过去十年间进一步恶化，08年以来的次贷危机和欧债危机造成的负面影响至今都还没有完全释放。在没有新的技术革新发生的情况下，未来的环境还会更差，战争的发生不是没有可能。所以，在天灾、疫情、战争带来的威胁下，我们能够做什么呢？我们什么都做不了，在这些面前我们只是渺小的蝼蚁。我们能够做的，就是尝试去理解世界，完善自己。</p>
+<h2 id="行为框架"><a href="#行为框架" class="headerlink" title="行为框架"></a>行为框架</h2><p>在过去的一年，我一直在尝试去更好地理解自己的行为模式，去记录数据，去分析数据，去更新自己的模型。尽管还没有达到我想要的效果，但是我明显地感觉到，<code>I&#39;m on my way</code>。这种记录与分析里最重要的一种表达方式，就是我给自己建立的这个站点，或者也可以说是我的个人博客。虽然除了个人博客，我还想在这个站点记录更多的东西，不过不管怎么样我们可以慢慢来。如你所见，在<a href="https://houmin.cc/about/"> <code>houmin.cc</code></a>，我创建了几个不同的栏目用于定期的去总结、去梳理生活与学习工作中碰到的问题。</p>
+<p>除了一年一度的 <a href="https://houmin.cc/categories/岁末围炉">岁末围炉</a>，另一个重要的专栏就是 <a href="https://houmin.cc/categories/朝花夕拾">朝花夕拾</a> 了。「朝花夕拾」是我给自己安排的每周总结，2020年第一期是 <a href="https://houmin.cc/posts/3e030bdb/">Carpe Diem</a>，最后一期是 <a href="https://houmin.cc/posts/64c2f65e">十字路口</a>。尽管号称每周更新，期间不乏拖更与断更，下面是2020年的「朝花夕拾」发布记录。可以看到，到2020年结束，朝花夕拾总共发布了29期。如果每周按照正常发布的节奏（以及排除年终/生日那周），总计应该有50期。尽管只是刚刚超过预期的一半，令我高兴的是整个「朝花夕拾」的框架已经建立。</p>
+<div id="echarts4085" style="width: 100%;height: 600px;margin: 0 auto"></div>
+<script type="text/javascript" src="https://cdn.bootcss.com/echarts/4.2.0-rc.2/echarts.min.js"></script>
+<script type="text/javascript" src="http://gallery.echartsjs.com/dep/echarts/map/js/china.js"></script>
+<script type="text/javascript">
+  // 基于准备好的dom，初始化echarts实例
+  var myChart = echarts.init(document.getElementById('echarts4085'));
+  // 指定图表的配置项和数据
+  
+option = {
+    title: {
+        text: '朝花夕拾'
+    },
+    tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+            type: 'cross',
+            crossStyle: {
+                color: '#999'
+            }
+        }
+    },
+    toolbox: {
+        feature: {
+            dataView: {show: true, readOnly: false},
+            magicType: {show: true, type: ['line', 'bar']},
+            restore: {show: true},
+            saveAsImage: {show: true}
+        }
+    },
+    legend: {
+        data: ['单月发布', '累计发布']
+    },
+    xAxis: [
+        {
+            type: 'category',
+            data:  ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'],
+            axisPointer: {
+                type: 'shadow'
+            }
+        }
+    ],
+    yAxis: [
+        {
+            type: 'value',
+            name: '单月发布',
+            min: 0,
+            max: 4,
+            interval: 4,
+            axisLabel: {
+                formatter: '{value} 篇'
+            }
+        },
+        {
+            type: 'value',
+            name: '累计发布',
+            min: 0,
+            max: 50,
+            interval: 4,
+            axisLabel: {
+                formatter: '{value} 篇'
+            }
+        }
+    ],
+    series: [
+        {
+            name: '单月发布',
+            type: 'bar',
+            data: [3, 4, 4, 4, 1, 1, 4, 1, 0, 0, 4, 3],
+        },
+        {
+            name: '累计发布',
+            type: 'line',
+            yAxisIndex: 1,
+            data: [3, 7, 11, 15, 16, 17, 21, 22, 22, 22, 26, 29],
+        }
+    ]
+};
+
+  // 使用刚指定的配置项和数据显示图表。
+  myChart.setOption(option);
+</script>
+
+<p>看看那些没能够定期发布的时间段，我依稀还能想到当时发生了什么。五月和六月，因为面临毕业论文答辩，没有花太多的时间在博客上，7月份入职后，在八月、九月和十月基本上都在消化吸收工作中涉及到的知识点，你可以看到那段时间我在 「术业专攻」中发布了很多专业内容的笔记。如果没有十一月的回归正常发布，今年的曲线将会很难看。</p>
+<p>按照我多年来新年计划失效的经验（如果说这次朝花夕拾没能够完全按期发布也算是一次失败经验的话），如果没有定期的回顾与总结，一旦某段时间放松自己，偏离目标，就会因为破窗效应索性放弃了整个一年的计划。一方面是缺少定期的回顾，另外一方面是自己设定的计划完成时间粒度太粗，一旦某段时间放弃则全盘放弃，正如我年初在 <a href="https://houmin.cc/posts/c924112f">Do You Want To Build A Snowman?</a> 这篇博文中提到的一样。</p>
+<p>现在回过头看，非常庆幸自己在2019年底有一段空闲时间给自己建立了一个框架，并在后续的日子里能够坚持实践。也许没有完全达到我期待中的效果，至少框架已经初具模型。事实上，早在16年的时候我就创建过自己的个人网站，也比较早的意识到博客系统可能会对我产生的帮助。然而（按照我现在的理解），正是因为没有建立一个好的可以执行下去的框架，导致当年创建的博客两次中断，在后续的日子里也没有留下多少有价值的记录。我也曾经建立过自己的 wiki 平台，但是因为项目维护和数据的获取更新等问题没有坚持下去。现在的这种框架对于我来说是最好的方式。</p>
+<p>建立框架对于知识体系的构建产生帮助的最为典型的一个例子是，「术业专攻」这个栏目的建立与文章发布。在年初的时候，我在  <a href="https://houmin.cc/posts/c924112f">Do You Want To Build A Snowman?</a> 这篇博文讨论过个人知识管理的话题，当时得到的几个明确结论是：</p>
+<ul>
+<li>Data、Information、Knowledge、Wisdom这几个概念之间有着明显的区别，看到数据并不等于获取信息，阅读博客和书籍并不等同于学会了知识，知道了知识并不等同于掌握了智慧</li>
+<li>提高知识获取效率最好的方法是主动去搜索资料，而不是被动的在信息流中流于表面的学习</li>
+<li>只靠搜索不能内化知识，虽然可能在某个地方能够看到这些知识，但他们永远不是你的</li>
+<li>只靠把知识存储在文件夹或笔记中，而不去花时间整理它们不能内化知识，你需要通过自己的整理去建立索引，方便以后更好的调用这些知识</li>
+<li>图像、思维导图、定期回顾复习、向他人表述能够更好的帮助知识内化</li>
+</ul>
+<p>结合这几个结论，当前我的博客系统就是我最好的知识管理工具，也是我自己的笔记系统。截止2020年底，我在「术业专攻」总共发布了90篇博文，其中大部分是我在专业内容上的笔记总结。目前原创性的内容还比较少，更多的是在做笔记、做梳理、做总结。通过在发布博文的过程中，我会去结合自身的理解去消化吸收这些内容，在我的知识体系中构建自己的索引。在这个过程中，我越发体会到自己的浅陋，除了发布的这些博文，还有很多那些还没来得及被消化和发布的内容存在我的草稿箱中。在过去的一年中，我还剩下 300+ 的博文没有发布，这需要大量的时间去消化吸收。</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-19_hexo-drafts.png"></p>
+<p>这是一个动态增长的过程，每每在工作中碰到一些新的知识点，我会去搜索相关的资料并保存于草稿箱中。保存于草稿箱并不等同于我消化吸收了对应的内容，我还需要去按照自己的思维脉络，整理出属于自己的文章。之后再碰到对应的问题后，我就可以很好的在自己的知识体系中定位问题，索引出相关知识点。即使短暂的不记住了，我也可以再来博客系统来回顾。</p>
+<p>除了专业相关的内容，我还根据自己的兴趣点，建立了 <a href="https://houmin.cc/categories/资本不眠">「资本不眠」</a>、<a href="https://houmin.cc/categories/好奇计划">「好奇计划」</a> 等栏目，用于记录专业内容之外的那些有意思的内容，并且可能还会去进一步扩展更多的栏目。记录、消化、总结、思考、时间、提高，是获取知识、创造新知识的最好办法，而 <code>houmin.cc</code> 就是我在这上面最好的框架与平台。</p>
+<p>根据我前面一以贯之的理念，为了更好的成长，我们需要用数据去量化成长的指标，从而进一步反思与优化自己的行为模式。对于我这个系统最基础的框架也是一样，我们也需要数据去衡量这个框架的进步与效果。也就是说，你如何反映出你的框架在实际work，你如何知道自己的产出是否有实际意义，作为一个网站，我给他最明确的指标就是网站搜索与访问量。</p>
+<p>听起来有点像运营微信微博等新媒体账号，对于你运营的网站，你期待的指标就是他的点击量和访问量获得显著提升。但是，与微信微博稍微有点不同的是，我的网站将完全基于搜索获取流量，而不是依赖于社交网络的传播。一方面我不得不承认，我现在网站中的很多内容还很粗浅，还不足以吸引人们在社交网络中传播它；另一方面，与我前面提到的知识管理理念相匹配，应该是人找信息，而不是信息找人，我们才是信息获取的发起方，通过搜索得到的内容将发挥更大的作用。</p>
+<p>下图是 <code>houmin.cc</code> 在过去一年来的搜索数据，尽管目前网站的日均访问量仍然很小很小，但是已经可以看到相比于2019年的日均访问量已经有了一个量级的提高。未来的一年，给自己定下的一个目标是，要进一步修正和完善这个框架，创作更多有价值的内容。当我们实现这个目标后，可以看到的一个效果是，这个站点的日均访问量将进一步提升一个量级。</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-31_site-google-search.png"></p>
+<p>虽然在这里对访问量提出了一定的指标，更关键的是要提高自己网站内容的质量，输出有价值的内容，提高自己的影响力。这里提出这样的目标，源自于之前在网络上搜索问题时，碰见的那些 <a href="https://houmin.cc/links">有意思的站点</a> 。他们的博客记录着他们的思考，记录着那些有价值的内容，是我想要实现的目标。</p>
+<h2 id="好好工作"><a href="#好好工作" class="headerlink" title="好好工作"></a>好好工作</h2><p>2020年7月，我从学校进入职场，开始了正式的职场生活。半年的工作让我对自己未来的期待，对当前的不足有了更加清晰的认识。经过几段实习经历和半年的工作经历，你已经见证了各种各样的前辈，你也看到了作为一个专业的技术工程师应该具备的能力。2021年，继续好好工作，扩展自己的深度和广度，加油！</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>考察指标</th>
+<th>具体指标</th>
+<th>实践改进方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>技术实力</td>
+<td>掌握扎实的底层技术原理，包括 kubernetes、linux、网络、Go语言等方面</td>
+<td>「术业专攻」博客更新</td>
+</tr>
+<tr>
+<td>业界动态</td>
+<td>洞悉业界动态，知道大家现在都在做什么，未来的趋势在哪里，我们可以做的事情有哪些</td>
+<td>创建「业界动态」专栏</td>
+</tr>
+<tr>
+<td>开源影响力</td>
+<td>积极参与开源社区贡献，在社区构建自己的影响力</td>
+<td>成为k8s社区Member</td>
+</tr>
+<tr>
+<td>产品思维</td>
+<td>在公司内部积极完成leader下发的任务，并能够从产品和业务的角度去更好的思考问题</td>
+<td>公司影响力提升</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="阅读光影"><a href="#阅读光影" class="headerlink" title="阅读光影"></a>阅读光影</h2><p>和2019年一样，2020年我并没有阅读多少书籍，豆瓣上标记的只有3本，但是我仍然愿意在这里花上一段篇幅来讨论它。从2014年注册豆瓣以来，下面是我每年在豆瓣读书上标记的阅读数，可以看到，本科时期是我阅读热情的高峰，尤其是大二和大三的时候，基本上每年阅读数能够达到50本。可是，读研之后，阅读的书就越来越少了，甚至在19年毫无所获。</p>
+<div id="echarts2442" style="width: 100%;height: 600px;margin: 0 auto"></div>
+<script type="text/javascript" src="https://cdn.bootcss.com/echarts/4.2.0-rc.2/echarts.min.js"></script>
+<script type="text/javascript" src="http://gallery.echartsjs.com/dep/echarts/map/js/china.js"></script>
+<script type="text/javascript">
+  // 基于准备好的dom，初始化echarts实例
+  var myChart = echarts.init(document.getElementById('echarts2442'));
+  // 指定图表的配置项和数据
+  
+option = {
+    title: {
+        text: '豆瓣阅读数据'
+    },
+    tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+            type: 'cross',
+            crossStyle: {
+                color: '#999'
+            }
+        }
+    },
+    toolbox: {
+        feature: {
+            dataView: {show: true, readOnly: false},
+            magicType: {show: true, type: ['line', 'bar']},
+            restore: {show: true},
+            saveAsImage: {show: true}
+        }
+    },
+    legend: {
+        data: ['阅读统计']
+    },
+    xAxis: [
+        {
+            type: 'category',
+            data:  ['2014', '2015', '2016', '2017', '2018', '2019', '2020'],
+            axisPointer: {
+                type: 'shadow'
+            }
+        }
+    ],
+    yAxis: [
+        {
+            type: 'value',
+            name: '阅读统计',
+            min: 0,
+            max: 60,
+            interval: 5,
+            axisLabel: {
+                formatter: '{value}'
+            }
+        }
+    ],
+    series: [
+        {
+            name: '阅读统计',
+            type: 'bar',
+            data: [25, 55, 49, 6, 6, 0, 3]
+        }
+    ]
+};
+
+  // 使用刚指定的配置项和数据显示图表。
+  myChart.setOption(option);
+</script>
+
+<p>2020年的上半年也是基本如此，没有阅读什么书籍。没有人会否认阅读的重要性，相对于从公众号或者知乎里面获取的零碎知识，阅读书籍是一种更加体系化的知识获取方式。在本科时期，我对于历史和小说比较感兴趣，这些领域的阅读都相对轻松。那个时候我经常会很快地扫读，也很少去写一些阅读笔记和书评，很多书籍看完之后就丢在一边，导致阅读的相对收益并不高。</p>
+<p>双十一之后，我从PT那里拿来了 Kindle，开始构建自己的阅读系统，构建主题阅读的方法论：</p>
+<ul>
+<li>问题意识。为什么要读一本书，是因为你心中对于某个主题包含着困惑（小说等书除外），你是抱着解答这些问题的期待翻开一本书的。我给自己建立了一个<a href="https://www.douban.com/doulist/133636602/" target="_blank" rel="external nofollow noopener noreferrer">2021阅读清单</a>，这是一个很实用主义的书单，涉及到各种经济学的原理与实践、涉及到行为模式的构建、涉及到专业知识的深化，我希望通过阅读这些书去解决这些问题。</li>
+<li>整理书籍的知识框架。一本书的精髓在于作者的框架逻辑，而不在于其遣词造句，读书最重要读的是其知识框架。</li>
+<li>交叉阅读验证知识框架。同一个主题往往不止一本书籍，阅读同一主题中的不同书籍可以交叉验证之前总结的知识框架。</li>
+<li>将书籍的知识框架打入到你的知识体系，将内化的知识表达出来。这个过程中，读书笔记是第一步，通过读书笔记，可以实现对书籍的二次精读，更加关注知识的整体架构，获取的知识才是成体系的，而不是碎片化的信息。</li>
+</ul>
+<p>以此方法论为基础，我将2020年阅读的三本书籍分别写下了阅读笔记，列次如下：</p>
+<ul>
+<li><a href="https://houmin.cc">【读书笔记】如何阅读一本书</a></li>
+<li><a href="https://houmin.cc">【读书笔记】光变</a></li>
+<li><a href="https://houmin.cc">【读书笔记】褚时健传</a></li>
+</ul>
+<p>与阅读相同，希望新的一年观影也能够感受更多的东西。在年初的时候，当时对 2008 年的经济危机十分感兴趣，看了好几部关于次贷危机的纪录片与电影，并以 <a href="https://houmin.cc/posts/787197ce/">The Big Short</a> 的形式总结发布出来。</p>
+<p>新的一年，我也给自己建立了一个 <a href="https://www.douban.com/doulist/133864290/" target="_blank" rel="external nofollow noopener noreferrer">2021观影清单</a>，观影的同时，希望有更多的文章发布。</p>
+<h2 id="资本不眠"><a href="#资本不眠" class="headerlink" title="资本不眠"></a>资本不眠</h2><p>2019 年初，给自己定下的一个目标是股市收益超过20个点，最好能够达到40个点。得益于今年不错的行情，再一次达到了这个目标，最终收益率达到了 <code>35%</code>，稍稍跑赢沪深300。不得不说，在投资方面我仍然没有入门，这是这两年来的股市行情向好，才没有亏钱。</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-31_invest-return.jpg"></p>
+<p>对于股票投资，我现在最大的问题在于，我不知道为什么要买一只股票。对于一只真正好的股票，股票涨了一些的时候我能不能拿得住，股票跌的时候我会不会害怕。这家公司身处什么行业，其主营业务是什么，它的管理层是一些怎样的人，它在过去几年的业绩怎么样，公司和行业的发展怎么样？现在处于经济周期的哪个阶段？股票建仓的策略如何？你对这只股票预期的收益是多少？</p>
+<p>上面的种种问题，我心里都没有底。今年最大的一个遗憾是新能源，看看下面来自我账户的两张图：</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-31_gwm.jpg"></p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-31_byd.jpg"></p>
+<p>对的，这两只在今年大涨了4倍的股票我在他们起飞之前都已经关注过。这还不算，19年初就已经关注起新能源汽车行业，并且在 2020 年初还专门写了篇 <a href="https://houmin.cc/posts/8082c63c/">聊聊行业：以新能源汽车为例</a>  的文章，作为行业研究的入门笔记。然而，我还是错过了这一切：）</p>
+<p>为什么？想想当初买这两只股票的逻辑：哟，长城汽车最高价到过16块，现在才七八块，绝对便宜啊，而且听说长城哈弗卖的挺不错的，不亏。然后我在长城处于7块到10块震荡的时候一直在做T，到10块后稍微跌了跌就清仓了。嗯，也能够赚点钱，但是 ：）比亚迪也基本是这样很早就卖了。</p>
+<p>说实话，真的很心痛，要是没有卖该多好：）不过说起来，没能拿住，本质上就是自己认知思维没打开，整个投资框架没有建立起来，这笔钱还不属于我。2020年的下半年，我完全没有操作，一方面因为这两只股票的教训已经从认知上更倾向于长期投资，不太喜欢这种短期波动获取的收益；另一方面因为工作原因，没有太多的时间去研究其他的股票，也就没有去操作。</p>
+<p>新的一年，在投资方面还是要去建立自己的投资框架，熟悉了解财经相关的知识，现在对财经方面的兴趣越来越强了（不愧是个俗人：）在2021年，希望至少完成5篇财经方面书籍的阅读，并且整理相关阅读笔记并发布。另外，除了A股投资，也要给自己开一个美股和港股的账户，毕竟那边有很多很好的标的；除了现在的股票投资，明年应该开始指数基金定投计划。</p>
+<p>还是那句话，希望明年整体投资收益超过20%，最好能够到40%，加油。</p>
+<h2 id="旅行影像"><a href="#旅行影像" class="headerlink" title="旅行影像"></a>旅行影像</h2><p>因为疫情，原来的旅行计划被迫放弃。令人开心的是，随着国内疫情的控制，今年还是除了北京，还是走了走杭州和西北，我将所看到的记录在了这些文章里。</p>
+<ul>
+<li><a href="https://houmin.cc/posts/2f653e3b/">西湖印象</a>：初夏到达杭州姐姐家，盛夏回到北京，杭州很美</li>
+<li><a href="https://houmin.cc/posts/2561fdfd/">26：一个人的北京</a>：国庆去了趟大西北，真美</li>
+</ul>
+<p>2020 年我仍然在记录着，除了旅行中的光影，我也记录着身边的影像，你可以在 <a href="https://houmin.cc/tags/摄影">这里</a> 看到。越来越觉得，除了奇美的自然景观，人的影像有时候会更加生动。新的一年，希望自己能够更多的走出去，希望自己的镜头下能够记录更多更美的时刻。</p>
+<h2 id="我与其他"><a href="#我与其他" class="headerlink" title="我与其他"></a>我与其他</h2><ul>
+<li>2020年，我重新捡起了跑步，断断续续着，希望新的一年能够找回大四时跑步的状态，并参加一次马拉松</li>
+<li>2020年，我开始审视自己的睡眠，并开始抓取自己的睡眠数据，希望新的一年能够将这一数据回归到正常</li>
+<li>2020年，卡林巴琴最终没有坚持下来，可是我仍然记得音乐带来的放松，希望以后能够掌握一门乐器，也许吉他</li>
+<li>2020年，「朝花夕拾」开始每周更多的记录，希望新的一年能够开拓数据收集的范围，记录世界纪录自己</li>
+<li>2020年，我开始高密度的听起了播客，喜欢下班路上听着播客的放松状态，希望以后我也能够做一档自己的播客</li>
+<li>2020年，我依旧是单身一个人，工作后能够投入到感情上面的时间越发减少，希望新的一年自己能够更加主动</li>
+<li>2020年结束了，可以确定的是，我们以后会不止一次地回忆起这不平凡的一年，下面是来自「声东击西」记录2020的声音</li>
+</ul>
+<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="1500" height="80" src="//music.163.com/outchain/player?type=3&id=2071218639&auto=1&height=66"></iframe>
+
+<hr>
+<p>再见，2020</p>
+<p>你好，2021</p>
+<p>新年快乐！</p>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/2ecc368/" rel="bookmark">2019 未来へ</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/9d4b744a/" title="2020 渺小">http://houmin.cc/posts/9d4b744a/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/" rel="tag"><i class="fa fa-tag"></i> 年终总结</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/64c2f65e/" rel="next" title="十字路口">
+                  <i class="fa fa-chevron-left"></i> 十字路口
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#世界你好"><span class="nav-number">1.</span> <span class="nav-text">世界你好</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#行为框架"><span class="nav-number">2.</span> <span class="nav-text">行为框架</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#好好工作"><span class="nav-number">3.</span> <span class="nav-text">好好工作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#阅读光影"><span class="nav-number">4.</span> <span class="nav-text">阅读光影</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#资本不眠"><span class="nav-number">5.</span> <span class="nav-text">资本不眠</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#旅行影像"><span class="nav-number">6.</span> <span class="nav-text">旅行影像</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#我与其他"><span class="nav-number">7.</span> <span class="nav-text">我与其他</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">153</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">212</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.6m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">49:11</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>
