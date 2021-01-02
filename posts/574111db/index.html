@@ -56,7 +56,7 @@
 </script>
 
   <meta name="description" content="我们在 GPU 与 CUDA 编程入门 这篇博客中初步介绍了如何Linux上使用GPU的方法，随着容器和k8s的迅猛发展，人们对于在容器中使用GPU的需求越发强烈。本文将基于前文，继续介绍如何在容器中使用GPU，进一步地，介绍在Kubernetes中如何调度GPU，并以Tensorflow为例，介绍如何基于Docker搭建部署了GPU的深度学习开发环境。">
-<meta name="keywords" content="container,docker,k8s,GPU,Nvidia,tensorflow">
+<meta name="keywords" content="container,k8s,tensorflow,GPU,docker,Nvidia">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Kubernetes】在Docker中使用GPU">
 <meta property="og:url" content="http://houmin.cc/posts/574111db/index.html">
@@ -435,13 +435,13 @@
       <div class="popular-posts-title"><a href="/posts/58272b06/" rel="bookmark">【Kubernetes】监控的可观测性</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/fdbf86e3/" rel="bookmark">【Kubernetes】网络模型</a></div>
-    </li>
-    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer 启动分析</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/3f069334/" rel="bookmark">【Kubernetes】Device Plugin</a></div>
+      <div class="popular-posts-title"><a href="/posts/fdbf86e3/" rel="bookmark">【Kubernetes】网络模型</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/cf391335/" rel="bookmark">【Kubernetes】GPU 共享</a></div>
     </li>
   </ul>
 
@@ -488,11 +488,11 @@
           
           <div class="post-tags">
               <a href="/tags/container/" rel="tag"><i class="fa fa-tag"></i> container</a>
-              <a href="/tags/docker/" rel="tag"><i class="fa fa-tag"></i> docker</a>
               <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
-              <a href="/tags/GPU/" rel="tag"><i class="fa fa-tag"></i> GPU</a>
-              <a href="/tags/Nvidia/" rel="tag"><i class="fa fa-tag"></i> Nvidia</a>
               <a href="/tags/tensorflow/" rel="tag"><i class="fa fa-tag"></i> tensorflow</a>
+              <a href="/tags/GPU/" rel="tag"><i class="fa fa-tag"></i> GPU</a>
+              <a href="/tags/docker/" rel="tag"><i class="fa fa-tag"></i> docker</a>
+              <a href="/tags/Nvidia/" rel="tag"><i class="fa fa-tag"></i> Nvidia</a>
           </div>
 
         
@@ -564,7 +564,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">147</span>
+          <span class="site-state-item-count">148</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -576,7 +576,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">208</span>
+        <span class="site-state-item-count">213</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -644,13 +644,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">1.5m</span>
+    <span title="站点总字数">1.6m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">46:44</span>
+    <span title="站点阅读时长">47:03</span>
 </div>
 
         
