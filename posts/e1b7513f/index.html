@@ -73,7 +73,11 @@
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-02_sgd-bgd.jpg">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-31_dp-forward-propagation.svg">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-02_back-propagation.svg">
-<meta property="og:updated_time" content="2021-01-02T13:49:10.378Z">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-21_sigmoid.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-21_tanh.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-21_relu.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-21_softmax.jpg">
+<meta property="og:updated_time" content="2021-01-03T09:18:07.023Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-31_dl-neuron.png">
 
@@ -269,7 +273,7 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2020-12-10 20:00:30" itemprop="dateCreated datePublished" datetime="2020-12-10T20:00:30+08:00">2020-12-10</time>
+              <time title="创建时间：2020-12-14 20:00:30" itemprop="dateCreated datePublished" datetime="2020-12-14T20:00:30+08:00">2020-12-14</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -310,14 +314,14 @@
                 <i class="fa fa-file-word-o"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>11k</span>
+              <span>12k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>19 分钟</span>
+              <span>23 分钟</span>
             </span>
 
         </div>
@@ -362,7 +366,7 @@
 y = f (\sum_{i=1}^n w_i * x_i  + b )</script><p>可以看到，神经元模型就是一个基本的函数，本质上做的是数据的映射，$ \mathbf{X} $ 为输入向量，$y$ 为输出变量，神经元对应着 $y = \varphi(\mathbf{X})$ ，而 $\mathbf{W}$ 和 $b$ 则是这个函数的参数。单个神经元如果没有加上激活函数，可以看作是一个线性模型，而 $\mathbf{W}$ 和 $b$ 则是这个线性模型的参数。</p>
 <script type="math/tex; mode=display">
 y = \mathbf{W}^\mathsf{T} \mathbf{X} + b</script><p>回想下本科的线性几何课程，<strong>线性模型的任何组合仍然是线性模型</strong>。但是对于现实数据而言，很多数据都是<strong>线性不可分</strong>的，需要的是<strong>非线性模型</strong>。另外，对于一个拥有很多特征的复杂数据集进行线性回归是代价很高的，需要高昂的计算代价。因此，我们需要在神经元模型中引入一个 <strong>非线性单元</strong>，也就是这里的 <strong>激活函数</strong>，使得神经元模型能够更好的解决复杂的数据分布问题。</p>
-<h3 id="多层神经网络"><a href="#多层神经网络" class="headerlink" title="多层神经网络"></a>多层神经网络</h3><p>人工神经网络由许多神经元组合而成，神经元组成的信息处理网络具有并行分布结构，因此有了更复杂的人工神经网络。一个多层人工神经网络 ANN 由输入层、隐藏层、输出层组成，第 <code>k-1</code> 层网络神经元的输出是第 <code>k</code> 层神经元的输入。下面是一个简单的两层神经网络：</p>
+<h3 id="多层神经网络"><a href="#多层神经网络" class="headerlink" title="多层神经网络"></a>多层神经网络</h3><p>人工神经网络由许多神经元组合而成，神经元组成的信息处理网络具有并行分布结构，因此有了更复杂的人工神经网络。一个多层人工神经网络 ANN 由输入层、隐藏层、输出层组成，第 <code>k-1</code> 层网络神经元的输出是第 <code>k</code> 层神经元的输入。下面是一个简单的两层神经网络，我们将输入层称为第零层：</p>
 <p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-31_dp-back-propagation.svg"></p>
 <p>人工神经网络的输入层与输出层的节点数往往固定，这取决于我们的输入和输出，而隐层数和隐层节点则可以自由指定。人工神经网络的关键不是节点而是连接，每层的神经元与下一层的多个神经元相连接，每条连接线都有独自的权重参数，这些参数往往通过训练得到。</p>
 <p>在这个图中，$w_{ij}$ 表示第 $k-1$ 层的第 $i$ 个节点到的权重第 $k$ 层的第 $j$ 个节点</p>
@@ -563,9 +567,41 @@ net_l^{k+1} = \sum_{j=0}^{r_{k}} w_{jl}^{k+1}o_j^{k} = \sum_{j=0}^{r_{k}} w_{jl}
 <li><p><strong>更新权值参数</strong>，根据公式5更新权值参数，然后进入第2步进行下一轮迭代计算，直到误差收敛</p>
 </li>
 </ol>
-<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><ul>
+<h2 id="调参与正则化优化"><a href="#调参与正则化优化" class="headerlink" title="调参与正则化优化"></a>调参与正则化优化</h2><p>上一小节中，我们介绍了神经网络的训练与预测：在明确了神经网络的模型后，我们就可以通过定义合理的损失函数，模型根据反向传播算法和随机梯度下降算法，自动地修正网络模型的参数（$W$ 和 $b$ ），并对训练数据的特征进行学习。</p>
+<p>但是，这里似乎还有很多问题没有解决：</p>
+<ul>
+<li>神经网络应该有多少层</li>
+<li>每一层应该有多少隐藏单元</li>
+<li>学习速率应该是多少</li>
+<li>各层应该采用哪些激活函数</li>
+<li>应该选用哪种损失函数</li>
+<li>梯度下降算法的参数应该如何选择</li>
+<li>……</li>
+</ul>
+<p>所有的这些超参数不可能在一开始就预测出来，实际上通常的情况是，首先有个初步想法，比如构建一个含有特定层数、隐藏单元等等的神经网络，然后在运行和测试中得到该神经网络的运行结果，并不断迭代更新自己的方案。</p>
+<h3 id="激活函数"><a href="#激活函数" class="headerlink" title="激活函数"></a>激活函数</h3><h4 id="线性函数"><a href="#线性函数" class="headerlink" title="线性函数"></a>线性函数</h4><p>线性函数是最基本的激活函数，其因变量与自变量有直接的比例关系，因此线性变换类似于线性回归。</p>
+<script type="math/tex; mode=display">f(x) = ax + b</script><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">linear</span><span class="params">(x, a, b)</span>:</span></span><br><span class="line">  <span class="keyword">return</span> a * x + b</span><br></pre></td></tr></table></figure>
+<h4 id="Sigmoid-函数"><a href="#Sigmoid-函数" class="headerlink" title="Sigmoid 函数"></a>Sigmoid 函数</h4><p><code>Sigmoid</code> 函数是一种在不删除数据的情况下，减少数据的极值或异常值的函数。</p>
+<script type="math/tex; mode=display">s(x) = \frac{1}{1 + e^{-ax}}</script><p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-21_sigmoid.png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">sigmoid</span><span class="params">(x, w = <span class="number">1</span>)</span>:</span></span><br><span class="line">  <span class="keyword">return</span> <span class="number">1</span> / (<span class="number">1</span> + np.sum(np.exp(-wx))</span><br></pre></td></tr></table></figure>
+<h4 id="双曲正切函数"><a href="#双曲正切函数" class="headerlink" title="双曲正切函数"></a>双曲正切函数</h4><p>双曲正切函数 <code>tanh</code> 与 <code>sigmoid</code> 函数蕾丝，不同的是，<code>tanh</code> 的归一范围是 -1 到 1，而不是 0 到 1，因此 tanh 的优点是可以更容易地处理附属。</p>
+<script type="math/tex; mode=display">tanh(x) = \frac{sinh(x)}{cosh(x)} = \frac{e^x - e^{-x}}{e^x + e^{-x}}</script><p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-21_tanh.png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">tanh</span><span class="params">(x)</span>:</span></span><br><span class="line">  <span class="keyword">return</span> np.tanh(h)</span><br></pre></td></tr></table></figure>
+<h4 id="ReLU-函数"><a href="#ReLU-函数" class="headerlink" title="ReLU 函数"></a>ReLU 函数</h4><p><code>ReLU</code> 函数满足仿生学中的稀疏性，只有当输入值高于一定数目时才激活该神经元节点。当输入值低于0时进行限制，当输入值上升到某一阈值以上时，函数中的自变量与因变量成线性关系。</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-21_relu.png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">relu</span><span class="params">(x)</span>:</span></span><br><span class="line">  <span class="keyword">return</span> x <span class="keyword">if</span> x &gt; <span class="number">0</span> <span class="keyword">else</span> <span class="number">0</span></span><br></pre></td></tr></table></figure>
+<h4 id="Softmax-函数"><a href="#Softmax-函数" class="headerlink" title="Softmax 函数"></a>Softmax 函数</h4><p><code>Softmax</code> 函数的本质是将一个 K 维的任意实数向量，映射成另一个 K 维的实数向量，其中向量中的每一个元素取值都介于（0，1）范围内。</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-21_softmax.jpg"></p>
+<script type="math/tex; mode=display">softmax(x_j) = \frac{e^{x_j}}{\sum_{k=1}^K e^{x_k}} j \in [1, K]</script><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">softmax</span><span class="params">(x)</span>:</span></span><br><span class="line">  <span class="keyword">return</span> np.exp(x) / np.sum(np.exp(x))</span><br></pre></td></tr></table></figure>
+<h4 id="激活函数的选择"><a href="#激活函数的选择" class="headerlink" title="激活函数的选择"></a>激活函数的选择</h4><h3 id="损失函数"><a href="#损失函数" class="headerlink" title="损失函数"></a>损失函数</h3><p>在神经网络中，损失函数用来评价网络模型输出的预测值 $\hat{\vec{Y}} = f(\vec{X})$ 与真实值 $\vec{Y}$ 之间的差异。这里使用 $L(\vec{Y}, \hat{\vec{Y}})$ 来表示损失函数，它是一个非负值函数。损失值越小，网络模型的性能就越好，所以优化算法目的就是让损失函数尽可能的小。</p>
+<h4 id="损失函数的定义"><a href="#损失函数的定义" class="headerlink" title="损失函数的定义"></a>损失函数的定义</h4><p>假设网络模型中有 N 个样本，样本的输入和输出向量为 $(\vec{X}, \vec{Y}) = (x_i, y_i), i \in [1, N]$ ，那么总损失函数  $L(\vec{Y}, \hat{\vec{Y}})$ 为每一个输出预测值与真实值的误差之和。</p>
+<script type="math/tex; mode=display">L(\vec{Y}, \hat{\vec{Y}}) = \sum_{i=0}^N l(y, \hat{y_i})</script><p>值得注意的是，机器学习问题主要分为回归和分类问题，对分类模型和回归模型进行评估时会使用不同的损失函数，下面将分别对回归模型和分类模型的损失函数进行介绍。</p>
+<h4 id="回归损失函数"><a href="#回归损失函数" class="headerlink" title="回归损失函数"></a>回归损失函数</h4><h5 id="均方误差损失函数，MSE"><a href="#均方误差损失函数，MSE" class="headerlink" title="均方误差损失函数，MSE"></a>均方误差损失函数，MSE</h5><h5 id="平均绝对误差损失函数，MAE"><a href="#平均绝对误差损失函数，MAE" class="headerlink" title="平均绝对误差损失函数，MAE"></a>平均绝对误差损失函数，MAE</h5><h5 id="均方误差对数损失函数，MSLE"><a href="#均方误差对数损失函数，MSLE" class="headerlink" title="均方误差对数损失函数，MSLE"></a>均方误差对数损失函数，MSLE</h5><h4 id="分类损失函数"><a href="#分类损失函数" class="headerlink" title="分类损失函数"></a>分类损失函数</h4><h5 id="Logistic-损失函数"><a href="#Logistic-损失函数" class="headerlink" title="Logistic 损失函数"></a>Logistic 损失函数</h5><h5 id="负对数似然损失函数"><a href="#负对数似然损失函数" class="headerlink" title="负对数似然损失函数"></a>负对数似然损失函数</h5><h5 id="交叉熵损失函数"><a href="#交叉熵损失函数" class="headerlink" title="交叉熵损失函数"></a>交叉熵损失函数</h5><h5 id="Hinge损失函数"><a href="#Hinge损失函数" class="headerlink" title="Hinge损失函数"></a>Hinge损失函数</h5><h5 id="指数损失函数"><a href="#指数损失函数" class="headerlink" title="指数损失函数"></a>指数损失函数</h5><h4 id="常用的损失函数"><a href="#常用的损失函数" class="headerlink" title="常用的损失函数"></a>常用的损失函数</h4><h3 id="超参数"><a href="#超参数" class="headerlink" title="超参数"></a>超参数</h3><h4 id="学习率"><a href="#学习率" class="headerlink" title="学习率"></a>学习率</h4><h4 id="动量"><a href="#动量" class="headerlink" title="动量"></a>动量</h4><h3 id="数据集准备"><a href="#数据集准备" class="headerlink" title="数据集准备"></a>数据集准备</h3><h3 id="数据集扩展"><a href="#数据集扩展" class="headerlink" title="数据集扩展"></a>数据集扩展</h3><h3 id="数据预处理"><a href="#数据预处理" class="headerlink" title="数据预处理"></a>数据预处理</h3><h4 id="Zero-Centralization"><a href="#Zero-Centralization" class="headerlink" title="Zero Centralization"></a>Zero Centralization</h4><h4 id="Normalization"><a href="#Normalization" class="headerlink" title="Normalization"></a>Normalization</h4><h4 id="Principal-Component-Analysis-PCA"><a href="#Principal-Component-Analysis-PCA" class="headerlink" title="Principal Component Analysis, PCA"></a>Principal Component Analysis, PCA</h4><h4 id="Whitening"><a href="#Whitening" class="headerlink" title="Whitening"></a>Whitening</h4><h4 id="网络初始化"><a href="#网络初始化" class="headerlink" title="网络初始化"></a>网络初始化</h4><h3 id="网络过度拟合"><a href="#网络过度拟合" class="headerlink" title="网络过度拟合"></a>网络过度拟合</h3><h3 id="正则化方法"><a href="#正则化方法" class="headerlink" title="正则化方法"></a>正则化方法</h3><p>正则化的最大作用是防止过度拟合，提高网络模型的泛化能力，具体实现方法是在损失函数中增加惩罚因子。</p>
+<h4 id="L2正则化"><a href="#L2正则化" class="headerlink" title="L2正则化"></a>L2正则化</h4><h4 id="L1正则化"><a href="#L1正则化" class="headerlink" title="L1正则化"></a>L1正则化</h4><h4 id="最大约束范式"><a href="#最大约束范式" class="headerlink" title="最大约束范式"></a>最大约束范式</h4><h4 id="Dropout-层"><a href="#Dropout-层" class="headerlink" title="Dropout 层"></a>Dropout 层</h4><h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
 <li><a href="https://brilliant.org/wiki/backpropagation" target="_blank" rel="external nofollow noopener noreferrer">Back Propagation Explained</a></li>
 <li><a href="https://en.wikipedia.org/wiki/Backpropagation" target="_blank" rel="external nofollow noopener noreferrer">WikiPedia: Back Propagation</a></li>
+<li><a href="http://www.ai-start.com/dl2017/" target="_blank" rel="external nofollow noopener noreferrer">深度学习笔记</a></li>
+<li><a href="https://nndl.github.io/" target="_blank" rel="external nofollow noopener noreferrer">https://nndl.github.io/</a></li>
 </ul>
 
     </div>
@@ -574,6 +610,15 @@ net_l^{k+1} = \sum_{j=0}^{r_{k}} w_{jl}^{k+1}o_j^{k} = \sum_{j=0}^{r_{k}} w_{jl}
     
     
       
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/77a2fe8f/" rel="bookmark">【深度学习】卷积神经网络</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/fcd0bf09/" rel="bookmark">【深度学习】TensorFlow2</a></div>
+    </li>
+  </ul>
 
       
         <div class="reward-container">
@@ -628,16 +673,16 @@ net_l^{k+1} = \sum_{j=0}^{r_{k}} w_{jl}^{k+1}o_j^{k} = \sum_{j=0}^{r_{k}} w_{jl}
 
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
-                <a href="/posts/36fc760d/" rel="next" title="远离他们">
-                  <i class="fa fa-chevron-left"></i> 远离他们
+                <a href="/posts/64c2f65e/" rel="next" title="十字路口">
+                  <i class="fa fa-chevron-left"></i> 十字路口
                 </a>
             </div>
 
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
-                <a href="/posts/64c2f65e/" rel="prev" title="十字路口">
-                  十字路口 <i class="fa fa-chevron-right"></i>
+                <a href="/posts/77a2fe8f/" rel="prev" title="【深度学习】卷积神经网络">
+                  【深度学习】卷积神经网络 <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>
@@ -678,7 +723,7 @@ net_l^{k+1} = \sum_{j=0}^{r_{k}} w_{jl}^{k+1}o_j^{k} = \sum_{j=0}^{r_{k}} w_{jl}
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#神经网络概述"><span class="nav-number">1.</span> <span class="nav-text">神经网络概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#神经元"><span class="nav-number">1.1.</span> <span class="nav-text">神经元</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#多层神经网络"><span class="nav-number">1.2.</span> <span class="nav-text">多层神经网络</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#训练与预测"><span class="nav-number">2.</span> <span class="nav-text">训练与预测</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#前向传播算法"><span class="nav-number">2.1.</span> <span class="nav-text">前向传播算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#梯度下降算法"><span class="nav-number">2.2.</span> <span class="nav-text">梯度下降算法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#批量梯度下降算法-BGD"><span class="nav-number">2.2.1.</span> <span class="nav-text">批量梯度下降算法 BGD</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#随机梯度下降算法-SGD"><span class="nav-number">2.2.2.</span> <span class="nav-text">随机梯度下降算法 SGD</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#小批量随机梯度下降算法-Min-batch-SGD"><span class="nav-number">2.2.3.</span> <span class="nav-text">小批量随机梯度下降算法 Min-batch SGD</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#反向传播算法"><span class="nav-number">2.3.</span> <span class="nav-text">反向传播算法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#计算梯度"><span class="nav-number">2.3.1.</span> <span class="nav-text">计算梯度</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#输出层"><span class="nav-number">2.3.2.</span> <span class="nav-text">输出层</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#隐藏层"><span class="nav-number">2.3.3.</span> <span class="nav-text">隐藏层</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#反向传播"><span class="nav-number">2.3.4.</span> <span class="nav-text">反向传播</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文献"><span class="nav-number">3.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#神经网络概述"><span class="nav-number">1.</span> <span class="nav-text">神经网络概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#神经元"><span class="nav-number">1.1.</span> <span class="nav-text">神经元</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#多层神经网络"><span class="nav-number">1.2.</span> <span class="nav-text">多层神经网络</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#训练与预测"><span class="nav-number">2.</span> <span class="nav-text">训练与预测</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#前向传播算法"><span class="nav-number">2.1.</span> <span class="nav-text">前向传播算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#梯度下降算法"><span class="nav-number">2.2.</span> <span class="nav-text">梯度下降算法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#批量梯度下降算法-BGD"><span class="nav-number">2.2.1.</span> <span class="nav-text">批量梯度下降算法 BGD</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#随机梯度下降算法-SGD"><span class="nav-number">2.2.2.</span> <span class="nav-text">随机梯度下降算法 SGD</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#小批量随机梯度下降算法-Min-batch-SGD"><span class="nav-number">2.2.3.</span> <span class="nav-text">小批量随机梯度下降算法 Min-batch SGD</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#反向传播算法"><span class="nav-number">2.3.</span> <span class="nav-text">反向传播算法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#计算梯度"><span class="nav-number">2.3.1.</span> <span class="nav-text">计算梯度</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#输出层"><span class="nav-number">2.3.2.</span> <span class="nav-text">输出层</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#隐藏层"><span class="nav-number">2.3.3.</span> <span class="nav-text">隐藏层</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#反向传播"><span class="nav-number">2.3.4.</span> <span class="nav-text">反向传播</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#调参与正则化优化"><span class="nav-number">3.</span> <span class="nav-text">调参与正则化优化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#激活函数"><span class="nav-number">3.1.</span> <span class="nav-text">激活函数</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#线性函数"><span class="nav-number">3.1.1.</span> <span class="nav-text">线性函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Sigmoid-函数"><span class="nav-number">3.1.2.</span> <span class="nav-text">Sigmoid 函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#双曲正切函数"><span class="nav-number">3.1.3.</span> <span class="nav-text">双曲正切函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ReLU-函数"><span class="nav-number">3.1.4.</span> <span class="nav-text">ReLU 函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Softmax-函数"><span class="nav-number">3.1.5.</span> <span class="nav-text">Softmax 函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#激活函数的选择"><span class="nav-number">3.1.6.</span> <span class="nav-text">激活函数的选择</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#损失函数"><span class="nav-number">3.2.</span> <span class="nav-text">损失函数</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#损失函数的定义"><span class="nav-number">3.2.1.</span> <span class="nav-text">损失函数的定义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#回归损失函数"><span class="nav-number">3.2.2.</span> <span class="nav-text">回归损失函数</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#均方误差损失函数，MSE"><span class="nav-number">3.2.2.1.</span> <span class="nav-text">均方误差损失函数，MSE</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#平均绝对误差损失函数，MAE"><span class="nav-number">3.2.2.2.</span> <span class="nav-text">平均绝对误差损失函数，MAE</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#均方误差对数损失函数，MSLE"><span class="nav-number">3.2.2.3.</span> <span class="nav-text">均方误差对数损失函数，MSLE</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分类损失函数"><span class="nav-number">3.2.3.</span> <span class="nav-text">分类损失函数</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Logistic-损失函数"><span class="nav-number">3.2.3.1.</span> <span class="nav-text">Logistic 损失函数</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#负对数似然损失函数"><span class="nav-number">3.2.3.2.</span> <span class="nav-text">负对数似然损失函数</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#交叉熵损失函数"><span class="nav-number">3.2.3.3.</span> <span class="nav-text">交叉熵损失函数</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Hinge损失函数"><span class="nav-number">3.2.3.4.</span> <span class="nav-text">Hinge损失函数</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#指数损失函数"><span class="nav-number">3.2.3.5.</span> <span class="nav-text">指数损失函数</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#常用的损失函数"><span class="nav-number">3.2.4.</span> <span class="nav-text">常用的损失函数</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#超参数"><span class="nav-number">3.3.</span> <span class="nav-text">超参数</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#学习率"><span class="nav-number">3.3.1.</span> <span class="nav-text">学习率</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#动量"><span class="nav-number">3.3.2.</span> <span class="nav-text">动量</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据集准备"><span class="nav-number">3.4.</span> <span class="nav-text">数据集准备</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据集扩展"><span class="nav-number">3.5.</span> <span class="nav-text">数据集扩展</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据预处理"><span class="nav-number">3.6.</span> <span class="nav-text">数据预处理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Zero-Centralization"><span class="nav-number">3.6.1.</span> <span class="nav-text">Zero Centralization</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Normalization"><span class="nav-number">3.6.2.</span> <span class="nav-text">Normalization</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Principal-Component-Analysis-PCA"><span class="nav-number">3.6.3.</span> <span class="nav-text">Principal Component Analysis, PCA</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Whitening"><span class="nav-number">3.6.4.</span> <span class="nav-text">Whitening</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#网络初始化"><span class="nav-number">3.6.5.</span> <span class="nav-text">网络初始化</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#网络过度拟合"><span class="nav-number">3.7.</span> <span class="nav-text">网络过度拟合</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#正则化方法"><span class="nav-number">3.8.</span> <span class="nav-text">正则化方法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#L2正则化"><span class="nav-number">3.8.1.</span> <span class="nav-text">L2正则化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#L1正则化"><span class="nav-number">3.8.2.</span> <span class="nav-text">L1正则化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#最大约束范式"><span class="nav-number">3.8.3.</span> <span class="nav-text">最大约束范式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Dropout-层"><span class="nav-number">3.8.4.</span> <span class="nav-text">Dropout 层</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">4.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -693,7 +738,7 @@ net_l^{k+1} = \sum_{j=0}^{r_{k}} w_{jl}^{k+1}o_j^{k} = \sum_{j=0}^{r_{k}} w_{jl}
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">148</span>
+          <span class="site-state-item-count">150</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -705,7 +750,7 @@ net_l^{k+1} = \sum_{j=0}^{r_{k}} w_{jl}^{k+1}o_j^{k} = \sum_{j=0}^{r_{k}} w_{jl}
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">213</span>
+        <span class="site-state-item-count">215</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -773,13 +818,13 @@ net_l^{k+1} = \sum_{j=0}^{r_{k}} w_{jl}^{k+1}o_j^{k} = \sum_{j=0}^{r_{k}} w_{jl}
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">1.6m</span>
+    <span title="站点总字数">1.8m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">47:03</span>
+    <span title="站点阅读时长">53:40</span>
 </div>
 
         
