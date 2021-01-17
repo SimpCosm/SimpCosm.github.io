@@ -58,7 +58,7 @@
   <meta name="description" content="我们在 GPU 与 CUDA 编程入门 这篇博客中初步介绍了如何Linux上使用GPU的方法，随着容器和k8s的迅猛发展，人们对于在容器中使用GPU的需求越发强烈。本文将基于前文，继续介绍如何在容器中使用GPU，进一步地，介绍在Kubernetes中如何调度GPU，并以Tensorflow为例，介绍如何基于Docker搭建部署了GPU的深度学习开发环境。">
 <meta name="keywords" content="container,docker,k8s,GPU,Nvidia,tensorflow">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【Kubernetes】在Docker中使用GPU">
+<meta property="og:title" content="【异构计算】在Docker中使用GPU">
 <meta property="og:url" content="http://houmin.cc/posts/574111db/index.html">
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="我们在 GPU 与 CUDA 编程入门 这篇博客中初步介绍了如何Linux上使用GPU的方法，随着容器和k8s的迅猛发展，人们对于在容器中使用GPU的需求越发强烈。本文将基于前文，继续介绍如何在容器中使用GPU，进一步地，介绍在Kubernetes中如何调度GPU，并以Tensorflow为例，介绍如何基于Docker搭建部署了GPU的深度学习开发环境。">
@@ -69,7 +69,7 @@
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-22_tensorflow-jupiter.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-22_tensorflow-gpu.png">
 <meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3521279-7ab3727232db8073.png">
-<meta property="og:updated_time" content="2020-11-23T05:29:01.884Z">
+<meta property="og:updated_time" content="2021-01-07T09:25:44.208Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-22_nvidia-gpu-docker.png">
 
@@ -87,7 +87,7 @@
   };
 </script>
 
-  <title>【Kubernetes】在Docker中使用GPU | Houmin</title>
+  <title>【异构计算】在Docker中使用GPU | Houmin</title>
   
 
 
@@ -255,7 +255,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          【Kubernetes】在Docker中使用GPU
+          【异构计算】在Docker中使用GPU
         </h2>
 
         <div class="post-meta">
@@ -441,7 +441,7 @@
       <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer 启动分析</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/cf391335/" rel="bookmark">【Kubernetes】GPU 共享</a></div>
+      <div class="popular-posts-title"><a href="/posts/3f069334/" rel="bookmark">【Kubernetes】Device Plugin</a></div>
     </li>
   </ul>
 
@@ -475,7 +475,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://houmin.cc/posts/574111db/" title="【Kubernetes】在Docker中使用GPU">http://houmin.cc/posts/574111db/</a>
+    <a href="http://houmin.cc/posts/574111db/" title="【异构计算】在Docker中使用GPU">http://houmin.cc/posts/574111db/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -507,8 +507,8 @@
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
-                <a href="/posts/cf391335/" rel="prev" title="【Kubernetes】GPU 共享">
-                  【Kubernetes】GPU 共享 <i class="fa fa-chevron-right"></i>
+                <a href="/posts/cf391335/" rel="prev" title="【异构计算】GPU 共享">
+                  【异构计算】GPU 共享 <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>
@@ -564,19 +564,19 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">150</span>
+          <span class="site-state-item-count">154</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">215</span>
+        <span class="site-state-item-count">219</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -644,13 +644,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">1.8m</span>
+    <span title="站点总字数">1.9m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">53:40</span>
+    <span title="站点阅读时长">56:29</span>
 </div>
 
         

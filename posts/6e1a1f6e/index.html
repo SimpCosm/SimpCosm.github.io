@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="A survey of GPU sharing for DL当前机器学习训练中，使用GPU提供算力已经非常普遍，对于GPU-based AI system的研究也如火如荼。在这些研究中，以提高资源利用率为主要目标的GPU共享(GPU sharing)是当下研究的热点之一。GPU共享涉及到的技术面较广，包括GPU架构（计算，存储等），Cuda，IO（内存，显存），机器学习框架（Tf，Pytorch）">
+<meta name="keywords" content="虚拟化,GPU,资源隔离,深度学习">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【异构计算】GPU 虚拟化">
+<meta property="og:url" content="http://houmin.cc/posts/6e1a1f6e/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="A survey of GPU sharing for DL当前机器学习训练中，使用GPU提供算力已经非常普遍，对于GPU-based AI system的研究也如火如荼。在这些研究中，以提高资源利用率为主要目标的GPU共享(GPU sharing)是当下研究的热点之一。GPU共享涉及到的技术面较广，包括GPU架构（计算，存储等），Cuda，IO（内存，显存），机器学习框架（Tf，Pytorch）">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://pic2.zhimg.com/80/v2-c56d1458a16fb2ecb05231676bedaebd_1440w.jpg">
+<meta property="og:image" content="https://pic1.zhimg.com/80/v2-a57553b87051e3f808f3e469f3066544_1440w.jpg">
+<meta property="og:image" content="https://pic4.zhimg.com/80/v2-77bf2f39619f86b12615dff7b4c94ef3_1440w.jpg">
+<meta property="og:image" content="https://pic2.zhimg.com/80/v2-115ed2529ef08b23dda03531a761e2b1_1440w.jpg">
+<meta property="og:image" content="https://pic1.zhimg.com/80/v2-08f7028ee011a1ae2304f3fd5c03e290_1440w.jpg">
+<meta property="og:image" content="https://pic4.zhimg.com/80/v2-704741168c4809f59f00579a11f2c1c7_1440w.jpg">
+<meta property="og:image" content="https://pic4.zhimg.com/80/v2-df195268fb6b385bc75745e30b667f4b_1440w.jpg">
+<meta property="og:image" content="https://pic3.zhimg.com/80/v2-94da48314185157753a32c54d93557ee_1440w.jpg">
+<meta property="og:image" content="https://pic3.zhimg.com/80/v2-2acd31e4bdba1acf7725da192939eb02_1440w.jpg">
+<meta property="og:image" content="https://pic3.zhimg.com/80/v2-953ef97814735d35dc1dcc7cfdab7c9e_1440w.jpg">
+<meta property="og:image" content="https://pic1.zhimg.com/80/v2-81a828e00f810669c93b4499fd9e8720_1440w.jpg">
+<meta property="og:image" content="https://pic2.zhimg.com/80/v2-9ac1476ec711db7c87c479674e8278f9_1440w.jpg">
+<meta property="og:image" content="https://pic2.zhimg.com/80/v2-28340c2c8607d60d527beeb4128483fd_1440w.jpg">
+<meta property="og:image" content="https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/graphics/architecture-grid-vgpu.png">
+<meta property="og:image" content="https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/graphics/architecture-grid-vgpu-internal.png">
+<meta property="og:image" content="https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/graphics/architecture-grid-vgpu-mig-backed-internal.png">
+<meta property="og:image" content="http://km.oa.com/files/photos/pictures/201812/1544621216_79_w462_h389.png">
+<meta property="og:image" content="https://pic1.zhimg.com/80/v2-a57553b87051e3f808f3e469f3066544_720w.jpg">
+<meta property="og:image" content="https://pic2.zhimg.com/80/v2-115ed2529ef08b23dda03531a761e2b1_720w.jpg">
+<meta property="og:image" content="https://pic3.zhimg.com/80/v2-953ef97814735d35dc1dcc7cfdab7c9e_720w.jpg">
+<meta property="og:image" content="https://pic1.zhimg.com/80/v2-81a828e00f810669c93b4499fd9e8720_720w.jpg">
+<meta property="og:image" content="https://docs.nvidia.com/deploy/mps/topics/media/image3.png">
+<meta property="og:image" content="https://docs.nvidia.com/deploy/mps/topics/media/image4.png">
+<meta property="og:updated_time" content="2021-01-07T09:26:49.007Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://pic2.zhimg.com/80/v2-c56d1458a16fb2ecb05231676bedaebd_1440w.jpg">
+
+<link rel="canonical" href="http://houmin.cc/posts/6e1a1f6e/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【异构计算】GPU 虚拟化 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/6e1a1f6e/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【异构计算】GPU 虚拟化
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-20 21:01:09" itemprop="dateCreated datePublished" datetime="2020-11-20T21:01:09+08:00">2020-11-20</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/6e1a1f6e/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/6e1a1f6e/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>12k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>22 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="A-survey-of-GPU-sharing-for-DL"><a href="#A-survey-of-GPU-sharing-for-DL" class="headerlink" title="A survey of GPU sharing for DL"></a><strong>A survey of GPU sharing for DL</strong></h2><p>当前机器学习训练中，使用GPU提供算力已经非常普遍，对于GPU-based AI system的研究也如火如荼。在这些研究中，以提高资源利用率为主要目标的GPU共享(GPU sharing)是当下研究的热点之一。GPU共享涉及到的技术面较广，包括GPU架构（计算，存储等），Cuda，IO（内存，显存），机器学习框架（Tf，Pytorch），集群&amp;调度，ML/DL算法特性，通信（单机内和多机间），逆向工程等等，是一个自上而下的工作。本篇文章希望能提供一个对GPU共享工作的分享，希望能和相关领域的研究者们共同讨论。限于笔者能力有限，可能会出现一些错漏，希望能多多指正，感谢。</p>
+<p>GPU共享，是指在同一张GPU卡上同时运行多个任务。优势在于：（1）集群中可以运行更多任务，减少抢占。（2）资源利用率（GPU/显存/e.t.c.）提高；GPU共享后，总利用率接近运行任务利用率之和，减少了资源浪费。（3）可以增强公平性，因为多个任务可以同时开始享受资源；也可以单独保证某一个任务的QoS。（4）减少任务排队时间。（5）总任务结束时间下降；假设两个任务结束时间分别是x,y，通过GPU共享，两个任务全部结束的时间小于x+y。</p>
+<p>想要实现GPU共享，需要完成的主要工作有：（1）资源隔离，是指共享组件有能力限制任务占据算力（线程/SM）及显存的比例，更进一步地，可以限制总线带宽。（2）并行模式，主要指时间片模式和MPS模式。</p>
+<a id="more"></a>
+<h2 id="资源隔离"><a href="#资源隔离" class="headerlink" title="资源隔离"></a><strong>资源隔离</strong></h2><p>资源隔离是指共享组件有能力限制任务占据算力/显存的比例。限制的方法就是劫持调用。图一是在Nvidia GPU上，机器学习自上而下的视图。由于Cuda和Driver不开源，因此资源隔离层一般处在用户态。在内核态做隔离的困难较大，但也有一些工作。顺带一提，Intel的Driver是开源的，在driver层的共享和热迁移方面有一些上海交大和Intel合作的工作。</p>
+<p><img alt="img" data-src="https://pic2.zhimg.com/80/v2-c56d1458a16fb2ecb05231676bedaebd_1440w.jpg"></p>
+<p>图一/使用Nvidia GPU机器学习自上而下视图</p>
+<p>来自腾讯的Gaia(ISPA’18)[1]共享层在Cuda driver API之上，它通过劫持对Cuda driver API的调用来做到资源隔离。劫持的调用如图二所示。具体实现方式也较为直接，在调用相应API时检查：（1）对于显存，一旦该任务申请显存后占用的显存大小大于config中的设置，就报错。（2）对于计算资源，存在硬隔离和软隔离两种方式，共同点是当任务使用的GPU SM利用率超出资源上限，则暂缓下发API调用。不同点是如果有资源空闲，软隔离允许任务超过设置，动态计算资源上限。而硬隔离则不允许超出设置量。该项目代码开源在[2]。实测即使只跑一个任务也会有较大JCT影响，可能是因为对资源的限制及守护程序的资源占用问题。KubeShare（HPDC ‘20）[3]的在资源隔离方面也是类似的方案。</p>
+<p><img alt="img" data-src="https://pic1.zhimg.com/80/v2-a57553b87051e3f808f3e469f3066544_1440w.jpg">图二/ Gaia限制的CUDA driver API</p>
+<p>发了44篇论文（截止2020年3月）的rCuda[4]和Gaia有相似之处，他们都是在Cuda driver API之上，通过劫持调用来做资源隔离。不同的是，rCuda除了资源隔离，最主要的目标是支持池化。池化简单来讲就是使用远程访问的形式使用GPU资源，任务使用本机的CPU和另一台机器的GPU，两者通过网络进行通信。也是因为这个原因，共享模块需要将CPU和GPU的调用分开。然而正常情况下混合编译的程序会插入一些没有开源的Cuda API，因此需要使用作者提供的cuda，分别编译程序的CPU和GPU部分。图三显示了rCuda的架构。如果使用该产品，用户需要重新编译，对用户有一定的影响。该项目代码不开源。另外vCUDA（TC ‘12）[5]和qCUDA(CloudCom ‘19)[18]也采用了和rCuda相似的技术。</p>
+<p><img alt="img" data-src="https://pic4.zhimg.com/80/v2-77bf2f39619f86b12615dff7b4c94ef3_1440w.jpg">图三/rCuda架构</p>
+<p>GPUShare（IPDPSW’ 16）[6]也是劫持的方式，但不同的是,它采用预测执行时间的方式来实现计算资源的公平性。作者认为比切换周期还小的短kernel不会影响公平使用，因此只限制了较大的kernel。</p>
+<p>来自阿里的cGPU[7]，其共享模块在Nvidia driver层之上，也就是内核态。由于是在公有云使用，相对于用户态的共享会更加安全。它也是通过劫持对driver的调用完成资源隔离的，通过设置任务占用时间片长度来分配任务占用算力，但不清楚使用何种方式精准地控制上下文切换的时间。值得一提的是，由于Nvidia driver是不开源的，因此需要一些逆向工程才可以获得driver的相关method的name和ioctl参数的结构。该方案在使用上对用户可以做到无感知，当然JCT是有影响的。代码没有开源，也没有论文。图四是cGPU的架构图。</p>
+<p><img alt="img" data-src="https://pic2.zhimg.com/80/v2-115ed2529ef08b23dda03531a761e2b1_1440w.jpg">图四/cgpu架构图</p>
+<p>来自Nvidia的vGPU[8]其共享模块在Nvidia driver里面。vGPU通过vfio-mdev提供了一个隔离性非常高的的硬件环境，主要面向的是虚拟机产品，无法动态调整资源比例。来自Nvidia的产品当然没有开源。图五是vGPU的架构图。</p>
+<p><img alt="img" data-src="https://pic1.zhimg.com/80/v2-08f7028ee011a1ae2304f3fd5c03e290_1440w.jpg">图五/vGPU架构图</p>
+<p>Fractional GPU（RTAS’ 19）[9]是一篇基于MPS的资源隔离方案。其共享模块在Nvidia driver里面。该方案的隔离非常硬，核心就是绑定。在计算隔离方面，它通过给任务绑定一定比例的可使用SM，就可以天然地实现计算隔离。MPS的计算隔离是通过限制任务的thread数，相较于Fractional GPU会限制地更加不准确。在显存隔离方面，作者深入地研究Nvidia GPU内存架构（包括一些逆向工程）图六是Fractional GPU通过逆向得到的Nvidia GPU GTX 970的存储体系架构。通过页面着色（Page Coloring）来完成显存隔离。页面着色的思想也是将特定的物理页分配给GPU SM分区，以限制分区间互相抢占的问题。该隔离方案整体上来说有一定损耗，而且只能使用规定好的资源比例，不能够灵活地检测和使用全部空闲资源。另外使用该方案需要修改用户代码。代码开源在[10]。</p>
+<p><img alt="img" data-src="https://pic4.zhimg.com/80/v2-704741168c4809f59f00579a11f2c1c7_1440w.jpg">图六/Fractional GPU通过逆向得到的Nvidia GPU GTX 970的存储体系架构</p>
+<p>Mig（ MULTI-INSTANCE GPU）[21]是今年A100机器支持的资源隔离方案，Nvidia在最底层硬件上对资源进行了隔离，可以完全地做到计算/通信/配置/错误的隔离。它将SM和显存均匀地分给GPU instance，最多支持将SM分7份（一份14个），显存分8份（1份5GB）。顺带一提A100有SM108个，剩下的10个将无法用上。它可选的配置也是有限制的，如图七所示。</p>
+<p><img alt="img" data-src="https://pic4.zhimg.com/80/v2-df195268fb6b385bc75745e30b667f4b_1440w.jpg"></p>
+<p><img alt="img" data-src="https://pic3.zhimg.com/80/v2-94da48314185157753a32c54d93557ee_1440w.jpg">图七/Mig GPU Instance配置</p>
+<h2 id="并行模式"><a href="#并行模式" class="headerlink" title="并行模式"></a><strong>并行模式</strong></h2><p>并行模式指任务是以何种方式在同一个GPU上运行的。目前有两种方式：（1）分时复用。指划分时间片，让不同的任务占据一个独立的时间片，需要进行上下文切换。在这种模式下，任务实际上是并发的，而不是并行的，因为同一时间只有一个任务在跑。（2）合并共享。指将多个任务合并成一个上下文，因此可以同时跑多个任务，是真正意义上的并行。在生产环境中，更多使用分时复用的方式。</p>
+<p><strong>分时复用</strong></p>
+<p>分时复用的模式大家都较为熟悉，CPU程序的时间片共享已经非常常见和易用，但在GPU领域还有一些工作要做。</p>
+<p>如果在Nvidia GPU上直接启动两个任务，使用的就是时间片共享的方式。但该模式存在多任务干扰问题：即使两个机器学习任务的GPU利用率和显存利用率之和远小于1，单个任务的JCT也会高出很多。究其原因，是因为计算碰撞，通信碰撞，以及GPU的上下文切换较慢。计算碰撞很好理解，如果切换给另一个任务的时候，本任务正好在做CPU计算/IO/通信，而需要GPU计算时，时间片就切回给本任务，那么就不会有JCT的影响。但两个任务往往同时需要使用GPU资源。通信碰撞，是指任务同时需要使用显存带宽，在主机内存和设备显存之间传输数据。GPU上下文切换慢，是相对CPU而言的。CPU上下文切换的速度是微秒级别，而GPU的切换在毫秒级别。在此处也会有一定的损耗。图八是分时复用模式的常见架构。</p>
+<p><img alt="img" data-src="https://pic3.zhimg.com/80/v2-2acd31e4bdba1acf7725da192939eb02_1440w.jpg">图八/分时复用架构图</p>
+<p>上文提到的Gaia，KubeShare，rCuda，vCuda，qCuda，cGPU，vGPU均为分时复用的模式。由于上文所述的问题，他们的单个任务完成时间（JCT）都会受到较大的影响。V100测试环境下，两个任务同时运行，其JCT是单个任务运行时的1.4倍以上。因此在生产环境下，我们需要考虑如何减少任务之间互相影响的问题。上述方案都没有考虑机器学习的特性，只要共享层接收到kernel下发，检查没有超过设置上限，就会继续向下传递。另外也限制任务显存的使用不能超过设置上限，不具备弹性。因此针对特定的生产场景，有一些工作结合机器学习任务的特性，进行了资源的限制及优化。</p>
+<p><strong>服务质量（QoS）保障</strong></p>
+<p>在生产环境的GPU集群中常会有两类任务，代称为高优先级任务和低优先级任务。高优任务是时间敏感的，在它需要资源时需要立刻提供给它。而低优任务是时间不敏感的，当集群有资源没被使用时，就可以安排它填充资源缝隙以提高集群利用率。因此共享模块需要优先保障高优先级任务的JCT不受影响，以限制低优任务资源占用的方式。</p>
+<p>Baymax（ASPLOS ‘16）[11]通过任务重排序保障了高优任务的QoS。Baymax作者认为多任务之间的性能干扰通常是由排队延迟和PCI-e带宽争用引起的。也就是说，当高优任务需要计算或IO通信时，如果有低优的任务排在它前面，高优任务就需要等待，因此QoS无法保障。针对这两点Baymax分别做了一些限制：（1）在排队延迟方面，Baymax利用KNN/LR模型来预测持续时间。然后Baymax对发给GPU的请求进行重新排序。简单来说，就是共享模块预测了每个请求的执行时间，当它认为发下去的请求GPU还没执行完时，新下发的请求就先进入队列里。同时将位于队列中的任务重排序，当需要下发请求时，先下发队列中的高优任务请求。（2）在PCI-e带宽争用方面，Baymax限制了并发数据传输任务的数量。Baymax作者在第二年发表了Prophet（ASPLOS ‘17）[12]，用于预测多任务共置时QoS的影响程度。在论文最后提到的实验中，表示如果预测到多个任务不会影响QoS，就将其共置，但此处共置使用的是MPS，也就是没有使用分时复用的模式了。在该研究中，预测是核心。预测准确性是否能适应复杂的生产环境，预测的机器负载是否较大，还暂不清楚。</p>
+<p>来自阿里的AntMan（OSDI ‘20）[13]也认为排队延迟和带宽争用是干扰的原因，不同的是，它从DL模型的特点切入，来区分切换的时机。</p>
+<p>在算力限制方面，AntMan通过限制低优任务的kernel launch保证了高优任务的QoS。图九是AntMan算力共享机制的对比。AntMan算力调度最小单元，在论文中描述似乎有些模糊，应该是Op（Operator），AntMan“会持续分析GPU运算符的执行时间“，并在空隙时插入另一个任务的Op。但如何持续分析，论文中并没有详细描述。在显存隔离方面，AntMan没有限制显存的大小，而是尽力让两个任务都能运行在机器上。但两个或多个任务的显存申请量可能会造成显存溢出，因此AntMan做了很多显存方面的工作。首先需要了解任务在显存中保存的内容：首先是模型，该数据是大小稳定的，当它在显存中时，iteration才可以开始计算。论文中表示90%的任务模型使用500mb以内的显存。其次是iteration开始时申请的临时显存，这部分显存理论上来说，在iteration结束后就会释放。但使用的机器学习框架有缓存机制，申请的显存不会退回，该特性保障了速度，但牺牲了共享的可能性。因此AntMan做了一些显存方面最核心的机制是，当显存放不下时，就转到内存上。在此处论文还做了很多工作，不再尽述。</p>
+<p>论文描述称AntMan可以规避总线带宽争用问题，但似乎从机制上来说无法避免。除此之外，按照Op为粒度进行算力隔离是否会需要大量调度负载也是一个疑问，另外Op执行时间的差异性较大，尤其是开启XLA之后，这也可能带来一些不确定性。该方案需要修改机器学习框架（Tensorflow和Pytorch），对用户有一定的影响。代码开源在[20]，目前还是WIP项目（截止2020/11/18），核心部分（local-coordinator）还没能开源。</p>
+<p><img alt="img" data-src="https://pic3.zhimg.com/80/v2-953ef97814735d35dc1dcc7cfdab7c9e_1440w.jpg">图九/AntMan算力共享机制的对比</p>
+<p>如果最小调度单元是iteration，则会更加简单。首先需要了解一下DL训练的特征：训练时的最小迭代是一个iteration，分为四个过程：IO，进行数据读取存储以及一些临时变量的申请等；前向，在此过程中会有密集的GPU kernel。NLP任务在此处也会有CPU负载。后向，计算梯度更新，需要下发GPU kernel；更新，如果非一机一卡的任务，会有通信的过程。之后更新合并后的梯度，需要一小段GPU时间。可以看出前向后向和通信之后的更新过程，是需要使用GPU的，通信和IO不需要。因此可以在此处插入一些来自其他任务的kernel，同时还可以保证被插入任务的QoS。更简单的方式是，通过在iteration前后插入另一个任务的iteration来完成共享。当然这样就无法考虑通信的空隙，可以被理解是一种tradeoff。另外也因为iteration是最小调度单元，避免了计算资源和显存带宽争用问题。另外，如果不考虑高优任务，实现一个退化版本，贪心地放置iteration而不加以限制。可以更简单地提高集群利用率，也可以让任务的JCT/排队时间减小。</p>
+<p><strong>针对推理的上下文切换</strong></p>
+<p>在上文中描述了分时复用的三个问题，其中上下文切换是一个耗时点。来自字节跳动的PipeSwitch（OSDI ‘20）[14]针对推理场景的上下文切换进行了优化。具体生产场景是这样的：训练推理任务共享一张卡，大多数时候训练使用资源。当推理请求下发，上下文需要立刻切换到推理任务。如果模型数据已经在显存中，切换会很快，但生产环境中模型一般较大，训练和推理的模型不能同时加载到显存中，当切换到推理时，需要先传输整个模型，因此速度较慢。</p>
+<p>在该场景下，GPU上下文切换的开销有：（1）任务清理，指释放显存。（2）任务初始化，指启动进程，初始化Cuda context等。（3）Malloc。（4）模型传输，从内存传到显存。</p>
+<p>在模型传输方面，PipeSwitch作者观察到，和训练不同的是推理只有前向过程，因此只需要知道上一层的输出及本层的参数就可以开始计算本层。目前的加载方式是，将模型数据全部加载到显存后，才会开始进行计算，但实际上如果对IO和计算做pipeline，只加载一层就开始计算该层，就会加快整体速度。当然直接使用层为最小粒度可能会带来较大开销，因此进行了grouping合并操作。图十显示了pipeline的对比。在任务清理和初始化方面，设置了一些常驻进程来避免开销。最后在Malloc方面也使用了统一的内存管理来降低开销。可以说做的非常全面。由于需要获知层级结构，因此需要对Pytorch框架进行修改，对用户有一定影响。代码开源在[19].</p>
+<p><img alt="img" data-src="https://pic1.zhimg.com/80/v2-81a828e00f810669c93b4499fd9e8720_1440w.jpg">图十/PipeSwitch pipeline的对比</p>
+<p><strong>合并共享</strong></p>
+<p>合并共享是指，多个任务合并成一个上下文，因此可以共享GPU资源，同时发送kernel到GPU上，也共同使用显存。最具有代表性的是Nvidia的MPS[15]。该模式的好处是显而易见的，当任务使用的资源可以同时被满足时，其JCT就基本没有影响，性能可以说是最好的。可以充分利用GPU资源。但坏处也是致命的：错误会互相影响，如果一个任务错误退出（包括被kill），如果该任务正在执行kernel，那么和该任务共同share IPC和UVM的任务也会一同出错退出。目前还没有工作能够解决这一问题，Nvidia官方也推荐使用MPS的任务需要能够接受错误影响，比如MPI程序。因此无法在生产场景上大规模使用。另外，有报告称其不能支持所有DL框架的所有版本。</p>
+<p>在资源隔离方面，MPS没有显存隔离，可以通过限制同时下发的thread数粗略地限制计算资源。它位于Nvidia Driver之上。图十一是MPS的架构图。</p>
+<p><img alt="img" data-src="https://pic2.zhimg.com/80/v2-9ac1476ec711db7c87c479674e8278f9_1440w.jpg">图十一/MPS架构图</p>
+<p>Salus（MLSys ‘20）[16]也采取了合并共享的方式，作者通过Adaptor将GPU请求合并到同一个context下，去掉了上下文切换。当然，和MPS一样会发生错误传播，论文中也没有要解决这一问题，因此无法在生产环境中使用。但笔者认为这篇论文中更大的价值在显存和调度方面，它的很多见解在AntMan和PipeSwitch中也有体现。调度方面，以iteration为最小粒度，并且诠释了原因：使用kernel为粒度，可以进一步利用资源，但会增加调度服务的开销。因此折中选择了iteration，可以实现性能最大化。显存方面，一些观察和AntMan是一致的：显存变化具有周期性；永久性显存（模型）较小，只要模型在显存中就可以开始计算；临时性显存在iteration结束后就应该释放。也描述了机器学习框架缓存机制的死锁问题。不过Salus实现上需要两个任务所需的显存都放到GPU显存里，没有置换的操作。论文中也提到了推理场景下的切换问题：切换后理论上模型传输时间比推理延迟本身长几倍。除此之外论文中也有一些其他的观察点，值得一看。图十二展示了Salus架构。该项目代码开源在[17]。Salus也需要修改DL框架。作者也开源了修改后的tensorflow代码。</p>
+<p><img alt="img" data-src="https://pic2.zhimg.com/80/v2-28340c2c8607d60d527beeb4128483fd_1440w.jpg">图十二/Salus架构图</p>
+<p>如果在合并共享模块之上做分时复用，应可以绕过硬件的限制，精准地控制时间片和切换的时机，也可以去除上下文切换的开销。但在这种情况下是否还会有错误影响，还需要进一步验证。</p>
+<h2 id="场景展望"><a href="#场景展望" class="headerlink" title="场景展望"></a><strong>场景展望</strong></h2><p>目前GPU共享已经逐渐开始进入工业落地的阶段了，若需要更好地满足用户对使用场景的期待，除了更高的性能，笔者认为以下几点也需要注意。</p>
+<ul>
+<li>能够提供稳定的服务，运维便捷。比如MPS的错误影响是不能被接受的，另外对于带有预测的实现，也需要更高的稳定性。共享工作负载尽量降低。</li>
+<li>更低的JCT时延，最好具有保障部分任务QoS的能力。对于一个已有的GPU集群进行改造时，需要尽量减少对已有的用户和任务的影响。</li>
+<li>不打扰用户，尽量不对用户的代码和框架等做修改，另外也需要考虑框架和其他库的更新问题。</li>
+</ul>
+<hr>
+<h2 id="GPU-虚拟化方案"><a href="#GPU-虚拟化方案" class="headerlink" title="GPU 虚拟化方案"></a>GPU 虚拟化方案</h2><h3 id="Nvidia-vGPU"><a href="#Nvidia-vGPU" class="headerlink" title="Nvidia vGPU"></a>Nvidia vGPU</h3><p>NVIDIA Virtual GPU允许多虚拟机能够同时直接访问单个物理GPU的能力，只需要在虚拟机上装上与宿主机相同的驱动设备。通过这种方式，NVIDIA vGPU给多个虚拟机非并行化图形性能，以及应用的兼容性，在不同负载间来共享一个GPU。</p>
+<p><img alt="Diagram showing the high-level architecture of NVIDIA vGPU" data-src="https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/graphics/architecture-grid-vgpu.png"></p>
+<p>NVIDIA在vGPU技术上提供了2种模式，GPU passthrough和Bare-Metal Deployment。GPU passthrough模式相当于独占，不允许虚拟机之间共享设备，Bare-Metal相当于共享模式。GRID技术的Bare-Metal通过vfio-mdev提供了一个隔离性非常高的的硬件环境（不是模拟简单的模拟硬件），这个虚拟化技术并不会对性能有很大的伤害，对多租户需要强隔离的平台是一个很好的选择。</p>
+<p>但是这个技术目前来看主要针对的是<a href="https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/index.html#grid-vgpu-introduction" target="_blank" rel="external nofollow noopener noreferrer">虚拟机平台</a>，在技术特性方面也有明确写出<a href="https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/index.html#features-grid-vgpu" target="_blank" rel="external nofollow noopener noreferrer">某些功能不支持</a>，其次NVIDIA GRID技术需要购买NVIDIA公司的软件授权才能使用，这个授权费相当昂贵。</p>
+<h4 id="Time-Sliced-Nvidia-vGPU-Internel-Architecture"><a href="#Time-Sliced-Nvidia-vGPU-Internel-Architecture" class="headerlink" title="Time-Sliced Nvidia vGPU Internel Architecture"></a>Time-Sliced Nvidia vGPU Internel Architecture</h4><p>通过分时复用实现对于 GPU 的共享：</p>
+<p><img alt="Diagram showing the internal architecture of a time-sliced NVIDIA vGPU" data-src="https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/graphics/architecture-grid-vgpu-internal.png"></p>
+<h4 id="Since-11-1-MIG-Backend-Nvidia-vGPU-Internal-Architecture"><a href="#Since-11-1-MIG-Backend-Nvidia-vGPU-Internal-Architecture" class="headerlink" title="Since 11.1 MIG-Backend Nvidia vGPU Internal Architecture"></a>Since 11.1 MIG-Backend Nvidia vGPU Internal Architecture</h4><p>Multi-Instance-GPU</p>
+<p><img alt="Diagram showing the internal architecture of a MIG-backed NVIDIA vGPU" data-src="https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/graphics/architecture-grid-vgpu-mig-backed-internal.png"></p>
+<h3 id="Nvidia-MPS"><a href="#Nvidia-MPS" class="headerlink" title="Nvidia MPS"></a>Nvidia MPS</h3><p>NVIDIA MPS技术NVIDIA对GPU共享的最早的一种支持模式，通过MPS server和MPS client就可以让多个GPU任务共享GPU的计算能力。对于容器平台，这种共享GPU的方式是一种可行性的选择。</p>
+<p>不过，这种指令代理技术有一个<a href="https://docs.nvidia.com/deploy/pdf/CUDA_Multi_Process_Service_Overview.pdf" target="_blank" rel="external nofollow noopener noreferrer">弊端</a>，就是如果MPS Server挂掉或者其他MPS client端造成的非正常性退出，会导致处于同一个MPS server下的所有MPS client都受到影响，这种影响对于提供共享服务的平台来说是灾难性的。</p>
+<h3 id="Gaia-vCUDA"><a href="#Gaia-vCUDA" class="headerlink" title="Gaia vCUDA"></a>Gaia vCUDA</h3><p>它通过劫持对Cuda driver API的调用来做到资源隔离。劫持的调用如图二所示。具体实现方式也较为直接，在调用相应API时检查：（1）对于显存，一旦该任务申请显存后占用的显存大小大于config中的设置，就报错。（2）对于计算资源，存在硬隔离和软隔离两种方式，共同点是当任务使用的GPU SM利用率超出资源上限，则暂缓下发API调用。不同点是如果有资源空闲，软隔离允许任务超过设置，动态计算资源上限。而硬隔离则不允许超出设置量。该项目代码开源在[2]。实测即使只跑一个任务也会有较大JCT影响，可能是因为对资源的限制及守护程序的资源占用问题。</p>
+<p>vCUDA的系统架构与NVIDIA的GRID架构类似，采用一个Manager来管理GPU，Manager负责配置容器的GPU计算能力和显存资源，做到使用者无法使用多余申请的显存，GPU的平均使用率不会大幅超出申请值。vCUDA的设计采用零入侵设计，用户的程序无需重新编译就可以运行在GaiaStack平台进行GPU共享。</p>
+<p><img alt="img" data-src="http://km.oa.com/files/photos/pictures/201812/1544621216_79_w462_h389.png"></p>
+<p>vCUDA使用修改后cuda library来达到资源控制，vCUDA分别修改了计算操作，显存操作和信息获取3个方面的API。</p>
+<p><img alt data-src="https://pic1.zhimg.com/80/v2-a57553b87051e3f808f3e469f3066544_720w.jpg"></p>
+<h3 id="Alibaba-cGPU"><a href="#Alibaba-cGPU" class="headerlink" title="Alibaba cGPU"></a>Alibaba cGPU</h3><p>来自阿里的cGPU[7]，其共享模块在Nvidia driver层之上，也就是内核态。由于是在公有云使用，相对于用户态的共享会更加安全。它也是通过劫持对driver的调用完成资源隔离的，通过设置任务占用时间片长度来分配任务占用算力，但不清楚使用何种方式精准地控制上下文切换的时间。值得一提的是，由于Nvidia driver是不开源的，因此需要一些逆向工程才可以获得driver的相关method的name和ioctl参数的结构。该方案在使用上对用户可以做到无感知，当然JCT是有影响的。代码没有开源，也没有论文。图四是cGPU的架构图。</p>
+<p><img alt data-src="https://pic2.zhimg.com/80/v2-115ed2529ef08b23dda03531a761e2b1_720w.jpg"></p>
+<h3 id="Alibaba-AntMan"><a href="#Alibaba-AntMan" class="headerlink" title="Alibaba AntMan"></a>Alibaba AntMan</h3><p>来自阿里的AntMan（OSDI ‘20）[13]也认为排队延迟和带宽争用是干扰的原因，不同的是，它从DL模型的特点切入，来区分切换的时机。</p>
+<p>在算力限制方面，AntMan通过限制低优任务的kernel launch保证了高优任务的QoS。图九是AntMan算力共享机制的对比。AntMan算力调度最小单元，在论文中描述似乎有些模糊，应该是Op（Operator），AntMan“会持续分析GPU运算符的执行时间“，并在空隙时插入另一个任务的Op。但如何持续分析，论文中并没有详细描述。在显存隔离方面，AntMan没有限制显存的大小，而是尽力让两个任务都能运行在机器上。但两个或多个任务的显存申请量可能会造成显存溢出，因此AntMan做了很多显存方面的工作。首先需要了解任务在显存中保存的内容：首先是模型，该数据是大小稳定的，当它在显存中时，iteration才可以开始计算。论文中表示90%的任务模型使用500mb以内的显存。其次是iteration开始时申请的临时显存，这部分显存理论上来说，在iteration结束后就会释放。但使用的机器学习框架有缓存机制，申请的显存不会退回，该特性保障了速度，但牺牲了共享的可能性。因此AntMan做了一些显存方面最核心的机制是，当显存放不下时，就转到内存上。在此处论文还做了很多工作，不再尽述。</p>
+<p>论文描述称AntMan可以规避总线带宽争用问题，但似乎从机制上来说无法避免。除此之外，按照Op为粒度进行算力隔离是否会需要大量调度负载也是一个疑问，另外Op执行时间的差异性较大，尤其是开启XLA之后，这也可能带来一些不确定性。该方案需要修改机器学习框架（Tensorflow和Pytorch），对用户有一定的影响。代码开源在[20]，目前还是WIP项目（截止2020/11/18），核心部分（local-coordinator）还没能开源。</p>
+<p><img alt="AntMan算力共享机制的对比" data-src="https://pic3.zhimg.com/80/v2-953ef97814735d35dc1dcc7cfdab7c9e_720w.jpg"></p>
+<p>如果最小调度单元是iteration，则会更加简单。首先需要了解一下DL训练的特征：训练时的最小迭代是一个iteration，分为四个过程：IO，进行数据读取存储以及一些临时变量的申请等；前向，在此过程中会有密集的GPU kernel。NLP任务在此处也会有CPU负载。后向，计算梯度更新，需要下发GPU kernel；更新，如果非一机一卡的任务，会有通信的过程。之后更新合并后的梯度，需要一小段GPU时间。可以看出前向后向和通信之后的更新过程，是需要使用GPU的，通信和IO不需要。因此可以在此处插入一些来自其他任务的kernel，同时还可以保证被插入任务的QoS。更简单的方式是，通过在iteration前后插入另一个任务的iteration来完成共享。当然这样就无法考虑通信的空隙，可以被理解是一种tradeoff。另外也因为iteration是最小调度单元，避免了计算资源和显存带宽争用问题。另外，如果不考虑高优任务，实现一个退化版本，贪心地放置iteration而不加以限制。可以更简单地提高集群利用率，也可以让任务的JCT/排队时间减小。</p>
+<h3 id="ByteDance-PipeSwitch"><a href="#ByteDance-PipeSwitch" class="headerlink" title="ByteDance PipeSwitch"></a>ByteDance PipeSwitch</h3><p>在上文中描述了分时复用的三个问题，其中上下文切换是一个耗时点。来自字节跳动的PipeSwitch（OSDI ‘20）[14]针对推理场景的上下文切换进行了优化。具体生产场景是这样的：训练推理任务共享一张卡，大多数时候训练使用资源。当推理请求下发，上下文需要立刻切换到推理任务。如果模型数据已经在显存中，切换会很快，但生产环境中模型一般较大，训练和推理的模型不能同时加载到显存中，当切换到推理时，需要先传输整个模型，因此速度较慢。</p>
+<p>在该场景下，GPU上下文切换的开销有：（1）任务清理，指释放显存。（2）任务初始化，指启动进程，初始化Cuda context等。（3）Malloc。（4）模型传输，从内存传到显存。</p>
+<p>在模型传输方面，PipeSwitch作者观察到，和训练不同的是推理只有前向过程，因此只需要知道上一层的输出及本层的参数就可以开始计算本层。目前的加载方式是，将模型数据全部加载到显存后，才会开始进行计算，但实际上如果对IO和计算做pipeline，只加载一层就开始计算该层，就会加快整体速度。当然直接使用层为最小粒度可能会带来较大开销，因此进行了grouping合并操作。图十显示了pipeline的对比。在任务清理和初始化方面，设置了一些常驻进程来避免开销。最后在Malloc方面也使用了统一的内存管理来降低开销。可以说做的非常全面。由于需要获知层级结构，因此需要对Pytorch框架进行修改，对用户有一定影响。代码开源在[19].</p>
+<p><img alt="img" data-src="https://pic1.zhimg.com/80/v2-81a828e00f810669c93b4499fd9e8720_720w.jpg"></p>
+<h2 id="GPU-并行模式"><a href="#GPU-并行模式" class="headerlink" title="GPU 并行模式"></a>GPU 并行模式</h2><p>并行模式指任务是以何种方式在同一个GPU上运行的。目前有两种方式：</p>
+<ul>
+<li>分时复用：指划分时间片，让不同的任务占据一个独立的时间片，需要进行上下文切换。在这种模式下，任务实际上是并发的，而不是并行的，因为同一时间只有一个任务在跑。</li>
+<li>合并共享：指将多个任务合并成一个上下文，因此可以同时跑多个任务，是真正意义上的并行。在生产环境中，更多使用分时复用的方式。</li>
+</ul>
+<h3 id="分时复用"><a href="#分时复用" class="headerlink" title="分时复用"></a>分时复用</h3><p>分时复用的模式大家都较为熟悉，CPU程序的时间片共享已经非常常见和易用，但在GPU领域还有一些工作要做。如果在Nvidia GPU上直接启动两个任务，使用的就是时间片共享的方式。但该模式存在多任务干扰问题：即使两个机器学习任务的GPU利用率和显存利用率之和远小于1，单个任务的JCT(单个任务完成时间)也会高出很多。</p>
+<p>究其原因，是因为计算碰撞，通信碰撞，以及GPU的上下文切换较慢。</p>
+<ul>
+<li>计算碰撞很好理解，如果切换给另一个任务的时候，本任务正好在做CPU计算/IO/通信，而需要GPU计算时，时间片就切回给本任务，那么就不会有JCT的影响。但两个任务往往同时需要使用GPU资源。</li>
+<li>通信碰撞，是指任务同时需要使用显存带宽，在主机内存和设备显存之间传输数据。</li>
+<li>GPU上下文切换慢，是相对CPU而言的。CPU上下文切换的速度是微秒级别，而GPU的切换在毫秒级别。在此处也会有一定的损耗。</li>
+</ul>
+<p>图八是分时复用模式的常见架构：</p>
+<p><img alt="media/image3.png" data-src="https://docs.nvidia.com/deploy/mps/topics/media/image3.png"></p>
+<p>上文提到的Gaia，KubeShare，rCuda，vCuda，qCuda，cGPU，vGPU均为分时复用的模式。由于上文所述的问题，他们的单个任务完成时间（JCT）都会受到较大的影响。V100测试环境下，两个任务同时运行，其JCT是单个任务运行时的1.4倍以上。因此在生产环境下，我们需要考虑如何减少任务之间互相影响的问题。上述方案都没有考虑机器学习的特性，只要共享层接收到kernel下发，检查没有超过设置上限，就会继续向下传递。另外也限制任务显存的使用不能超过设置上限，不具备弹性。因此针对特定的生产场景，有一些工作结合机器学习任务的特性，进行了资源的限制及优化。</p>
+<h3 id="QoS-保障"><a href="#QoS-保障" class="headerlink" title="QoS 保障"></a>QoS 保障</h3><h3 id="合并共享"><a href="#合并共享" class="headerlink" title="合并共享"></a>合并共享</h3><p>合并共享是指，多个任务合并成一个上下文，因此可以共享GPU资源，同时发送kernel到GPU上，也共同使用显存。最具有代表性的是Nvidia的MPS[15]。该模式的好处是显而易见的，当任务使用的资源可以同时被满足时，其JCT就基本没有影响，性能可以说是最好的。可以充分利用GPU资源。但坏处也是致命的：错误会互相影响，如果一个任务错误退出（包括被kill），如果该任务正在执行kernel，那么和该任务共同share IPC和UVM的任务也会一同出错退出。目前还没有工作能够解决这一问题，Nvidia官方也推荐使用MPS的任务需要能够接受错误影响，比如MPI程序。因此无法在生产场景上大规模使用。另外，有报告称其不能支持所有DL框架的所有版本。</p>
+<p>在资源隔离方面，MPS没有显存隔离，可以通过限制同时下发的thread数粗略地限制计算资源。它位于Nvidia Driver之上</p>
+<p><img alt="media/image4.png" data-src="https://docs.nvidia.com/deploy/mps/topics/media/image4.png"></p>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ul>
+<li><a href="https://zhuanlan.zhihu.com/p/285994980" target="_blank" rel="external nofollow noopener noreferrer">https://zhuanlan.zhihu.com/p/285994980</a></li>
+<li><a href="https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/index.html" target="_blank" rel="external nofollow noopener noreferrer">Nvidia vGPU</a></li>
+<li><a href="https://docs.nvidia.com/deploy/mps/index.html" target="_blank" rel="external nofollow noopener noreferrer">Nvidia MPS</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/285994980" target="_blank" rel="external nofollow noopener noreferrer">针对深度学习的GPU共享</a></li>
+<li><a href="http://km.oa.com/group/37641/articles/show/418533" target="_blank" rel="external nofollow noopener noreferrer">http://km.oa.com/group/37641/articles/show/418533</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/4e8612ed/" rel="bookmark">【异构计算】NVIDIA GPU MIG</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/cf391335/" rel="bookmark">【异构计算】GPU 共享</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/ccdd2b68/" rel="bookmark">macOS 使用 Vagrant 管理虚拟机</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/65866329/" rel="bookmark">虚拟化技术概览</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/f07e2cff/" rel="bookmark">网络虚拟化</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/6e1a1f6e/" title="【异构计算】GPU 虚拟化">http://houmin.cc/posts/6e1a1f6e/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E8%99%9A%E6%8B%9F%E5%8C%96/" rel="tag"><i class="fa fa-tag"></i> 虚拟化</a>
+              <a href="/tags/GPU/" rel="tag"><i class="fa fa-tag"></i> GPU</a>
+              <a href="/tags/%E8%B5%84%E6%BA%90%E9%9A%94%E7%A6%BB/" rel="tag"><i class="fa fa-tag"></i> 资源隔离</a>
+              <a href="/tags/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/" rel="tag"><i class="fa fa-tag"></i> 深度学习</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/4e8612ed/" rel="next" title="【异构计算】NVIDIA GPU MIG">
+                  <i class="fa fa-chevron-left"></i> 【异构计算】NVIDIA GPU MIG
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/b0b2b640/" rel="prev" title="めぐる季节">
+                  めぐる季节 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#A-survey-of-GPU-sharing-for-DL"><span class="nav-number">1.</span> <span class="nav-text">A survey of GPU sharing for DL</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#资源隔离"><span class="nav-number">2.</span> <span class="nav-text">资源隔离</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#并行模式"><span class="nav-number">3.</span> <span class="nav-text">并行模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#场景展望"><span class="nav-number">4.</span> <span class="nav-text">场景展望</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GPU-虚拟化方案"><span class="nav-number">5.</span> <span class="nav-text">GPU 虚拟化方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Nvidia-vGPU"><span class="nav-number">5.1.</span> <span class="nav-text">Nvidia vGPU</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Time-Sliced-Nvidia-vGPU-Internel-Architecture"><span class="nav-number">5.1.1.</span> <span class="nav-text">Time-Sliced Nvidia vGPU Internel Architecture</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Since-11-1-MIG-Backend-Nvidia-vGPU-Internal-Architecture"><span class="nav-number">5.1.2.</span> <span class="nav-text">Since 11.1 MIG-Backend Nvidia vGPU Internal Architecture</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Nvidia-MPS"><span class="nav-number">5.2.</span> <span class="nav-text">Nvidia MPS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Gaia-vCUDA"><span class="nav-number">5.3.</span> <span class="nav-text">Gaia vCUDA</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Alibaba-cGPU"><span class="nav-number">5.4.</span> <span class="nav-text">Alibaba cGPU</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Alibaba-AntMan"><span class="nav-number">5.5.</span> <span class="nav-text">Alibaba AntMan</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ByteDance-PipeSwitch"><span class="nav-number">5.6.</span> <span class="nav-text">ByteDance PipeSwitch</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GPU-并行模式"><span class="nav-number">6.</span> <span class="nav-text">GPU 并行模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#分时复用"><span class="nav-number">6.1.</span> <span class="nav-text">分时复用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#QoS-保障"><span class="nav-number">6.2.</span> <span class="nav-text">QoS 保障</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#合并共享"><span class="nav-number">6.3.</span> <span class="nav-text">合并共享</span></a></li></ol></li></ol><li class="nav-item nav-level-1"><a class="nav-link" href="#参考资料"><span class="nav-number"></span> <span class="nav-text">参考资料</span></a></li></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">154</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">219</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.9m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">56:29</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

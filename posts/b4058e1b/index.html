@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="问题背景在使用GPU进行深度学习相关的训练与推理时，需要查看当前集群中GPU的使用情况： 需要通过当前GPU设备资源使用情况判断是否可以再部署新的应用，判断集群是否需要扩容，为GPU服务提供对齐CPU的容量保障服务，补齐容量保障中的GPU短板 需要通过当前GPU设备资源使用情况分析使用中存在的瓶颈和短板，推进优化，提高资源利用率和服务性能">
+<meta name="keywords" content="监控,GPU">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【系统监控】GPU 监控">
+<meta property="og:url" content="http://houmin.cc/posts/b4058e1b/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="问题背景在使用GPU进行深度学习相关的训练与推理时，需要查看当前集群中GPU的使用情况： 需要通过当前GPU设备资源使用情况判断是否可以再部署新的应用，判断集群是否需要扩容，为GPU服务提供对齐CPU的容量保障服务，补齐容量保障中的GPU短板 需要通过当前GPU设备资源使用情况分析使用中存在的瓶颈和短板，推进优化，提高资源利用率和服务性能">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-06_nvidia-managing-tools.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-06_nvidia-dcgm.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-06_nvidia-dcgm-icon.png">
+<meta property="og:image" content="https://developer-blogs.nvidia.com/wp-content/uploads/2016/08/image01-300x125.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-06_dcgm-modularity.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-16_prometheus-architecture.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-06_nvidia-gpu-telemetry.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-06_nvidia-dcgm-grafana.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-07_falcon-arch.png">
+<meta property="og:updated_time" content="2021-01-07T08:47:52.346Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-06_nvidia-managing-tools.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/b4058e1b/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【系统监控】GPU 监控 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/b4058e1b/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【系统监控】GPU 监控
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-01-06 11:01:35" itemprop="dateCreated datePublished" datetime="2021-01-06T11:01:35+08:00">2021-01-06</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/b4058e1b/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/b4058e1b/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>19k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>34 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="问题背景"><a href="#问题背景" class="headerlink" title="问题背景"></a>问题背景</h2><p>在使用GPU进行深度学习相关的训练与推理时，需要查看当前集群中GPU的使用情况：</p><ul>
+<li>需要通过当前GPU设备资源使用情况判断是否可以再部署新的应用，判断集群是否需要扩容，为GPU服务提供对齐CPU的容量保障服务，补齐容量保障中的GPU短板</li>
+<li>需要通过当前GPU设备资源使用情况分析使用中存在的瓶颈和短板，推进优化，提高资源利用率和服务性能</li>
+</ul><a id="more"></a>
+
+<p>为了获得GPU的监控数据，NVIDIA 提供了以下三种方法：</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-06_nvidia-managing-tools.png"></p>
+<ul>
+<li><a href="https://developer.nvidia.com/nvidia-management-library-nvml" target="_blank" rel="external nofollow noopener noreferrer">NVML</a>：NVIDIA Management Library，基于C进行监控和管理GPU的库，<code>nvidia-smi</code> 命令即是基于此实现的</li>
+<li><a href="https://developer.nvidia.com/dcgm" target="_blank" rel="external nofollow noopener noreferrer">DCGM</a>：Data Center GPU Manager，基于NVML和CUDA实现的一整套GPU的监控和管理工具</li>
+<li>第三方工具：基于 DCGM 或者 NVML 开发的第三方监控工具，可以与Prometheus等工具结合，提供数据库、UI等工具</li>
+</ul>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-06_nvidia-dcgm.png"></p>
+<p>对比这三种工具的特点：</p>
+<ul>
+<li>NVML<ul>
+<li>无状态的查询，只支持查询当前数据</li>
+<li>属于低级别控制GPU的API</li>
+<li>基于NVML库开发的管理工具运行成本低，开发成本高</li>
+<li>基于NVML库开发的管理工具必须与GPU运行在同一个节点</li>
+</ul>
+</li>
+<li>DCGM<ul>
+<li>可以查询几个小时的数据指标</li>
+<li>提供了GPU的健康检查和诊断</li>
+<li>可以对一组GPU进行批量查询</li>
+<li>允许以 <code>remote/local</code> 两种方式运行</li>
+</ul>
+</li>
+<li>第三方工具<ul>
+<li>提供了database、graphs和好看的UI</li>
+</ul>
+</li>
+</ul>
+<p>本文后续将主要介绍 DCGM。</p>
+<h2 id="DCGM"><a href="#DCGM" class="headerlink" title="DCGM"></a>DCGM</h2><p>下图展示了 <code>DCGM</code> 在集群中运行的方式，<code>DCGM</code> 以 Agent 的形式部署在计算节点上，管理节点上的工具可以通过 <code>DCGM</code> 提供的API管理和监控GPU。</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-06_nvidia-dcgm-icon.png"></p>
+<p><code>DCGM</code> 提供了一下四种关键特性：</p>
+<ul>
+<li><strong>Active Health Monitoring</strong></li>
+<li><strong>GPU Diagnostics</strong></li>
+<li><strong>Policy and Alerting</strong></li>
+<li><strong>Configuration Managerment</strong></li>
+</ul>
+<h3 id="安装部署"><a href="#安装部署" class="headerlink" title="安装部署"></a>安装部署</h3><p>DCGM 需要单独下载安装，在NVIDIA官网<a href="https://developer.nvidia.com/dcgm#Downloads" target="_blank" rel="external nofollow noopener noreferrer">NVIDIA</a>下载对应的安装包，这里选择下载rpm包即可，下载完成后：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 卸载可能已安装的旧版本DCGM</span></span><br><span class="line">$ yum remove datacenter-gpu-manager</span><br><span class="line"><span class="comment"># 安装</span></span><br><span class="line">$ rpm -ivh datacenter-gpu-manager-2.0.13-1-x86_64.rpm</span><br></pre></td></tr></table></figure>
+<ul>
+<li>DCGM的动态链接库会被安装到<code>/usr/lib64</code>目录</li>
+<li>Python库会被安装到<code>/usr/local/dcgm/bindings</code>目录</li>
+</ul>
+<p>DCGM 是一个面向集群管理的工具，所以在实际使用前，需要先在目标机器启动一个agent，<code>nv-hostengine</code>，具体启动命令如下</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 启动 nv-hostengine</span></span><br><span class="line">$ nv-hostengine --port 39999 --<span class="built_in">bind</span>-interface 127.0.0.1</span><br><span class="line">Host Engine Listener Started</span><br><span class="line">Started host engine version 2.0.13 using port number: 39999</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看设备列表</span></span><br><span class="line">$ dcgmi discovery --host 127.0.0.1:39999 -l</span><br><span class="line">4 GPUs found.</span><br><span class="line">+--------+----------------------------------------------------------------------+</span><br><span class="line">| GPU ID | Device Information                                                   |</span><br><span class="line">+--------+----------------------------------------------------------------------+</span><br><span class="line">| 0      | Name: Tesla T4                                                       |</span><br><span class="line">|        | PCI Bus ID: 00000000:00:08.0                                         |</span><br><span class="line">|        | Device UUID: GPU-0bf43c76-0f1a-f49f-a362-92d5b9bbbc9f                |</span><br><span class="line">+--------+----------------------------------------------------------------------+</span><br><span class="line">| 1      | Name: Tesla T4                                                       |</span><br><span class="line">|        | PCI Bus ID: 00000000:00:09.0                                         |</span><br><span class="line">|        | Device UUID: GPU-c55a4e5e-47dd-48c2-99d0-2630042bf619                |</span><br><span class="line">+--------+----------------------------------------------------------------------+</span><br><span class="line">| 2      | Name: Tesla T4                                                       |</span><br><span class="line">|        | PCI Bus ID: 00000000:00:0A.0                                         |</span><br><span class="line">|        | Device UUID: GPU-95e5fe58-f03d-815e-c871-65637b623aca                |</span><br><span class="line">+--------+----------------------------------------------------------------------+</span><br><span class="line">| 3      | Name: Tesla T4                                                       |</span><br><span class="line">|        | PCI Bus ID: 00000000:00:0B.0                                         |</span><br><span class="line">|        | Device UUID: GPU-70747d1b-2b7a-9895-29f5-485608c1742e                |</span><br><span class="line">+--------+----------------------------------------------------------------------+</span><br><span class="line">0 NvSwitches found.</span><br><span class="line">+-----------+</span><br><span class="line">| Switch ID |</span><br><span class="line">+-----------+</span><br><span class="line">+-----------+</span><br><span class="line"></span><br><span class="line"><span class="comment"># 关闭 nv-hostengine，这里作演示用，后续的过程还要继续打开</span></span><br><span class="line">$ nv-hostengine –t</span><br><span class="line">Host engine successfully terminated.</span><br></pre></td></tr></table></figure>
+<p>其中，<code>--port</code> <code>--bind-interface</code> 两个参数分别用来设置监听的端口和绑定的IP地址。同时也支持使用 <code>UNIX_SOCKET</code> 通信</p>
+<p>在启动 <code>nv-hostengine</code> 之后，我们就可以使用 <code>dcgmi</code> 来操作</p>
+<h3 id="组操作"><a href="#组操作" class="headerlink" title="组操作"></a>组操作</h3><p>和NVML不同，DCGM 的大部分功能都是面向组的，所以在使用DCGM之前，首先需要创建组，然后才能使用DCGM提供的各种功能。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 获取设备列表后，可以用如下命令创建组</span></span><br><span class="line"><span class="comment"># 创建成功后，该命令会输出如下，返回设备的组ID，后续的操作中都会用到组ID，例如下面的组ID 2</span></span><br><span class="line">$ dcgmi group --host 127.0.0.1:39999 -c GPU_GROUP</span><br><span class="line">Successfully created group <span class="string">"GPU_GROUP"</span> with a group ID of 2</span><br><span class="line"></span><br><span class="line">$ dcgmi group --host 127.0.0.1:39999 -l</span><br><span class="line">+-------------------+----------------------------------------------------------+</span><br><span class="line">| GROUPS                                                                       |</span><br><span class="line">| 1 group found.                                                               |</span><br><span class="line">+===================+==========================================================+</span><br><span class="line">| Groups            |                                                          |</span><br><span class="line">| -&gt; 2              |                                                          |</span><br><span class="line">|    -&gt; Group ID    | 2                                                        |</span><br><span class="line">|    -&gt; Group Name  | GPU_GROUP                                                |</span><br><span class="line">|    -&gt; Entities    | None                                                     |</span><br><span class="line">+-------------------+----------------------------------------------------------+</span><br><span class="line"></span><br><span class="line">$ dcgmi discovery --host 127.0.0.1:39999 -l </span><br><span class="line">4 GPUs found.</span><br><span class="line">+--------+----------------------------------------------------------------------+</span><br><span class="line">| GPU ID | Device Information                                                   |</span><br><span class="line">+--------+----------------------------------------------------------------------+</span><br><span class="line">| 0      | Name: Tesla T4                                                       |</span><br><span class="line">|        | PCI Bus ID: 00000000:00:08.0                                         |</span><br><span class="line">|        | Device UUID: GPU-0bf43c76-0f1a-f49f-a362-92d5b9bbbc9f                |</span><br><span class="line">+--------+----------------------------------------------------------------------+</span><br><span class="line">| 1      | Name: Tesla T4                                                       |</span><br><span class="line">|        | PCI Bus ID: 00000000:00:09.0                                         |</span><br><span class="line">|        | Device UUID: GPU-c55a4e5e-47dd-48c2-99d0-2630042bf619                |</span><br><span class="line">+--------+----------------------------------------------------------------------+</span><br><span class="line">| 2      | Name: Tesla T4                                                       |</span><br><span class="line">|        | PCI Bus ID: 00000000:00:0A.0                                         |</span><br><span class="line">|        | Device UUID: GPU-95e5fe58-f03d-815e-c871-65637b623aca                |</span><br><span class="line">+--------+----------------------------------------------------------------------+</span><br><span class="line">| 3      | Name: Tesla T4                                                       |</span><br><span class="line">|        | PCI Bus ID: 00000000:00:0B.0                                         |</span><br><span class="line">|        | Device UUID: GPU-70747d1b-2b7a-9895-29f5-485608c1742e                |</span><br><span class="line">+--------+----------------------------------------------------------------------+</span><br><span class="line">0 NvSwitches found.</span><br><span class="line">+-----------+</span><br><span class="line">| Switch ID |</span><br><span class="line">+-----------+</span><br><span class="line">+-----------+</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建组后可以用如下命令给组中添加设备</span></span><br><span class="line">$ dcgmi group --host 127.0.0.1:39999 -g 2 -a 0,1</span><br><span class="line">Add to group operation successful.</span><br><span class="line"></span><br><span class="line">$ dcgmi group --host 127.0.0.1:39999 -g 2 -i</span><br><span class="line">+-------------------+----------------------------------------------------------+</span><br><span class="line">| GROUP INFO                                                                   |</span><br><span class="line">+===================+==========================================================+</span><br><span class="line">| 2                 |                                                          |</span><br><span class="line">| -&gt; Group ID       | 2                                                        |</span><br><span class="line">| -&gt; Group Name     | GPU_GROUP                                                |</span><br><span class="line">| -&gt; Entities       | GPU 0, GPU 1                                             |</span><br><span class="line">+-------------------+----------------------------------------------------------+</span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用如下命令可以从组中删除设备</span></span><br><span class="line">$ dcgmi group --host 127.0.0.1:39999 -g 2 -r 0,1</span><br><span class="line">Remove from group operation successful.</span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用如下命令可以从删除组</span></span><br><span class="line">$ dcgmi group --host 127.0.0.1:39999 -d 2</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>注意：group和设备之间是多对多关系</p>
+</blockquote>
+<h3 id="Job-Statistics"><a href="#Job-Statistics" class="headerlink" title="Job Statistics"></a>Job Statistics</h3><p>当有一个Job需要通过GPU加速计算的时候，我们想知道：</p>
+<ul>
+<li>我的Job运行在哪个GPU上</li>
+<li>我的Job使用了多少GPU</li>
+<li>在我的Job运行过程中是否有任何的错误和Warning</li>
+<li>系统的GPU是否都健康并且准备好了下一个Job的计算</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 当前 Group 3 如下</span></span><br><span class="line">$ dcgmi group --host 127.0.0.1:39999 -g 3 -i</span><br><span class="line">+-------------------+----------------------------------------------------------+</span><br><span class="line">| GROUP INFO                                                                   |</span><br><span class="line">+===================+==========================================================+</span><br><span class="line">| 3                 |                                                          |</span><br><span class="line">| -&gt; Group ID       | 3                                                        |</span><br><span class="line">| -&gt; Group Name     | GPU_GROUP                                                |</span><br><span class="line">| -&gt; Entities       | GPU 0, GPU 1, GPU 2, GPU 3                               |</span><br><span class="line">+-------------------+----------------------------------------------------------+</span><br><span class="line"></span><br><span class="line"><span class="comment"># 在使用dcgmi获取GPU统计数据，需要先打开数据分析功能，具体命令如下</span></span><br><span class="line">$ dcgmi stats --host 127.0.0.1:39999 -g 3 --<span class="built_in">enable</span></span><br><span class="line">Successfully started process watches.</span><br><span class="line"></span><br><span class="line"><span class="comment"># 打开数据分析功能后，可以使用如下命令查看具体的进程的统计信息</span></span><br><span class="line"><span class="comment"># 假设这里启动了一个CUDA应用进程正在使用GPU进行计算</span></span><br><span class="line">$ dcgmi stats --host 127.0.0.1:39999 -g 3 -p 41861 -v</span><br><span class="line">Successfully retrieved process info <span class="keyword">for</span> PID: 41861. Process ran on 1 GPUs.</span><br><span class="line">+------------------------------------------------------------------------------+</span><br><span class="line">| GPU ID: 3                                                                    |</span><br><span class="line">+====================================+=========================================+</span><br><span class="line">|-----  Execution Stats  ------------+-----------------------------------------|</span><br><span class="line">| Start Time                     *   | Wed Jan  6 16:54:16 2021                |</span><br><span class="line">| End Time                       *   | Still Running                           |</span><br><span class="line">| Total Execution Time (sec)     *   | Still Running                           |</span><br><span class="line">| No. of Conflicting Processes   *   | 0                                       |</span><br><span class="line">+-----  Performance Stats  ----------+-----------------------------------------+</span><br><span class="line">| Energy Consumed (Joules)           | 2985                                    |</span><br><span class="line">| Max GPU Memory Used (bytes)    *   | 12107907072                             |</span><br><span class="line">| SM Clock (MHz)                     | Avg: 1590, Max: 1590, Min: 1590         |</span><br><span class="line">| Memory Clock (MHz)                 | Avg: 5000, Max: 5000, Min: 5000         |</span><br><span class="line">| SM Utilization (%)                 | Avg: 100, Max: 100, Min: 100            |</span><br><span class="line">| Memory Utilization (%)             | Avg: 5, Max: 5, Min: 5                  |</span><br><span class="line">| PCIe Rx Bandwidth (megabytes)      | Avg: N/A, Max: N/A, Min: N/A            |</span><br><span class="line">| PCIe Tx Bandwidth (megabytes)      | Avg: N/A, Max: N/A, Min: N/A            |</span><br><span class="line">+-----  Event Stats  ----------------+-----------------------------------------+</span><br><span class="line">| Double Bit ECC Errors              | 0                                       |</span><br><span class="line">| PCIe Replay Warnings               | 0                                       |</span><br><span class="line">| Critical XID Errors                | 0                                       |</span><br><span class="line">+-----  Slowdown Stats  -------------+-----------------------------------------+</span><br><span class="line">| Due to - Power (%)                 | 0                                       |</span><br><span class="line">|        - Thermal (%)               | 0                                       |</span><br><span class="line">|        - Reliability (%)           | 0                                       |</span><br><span class="line">|        - Board Limit (%)           | 0                                       |</span><br><span class="line">|        - Low Utilization (%)       | 0                                       |</span><br><span class="line">|        - Sync Boost (%)            | 0                                       |</span><br><span class="line">+-----  Process Utilization  --------+-----------------------------------------+</span><br><span class="line">| PID                                | 41861                                   |</span><br><span class="line">|     Avg SM Utilization (%)         | 99                                      |</span><br><span class="line">|     Avg Memory Utilization (%)     | 3                                       |</span><br><span class="line">+-----  Overall Health  -------------+-----------------------------------------+</span><br><span class="line">| Overall Health                     | Healthy                                 |</span><br><span class="line">+------------------------------------+-----------------------------------------+</span><br><span class="line"></span><br><span class="line">(*) Represents a process statistic. Otherwise device statistic during</span><br><span class="line">    process lifetime listed.</span><br></pre></td></tr></table></figure>
+<h3 id="Configuration-Managerment"><a href="#Configuration-Managerment" class="headerlink" title="Configuration Managerment"></a>Configuration Managerment</h3><p>DCGM 可以更改GPU设置, 具体支持的设置项如下，查看原有设置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">$ dcgmi config  --host 127.0.0.1:39999 -g 3 --get</span><br><span class="line">+------------------------------+------------------------------+------------------------------+</span><br><span class="line">| GPU_GROUP                                                                                  |</span><br><span class="line">| Group of 4 GPUs                                                                            |</span><br><span class="line">+==============================+==============================+==============================+</span><br><span class="line">| Field                        | Target                       | Current                      |</span><br><span class="line">+------------------------------+------------------------------+------------------------------+</span><br><span class="line">| Compute Mode                 | Not Specified                | Unrestricted                 |</span><br><span class="line">| ECC Mode                     | Not Specified                | Enabled                      |</span><br><span class="line">| Sync Boost                   | Not Specified                | Not Supported                |</span><br><span class="line">| Memory Application Clock     | Not Specified                | 5001                         |</span><br><span class="line">| SM Application Clock         | Not Specified                | 585                          |</span><br><span class="line">| Power Limit                  | Not Specified                | 70                           |</span><br><span class="line">+------------------------------+------------------------------+------------------------------+</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 具体参数说明</span></span><br><span class="line">$ dcgmi config -h</span><br><span class="line"></span><br><span class="line"> config -- Used to configure settings <span class="keyword">for</span> groups of GPUs.</span><br><span class="line"></span><br><span class="line">Usage: dcgmi config</span><br><span class="line">   dcgmi config [--host &lt;IP/FQDN&gt;] [-g &lt;groupId&gt;] --enforce</span><br><span class="line">   dcgmi config [--host &lt;IP/FQDN&gt;] [-g &lt;groupId&gt;] --get [-v] [-j]</span><br><span class="line">   dcgmi config [--host &lt;IP/FQDN&gt;] [-g &lt;groupId&gt;] --<span class="built_in">set</span> [-e &lt;0/1&gt;] [-s</span><br><span class="line">        &lt;0/1&gt;] [-a &lt;mem,proc&gt;] [-P &lt;<span class="built_in">limit</span>&gt;] [-c &lt;mode&gt;]</span><br><span class="line">  </span><br><span class="line">  ...</span><br><span class="line">  -c  --compmode   mode       Configure Compute Mode. Can be any of the</span><br><span class="line">                               following:</span><br><span class="line">                               0 - Unrestricted</span><br><span class="line">                               1 - Prohibited</span><br><span class="line">                               2 - Exclusive Process</span><br><span class="line">  -P  --powerlimit <span class="built_in">limit</span>      Configure Power Limit (Watts).</span><br><span class="line">  -a  --appclocks  mem,proc   Configure Application Clocks. Must use memory,proc</span><br><span class="line">                               clocks (csv) format(MHz).</span><br><span class="line">  -s  --syncboost  0/1        Configure Syncboost. (1 to Enable, 0 to Disable)</span><br><span class="line">  -e  --eccmode    0/1        Configure Ecc mode. (1 to Enable, 0 to Disable)</span><br><span class="line">  </span><br><span class="line"><span class="comment"># 更改设置</span></span><br><span class="line">$ dcgmi config  --host 127.0.0.1:39999 -g 3 --<span class="built_in">set</span> -c 2</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查询结果</span></span><br><span class="line">$ dcgmi config  --host 127.0.0.1:39999 -g 3 --get</span><br><span class="line">+------------------------------+------------------------------+------------------------------+</span><br><span class="line">| GPU_GROUP                                                                                  |</span><br><span class="line">| Group of 4 GPUs                                                                            |</span><br><span class="line">+==============================+==============================+==============================+</span><br><span class="line">| Field                        | Target                       | Current                      |</span><br><span class="line">+------------------------------+------------------------------+------------------------------+</span><br><span class="line">| Compute Mode                 | E. Process                   | E. Process                   |</span><br><span class="line">| ECC Mode                     | Not Specified                | Enabled                      |</span><br><span class="line">| Sync Boost                   | Not Specified                | Not Supported                |</span><br><span class="line">| Memory Application Clock     | Not Specified                | 5001                         |</span><br><span class="line">| SM Application Clock         | Not Specified                | 585                          |</span><br><span class="line">| Power Limit                  | Not Specified                | 70                           |</span><br><span class="line">+------------------------------+------------------------------+------------------------------+</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>注意，使用DCGM更改设置时，运作模式是一种面向声明的模式，用户通过dcgmi指定需要的目标设置，同时nv-hostengine自动调整设置，使当前设置对齐目标设置</p>
+</blockquote>
+<h3 id="Policy-and-Alerting"><a href="#Policy-and-Alerting" class="headerlink" title="Policy and Alerting"></a>Policy and Alerting</h3><p>dcgm 的提供了policy 功能，policy 本质上是类似于一种Watch机制，首先设定一个<code>违反</code>条件，然后可以根据<code>违反</code>条件设置对应的处理策略。一般而言，可以设置一个条件，然后注册listener，等待dcgm通知。</p>
+<p><img alt data-src="https://developer-blogs.nvidia.com/wp-content/uploads/2016/08/image01-300x125.png"></p>
+<p>例如</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 通过如下命令设置最大温度50度的条件</span></span><br><span class="line">$ dcgmi policy --host 127.0.0.1:39999 -g 3 --<span class="built_in">set</span> 0,0 -T 50</span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置后的policy，通过如下命令查询</span></span><br><span class="line">$ dcgmi policy --host 127.0.0.1:39999 -g 2 --get</span><br><span class="line">Policy information</span><br><span class="line">+-----------------------------+------------------------------------------------+</span><br><span class="line">| Policy Information                                                           |</span><br><span class="line">| GPU_GROUP                                                                    |</span><br><span class="line">+=============================+================================================+</span><br><span class="line">| Violation conditions        | Max temperature threshold - 50                 |</span><br><span class="line">| Isolation mode              | Manual                                         |</span><br><span class="line">| Action on violation         | None                                           |</span><br><span class="line">| Validation after action     | None                                           |</span><br><span class="line">| Validation failure action   | None                                           |</span><br><span class="line">+-----------------------------+------------------------------------------------+</span><br><span class="line"></span><br><span class="line">$ dcgmi policy --host 127.0.0.1:39999 -g 2 --reg</span><br><span class="line">Timestamp: Wed Jan  6 17:02:27 2021</span><br><span class="line">The maximum thermal <span class="built_in">limit</span> has violated policy manager values.</span><br><span class="line">Temperature: 65</span><br><span class="line">Listening <span class="keyword">for</span> violations.</span><br><span class="line">Timestamp: Wed Jan  6 17:02:37 2021</span><br><span class="line">The maximum thermal <span class="built_in">limit</span> has violated policy manager values.</span><br><span class="line">Temperature: 65</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>参数设置</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"> --<span class="built_in">set</span>        actn,val   (OR required)  Set the current violation policy.</span><br><span class="line">                             Use csv action,validation (ie. 1,2)</span><br><span class="line">                             -----</span><br><span class="line">                             Action to take when any of the violations</span><br><span class="line">                             specified occur.</span><br><span class="line">                             0 - None</span><br><span class="line">                             1 - GPU Reset</span><br><span class="line">                             -----</span><br><span class="line">                             Validation to take after the violation action has</span><br><span class="line">                             been performed.</span><br><span class="line">                             0 - None</span><br><span class="line">                             1 - System Validation (short)</span><br><span class="line">                             2 - System Validation (medium)</span><br><span class="line">                             3 - System Validation (long)</span><br><span class="line">-x  --xiderrors             Add XID errors to the policy conditions.</span><br><span class="line">-n  --nvlinkerrors           Add NVLink errors to the policy conditions.</span><br><span class="line">-p  --pcierrors             Add PCIe replay errors to the policy conditions.</span><br><span class="line">-e  --eccerrors             Add ECC double bit errors to the policy</span><br><span class="line">                             conditions.</span><br><span class="line">-P  --maxpower   max        Specify the maximum power a group<span class="string">'s GPUs can reach</span></span><br><span class="line"><span class="string">                             before triggering a violation.</span></span><br><span class="line"><span class="string">-T  --maxtemp    max        Specify the maximum temperature a group'</span>s GPUs can</span><br><span class="line">                             reach before triggering a violation.</span><br><span class="line">-M  --maxpages   max        Specify the maximum number of retired pages that</span><br><span class="line">                             will trigger a violation.</span><br></pre></td></tr></table></figure>
+<h3 id="Health-check"><a href="#Health-check" class="headerlink" title="Health check"></a>Health check</h3><p><code>DCGM</code> 的健康检查是无侵入式的检查，提供了实时监控和聚合的健康数据，其运行机制是</p>
+<ol>
+<li>打开健康检查，设置需要检查的项</li>
+<li>DCGM在后台运行，根据设置监控对应组件状态</li>
+<li>用户通过<code>dcgmi health</code>命令查询当前发现的错误</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">$ dcgmi health --check -g 1</span><br><span class="line">Health Monitor Report</span><br><span class="line">+------------------+---------------------------------------------------------+</span><br><span class="line">| Overall Health:   Healthy                                                  |</span><br><span class="line">+==================+=========================================================+</span><br><span class="line"></span><br><span class="line">$ dcgmi health --check -g 1 </span><br><span class="line">Health Monitor Report</span><br><span class="line">+----------------------------------------------------------------------+</span><br><span class="line">| Group 1       | Overall Health: Warning                              |</span><br><span class="line">+==================+===================================================+</span><br><span class="line">| GPU ID: 0     | Warning                                              |</span><br><span class="line">|               | PCIe system: Warning - Detected more than 8 PCIe     |</span><br><span class="line">|               | replays per minute <span class="keyword">for</span> GPU 0: 13                     |</span><br><span class="line">+---------------+------------------------------------------------------+</span><br><span class="line">| GPU ID: 1     | Warning                                              |</span><br><span class="line">|               | InfoROM system: Warning - A corrupt InfoROM has been |</span><br><span class="line">|               | detected <span class="keyword">in</span> GPU 1.                                   |</span><br><span class="line">+---------------+------------------------------------------------------+</span><br></pre></td></tr></table></figure>
+<h3 id="GPU-Diagnostics"><a href="#GPU-Diagnostics" class="headerlink" title="GPU Diagnostics"></a>GPU Diagnostics</h3><p>诊断是主动检查的模式，提供了三个级别的检查，每次运行时会根据运行级别，运行对应的测试程序，来发现问题。</p>
+<p>运行命令如下</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">$ dcgmi diag --host 127.0.0.1:39999 -g 3 -r 1</span><br><span class="line">Successfully ran diagnostic <span class="keyword">for</span> group.</span><br><span class="line">+---------------------------+------------------------------------------------+</span><br><span class="line">| Diagnostic                | Result                                         |</span><br><span class="line">+===========================+================================================+</span><br><span class="line">|-----  Deployment  --------+------------------------------------------------|</span><br><span class="line">| Blacklist                 | Pass                                           |</span><br><span class="line">| NVML Library              | Pass                                           |</span><br><span class="line">| CUDA Main Library         | Pass                                           |</span><br><span class="line">| Permissions and OS Blocks | Pass                                           |</span><br><span class="line">| Persistence Mode          | Pass                                           |</span><br><span class="line">| Environment Variables     | Pass                                           |</span><br><span class="line">| Page Retirement           | Pass                                           |</span><br><span class="line">| Graphics Processes        | Pass                                           |</span><br><span class="line">| Inforom                   | Pass                                           |</span><br><span class="line">+---------------------------+------------------------------------------------+</span><br></pre></td></tr></table></figure>
+<h3 id="Profile"><a href="#Profile" class="headerlink" title="Profile"></a>Profile</h3><p>profile功能可以用较小的性能消耗获取GPU卡的利用率数据以及进程的性能数据，profile功能对于驱动版本和卡的类型有一些强制要求，具体是</p>
+<ol>
+<li>DCGM 版本大于1.7</li>
+<li>驱动版本大于418.43</li>
+<li>nv-hostengine 以root身份启动</li>
+<li>目前只支持Tesla V100、Tesla T4卡</li>
+</ol>
+<p>可以获取的性能指标有</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">指标</th>
+<th style="text-align:left">说明</th>
+<th style="text-align:left">FIELD_NAME</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">Graphics Engine Activity</td>
+<td style="text-align:left">Ratio of time the graphics engine is active. The graphics engine is active if a graphics/compute context is bound and the graphics pipe or compute pipe is busy. PROF_GR_ENGINE_ACTIVE (ID: 1001)</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">SM Activity</td>
+<td style="text-align:left">The ratio of cycles an SM has at least 1 warp assigned (computed from the number of cycles and elapsed cycles)</td>
+<td style="text-align:left">PROF_SM_ACTIVE (ID: 1002)</td>
+</tr>
+<tr>
+<td style="text-align:left">SM Occupancy</td>
+<td style="text-align:left">The ratio of number of warps resident on an SM. (number of resident warps as a percentage of the theoretical maximum number of warps per elapsed cycle)</td>
+<td style="text-align:left">PROF_SM_OCCUPANCY (ID: 1003)</td>
+</tr>
+<tr>
+<td style="text-align:left">Tensor Activity</td>
+<td style="text-align:left">The ratio of cycles the tensor (HMMA) pipe is active (off the peak sustained elapsed cycles)</td>
+<td style="text-align:left">PROF_PIPE_TENSOR_ACTIVE (ID: 1004)</td>
+</tr>
+<tr>
+<td style="text-align:left">Memory BW Utilization</td>
+<td style="text-align:left">The ratio of cycles the device memory interface is active sending or receiving data.</td>
+<td style="text-align:left">PROF_DRAM_ACTIVE (ID: 1005)</td>
+</tr>
+<tr>
+<td style="text-align:left">Engine Activity</td>
+<td style="text-align:left">Ratio of cycles the fp64 /fp32 / fp16 / HMMA / IMMA pipes are active.</td>
+<td style="text-align:left">PROF_PIPE_FPXY_ACTIVE (ID: 1006 (FP64); 1007 (FP32); 1008 (FP16))</td>
+</tr>
+<tr>
+<td style="text-align:left">NVLink Activity</td>
+<td style="text-align:left">The number of bytes of active NVLink rx or tx data including both header and payload.</td>
+<td style="text-align:left">DEV_NVLINK_BANDWIDTH_L0</td>
+</tr>
+<tr>
+<td style="text-align:left">PCIe Bandwidth pci<em>_bytes</em>{rx, tx}</td>
+<td style="text-align:left">The number of bytes of active pcie rx or tx data including both header and payload.</td>
+<td style="text-align:left">PROF<em>PCIE</em>[TR]X_BYTES (ID: 1009 (TX); 1010 (RX))</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-06_dcgm-modularity.png"></p>
+<h2 id="在-k8s-中集成-GPU-Telemetry"><a href="#在-k8s-中集成-GPU-Telemetry" class="headerlink" title="在 k8s 中集成 GPU Telemetry"></a>在 k8s 中集成 GPU Telemetry</h2><p>系统监控通常需要有以下几个组件：</p>
+<ul>
+<li>数据收集组件：collector，作为数据来源</li>
+<li>时序数据库组件：存储收集到的metrics</li>
+<li>可视化组件：将收集到的数据以可视化的界面友好地展示出来</li>
+</ul>
+<p>Prometheus 作为云原生时代优秀的解决方案，其结合 Grafana 和 Alert Manager 等组件实现了 k8s 集群的系统监控，下面是其组件架构，更多内容可以参考我的<a href="https://houmin.cc/posts/18c039ab/">另一篇博文</a>。</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-16_prometheus-architecture.png"></p>
+<p>同样，为了获得 GPU 的监控数据，NVIDIA 推出了 <a href="https://github.com/NVIDIA/gpu-monitoring-tools" target="_blank" rel="external nofollow noopener noreferrer"><code>dcgm-exporter</code></a>，它封装了 <code>DCGM</code>，类似于 <code>node-exporter</code> 将 GPU 的数据暴露给 Prometheus：</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-06_nvidia-gpu-telemetry.png"></p>
+<h3 id="部署-dcgm-exporter"><a href="#部署-dcgm-exporter" class="headerlink" title="部署 dcgm-exporter"></a>部署 dcgm-exporter</h3><p><code>dcgm-exporter</code> 作为 <code>DaemonSet</code> 运行在每一个装有GPU的Node上，为了使得 Prometheus 能够采集到它收集的数据，同时创建了 <code>Service</code>。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DaemonSet</span></span><br><span class="line"><span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">"dcgm-exporter"</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app.kubernetes.io/name:</span> <span class="string">"dcgm-exporter"</span></span><br><span class="line">    <span class="attr">app.kubernetes.io/version:</span> <span class="string">"2.1.1"</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">updateStrategy:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">RollingUpdate</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app.kubernetes.io/name:</span> <span class="string">"dcgm-exporter"</span></span><br><span class="line">      <span class="attr">app.kubernetes.io/version:</span> <span class="string">"2.1.1"</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app.kubernetes.io/name:</span> <span class="string">"dcgm-exporter"</span></span><br><span class="line">        <span class="attr">app.kubernetes.io/version:</span> <span class="string">"2.1.1"</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">"dcgm-exporter"</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">image:</span> <span class="string">"nvidia/dcgm-exporter:2.0.13-2.1.1-ubuntu18.04"</span></span><br><span class="line">        <span class="attr">env:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">"DCGM_EXPORTER_LISTEN"</span></span><br><span class="line">          <span class="attr">value:</span> <span class="string">":9400"</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">"DCGM_EXPORTER_KUBERNETES"</span></span><br><span class="line">          <span class="attr">value:</span> <span class="string">"true"</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">"dcgm-exporter"</span></span><br><span class="line">        <span class="attr">ports:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">"metrics"</span></span><br><span class="line">          <span class="attr">containerPort:</span> <span class="number">9400</span></span><br><span class="line">        <span class="attr">securityContext:</span></span><br><span class="line">          <span class="attr">runAsNonRoot:</span> <span class="literal">false</span></span><br><span class="line">          <span class="attr">runAsUser:</span> <span class="number">0</span></span><br><span class="line">        <span class="attr">volumeMounts:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">"pod-gpu-resources"</span></span><br><span class="line">          <span class="attr">readOnly:</span> <span class="literal">true</span></span><br><span class="line">          <span class="attr">mountPath:</span> <span class="string">"/var/lib/kubelet/pod-resources"</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">"pod-gpu-resources"</span></span><br><span class="line">        <span class="attr">hostPath:</span></span><br><span class="line">          <span class="attr">path:</span> <span class="string">"/var/lib/kubelet/pod-resources"</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">"dcgm-exporter"</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app.kubernetes.io/name:</span> <span class="string">"dcgm-exporter"</span></span><br><span class="line">    <span class="attr">app.kubernetes.io/version:</span> <span class="string">"2.1.1"</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app.kubernetes.io/name:</span> <span class="string">"dcgm-exporter"</span></span><br><span class="line">    <span class="attr">app.kubernetes.io/version:</span> <span class="string">"2.1.1"</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">"metrics"</span></span><br><span class="line">    <span class="attr">port:</span> <span class="number">9400</span></span><br></pre></td></tr></table></figure>
+<p>这一步之后，可以获取每个Node上的 Metrics：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>部署完成后，需要在Prometheus的配置中，给 <code>scrape_configs</code>添加 <code>gpu-metrics</code> 的 job，通过 <code>kubernetes_sd_configs</code> 的服务发现机制找到 <code>dcgm-exporter</code> 对应的服务。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">job_name:</span> <span class="string">gpu-metrics</span></span><br><span class="line">  <span class="attr">scrape_interval:</span> <span class="string">1s</span></span><br><span class="line">  <span class="attr">metrics_path:</span> <span class="string">/metrics</span></span><br><span class="line">  <span class="attr">scheme:</span> <span class="string">http</span></span><br><span class="line">  <span class="attr">kubernetes_sd_configs:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">role:</span> <span class="string">endpoints</span></span><br><span class="line">    <span class="attr">namespaces:</span></span><br><span class="line">      <span class="attr">names:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">kube-system</span></span><br><span class="line">    <span class="attr">selectors:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">role:</span> <span class="string">pod</span></span><br><span class="line">          <span class="attr">label:</span> <span class="string">"app.kubernetes.io/name:dcgm-exporter"</span></span><br><span class="line">  <span class="attr">relabel_configs:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">source_labels:</span> <span class="string">[__meta_kubernetes_pod_node_name]</span></span><br><span class="line">    <span class="attr">action:</span> <span class="string">replace</span></span><br><span class="line">    <span class="attr">target_label:</span> <span class="string">kubernetes_node</span></span><br></pre></td></tr></table></figure>
+<h3 id="使用-grafana-监控"><a href="#使用-grafana-监控" class="headerlink" title="使用 grafana 监控"></a>使用 grafana 监控</h3><p>NVIDIA 提供了专用于 <a href="https://grafana.com/grafana/dashboards/12239" target="_blank" rel="external nofollow noopener noreferrer">GPU 监控的 Grafana 面板</a> ，在Grafana 导入面板后，即可看到对应的GPU监控面板：</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-06_nvidia-dcgm-grafana.png"></p>
+<h2 id="OpenFalcon-GPU-监控插件"><a href="#OpenFalcon-GPU-监控插件" class="headerlink" title="OpenFalcon GPU 监控插件"></a>OpenFalcon GPU 监控插件</h2><p>OpenFalcon 是小米开源的一套监控系统解决方案，其架构如下图所示。在每个节点上会有一个 <code>falcon-agent</code> 的 daemon 进程，负责对每个节点进行数据采集。</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-07_falcon-arch.png"></p>
+<p>为了支持GPU监控，OpenFalcon 有专门的 <a href="https://github.com/open-falcon/gpu-mon" target="_blank" rel="external nofollow noopener noreferrer">GPU 监控插件</a>，它依赖于 <code>DCGM</code> 获得监控指标，下面是一些常用的指标：</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">GPUUtils</span>             <span class="string">GPU 使用率 (%)</span></span><br><span class="line"><span class="attr">MemUtils</span>             <span class="string">GPU 显存使用率(%)</span></span><br><span class="line"><span class="attr">FBUsed</span>               <span class="string">GPU 的显存占用(MB)</span></span><br><span class="line"><span class="attr">Performance</span>          <span class="string">GPU 的性能状态(0-15, 其中0表示最高)</span></span><br><span class="line"><span class="attr">DeviceTemperature</span>    <span class="string">当前GPU设备温度(℃)</span></span><br><span class="line"><span class="attr">PowerUsed</span>            <span class="string">GPU的功率使用</span></span><br><span class="line"><span class="attr">SingleBitError</span>       <span class="string">全部累积的单精度ECC错误</span></span><br><span class="line"><span class="attr">DoubleBitError</span>       <span class="string">全部累积的双精度ECC错误</span></span><br></pre></td></tr></table></figure>
+<h2 id="GPU-Manager-监控数据分析"><a href="#GPU-Manager-监控数据分析" class="headerlink" title="GPU Manager 监控数据分析"></a>GPU Manager 监控数据分析</h2><p>与 <code>OpenFalcon</code> 不同，GPU Manager 使用的是 <code>NVML</code> 库开发，获得对于 GPU Pod 级的监控数据。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(disp *Display)</span> <span class="title">getDeviceUsage</span><span class="params">(pidsInCont []<span class="keyword">int</span>, deviceIdx <span class="keyword">int</span>)</span> *<span class="title">displayapi</span>.<span class="title">DeviceInfo</span></span> &#123;</span><br><span class="line">	nvml.Init()</span><br><span class="line">	<span class="keyword">defer</span> nvml.Shutdown()</span><br><span class="line"></span><br><span class="line">	dev, err := nvml.DeviceGetHandleByIndex(<span class="keyword">uint</span>(deviceIdx))</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		klog.Warningf(<span class="string">"can't find device %d, error %s"</span>, deviceIdx, err)</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	processSamples, err := dev.DeviceGetProcessUtilization(<span class="number">1024</span>, time.Second)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		klog.Warningf(<span class="string">"can't get processes utilization from device %d, error %s"</span>, deviceIdx, err)</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	processOnDevices, err := dev.DeviceGetComputeRunningProcesses(<span class="number">1024</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		klog.Warningf(<span class="string">"can't get processes info from device %d, error %s"</span>, deviceIdx, err)</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	busID, err := dev.DeviceGetPciInfo()</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		klog.Warningf(<span class="string">"can't get pci info from device %d, error %s"</span>, deviceIdx, err)</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	sort.Slice(pidsInCont, <span class="function"><span class="keyword">func</span><span class="params">(i, j <span class="keyword">int</span>)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">		<span class="keyword">return</span> pidsInCont[i] &lt; pidsInCont[j]</span><br><span class="line">	&#125;)</span><br><span class="line"></span><br><span class="line">	usedMemory := <span class="keyword">uint64</span>(<span class="number">0</span>)</span><br><span class="line">	usedPids := <span class="built_in">make</span>([]<span class="keyword">int32</span>, <span class="number">0</span>)</span><br><span class="line">	usedGPU := <span class="keyword">uint</span>(<span class="number">0</span>)</span><br><span class="line">	<span class="keyword">for</span> _, info := <span class="keyword">range</span> processOnDevices &#123;</span><br><span class="line">		idx := sort.Search(<span class="built_in">len</span>(pidsInCont), <span class="function"><span class="keyword">func</span><span class="params">(pivot <span class="keyword">int</span>)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">			<span class="keyword">return</span> pidsInCont[pivot] &gt;= <span class="keyword">int</span>(info.Pid)</span><br><span class="line">		&#125;)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> idx &lt; <span class="built_in">len</span>(pidsInCont) &amp;&amp; pidsInCont[idx] == <span class="keyword">int</span>(info.Pid) &#123;</span><br><span class="line">			usedPids = <span class="built_in">append</span>(usedPids, <span class="keyword">int32</span>(pidsInCont[idx]))</span><br><span class="line">			usedMemory += info.UsedGPUMemory</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> _, sample := <span class="keyword">range</span> processSamples &#123;</span><br><span class="line">		idx := sort.Search(<span class="built_in">len</span>(pidsInCont), <span class="function"><span class="keyword">func</span><span class="params">(pivot <span class="keyword">int</span>)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">			<span class="keyword">return</span> pidsInCont[pivot] &gt;= <span class="keyword">int</span>(sample.Pid)</span><br><span class="line">		&#125;)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> idx &lt; <span class="built_in">len</span>(pidsInCont) &amp;&amp; pidsInCont[idx] == <span class="keyword">int</span>(sample.Pid) &#123;</span><br><span class="line">			usedGPU += sample.SmUtil</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> &amp;displayapi.DeviceInfo&#123;</span><br><span class="line">		Id:      busID.BusID,</span><br><span class="line">		CardIdx: fmt.Sprintf(<span class="string">"%d"</span>, deviceIdx),</span><br><span class="line">		Gpu:     <span class="keyword">float32</span>(usedGPU),</span><br><span class="line">		Mem:     <span class="keyword">float32</span>(usedMemory &gt;&gt; <span class="number">20</span>),</span><br><span class="line">		Pids:    usedPids,</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="GPU-监控指标探讨"><a href="#GPU-监控指标探讨" class="headerlink" title="GPU 监控指标探讨"></a>GPU 监控指标探讨</h2><p>对于 k8s 的 GPU 监控，我们到底需要那些指标：</p>
+<ul>
+<li>集群级别<ul>
+<li>整个集群有多少GPU，各种GPU的型号是怎样的</li>
+<li>集群级别GPU算力使用量（绝对值），算力使用率（相对值）</li>
+<li>集群级别GPU显存使用量（绝对值），显存使用率（相对值）</li>
+</ul>
+</li>
+<li>单机级别<ul>
+<li>Node上有多少GPU，各种GPU的型号是怎样的</li>
+<li>单机级别GPU算力使用量（绝对值），算力使用率（相对值）</li>
+<li>单机级别GPU显存使用量（绝对值），显存使用率（相对值）</li>
+</ul>
+</li>
+<li>Pod级别<ul>
+<li>Pod 运行在哪个GPU上</li>
+<li>Pod级别GPU算力使用量（绝对值），算力使用率（相对值）</li>
+<li>Pod级别GPU显存使用量（绝对值），显存使用率（相对值）</li>
+</ul>
+</li>
+<li>其他相关统计数据<ul>
+<li>GPU的功率、温度、主频、FAN转速等</li>
+</ul>
+</li>
+</ul>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://github.com/NVIDIA/gpu-monitoring-tools" target="_blank" rel="external nofollow noopener noreferrer">NVIDIA GPU Monitoring Tools</a></li>
+<li><a href="https://developer.nvidia.com/blog/monitoring-gpus-in-kubernetes-with-dcgm/" target="_blank" rel="external nofollow noopener noreferrer">Monitoring GPUs in Kubernetes with DCGM</a></li>
+<li><a href="https://docs.nvidia.com/datacenter/cloud-native/kubernetes/dcgme2e.html" target="_blank" rel="external nofollow noopener noreferrer">Integrating GPU Telemetry into Kubernetes</a></li>
+<li><a href="http://on-demand.gputechconf.com/gtc/2018/presentation/s8505-gpu-monitoring-and-management-with-nvidia-data-center-gpu-manager-dcgm-v2.pdf" target="_blank" rel="external nofollow noopener noreferrer">GTC 2018 Talk: GPU Monitoring and Management with NVIDIA Data Center GPU Manager</a></li>
+<li><a href="https://book.open-falcon.org/zh_0_2/" target="_blank" rel="external nofollow noopener noreferrer">OpenFalcon 说明书</a></li>
+<li><a href="https://github.com/open-falcon/gpu-mon" target="_blank" rel="external nofollow noopener noreferrer">OpenFalcon GPU监控插件</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/7f85cd98/" rel="bookmark">【系统监控】Linux常见监控指标</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/703a5727/" rel="bookmark">【系统监控】cAdvisor</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/9bd76ed5/" rel="bookmark">【系统监控】kube-state-metrics</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/913a8837/" rel="bookmark">【系统监控】Metrics Server</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/58272b06/" rel="bookmark">【Kubernetes】监控的可观测性</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/b4058e1b/" title="【系统监控】GPU 监控">http://houmin.cc/posts/b4058e1b/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E7%9B%91%E6%8E%A7/" rel="tag"><i class="fa fa-tag"></i> 监控</a>
+              <a href="/tags/GPU/" rel="tag"><i class="fa fa-tag"></i> GPU</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/9d4b744a/" rel="next" title="2020 渺小">
+                  <i class="fa fa-chevron-left"></i> 2020 渺小
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/c2e89645/" rel="prev" title="从「纸牌屋」看美国政治生态">
+                  从「纸牌屋」看美国政治生态 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#问题背景"><span class="nav-number">1.</span> <span class="nav-text">问题背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DCGM"><span class="nav-number">2.</span> <span class="nav-text">DCGM</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#安装部署"><span class="nav-number">2.1.</span> <span class="nav-text">安装部署</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#组操作"><span class="nav-number">2.2.</span> <span class="nav-text">组操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Job-Statistics"><span class="nav-number">2.3.</span> <span class="nav-text">Job Statistics</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Configuration-Managerment"><span class="nav-number">2.4.</span> <span class="nav-text">Configuration Managerment</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Policy-and-Alerting"><span class="nav-number">2.5.</span> <span class="nav-text">Policy and Alerting</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Health-check"><span class="nav-number">2.6.</span> <span class="nav-text">Health check</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GPU-Diagnostics"><span class="nav-number">2.7.</span> <span class="nav-text">GPU Diagnostics</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Profile"><span class="nav-number">2.8.</span> <span class="nav-text">Profile</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#在-k8s-中集成-GPU-Telemetry"><span class="nav-number">3.</span> <span class="nav-text">在 k8s 中集成 GPU Telemetry</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#部署-dcgm-exporter"><span class="nav-number">3.1.</span> <span class="nav-text">部署 dcgm-exporter</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用-grafana-监控"><span class="nav-number">3.2.</span> <span class="nav-text">使用 grafana 监控</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#OpenFalcon-GPU-监控插件"><span class="nav-number">4.</span> <span class="nav-text">OpenFalcon GPU 监控插件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GPU-Manager-监控数据分析"><span class="nav-number">5.</span> <span class="nav-text">GPU Manager 监控数据分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GPU-监控指标探讨"><span class="nav-number">6.</span> <span class="nav-text">GPU 监控指标探讨</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">7.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">154</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">219</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.9m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">56:29</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

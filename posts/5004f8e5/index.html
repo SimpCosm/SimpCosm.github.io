@@ -56,9 +56,9 @@
 </script>
 
   <meta name="description" content="随着近年来深度学习的爆发，原来被用于图形渲染的GPU被大量用于并行加速深度学习的模型训练中，在这个过程中 CUDA 作为 NVIDIA 推出的基于GPU的一个通用并行计算平台和编程模型也得到了广泛的使用。或许你已经十分了解 现代CPU的体系架构，但是对于GPU还不甚清晰，GPU的体系架构到底和CPU有何区别，CUDA模型是什么，我们该如何使用 CUDA实现并行计算，本文将为你扫盲祛魅，本文中使用到">
-<meta name="keywords" content="GPU,CUDA">
+<meta name="keywords" content="GPU,CUDA,异构计算">
 <meta property="og:type" content="article">
-<meta property="og:title" content="GPU 与 CUDA 编程入门">
+<meta property="og:title" content="【异构计算】GPU 与 CUDA">
 <meta property="og:url" content="http://houmin.cc/posts/5004f8e5/index.html">
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="随着近年来深度学习的爆发，原来被用于图形渲染的GPU被大量用于并行加速深度学习的模型训练中，在这个过程中 CUDA 作为 NVIDIA 推出的基于GPU的一个通用并行计算平台和编程模型也得到了广泛的使用。或许你已经十分了解 现代CPU的体系架构，但是对于GPU还不甚清晰，GPU的体系架构到底和CPU有何区别，CUDA模型是什么，我们该如何使用 CUDA实现并行计算，本文将为你扫盲祛魅，本文中使用到">
@@ -83,7 +83,7 @@
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-21_cuda-memory-model.jpg">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-21_cuda-parallel_thread.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-21_cuda-parallel_block.png">
-<meta property="og:updated_time" content="2020-11-21T16:41:14.107Z">
+<meta property="og:updated_time" content="2021-01-07T09:26:23.272Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-18_moores-law-develop.jpg">
 
@@ -101,7 +101,7 @@
   };
 </script>
 
-  <title>GPU 与 CUDA 编程入门 | Houmin</title>
+  <title>【异构计算】GPU 与 CUDA | Houmin</title>
   
 
 
@@ -269,7 +269,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          GPU 与 CUDA 编程入门
+          【异构计算】GPU 与 CUDA
         </h2>
 
         <div class="post-meta">
@@ -514,13 +514,19 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/574111db/" rel="bookmark">【Kubernetes】在Docker中使用GPU</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/cf391335/" rel="bookmark">【Kubernetes】GPU 共享</a></div>
+      <div class="popular-posts-title"><a href="/posts/574111db/" rel="bookmark">【异构计算】在Docker中使用GPU</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/3f069334/" rel="bookmark">【Kubernetes】Device Plugin</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/4e8612ed/" rel="bookmark">【异构计算】NVIDIA GPU MIG</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/cf391335/" rel="bookmark">【异构计算】GPU 共享</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/6e1a1f6e/" rel="bookmark">【异构计算】GPU 虚拟化</a></div>
     </li>
   </ul>
 
@@ -554,7 +560,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://houmin.cc/posts/5004f8e5/" title="GPU 与 CUDA 编程入门">http://houmin.cc/posts/5004f8e5/</a>
+    <a href="http://houmin.cc/posts/5004f8e5/" title="【异构计算】GPU 与 CUDA">http://houmin.cc/posts/5004f8e5/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -568,6 +574,7 @@
           <div class="post-tags">
               <a href="/tags/GPU/" rel="tag"><i class="fa fa-tag"></i> GPU</a>
               <a href="/tags/CUDA/" rel="tag"><i class="fa fa-tag"></i> CUDA</a>
+              <a href="/tags/%E5%BC%82%E6%9E%84%E8%AE%A1%E7%AE%97/" rel="tag"><i class="fa fa-tag"></i> 异构计算</a>
           </div>
 
         
@@ -639,19 +646,19 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">150</span>
+          <span class="site-state-item-count">154</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">215</span>
+        <span class="site-state-item-count">219</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -719,13 +726,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">1.8m</span>
+    <span title="站点总字数">1.9m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">53:40</span>
+    <span title="站点阅读时长">56:29</span>
 </div>
 
         

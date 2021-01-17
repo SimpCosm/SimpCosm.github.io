@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="MIG，也就是 Multi-Instance GPU 是 NVIDIA 在 NVIDIA GTC 2020 发布的最新 Ampere 架构的 NVIDIA A100 GPU 推出的新特性。当配置为 MIG 运行状态时，A100 可以通过分出最多 7 个核心来帮助供应商提高 GPU 服务器的利用率，无需额外投入。MIG 提供了一种多用户使用隔离的GPU资源、提高GPU资源使用率的新的方式，特别适合于">
+<meta name="keywords" content="虚拟化,GPU,MIG">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【异构计算】NVIDIA GPU MIG">
+<meta property="og:url" content="http://houmin.cc/posts/4e8612ed/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="MIG，也就是 Multi-Instance GPU 是 NVIDIA 在 NVIDIA GTC 2020 发布的最新 Ampere 架构的 NVIDIA A100 GPU 推出的新特性。当配置为 MIG 运行状态时，A100 可以通过分出最多 7 个核心来帮助供应商提高 GPU 服务器的利用率，无需额外投入。MIG 提供了一种多用户使用隔离的GPU资源、提高GPU资源使用率的新的方式，特别适合于">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_nvidia-gpu.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-04_nvidia-mig-compare.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_nvidia-compute-instance.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_csp-multi-user-today.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_csp-mig.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_nvidia-mig-partition.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_nvidia-mig.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-13_nvidia-mig.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_mig-isolation.png">
+<meta property="og:image" content="https://docs.nvidia.com/datacenter/tesla/mig-user-guide/graphics/gpu-instances-combo-pic.png">
+<meta property="og:image" content="https://docs.nvidia.com/datacenter/tesla/mig-user-guide/graphics/gpu-instances-example-pic.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_mig-profile0.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_mig-profile1.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_mig-profile2.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_mig-profile3.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-01-14_mig-profiles.png">
+<meta property="og:image" content="https://docs.nvidia.com/datacenter/tesla/mig-user-guide/graphics/gpu-instances-placement-pic.png">
+<meta property="og:updated_time" content="2021-01-14T10:40:22.828Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_nvidia-gpu.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/4e8612ed/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【异构计算】NVIDIA GPU MIG | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/4e8612ed/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【异构计算】NVIDIA GPU MIG
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-19 17:03:47" itemprop="dateCreated datePublished" datetime="2020-11-19T17:03:47+08:00">2020-11-19</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/4e8612ed/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/4e8612ed/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>32k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>58 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>MIG，也就是 <code>Multi-Instance GPU</code> 是 NVIDIA 在 <code>NVIDIA GTC 2020</code> 发布的最新 Ampere 架构的 <code>NVIDIA A100 GPU</code> 推出的新特性。当配置为 MIG 运行状态时，A100 可以通过分出最多 7 个核心来帮助供应商提高 GPU 服务器的利用率，无需额外投入。MIG 提供了一种多用户使用隔离的GPU资源、提高GPU资源使用率的新的方式，特别适合于云服务提供商的多租户场景，保证一个租户的运行不干扰另一个租户。本文将介绍 MIG 的新特性和使用方法，以及在容器和 k8s 中使用 MIG 的方案。 </p>
+<a id="more"></a>
+<h2 id="MIG-技术简介"><a href="#MIG-技术简介" class="headerlink" title="MIG 技术简介"></a>MIG 技术简介</h2><p>随着深度学习的广泛应用，使用GPU加速训练和推理越来越普遍。然而，高昂的GPU价格在这里成为了不可忽视的成本，有时候单个GPU并没有得到充分的利用，在多租户之间如何能够共享GPU并且互不干扰成为了一个重要课题，尤其是在云服务环境使用GPU的场景下。针对这个问题，有很多种解决方案，分别是软件级虚拟化GPU和硬件级虚拟化GPU，而 MIG 即是硬件级虚拟化GPU的一种方式：</p>
+<blockquote>
+<p>Data center managers aim to keep resource utilization high, so an ideal data center accelerator doesn’t just go big- it also efficiently accelerates many smaller workloads.</p>
+</blockquote>
+<p><strong>MIG主要技术特点</strong></p>
+<ol>
+<li>每个GI独立的SM，完全隔离的显存（包括隔离的显存，L2cache，独立的DMA控制器等），从而可以保证每个GI的QoS</li>
+<li>支持虚拟机，容器，进程层面的使用</li>
+</ol>
+<p>首先看一下传统GPU的内部架构，<strong>MIG的目的是使虚拟的每个GPU实例都拥有上面类似的架构。</strong></p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_nvidia-gpu.png"></p>
+<h3 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a><strong>基本概念</strong></h3><p>MIG对资源的划分可以分为两级，分别是GPU Instance、Compute Instance</p>
+<h4 id="GPU-Instance"><a href="#GPU-Instance" class="headerlink" title="GPU Instance"></a>GPU Instance</h4><p>MIG功能可以将单个GPU划分为多个GPU分区，称为 <code>GPU Insance</code>。创建GPU实例可以认为是将一个大GPU拆分为多个较小的GPU，每个GPU实例都具有专用的计算和内存资源。</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-04_nvidia-mig-compare.png"></p>
+<p>每个GPU实例的行为就像一个较小的，功能齐全的独立GPU，其中包括：</p>
+<ul>
+<li>预定义数量的GPC</li>
+<li>SMs</li>
+<li>L2 Cache</li>
+<li>Frame buffer</li>
+</ul>
+<p>注意：在MIG操作模式下，每个GPU实例中的单个GPC启用了7个TPC（14个SM），这使所有GPU切片具有相同的一致计算性能。</p>
+<ul>
+<li><strong>GPU Engine</strong>：一个 GPU Engine 是 GPU 中执行工作的组件，常用的GPU Engine 如下，每个Engine都能够被独立地调度和为不同 GPU Context 执行工作<ul>
+<li><strong>Compute/Graphics engine</strong> that executes the compute instructions</li>
+<li>the copy engine (<strong>CE</strong>) that is responsible for performing DMAs</li>
+<li><strong>NVDEC</strong> for video decoding</li>
+<li><strong>NVENC</strong> for encoding</li>
+</ul>
+</li>
+<li><strong>GPU Memory Slice</strong>：一个 GPU Memory Slice 是 A100 GPU Memory 的一个最小片段，包括对应的 <code>memory controllers</code> 和 <code>cache</code>，粗略来说一个 GPU Memory Slice 大致是总的GPU Memory资源的 1/8，包括memory的 capacity 和 bandwidth。</li>
+<li><p><strong>GPU SM Slice</strong>：一个 GPU SM Slice 是 A100 GPU SMs 的一个最小片段，粗略来说一个 GPU SM Slice 大致是总的GPU SM资源的 1/7</p>
+</li>
+<li><p><strong>GPU Slice</strong>：一个 GPU Slice 是 A100 GPU 中集合一个 <code>GPU Memory Slice</code> 和 一个 <code>GPU SM Slice</code> 的最小片段</p>
+</li>
+<li><strong>GPU Instance</strong>：一个 GPU Instance 是 GPU Slices 和 GPU Engines (DMAs, NVDECs, etc.)的结合</li>
+</ul>
+<h4 id="Compute-Instance"><a href="#Compute-Instance" class="headerlink" title="Compute Instance"></a>Compute Instance</h4><p>一个 GPU Instance 可以被划分为多个 Compute Instance，多个Compute Instance之间共享Memory和Engine，它包含了原来GPU Instance里面 <code>GPU SM slices</code> 和 <code>GPU Engines</code> 的一个子集(DMAs, NVDECs, etc.)：</p>
+<ul>
+<li>默认情况下，将在每个GPU实例下创建一个 Compute Instances，从而公开GPU实例中可用的所有GPU计算资源。</li>
+<li>可以将GPU实例细分为多个较小的 Compute Instances，以进一步拆分其计算资源。</li>
+</ul>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_nvidia-compute-instance.png"></p>
+<h3 id="架构对比"><a href="#架构对比" class="headerlink" title="架构对比"></a>架构对比</h3><p>pre-A100 GPU每个用户独占SM、Frame Buffer、L2 Cache。</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_csp-multi-user-today.png"></p>
+<p>A100 MIG将GPU进行物理切割，每个虚拟GPU instance具有独立的SM、L2 Cache、DRAM。</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_csp-mig.png"></p>
+<p>下面是MIG 配置多个独立的GPU Compute workloads。每个GPC分配固定的CE和DEC。A100中有5个decoder。</p>
+<p>当1个GPU instance中包含2个Compute instance时，2个Compute instance共享CE、DEC和L2、Frame Buffer。</p>
+<ul>
+<li>GPC：Graphics Processor Cluster</li>
+<li>TPC：Texture Processor Cluster</li>
+</ul>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_nvidia-mig-partition.png"></p>
+<p>Compute instance使多个上下文可以在GPU实例上同时运行。</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_nvidia-mig.png"></p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-13_nvidia-mig.png"></p>
+<h3 id="MIG-隔离"><a href="#MIG-隔离" class="headerlink" title="MIG 隔离"></a>MIG 隔离</h3><p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_mig-isolation.png"></p>
+<p><strong>和上一代Volta MPS技术的对比</strong></p>
+<blockquote>
+<p>MPS was designed for sharing the GPU among applications from <strong>a single user</strong>, but not for multi-user or <strong>multi-tenant use</strong> cases.</p>
+</blockquote>
+<p>解决了MPS存在的memory system resources were shared across all the applications问题，同时继承了Volta MPS所有功能</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">对比项</th>
+<th style="text-align:left">MPS</th>
+<th style="text-align:left">MIG</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">Partition Type</td>
+<td style="text-align:left">Logical</td>
+<td style="text-align:left">Physical</td>
+</tr>
+<tr>
+<td style="text-align:left">Max Partitions</td>
+<td style="text-align:left">48</td>
+<td style="text-align:left">7</td>
+</tr>
+<tr>
+<td style="text-align:left">SM Performance Isolation</td>
+<td style="text-align:left">Yes (by percentage, not partitioning)</td>
+<td style="text-align:left">Yes</td>
+</tr>
+<tr>
+<td style="text-align:left">Memory Protection</td>
+<td style="text-align:left">Yes</td>
+<td style="text-align:left">Yes</td>
+</tr>
+<tr>
+<td style="text-align:left">Memory Bandwidth QoS</td>
+<td style="text-align:left">No</td>
+<td style="text-align:left">Yes</td>
+</tr>
+<tr>
+<td style="text-align:left">Error Isolation</td>
+<td style="text-align:left">No</td>
+<td style="text-align:left">Yes</td>
+</tr>
+<tr>
+<td style="text-align:left">Cross-Partition Interop</td>
+<td style="text-align:left">IPC</td>
+<td style="text-align:left">Limited IPC</td>
+</tr>
+<tr>
+<td style="text-align:left">Reconfigure</td>
+<td style="text-align:left">Process Launch</td>
+<td style="text-align:left">When Idle</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="GPU-Partitioning"><a href="#GPU-Partitioning" class="headerlink" title="GPU Partitioning"></a>GPU Partitioning</h3><p>每个 GI 包括的资源不是随意定义的，NVIDIA 提供了 一系列的 <code>GPU Instance Profiles</code>，用户在创建 GI 时必须按照这个 Profile 来切割。我们知道，A100 总共有 8 个 GPU Memory Slice 和 7 个 SM Slice，那么切分总共有5种 Profile：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Profile Name</th>
+<th>Fraction of Memory</th>
+<th>Fraction of SMs</th>
+<th>Hardware Units</th>
+<th>Number of Instances Available</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MIG 1g.5gb</td>
+<td>1/8</td>
+<td>1/7</td>
+<td>0 NVDECs</td>
+<td>7</td>
+</tr>
+<tr>
+<td>MIG 2g.10gb</td>
+<td>2/8</td>
+<td>2/7</td>
+<td>1 NVDECs</td>
+<td>3</td>
+</tr>
+<tr>
+<td>MIG 3g.20gb</td>
+<td>4/8</td>
+<td>3/7</td>
+<td>2 NVDECs</td>
+<td>2</td>
+</tr>
+<tr>
+<td>MIG 4g.20gb</td>
+<td>4/8</td>
+<td>4/7</td>
+<td>2 NVDECs</td>
+<td>1</td>
+</tr>
+<tr>
+<td>MIG 7g.40gb</td>
+<td>Full</td>
+<td>7/7</td>
+<td>5 NVDECs</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>注意：这里对于 <code>A100-SXM4-40GB</code> 总的 Memory大小是40GB，所以最小单位是 <code>1g.5gb</code>，如果对于 <code>A100-SXM4-80GB</code>，则最小单位是 <code>1g.10gb</code>。</p>
+<p>也就是说，这几种 Profile 确定了 A100 GPU 可以被切分的方式，如下图，所有可以切分的方式只是下图从左到右选择不同的Profile，并且两个Profile上下不重叠。唯一的例外是，现在 NVIDIA 不支持 (4 memory, 4 compute) 和 (4 memory, 3 compute) 的组合：</p>
+<p><img alt data-src="https://docs.nvidia.com/datacenter/tesla/mig-user-guide/graphics/gpu-instances-combo-pic.png"></p>
+<p>下图就是组合的一种方式：A100 GPU 被切割成了3个GPU Instance，分别的大小是</p>
+<ul>
+<li>4 memory，4 compute</li>
+<li>2 memory，2 compute</li>
+<li>1 memory，1 compute</li>
+</ul>
+<p><img alt="Example Configuration of GPU Instances." data-src="https://docs.nvidia.com/datacenter/tesla/mig-user-guide/graphics/gpu-instances-example-pic.png"></p>
+<p>下图也是组合的一种可能：</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_mig-profile0.png"></p>
+<p>前面提到， 硬件上 NVIDIA 不支持 (4 memory, 4 compute) 和 (4 memory, 3 compute) 的组合，但是支持两个  (4 memory, 3 compute) 的组合，这里左边的一个  (4 memory, 3 compute) 是将  (4 memory, 4 compute) 示例化为一个  (4 memory, 3 compute)。如下图就将 A100 切分成两个 GPU Instance，每个GPU Instance都有 (4 memory, 3 compute)</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_mig-profile1.png"></p>
+<p>或者切分成3个GPU Instance：</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_mig-profile2.png"></p>
+<p>也可以切分成下面这种4个GPU Instance：</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-14_mig-profile3.png"></p>
+<p>总的来说，一共有 18 种切分方法：</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-01-14_mig-profiles.png"></p>
+<p>注意，下图中的两种切分并不相同，因为每个切分的Instance 的 <code>physical layout</code> 也很重要：</p>
+<p><img alt="Placement of GPU Instances." data-src="https://docs.nvidia.com/datacenter/tesla/mig-user-guide/graphics/gpu-instances-placement-pic.png"></p>
+<h2 id="MIG-技术使用"><a href="#MIG-技术使用" class="headerlink" title="MIG 技术使用"></a>MIG 技术使用</h2><p>具体到A100卡，实际实现有两个型号，分别是</p>
+<ul>
+<li>GA100 Full GPU with 128 SMs</li>
+<li>A100 Tensor Core GPU with 108 SMs</li>
+</ul>
+<p>本次调研中使用的卡是108 SM版本</p>
+<h3 id="驱动安装"><a href="#驱动安装" class="headerlink" title="驱动安装"></a>驱动安装</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">$ nvidia-smi</span><br><span class="line">Wed Jan 13 11:42:34 2021</span><br><span class="line">+-----------------------------------------------------------------------------+</span><br><span class="line">| NVIDIA-SMI 460.27.04    Driver Version: 460.27.04    CUDA Version: 11.2     |</span><br><span class="line">|-------------------------------+----------------------+----------------------+</span><br><span class="line">| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |</span><br><span class="line">| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |</span><br><span class="line">|                               |                      |               MIG M. |</span><br><span class="line">|===============================+======================+======================|</span><br><span class="line">|   0  A100-SXM4-40GB      Off  | 00000000:00:08.0 Off |                    0 |</span><br><span class="line">| N/A   26C    P0    43W / 400W |      0MiB / 40536MiB |      0%      Default |</span><br><span class="line">|                               |                      |             Disabled |</span><br><span class="line">+-------------------------------+----------------------+----------------------+</span><br><span class="line"></span><br><span class="line">+-----------------------------------------------------------------------------+</span><br><span class="line">| Processes:                                                                  |</span><br><span class="line">|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |</span><br><span class="line">|        ID   ID                                                   Usage      |</span><br><span class="line">|=============================================================================|</span><br><span class="line">|  No running processes found                                                 |</span><br><span class="line">+-----------------------------------------------------------------------------+</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ tree /dev/</span><br><span class="line">├── nvidia0</span><br><span class="line">├── nvidia-caps</span><br><span class="line">│   ├── nvidia-cap1</span><br><span class="line">│   └── nvidia-cap2</span><br><span class="line">├── nvidiactl</span><br><span class="line">├── nvidia-modeset</span><br><span class="line">├── nvidia-uvm</span><br><span class="line">├── nvidia-uvm-tools</span><br></pre></td></tr></table></figure>
+<h3 id="开启MIG支持"><a href="#开启MIG支持" class="headerlink" title="开启MIG支持"></a>开启MIG支持</h3><p>查询是否开启MIG</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ nvidia-smi -i 0 --query-gpu=pci.bus_id,mig.mode.current --format=csv</span><br><span class="line">pci.bus_id, mig.mode.current</span><br><span class="line">00000000:00:08.0, Disabled</span><br></pre></td></tr></table></figure>
+<p>对于指定卡开启mig，只有在卡空闲时才能更改mig enable 设置</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ nvidia-smi -i 0 -mig 1</span><br><span class="line">Warning: MIG mode is <span class="keyword">in</span> pending <span class="built_in">enable</span> state <span class="keyword">for</span> GPU 00000000:00:08.0:In use by another client</span><br><span class="line">00000000:00:08.0 is currently being used by one or more other processes (e.g. CUDA application or a monitoring application such as another instance of nvidia-smi). Please first <span class="built_in">kill</span> all processes using the device and retry the <span class="built_in">command</span> or reboot the system to make MIG mode effective.</span><br><span class="line">All <span class="keyword">done</span>.</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>If you are using MIG inside a VM with GPU passthrough, then you may need to reboot the VM to allow the GPU to be in MIG mode as in some cases, GPU reset is not allowed via the hypervisor for security reasons. This can be seen in the following example:</p>
+</blockquote>
+<p>重启之后</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ nvidia-smi -i 0 --query-gpu=pci.bus_id,mig.mode.current --format=csv</span><br><span class="line">pci.bus_id, mig.mode.current</span><br><span class="line">00000000:00:08.0, Enabled</span><br></pre></td></tr></table></figure>
+<h3 id="查询可分配-GI-信息"><a href="#查询可分配-GI-信息" class="headerlink" title="查询可分配 GI 信息"></a>查询可分配 GI 信息</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nvidia-smi mig -lgip</span></span><br><span class="line">+--------------------------------------------------------------------------+</span><br><span class="line">| GPU instance profiles:                                                   |</span><br><span class="line">| GPU   Name          ID    Instances   Memory     P2P    SM    DEC   ENC  |</span><br><span class="line">|                           Free/Total   GiB              CE    JPEG  OFA  |</span><br><span class="line">|==========================================================================|</span><br><span class="line">|   0  MIG 1g.5gb     19     7/7        4.75       No     14     0     0   |</span><br><span class="line">|                                                          1     0     0   |</span><br><span class="line">+--------------------------------------------------------------------------+</span><br><span class="line">|   0  MIG 2g.10gb    14     3/3        9.75       No     28     1     0   |</span><br><span class="line">|                                                          2     0     0   |</span><br><span class="line">+--------------------------------------------------------------------------+</span><br><span class="line">|   0  MIG 3g.20gb     9     2/2        19.62      No     42     2     0   |</span><br><span class="line">|                                                          3     0     0   |</span><br><span class="line">+--------------------------------------------------------------------------+</span><br><span class="line">|   0  MIG 4g.20gb     5     1/1        19.62      No     56     2     0   |</span><br><span class="line">|                                                          4     0     0   |</span><br><span class="line">+--------------------------------------------------------------------------+</span><br><span class="line">|   0  MIG 7g.40gb     0     1/1        39.50      No     98     5     0   |</span><br><span class="line">|                                                          7     1     1   |</span><br><span class="line">+--------------------------------------------------------------------------+</span><br></pre></td></tr></table></figure>
+<h3 id="查询-GI-placements"><a href="#查询-GI-placements" class="headerlink" title="查询 GI placements"></a>查询 GI placements</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nvidia-smi mig -lgipp</span></span><br><span class="line">GPU  0 Profile ID 19 Placements: &#123;0,1,2,3,4,5,6&#125;:1</span><br><span class="line">GPU  0 Profile ID 14 Placements: &#123;0,2,4&#125;:2</span><br><span class="line">GPU  0 Profile ID  9 Placements: &#123;0,4&#125;:4</span><br><span class="line">GPU  0 Profile ID  5 Placement : &#123;0&#125;:4</span><br><span class="line">GPU  0 Profile ID  0 Placement : &#123;0&#125;:8</span><br></pre></td></tr></table></figure>
+<h3 id="创建-GPU-Instances"><a href="#创建-GPU-Instances" class="headerlink" title="创建 GPU Instances"></a>创建 GPU Instances</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nvidia-smi mig -cgi 9,14,19</span></span><br><span class="line">Successfully created GPU instance ID  2 on GPU  0 using profile MIG 3g.20gb (ID  9)</span><br><span class="line">Successfully created GPU instance ID  3 on GPU  0 using profile MIG 2g.10gb (ID 14)</span><br><span class="line">Successfully created GPU instance ID  9 on GPU  0 using profile MIG 1g.5gb (ID 19)</span><br></pre></td></tr></table></figure>
+<h3 id="查询-GPU-Instance"><a href="#查询-GPU-Instance" class="headerlink" title="查询 GPU Instance"></a>查询 GPU Instance</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nvidia-smi mig -lgi</span></span><br><span class="line">+----------------------------------------------------+</span><br><span class="line">| GPU instances:                                     |</span><br><span class="line">| GPU   Name          Profile  Instance   Placement  |</span><br><span class="line">|                       ID       ID       Start:Size |</span><br><span class="line">|====================================================|</span><br><span class="line">|   0  MIG 1g.5gb       19        9          2:1     |</span><br><span class="line">+----------------------------------------------------+</span><br><span class="line">|   0  MIG 2g.10gb      14        3          0:2     |</span><br><span class="line">+----------------------------------------------------+</span><br><span class="line">|   0  MIG 3g.20gb       9        2          4:4     |</span><br><span class="line">+----------------------------------------------------+</span><br></pre></td></tr></table></figure>
+<h3 id="创建-Compute-Instance"><a href="#创建-Compute-Instance" class="headerlink" title="创建 Compute Instance"></a>创建 Compute Instance</h3><p>创建CI前，首先需要查询对应的GI支持Profile列表，可以发现上文创建的ID为2的GI可以进一步分为3种类型的CI</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nvidia-smi mig -lcip -gi 2</span></span><br><span class="line">+--------------------------------------------------------------------------------------+</span><br><span class="line">| Compute instance profiles:                                                           |</span><br><span class="line">| GPU     GPU       Name             Profile  Instances   Exclusive       Shared       |</span><br><span class="line">|       Instance                       ID     Free/Total     SM       DEC   ENC   OFA  |</span><br><span class="line">|         ID                                                          CE    JPEG       |</span><br><span class="line">|======================================================================================|</span><br><span class="line">|   0      2       MIG 1c.3g.20gb       0      3/3           14        2     0     0   |</span><br><span class="line">|                                                                      3     0         |</span><br><span class="line">+--------------------------------------------------------------------------------------+</span><br><span class="line">|   0      2       MIG 2c.3g.20gb       1      1/1           28        2     0     0   |</span><br><span class="line">|                                                                      3     0         |</span><br><span class="line">+--------------------------------------------------------------------------------------+</span><br><span class="line">|   0      2       MIG 3g.20gb          2*     1/1           42        2     0     0   |</span><br><span class="line">|                                                                      3     0         |</span><br><span class="line">+--------------------------------------------------------------------------------------+</span><br><span class="line"></span><br><span class="line"><span class="comment"># nvidia-smi mig -lcip -gi 3</span></span><br><span class="line">+--------------------------------------------------------------------------------------+</span><br><span class="line">| Compute instance profiles:                                                           |</span><br><span class="line">| GPU     GPU       Name             Profile  Instances   Exclusive       Shared       |</span><br><span class="line">|       Instance                       ID     Free/Total     SM       DEC   ENC   OFA  |</span><br><span class="line">|         ID                                                          CE    JPEG       |</span><br><span class="line">|======================================================================================|</span><br><span class="line">|   0      3       MIG 1c.2g.10gb       0      2/2           14        1     0     0   |</span><br><span class="line">|                                                                      2     0         |</span><br><span class="line">+--------------------------------------------------------------------------------------+</span><br><span class="line">|   0      3       MIG 2g.10gb          1*     1/1           28        1     0     0   |</span><br><span class="line">|                                                                      2     0         |</span><br><span class="line">+--------------------------------------------------------------------------------------+</span><br></pre></td></tr></table></figure>
+<p>然后进一步将ID为2的GI划分为两个CI，Profile分别是1c.3g.20gb，2c.3g.20gb，具体命令如下</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nvidia-smi mig -cci 0,1 -gi 2</span></span><br><span class="line">Successfully created compute instance ID  0 on GPU  0 GPU instance ID  2 using profile MIG 1c.3g.20gb (ID  0)</span><br><span class="line">Successfully created compute instance ID  1 on GPU  0 GPU instance ID  2 using profile MIG 2c.3g.20gb (ID  1)</span><br></pre></td></tr></table></figure>
+<h3 id="查询-Compute-Instance"><a href="#查询-Compute-Instance" class="headerlink" title="查询 Compute Instance"></a>查询 Compute Instance</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nvidia-smi mig -lci -gi 2</span></span><br><span class="line">+--------------------------------------------------------------------+</span><br><span class="line">| Compute instances:                                                 |</span><br><span class="line">| GPU     GPU       Name             Profile   Instance   Placement  |</span><br><span class="line">|       Instance                       ID        ID       Start:Size |</span><br><span class="line">|         ID                                                         |</span><br><span class="line">|====================================================================|</span><br><span class="line">|   0      2       MIG 1c.3g.20gb       0         0          0:1     |</span><br><span class="line">+--------------------------------------------------------------------+</span><br><span class="line">|   0      2       MIG 2c.3g.20gb       1         1          1:2     |</span><br><span class="line">+--------------------------------------------------------------------+</span><br></pre></td></tr></table></figure>
+<p>执行 <code>nvidia-smi</code> 也可以看到如下输出</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nvidia-smi</span></span><br><span class="line">Wed Jan 13 12:04:54 2021</span><br><span class="line">+-----------------------------------------------------------------------------+</span><br><span class="line">| NVIDIA-SMI 460.27.04    Driver Version: 460.27.04    CUDA Version: 11.2     |</span><br><span class="line">|-------------------------------+----------------------+----------------------+</span><br><span class="line">| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |</span><br><span class="line">| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |</span><br><span class="line">|                               |                      |               MIG M. |</span><br><span class="line">|===============================+======================+======================|</span><br><span class="line">|   0  A100-SXM4-40GB      On   | 00000000:00:08.0 Off |                   On |</span><br><span class="line">| N/A   26C    P0    43W / 400W |     11MiB / 40536MiB |     N/A      Default |</span><br><span class="line">|                               |                      |              Enabled |</span><br><span class="line">+-------------------------------+----------------------+----------------------+</span><br><span class="line"></span><br><span class="line">+-----------------------------------------------------------------------------+</span><br><span class="line">| MIG devices:                                                                |</span><br><span class="line">+------------------+----------------------+-----------+-----------------------+</span><br><span class="line">| GPU  GI  CI  MIG |         Memory-Usage |        Vol|         Shared        |</span><br><span class="line">|      ID  ID  Dev |           BAR1-Usage | SM     Unc| CE  ENC  DEC  OFA  JPG|</span><br><span class="line">|                  |                      |        ECC|                       |</span><br><span class="line">|==================+======================+===========+=======================|</span><br><span class="line">|  0    2   0   0  |      5MiB / 20096MiB | 14      0 |  3   0    2    0    0 |</span><br><span class="line">|                  |      0MiB / 32767MiB |           |                       |</span><br><span class="line">+------------------+                      +-----------+-----------------------+</span><br><span class="line">|  0    2   1   1  |                      | 28      0 |  3   0    2    0    0 |</span><br><span class="line">|                  |                      |           |                       |</span><br><span class="line">+------------------+----------------------+-----------+-----------------------+</span><br><span class="line"></span><br><span class="line">+-----------------------------------------------------------------------------+</span><br><span class="line">| Processes:                                                                  |</span><br><span class="line">|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |</span><br><span class="line">|        ID   ID                                                   Usage      |</span><br><span class="line">|=============================================================================|</span><br><span class="line">|  No running processes found                                                 |</span><br><span class="line">+-----------------------------------------------------------------------------+</span><br></pre></td></tr></table></figure>
+<p>执行<code>nvidia-smi -L</code> 可以列出每个设备的UUID，供后续计算时使用</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nvidia-smi -L</span></span><br><span class="line">GPU 0: A100-SXM4-40GB (UUID: GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181)</span><br><span class="line">  MIG 1c.3g.20gb Device 0: (UUID: MIG-GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181/2/0)</span><br><span class="line">  MIG 2c.3g.20gb Device 1: (UUID: MIG-GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181/2/1)</span><br></pre></td></tr></table></figure>
+<h3 id="删除-CPU-Instance"><a href="#删除-CPU-Instance" class="headerlink" title="删除 CPU Instance"></a>删除 CPU Instance</h3><p>可以使用如下命令删除gi实例1上的ci实例0</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nvidia-smi mig -dci -ci 0 -gi 1</span><br></pre></td></tr></table></figure>
+<h2 id="使用-MIG"><a href="#使用-MIG" class="headerlink" title="使用 MIG"></a>使用 MIG</h2><h3 id="Bare-Metal"><a href="#Bare-Metal" class="headerlink" title="Bare-Metal"></a>Bare-Metal</h3><p>暂时没有拿到 bare metal 的 A100 机器，TODO</p>
+<h3 id="Container"><a href="#Container" class="headerlink" title="Container"></a>Container</h3><h4 id="前置条件"><a href="#前置条件" class="headerlink" title="前置条件"></a>前置条件</h4><ul>
+<li>安装Docker</li>
+<li>安装NVIDIA Container Toolkit：<ul>
+<li>Nvidia-docker2 版本推荐在 v2.5.0 以上</li>
+</ul>
+</li>
+</ul>
+<h4 id="运行容器"><a href="#运行容器" class="headerlink" title="运行容器"></a>运行容器</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># docker run --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=MIG-GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181/2/1 nvidia/cuda nvidia-smi</span></span><br><span class="line">docker: Error response from daemon: OCI runtime create failed: container_linux.go:349: starting container process caused <span class="string">"process_linux.go:449: container init caused \"process_linux.go:432: running prestart hook 0 caused \\\"error running hook: exit status 1, stdout: , stderr: exec command: [/usr/bin/nvidia-container-cli --load-kmods configure --ldconfig=@/sbin/ldconfig --device=MIG-GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181/2/1 --compute --utility --require=cuda&gt;=11.1 brand=tesla,driver&gt;=418,driver&lt;419 brand=tesla,driver&gt;=440,driver&lt;441 brand=tesla,driver&gt;=450,driver&lt;451 --pid=11936 /var/lib/docker/overlay2/5ee3e036c29f6cd488a3ad1ab1c55a47e595ffff530075853396745de546e4a8/merged]\\\\nnvidia-container-cli: device error: unknown device id: MIG-GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181/2/1\\\\n\\\"\""</span>: unknown.</span><br><span class="line">ERRO[0000] error waiting <span class="keyword">for</span> container: context canceled</span><br></pre></td></tr></table></figure>
+<p>怀疑是 NVIDIA Docker Toolkit 版本太老</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># /usr/bin/nvidia-container-runtime -v</span></span><br><span class="line">runc version 1.0.0-rc10</span><br><span class="line">commit: dc9208a3303feef5b3839f4323d9beb36df0a9dd</span><br><span class="line">spec: 1.0.1-dev</span><br></pre></td></tr></table></figure>
+<p>安装新版本的 NVIDIA Docker Toolkit</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">Dependencies Resolved</span><br><span class="line"></span><br><span class="line">==========================================================================================================================================================================</span><br><span class="line"> Package                                       Arch                       Version                                      Repository                                    Size</span><br><span class="line">==========================================================================================================================================================================</span><br><span class="line">Installing:</span><br><span class="line"> nvidia-docker2                                noarch                     2.5.0-1                                      nvidia-docker                                8.4 k</span><br><span class="line">Installing <span class="keyword">for</span> dependencies:</span><br><span class="line"> container-selinux                             noarch                     2:2.119.1-1.c57a6f9.tl2                      tlinux                                        39 k</span><br><span class="line"> containerd.io                                 x86_64                     1.2.5-3.1.el7                                tlinux                                        22 M</span><br><span class="line"> docker-ce                                     x86_64                     3:18.09.5-3.el7                              tlinux                                        19 M</span><br><span class="line"> docker-ce-cli                                 x86_64                     1:18.09.5-3.el7                              tlinux                                        14 M</span><br><span class="line">Updating <span class="keyword">for</span> dependencies:</span><br><span class="line"> libnvidia-container-tools                     x86_64                     1.3.1-1                                      libnvidia-container                           42 k</span><br><span class="line"> libnvidia-container1                          x86_64                     1.3.1-1                                      libnvidia-container                           86 k</span><br><span class="line"> nvidia-container-runtime                      x86_64                     3.4.0-1                                      nvidia-container-runtime                     693 k</span><br><span class="line"> nvidia-container-toolkit                      x86_64                     1.4.0-2                                      nvidia-container-runtime                     819 k</span><br></pre></td></tr></table></figure>
+<p>环境配置好后，即可通过 <code>docker</code> 运行容器使用GPU：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">$ docker run --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=MIG-GPU-61148488-f8ba-c817-b2e8-18f59e2b66b1/2/0 nvidia/cuda nvidia-smi</span><br><span class="line">Wed Jan 13 11:30:19 2021</span><br><span class="line">+-----------------------------------------------------------------------------+</span><br><span class="line">| NVIDIA-SMI 460.27.04    Driver Version: 460.27.04    CUDA Version: 11.2     |</span><br><span class="line">|-------------------------------+----------------------+----------------------+</span><br><span class="line">| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |</span><br><span class="line">| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |</span><br><span class="line">|                               |                      |               MIG M. |</span><br><span class="line">|===============================+======================+======================|</span><br><span class="line">|   0  A100-SXM4-40GB      On   | 00000000:00:08.0 Off |                   On |</span><br><span class="line">| N/A   26C    P0    42W / 400W |                  N/A |     N/A      Default |</span><br><span class="line">|                               |                      |              Enabled |</span><br><span class="line">+-------------------------------+----------------------+----------------------+</span><br><span class="line"></span><br><span class="line">+-----------------------------------------------------------------------------+</span><br><span class="line">| MIG devices:                                                                |</span><br><span class="line">+------------------+----------------------+-----------+-----------------------+</span><br><span class="line">| GPU  GI  CI  MIG |         Memory-Usage |        Vol|         Shared        |</span><br><span class="line">|      ID  ID  Dev |           BAR1-Usage | SM     Unc| CE  ENC  DEC  OFA  JPG|</span><br><span class="line">|                  |                      |        ECC|                       |</span><br><span class="line">|==================+======================+===========+=======================|</span><br><span class="line">|  0    2   0   0  |      5MiB / 20096MiB | 14      0 |  3   0    2    0    0 |</span><br><span class="line">|                  |      0MiB / 32767MiB |           |                       |</span><br><span class="line">+------------------+----------------------+-----------+-----------------------+</span><br><span class="line"></span><br><span class="line">+-----------------------------------------------------------------------------+</span><br><span class="line">| Processes:                                                                  |</span><br><span class="line">|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |</span><br><span class="line">|        ID   ID                                                   Usage      |</span><br><span class="line">|=============================================================================|</span><br><span class="line">|  No running processes found                                                 |</span><br><span class="line">+-----------------------------------------------------------------------------+</span><br></pre></td></tr></table></figure>
+<h3 id="Kubernetes"><a href="#Kubernetes" class="headerlink" title="Kubernetes"></a>Kubernetes</h3><h4 id="前置依赖"><a href="#前置依赖" class="headerlink" title="前置依赖"></a>前置依赖</h4><ul>
+<li>NVIDIA R450+ datacenter driver: 450.80.02+</li>
+<li>NVIDIA Container Toolkit (nvidia-docker2): v2.5.0+</li>
+<li>NVIDIA k8s-device-plugin: v0.7.0+</li>
+<li>NVIDIA gpu-feature-discovery: v0.2.0+</li>
+</ul>
+<h4 id="None"><a href="#None" class="headerlink" title="None"></a>None</h4><p>确认 Node 上的 MIG 特性开启，此时没有创建任何GI：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">Thu Jan 14 16:35:34 2021</span><br><span class="line">+-----------------------------------------------------------------------------+</span><br><span class="line">| NVIDIA-SMI 460.27.04    Driver Version: 460.27.04    CUDA Version: 11.2     |</span><br><span class="line">|-------------------------------+----------------------+----------------------+</span><br><span class="line">| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |</span><br><span class="line">| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |</span><br><span class="line">|                               |                      |               MIG M. |</span><br><span class="line">|===============================+======================+======================|</span><br><span class="line">|   0  A100-SXM4-40GB      On   | 00000000:00:08.0 Off |                   On |</span><br><span class="line">| N/A   26C    P0    43W / 400W |      0MiB / 40536MiB |     N/A      Default |</span><br><span class="line">|                               |                      |              Enabled |</span><br><span class="line">+-------------------------------+----------------------+----------------------+</span><br><span class="line"></span><br><span class="line">+-----------------------------------------------------------------------------+</span><br><span class="line">| MIG devices:                                                                |</span><br><span class="line">+------------------+----------------------+-----------+-----------------------+</span><br><span class="line">| GPU  GI  CI  MIG |         Memory-Usage |        Vol|         Shared        |</span><br><span class="line">|      ID  ID  Dev |           BAR1-Usage | SM     Unc| CE  ENC  DEC  OFA  JPG|</span><br><span class="line">|                  |                      |        ECC|                       |</span><br><span class="line">|==================+======================+===========+=======================|</span><br><span class="line">|  No MIG devices found                                                       |</span><br><span class="line">+-----------------------------------------------------------------------------+</span><br><span class="line"></span><br><span class="line">+-----------------------------------------------------------------------------+</span><br><span class="line">| Processes:                                                                  |</span><br><span class="line">|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |</span><br><span class="line">|        ID   ID                                                   Usage      |</span><br><span class="line">|=============================================================================|</span><br><span class="line">|  No running processes found                                                 |</span><br><span class="line">+-----------------------------------------------------------------------------+</span><br></pre></td></tr></table></figure>
+<p>启动 <code>Device Plugin</code>，此时 <code>mig-strategy</code> 是 <code>none</code>：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">kind:</span> <span class="string">DaemonSet</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nvidia-device-plugin-daemonset</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">nvidia-device-plugin-ds</span></span><br><span class="line">  <span class="attr">updateStrategy:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">RollingUpdate</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="comment"># This annotation is deprecated. Kept here for backward compatibility</span></span><br><span class="line">      <span class="comment"># See https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/</span></span><br><span class="line">      <span class="attr">annotations:</span></span><br><span class="line">        <span class="attr">scheduler.alpha.kubernetes.io/critical-pod:</span> <span class="string">""</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">nvidia-device-plugin-ds</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">tolerations:</span></span><br><span class="line">      <span class="comment"># This toleration is deprecated. Kept here for backward compatibility</span></span><br><span class="line">      <span class="comment"># See https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">CriticalAddonsOnly</span></span><br><span class="line">        <span class="attr">operator:</span> <span class="string">Exists</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">nvidia.com/gpu</span></span><br><span class="line">        <span class="attr">operator:</span> <span class="string">Exists</span></span><br><span class="line">        <span class="attr">effect:</span> <span class="string">NoSchedule</span></span><br><span class="line">      <span class="comment"># Mark this pod as a critical add-on; when enabled, the critical add-on</span></span><br><span class="line">      <span class="comment"># scheduler reserves resources for critical add-on pods so that they can</span></span><br><span class="line">      <span class="comment"># be rescheduled after a failure.</span></span><br><span class="line">      <span class="comment"># See https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/</span></span><br><span class="line">      <span class="attr">priorityClassName:</span> <span class="string">"system-node-critical"</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">image:</span> <span class="string">nvidia/k8s-device-plugin:v0.7.0</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">nvidia-device-plugin-ctr</span></span><br><span class="line">        <span class="attr">args:</span> <span class="string">["--fail-on-init-error=false"]</span></span><br><span class="line">        <span class="attr">securityContext:</span></span><br><span class="line">          <span class="attr">allowPrivilegeEscalation:</span> <span class="literal">false</span></span><br><span class="line">          <span class="attr">capabilities:</span></span><br><span class="line">            <span class="attr">drop:</span> <span class="string">["ALL"]</span></span><br><span class="line">        <span class="attr">volumeMounts:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">device-plugin</span></span><br><span class="line">            <span class="attr">mountPath:</span> <span class="string">/var/lib/kubelet/device-plugins</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">device-plugin</span></span><br><span class="line">          <span class="attr">hostPath:</span></span><br><span class="line">            <span class="attr">path:</span> <span class="string">/var/lib/kubelet/device-plugins</span></span><br></pre></td></tr></table></figure>
+<p>可以看到 <code>Node</code> 上可以用 <code>nvidia.com/gpu</code> 资源数目：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">Capacity:</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line">  <span class="attr">nvidia.com/gpu:</span>          <span class="number">1</span></span><br><span class="line"><span class="attr">Allocatable:</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line">  <span class="attr">nvidia.com/gpu:</span>          <span class="number">1</span></span><br></pre></td></tr></table></figure>
+<p>部署 <code>Pod</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl run -it --rm \</span><br><span class="line">   --image=nvidia/cuda \</span><br><span class="line">   --restart=Never \</span><br><span class="line">   --limits=nvidia.com/gpu=1 \</span><br><span class="line">GPU 0: A100-SXM4-40GB (UUID: GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181)</span><br><span class="line">pod <span class="string">"mig-none-example"</span> deleted</span><br></pre></td></tr></table></figure>
+<h4 id="Single"><a href="#Single" class="headerlink" title="Single"></a>Single</h4><p> 确认 Node 上的MIG特性开启后，创建大小相同的7个GI，每个GI对应着一个CI：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">$ nvidia-smi mig -cgi 19,19,19,19,19,19,19 -C</span><br><span class="line">Successfully created GPU instance ID 13 on GPU  0 using profile MIG 1g.5gb (ID 19)</span><br><span class="line">Successfully created compute instance ID  0 on GPU  0 GPU instance ID 13 using profile MIG 1g.5gb (ID  0)</span><br><span class="line">Successfully created GPU instance ID 11 on GPU  0 using profile MIG 1g.5gb (ID 19)</span><br><span class="line">Successfully created compute instance ID  0 on GPU  0 GPU instance ID 11 using profile MIG 1g.5gb (ID  0)</span><br><span class="line">Successfully created GPU instance ID 12 on GPU  0 using profile MIG 1g.5gb (ID 19)</span><br><span class="line">Successfully created compute instance ID  0 on GPU  0 GPU instance ID 12 using profile MIG 1g.5gb (ID  0)</span><br><span class="line">Successfully created GPU instance ID  7 on GPU  0 using profile MIG 1g.5gb (ID 19)</span><br><span class="line">Successfully created compute instance ID  0 on GPU  0 GPU instance ID  7 using profile MIG 1g.5gb (ID  0)</span><br><span class="line">Successfully created GPU instance ID  8 on GPU  0 using profile MIG 1g.5gb (ID 19)</span><br><span class="line">Successfully created compute instance ID  0 on GPU  0 GPU instance ID  8 using profile MIG 1g.5gb (ID  0)</span><br><span class="line">Successfully created GPU instance ID  9 on GPU  0 using profile MIG 1g.5gb (ID 19)</span><br><span class="line">Successfully created compute instance ID  0 on GPU  0 GPU instance ID  9 using profile MIG 1g.5gb (ID  0)</span><br><span class="line">Successfully created GPU instance ID 10 on GPU  0 using profile MIG 1g.5gb (ID 19)</span><br><span class="line">Successfully created compute instance ID  0 on GPU  0 GPU instance ID 10 using profile MIG 1g.5gb (ID  0)</span><br><span class="line">$ nvidia-smi -L</span><br><span class="line">GPU 0: A100-SXM4-40GB (UUID: GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181)</span><br><span class="line">  MIG 1g.5gb Device 0: (UUID: MIG-GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181/7/0)</span><br><span class="line">  MIG 1g.5gb Device 1: (UUID: MIG-GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181/8/0)</span><br><span class="line">  MIG 1g.5gb Device 2: (UUID: MIG-GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181/9/0)</span><br><span class="line">  MIG 1g.5gb Device 3: (UUID: MIG-GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181/10/0)</span><br><span class="line">  MIG 1g.5gb Device 4: (UUID: MIG-GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181/11/0)</span><br><span class="line">  MIG 1g.5gb Device 5: (UUID: MIG-GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181/12/0)</span><br><span class="line">  MIG 1g.5gb Device 6: (UUID: MIG-GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181/13/0)</span><br></pre></td></tr></table></figure>
+<p>部署 <code>Device Plugin</code>：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DaemonSet</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nvidia-device-plugin-daemonset</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">nvidia-device-plugin-ds</span></span><br><span class="line">  <span class="attr">updateStrategy:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">RollingUpdate</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="comment"># This annotation is deprecated. Kept here for backward compatibility</span></span><br><span class="line">      <span class="comment"># See https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/</span></span><br><span class="line">      <span class="attr">annotations:</span></span><br><span class="line">        <span class="attr">scheduler.alpha.kubernetes.io/critical-pod:</span> <span class="string">""</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">nvidia-device-plugin-ds</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">tolerations:</span></span><br><span class="line">      <span class="comment"># This toleration is deprecated. Kept here for backward compatibility</span></span><br><span class="line">      <span class="comment"># See https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">CriticalAddonsOnly</span></span><br><span class="line">        <span class="attr">operator:</span> <span class="string">Exists</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">nvidia.com/gpu</span></span><br><span class="line">        <span class="attr">operator:</span> <span class="string">Exists</span></span><br><span class="line">        <span class="attr">effect:</span> <span class="string">NoSchedule</span></span><br><span class="line">      <span class="comment"># Mark this pod as a critical add-on; when enabled, the critical add-on</span></span><br><span class="line">      <span class="comment"># scheduler reserves resources for critical add-on pods so that they can</span></span><br><span class="line">      <span class="comment"># be rescheduled after a failure.</span></span><br><span class="line">      <span class="comment"># See https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/</span></span><br><span class="line">      <span class="attr">priorityClassName:</span> <span class="string">"system-node-critical"</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">image:</span> <span class="string">nvidia/k8s-device-plugin:v0.7.0</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">nvidia-device-plugin-ctr</span></span><br><span class="line">        <span class="attr">args:</span> <span class="string">["--fail-on-init-error=false",</span> <span class="string">"--mig-strategy=single"</span><span class="string">]</span></span><br><span class="line">        <span class="attr">securityContext:</span></span><br><span class="line">          <span class="attr">allowPrivilegeEscalation:</span> <span class="literal">false</span></span><br><span class="line">          <span class="attr">capabilities:</span></span><br><span class="line">            <span class="attr">drop:</span> <span class="string">["ALL"]</span></span><br><span class="line">        <span class="attr">volumeMounts:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">device-plugin</span></span><br><span class="line">            <span class="attr">mountPath:</span> <span class="string">/var/lib/kubelet/device-plugins</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">device-plugin</span></span><br><span class="line">          <span class="attr">hostPath:</span></span><br><span class="line">            <span class="attr">path:</span> <span class="string">/var/lib/kubelet/device-plugins</span></span><br></pre></td></tr></table></figure>
+<p>这时候可以看到 Node 上面的标记 <code>nvidia.com/gpu</code> 变成了 7 个：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">Capacity:</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line">  <span class="attr">nvidia.com/gpu:</span>          <span class="number">7</span></span><br><span class="line"><span class="attr">Allocatable:</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line">  <span class="attr">nvidia.com/gpu:</span>          <span class="number">7</span></span><br></pre></td></tr></table></figure>
+<p>部署 <code>discovery</code></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DaemonSet</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">gpu-feature-discovery</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app.kubernetes.io/name:</span> <span class="string">gpu-feature-discovery</span></span><br><span class="line">    <span class="attr">app.kubernetes.io/version:</span> <span class="number">0.2</span><span class="number">.0</span></span><br><span class="line">    <span class="attr">app.kubernetes.io/part-of:</span> <span class="string">nvidia-gpu</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app.kubernetes.io/name:</span> <span class="string">gpu-feature-discovery</span></span><br><span class="line">      <span class="attr">app.kubernetes.io/part-of:</span> <span class="string">nvidia-gpu</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app.kubernetes.io/name:</span> <span class="string">gpu-feature-discovery</span></span><br><span class="line">        <span class="attr">app.kubernetes.io/version:</span> <span class="number">0.2</span><span class="number">.0</span></span><br><span class="line">        <span class="attr">app.kubernetes.io/part-of:</span> <span class="string">nvidia-gpu</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">image:</span> <span class="string">nvidia/gpu-feature-discovery:v0.2.0</span></span><br><span class="line">          <span class="attr">name:</span> <span class="string">gpu-feature-discovery</span></span><br><span class="line">          <span class="attr">args:</span> <span class="string">["--mig-strategy=single"]</span></span><br><span class="line">          <span class="attr">volumeMounts:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">output-dir</span></span><br><span class="line">              <span class="attr">mountPath:</span> <span class="string">"/etc/kubernetes/node-feature-discovery/features.d"</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">dmi-product-name</span></span><br><span class="line">              <span class="attr">mountPath:</span> <span class="string">"/sys/class/dmi/id/product_name"</span></span><br><span class="line">          <span class="attr">env:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">NVIDIA_MIG_MONITOR_DEVICES</span></span><br><span class="line">              <span class="attr">value:</span> <span class="string">all</span></span><br><span class="line">          <span class="attr">securityContext:</span></span><br><span class="line">            <span class="attr">privileged:</span> <span class="literal">true</span></span><br><span class="line">      <span class="attr">nodeSelector:</span></span><br><span class="line">        <span class="attr">feature.node.kubernetes.io/pci-10de.present:</span> <span class="string">"true"</span> <span class="comment"># NVIDIA vendor ID</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">output-dir</span></span><br><span class="line">          <span class="attr">hostPath:</span></span><br><span class="line">            <span class="attr">path:</span> <span class="string">"/etc/kubernetes/node-feature-discovery/features.d"</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">dmi-product-name</span></span><br><span class="line">          <span class="attr">hostPath:</span></span><br><span class="line">            <span class="attr">path:</span> <span class="string">"/sys/class/dmi/id/product_name"</span></span><br></pre></td></tr></table></figure>
+<p>运行 Pod 申请GPU：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">$  <span class="keyword">for</span> i <span class="keyword">in</span> $(seq 7); <span class="keyword">do</span></span><br><span class="line">   kubectl run \</span><br><span class="line">      --image=nvidia/cuda:11.0-base \</span><br><span class="line">      --restart=Never \</span><br><span class="line">      --limits=nvidia.com/gpu=1 \</span><br><span class="line">      mig-single-example-<span class="variable">$&#123;i&#125;</span> -- bash -c <span class="string">"nvidia-smi -L; sleep infinity"</span></span><br><span class="line"><span class="keyword">done</span></span><br><span class="line">pod/mig-single-example-1 created</span><br><span class="line">pod/mig-single-example-2 created</span><br><span class="line">pod/mig-single-example-3 created</span><br><span class="line">pod/mig-single-example-4 created</span><br><span class="line">pod/mig-single-example-5 created</span><br><span class="line">pod/mig-single-example-6 created</span><br><span class="line">pod/mig-single-example-7 created</span><br><span class="line"></span><br><span class="line">$ <span class="keyword">for</span> i <span class="keyword">in</span> $(seq 7); <span class="keyword">do</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"mig-single-example-<span class="variable">$&#123;i&#125;</span>"</span>;</span><br><span class="line">kubectl logs mig-single-example-<span class="variable">$&#123;i&#125;</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">""</span>;</span><br><span class="line"><span class="keyword">done</span></span><br><span class="line"></span><br><span class="line">mig-single-example-1</span><br><span class="line">GPU 0: A100-SXM4-40GB (UUID: GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181)</span><br><span class="line">  MIG 1g.5gb Device 0: (UUID: MIG-GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181/11/0)</span><br><span class="line"></span><br><span class="line">mig-single-example-2</span><br><span class="line">GPU 0: A100-SXM4-40GB (UUID: GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181)</span><br><span class="line">  MIG 1g.5gb Device 0: (UUID: MIG-GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181/7/0)</span><br><span class="line"></span><br><span class="line">mig-single-example-3</span><br><span class="line">GPU 0: A100-SXM4-40GB (UUID: GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181)</span><br><span class="line">  MIG 1g.5gb Device 0: (UUID: MIG-GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181/8/0)</span><br><span class="line">  </span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">$ <span class="keyword">for</span> i <span class="keyword">in</span> $(seq 7); <span class="keyword">do</span></span><br><span class="line">kubectl delete pod mig-single-example-<span class="variable">$&#123;i&#125;</span>;</span><br><span class="line"><span class="keyword">done</span></span><br><span class="line"></span><br><span class="line">pod <span class="string">"mig-single-example-1"</span> deleted</span><br><span class="line">pod <span class="string">"mig-single-example-2"</span> deleted</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<h4 id="Mixed"><a href="#Mixed" class="headerlink" title="Mixed"></a>Mixed</h4><p> 确认 Node 上的MIG特性开启后，创建不同大小的3个GI，每个GI对应着一个CI：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$ nvidia-smi mig -cgi 9,14,19 -C</span><br><span class="line">Successfully created GPU instance ID  2 on GPU  0 using profile MIG 3g.20gb (ID  9)</span><br><span class="line">Successfully created compute instance ID  0 on GPU  0 GPU instance ID  2 using profile MIG 3g.20gb (ID  2)</span><br><span class="line">Successfully created GPU instance ID  3 on GPU  0 using profile MIG 2g.10gb (ID 14)</span><br><span class="line">Successfully created compute instance ID  0 on GPU  0 GPU instance ID  3 using profile MIG 2g.10gb (ID  1)</span><br><span class="line">Successfully created GPU instance ID  9 on GPU  0 using profile MIG 1g.5gb (ID 19)</span><br><span class="line">Successfully created compute instance ID  0 on GPU  0 GPU instance ID  9 using profile MIG 1g.5gb (ID  0)</span><br><span class="line">$ nvidia-smi -L</span><br><span class="line">GPU 0: A100-SXM4-40GB (UUID: GPU-61148488-f8ba-c817-b2e8-18f59e2b66b1)</span><br><span class="line">  MIG 3g.20gb Device 0: (UUID: MIG-GPU-61148488-f8ba-c817-b2e8-18f59e2b66b1/2/0)</span><br><span class="line">  MIG 2g.10gb Device 1: (UUID: MIG-GPU-61148488-f8ba-c817-b2e8-18f59e2b66b1/3/0)</span><br><span class="line">  MIG 1g.5gb Device 2: (UUID: MIG-GPU-61148488-f8ba-c817-b2e8-18f59e2b66b1/9/0)</span><br></pre></td></tr></table></figure>
+<p>启动 <code>Device Plugin</code> ：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DaemonSet</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nvidia-device-plugin-daemonset</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">nvidia-device-plugin-ds</span></span><br><span class="line">  <span class="attr">updateStrategy:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">RollingUpdate</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="comment"># This annotation is deprecated. Kept here for backward compatibility</span></span><br><span class="line">      <span class="comment"># See https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/</span></span><br><span class="line">      <span class="attr">annotations:</span></span><br><span class="line">        <span class="attr">scheduler.alpha.kubernetes.io/critical-pod:</span> <span class="string">""</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">nvidia-device-plugin-ds</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">tolerations:</span></span><br><span class="line">      <span class="comment"># This toleration is deprecated. Kept here for backward compatibility</span></span><br><span class="line">      <span class="comment"># See https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">CriticalAddonsOnly</span></span><br><span class="line">        <span class="attr">operator:</span> <span class="string">Exists</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">nvidia.com/gpu</span></span><br><span class="line">        <span class="attr">operator:</span> <span class="string">Exists</span></span><br><span class="line">        <span class="attr">effect:</span> <span class="string">NoSchedule</span></span><br><span class="line">      <span class="comment"># Mark this pod as a critical add-on; when enabled, the critical add-on</span></span><br><span class="line">      <span class="comment"># scheduler reserves resources for critical add-on pods so that they can</span></span><br><span class="line">      <span class="comment"># be rescheduled after a failure.</span></span><br><span class="line">      <span class="comment"># See https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/</span></span><br><span class="line">      <span class="attr">priorityClassName:</span> <span class="string">"system-node-critical"</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">image:</span> <span class="string">nvidia/k8s-device-plugin:v0.7.0</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">nvidia-device-plugin-ctr</span></span><br><span class="line">        <span class="attr">args:</span> <span class="string">["--fail-on-init-error=false",</span> <span class="string">"--mig-strategy=mixed"</span><span class="string">]</span></span><br><span class="line">        <span class="attr">securityContext:</span></span><br><span class="line">          <span class="attr">allowPrivilegeEscalation:</span> <span class="literal">false</span></span><br><span class="line">          <span class="attr">capabilities:</span></span><br><span class="line">            <span class="attr">drop:</span> <span class="string">["ALL"]</span></span><br><span class="line">        <span class="attr">volumeMounts:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">device-plugin</span></span><br><span class="line">            <span class="attr">mountPath:</span> <span class="string">/var/lib/kubelet/device-plugins</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">device-plugin</span></span><br><span class="line">          <span class="attr">hostPath:</span></span><br><span class="line">            <span class="attr">path:</span> <span class="string">/var/lib/kubelet/device-plugins</span></span><br></pre></td></tr></table></figure>
+<p>启动 <code>Device Plugin</code> 之后，可以看到 Node 上的有MIG的<code>resource type</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">Capacity:</span><br><span class="line">...</span><br><span class="line">  nvidia.com/gpu:          0</span><br><span class="line">  nvidia.com/mig-1g.5gb:   1</span><br><span class="line">  nvidia.com/mig-2g.10gb:  1</span><br><span class="line">  nvidia.com/mig-3g.20gb:  1</span><br><span class="line">  pods:                    61</span><br><span class="line">Allocatable:</span><br><span class="line">...</span><br><span class="line">  nvidia.com/gpu:          0</span><br><span class="line">  nvidia.com/mig-1g.5gb:   1</span><br><span class="line">  nvidia.com/mig-2g.10gb:  1</span><br><span class="line">  nvidia.com/mig-3g.20gb:  1</span><br><span class="line">  pods:                    61</span><br></pre></td></tr></table></figure>
+<p>这时候启动 <code>gpu-feature-discovery</code>，启动策略是 <code>mixed</code>：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DaemonSet</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">gpu-feature-discovery</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app.kubernetes.io/name:</span> <span class="string">gpu-feature-discovery</span></span><br><span class="line">    <span class="attr">app.kubernetes.io/version:</span> <span class="number">0.2</span><span class="number">.0</span></span><br><span class="line">    <span class="attr">app.kubernetes.io/part-of:</span> <span class="string">nvidia-gpu</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app.kubernetes.io/name:</span> <span class="string">gpu-feature-discovery</span></span><br><span class="line">      <span class="attr">app.kubernetes.io/part-of:</span> <span class="string">nvidia-gpu</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app.kubernetes.io/name:</span> <span class="string">gpu-feature-discovery</span></span><br><span class="line">        <span class="attr">app.kubernetes.io/version:</span> <span class="number">0.2</span><span class="number">.0</span></span><br><span class="line">        <span class="attr">app.kubernetes.io/part-of:</span> <span class="string">nvidia-gpu</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">image:</span> <span class="string">nvidia/gpu-feature-discovery:v0.2.0</span></span><br><span class="line">          <span class="attr">name:</span> <span class="string">gpu-feature-discovery</span></span><br><span class="line">          <span class="attr">args:</span> <span class="string">["--mig-strategy=mixed"]</span></span><br><span class="line">          <span class="attr">volumeMounts:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">output-dir</span></span><br><span class="line">              <span class="attr">mountPath:</span> <span class="string">"/etc/kubernetes/node-feature-discovery/features.d"</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">dmi-product-name</span></span><br><span class="line">              <span class="attr">mountPath:</span> <span class="string">"/sys/class/dmi/id/product_name"</span></span><br><span class="line">          <span class="attr">env:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">NVIDIA_MIG_MONITOR_DEVICES</span></span><br><span class="line">              <span class="attr">value:</span> <span class="string">all</span></span><br><span class="line">          <span class="attr">securityContext:</span></span><br><span class="line">            <span class="attr">privileged:</span> <span class="literal">true</span></span><br><span class="line">      <span class="comment">#nodeSelector:</span></span><br><span class="line">      <span class="comment">#  feature.node.kubernetes.io/pci-10de.present: "true" # NVIDIA vendor ID</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">output-dir</span></span><br><span class="line">          <span class="attr">hostPath:</span></span><br><span class="line">            <span class="attr">path:</span> <span class="string">"/etc/kubernetes/node-feature-discovery/features.d"</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">dmi-product-name</span></span><br><span class="line">          <span class="attr">hostPath:</span></span><br><span class="line">            <span class="attr">path:</span> <span class="string">"/sys/class/dmi/id/product_name"</span></span><br></pre></td></tr></table></figure>
+<p>这时候查看 Node 的 label，可以看到 MIG 相关的 label 已经打上 ？</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get node -o json | \</span><br><span class="line">   jq <span class="string">'.items[0].metadata.labels | with_entries(select(.key | startswith("nvidia.com")))'</span></span><br><span class="line">&#123;&#125;</span><br></pre></td></tr></table></figure>
+<p>使用 <code>kubectl</code> 启动 Pod：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl run -it --rm \</span><br><span class="line">   --image=nvidia/cuda:11.0-base \</span><br><span class="line">   --restart=Never \</span><br><span class="line">   --limits=nvidia.com/mig-1g.5gb=1 \</span><br><span class="line">   mig-mixed-example -- nvidia-smi -L</span><br><span class="line">GPU 0: A100-SXM4-40GB (UUID: GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181)</span><br><span class="line">  MIG 1g.5gb Device 0: (UUID: MIG-GPU-ed92375c-b61c-7a27-2611-bc72ad3ea181/9/0)</span><br><span class="line">pod <span class="string">"mig-mixed-example"</span> deleted</span><br></pre></td></tr></table></figure>
+<h4 id="当前TKE的问题"><a href="#当前TKE的问题" class="headerlink" title="当前TKE的问题"></a>当前TKE的问题</h4><ul>
+<li>驱动版本 和 Nvidia-container-toolkit 版本 较老，需要更新</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># TKE GPU Node查看到 Driver 信息</span></span><br><span class="line">$ nvidia-smi -a</span><br><span class="line">Driver Version                      : 418.67</span><br><span class="line">CUDA Version                        : 10.1</span><br><span class="line"></span><br><span class="line"><span class="comment"># Nvidia Container Toolkit 版本</span></span><br><span class="line">nvidia-container-runtime-3.1.0-1</span><br><span class="line">nvidia-container-toolkit-1.0.1-2</span><br><span class="line">libnvidia-container-tools-1.0.2-1</span><br><span class="line">libnvidia-container1-1.0.2-1</span><br><span class="line"></span><br><span class="line"><span class="comment"># NVIDIA Device Plugin 版本较老</span></span><br><span class="line">nvidia/k8s-device-plugin:1.10</span><br><span class="line"></span><br><span class="line">应该用 NVIDIA k8s-device-plugin: v0.7.0+</span><br></pre></td></tr></table></figure>
+<ul>
+<li>VM 中使用 MIG，开启MIG特性需要重启VM</li>
+</ul>
+<blockquote>
+<p> If you are using MIG inside a VM with GPU passthrough, then you may <strong>need to reboot the VM</strong> to allow the GPU to be in MIG mode as in some cases, GPU reset is not allowed via the hypervisor for security reasons. This can be seen in the following example:</p>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ sudo nvidia-smi -i 0 -mig 1</span><br><span class="line">Warning: MIG mode is <span class="keyword">in</span> pending <span class="built_in">enable</span> state <span class="keyword">for</span> GPU 00000000:00:03.0:Not Supported</span><br><span class="line">Reboot the system or try nvidia-smi --gpu-reset to make MIG mode effective on GPU 00000000:00:03.0</span><br><span class="line">All <span class="keyword">done</span>.</span><br><span class="line"></span><br><span class="line">$ sudo nvidia-smi --gpu-reset</span><br><span class="line">Resetting GPU 00000000:00:03.0 is not supported.</span><br></pre></td></tr></table></figure>
+<h2 id="划分MIG后的性能对比"><a href="#划分MIG后的性能对比" class="headerlink" title="划分MIG后的性能对比"></a>划分MIG后的性能对比</h2><h3 id="整块卡的性能"><a href="#整块卡的性能" class="headerlink" title="整块卡的性能"></a>整块卡的性能</h3><div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">测试项目</th>
+<th style="text-align:left">实测性能</th>
+<th style="text-align:left">官方标准性能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">FP32MAD</td>
+<td style="text-align:left">19.436TF</td>
+<td style="text-align:left">19.5 TF</td>
+</tr>
+<tr>
+<td style="text-align:left">FP64MAD</td>
+<td style="text-align:left">9.690TF</td>
+<td style="text-align:left">9.7 TF</td>
+</tr>
+<tr>
+<td style="text-align:left">int32mad</td>
+<td style="text-align:left">19.446TF</td>
+<td style="text-align:left">-</td>
+</tr>
+<tr>
+<td style="text-align:left">int32add</td>
+<td style="text-align:left">18.906TF</td>
+<td style="text-align:left">-</td>
+</tr>
+<tr>
+<td style="text-align:left">FP32GEMMTensor (矩阵大小满足最佳性能要求)</td>
+<td style="text-align:left">158.426TF</td>
+<td style="text-align:left">156 TF</td>
+</tr>
+<tr>
+<td style="text-align:left">FP32GEMMTensor (不满足最佳性能要求)</td>
+<td style="text-align:left">68.054 TF</td>
+<td style="text-align:left">-</td>
+</tr>
+<tr>
+<td style="text-align:left">FP32GEMM</td>
+<td style="text-align:left">19.047 TF</td>
+<td style="text-align:left">-</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>备注</strong></p>
+<ol>
+<li>GEMM 需要在cuda 11.0 下重编，才能达到以上效果</li>
+<li>满足最佳性能要求是的GEMM大小参数 9000 <em> 6000 </em> 6000</li>
+<li>不满足最佳性能要求的GEMM大小参数 8997 <em> 5998 </em> 5998</li>
+</ol>
+<h3 id="MIG卡的性能"><a href="#MIG卡的性能" class="headerlink" title="MIG卡的性能"></a>MIG卡的性能</h3><p>为了测试各个CI和GI的性能，对3g.20gb GI进行进一步划分，分为 2c.3g.20gb, 1c.3g.20gb，另外两个GI不做进一步划分，直接在GI基础上创建CI。</p>
+<p>至此一块GPU卡被分为四个CI分别是</p>
+<ul>
+<li>MIG 1c.3g.20gb</li>
+<li>MIG 2c.3g.20gb</li>
+<li>MIG 2g.10gb</li>
+<li>MIG 1g.5gb</li>
+</ul>
+<h4 id="各CI串行执行"><a href="#各CI串行执行" class="headerlink" title="各CI串行执行"></a>各CI串行执行</h4><p><strong>MIG 1c.3g.20gb</strong></p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">测试项目</th>
+<th style="text-align:left">实测性能(OPS)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">FP32MAD</td>
+<td style="text-align:left">2.523 T</td>
+</tr>
+<tr>
+<td style="text-align:left">FP64MAD</td>
+<td style="text-align:left">1.261 T</td>
+</tr>
+<tr>
+<td style="text-align:left">INT32MAD</td>
+<td style="text-align:left">2.524 T</td>
+</tr>
+<tr>
+<td style="text-align:left">INT32ADD</td>
+<td style="text-align:left">2.455 T</td>
+</tr>
+<tr>
+<td style="text-align:left">FP32GEMMTensor (矩阵大小满足最佳性能要求)</td>
+<td style="text-align:left">23.081 T</td>
+</tr>
+<tr>
+<td style="text-align:left">FP32GEMMTensor (不满足最佳性能要求)</td>
+<td style="text-align:left">8.940 T</td>
+</tr>
+<tr>
+<td style="text-align:left">FP32GEMM</td>
+<td style="text-align:left">2.476 T</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>MIG 2c.3g.20gb</strong></p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">测试项目</th>
+<th style="text-align:left">实测性能(OPS)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">FP32MAD</td>
+<td style="text-align:left">5.046 T</td>
+</tr>
+<tr>
+<td style="text-align:left">FP64MAD</td>
+<td style="text-align:left">2.521 T</td>
+</tr>
+<tr>
+<td style="text-align:left">INT32MAD</td>
+<td style="text-align:left">5.049 T</td>
+</tr>
+<tr>
+<td style="text-align:left">INT32ADD</td>
+<td style="text-align:left">4.908 T</td>
+</tr>
+<tr>
+<td style="text-align:left">FP32GEMMTensor (矩阵大小满足最佳性能要求)</td>
+<td style="text-align:left">44.941 T</td>
+</tr>
+<tr>
+<td style="text-align:left">FP32GEMMTensor (不满足最佳性能要求)</td>
+<td style="text-align:left">18.920 T</td>
+</tr>
+<tr>
+<td style="text-align:left">FP32GEMM</td>
+<td style="text-align:left">4.909 T</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>MIG 2g.10gb</strong></p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">测试项目</th>
+<th style="text-align:left">实测性能(OPS)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">FP32MAD</td>
+<td style="text-align:left">5.046 T</td>
+</tr>
+<tr>
+<td style="text-align:left">FP64MAD</td>
+<td style="text-align:left">2.521 T</td>
+</tr>
+<tr>
+<td style="text-align:left">INT32MAD</td>
+<td style="text-align:left">5.049 T</td>
+</tr>
+<tr>
+<td style="text-align:left">INT32ADD</td>
+<td style="text-align:left">4.908 T</td>
+</tr>
+<tr>
+<td style="text-align:left">FP32GEMMTensor (矩阵大小满足最佳性能要求)</td>
+<td style="text-align:left">40.151 T</td>
+</tr>
+<tr>
+<td style="text-align:left">FP32GEMMTensor (不满足最佳性能要求)</td>
+<td style="text-align:left">17.514 T</td>
+</tr>
+<tr>
+<td style="text-align:left">FP32GEMM</td>
+<td style="text-align:left">4.909 T</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>MIG 1g.5gb</strong></p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">测试项目</th>
+<th style="text-align:left">实测性能(OPS)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">FP32MAD</td>
+<td style="text-align:left">2.523 T</td>
+</tr>
+<tr>
+<td style="text-align:left">FP64MAD</td>
+<td style="text-align:left">1.261 T</td>
+</tr>
+<tr>
+<td style="text-align:left">INT32MAD</td>
+<td style="text-align:left">2.524 T</td>
+</tr>
+<tr>
+<td style="text-align:left">INT32ADD</td>
+<td style="text-align:left">2.454 T</td>
+</tr>
+<tr>
+<td style="text-align:left">FP32GEMMTensor (矩阵大小满足最佳性能要求)</td>
+<td style="text-align:left">16.453 T</td>
+</tr>
+<tr>
+<td style="text-align:left">FP32GEMMTensor (不满足最佳性能要求)</td>
+<td style="text-align:left">8.261 T</td>
+</tr>
+<tr>
+<td style="text-align:left">FP32GEMM</td>
+<td style="text-align:left">2.476T</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>备注</strong></p>
+<p>在串行执行FP32MAD任务时，1c.3g.20gb，1g.5gb的测试任务时保持在14.3%，2c.3g.20gb，2g.10gb的测试任务时保持在28.6%附近</p>
+<h4 id="各CI并行执行"><a href="#各CI并行执行" class="headerlink" title="各CI并行执行"></a>各CI并行执行</h4><p>统一执行FP32MAD</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">测试项目</th>
+<th style="text-align:left">实测性能(OPS)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1c.3g.20gb</td>
+<td style="text-align:left">2.523 T</td>
+</tr>
+<tr>
+<td style="text-align:left">2c.3g.20gb</td>
+<td style="text-align:left">5.044 T</td>
+</tr>
+<tr>
+<td style="text-align:left">2g.10gb</td>
+<td style="text-align:left">5.046 T</td>
+</tr>
+<tr>
+<td style="text-align:left">1g.5gb</td>
+<td style="text-align:left">2.523 T</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>统一执行FP32GEMMTensor</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">测试项目</th>
+<th style="text-align:left">实测性能(OPS)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1c.3g.20gb</td>
+<td style="text-align:left">20.450 T</td>
+</tr>
+<tr>
+<td style="text-align:left">2c.3g.20gb</td>
+<td style="text-align:left">41.194 T</td>
+</tr>
+<tr>
+<td style="text-align:left">2g.10gb</td>
+<td style="text-align:left">39.773 T</td>
+</tr>
+<tr>
+<td style="text-align:left">1g.5gb</td>
+<td style="text-align:left">16.336 T</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>备注</strong></p>
+<p>在并行执行FP32MAD任务时，SmActivity,SmOccupancy,FP32Activity三项监控指标保持在85.7%附近</p>
+<p>分别执行不同类型的计算</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">测试项目</th>
+<th style="text-align:left">实测性能(OPS)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1c.3g.20gb FP32MAD</td>
+<td style="text-align:left">2.523 T</td>
+</tr>
+<tr>
+<td style="text-align:left">2c.3g.20gb FP64MAD</td>
+<td style="text-align:left">2.521 T</td>
+</tr>
+<tr>
+<td style="text-align:left">2g.10gb INT32MAD</td>
+<td style="text-align:left">5.048 T</td>
+</tr>
+<tr>
+<td style="text-align:left">1g.5gb INT32ADD</td>
+<td style="text-align:left">2.454 T</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>备注</strong></p>
+<p>在并行执行不同计算任务时，SmActivity,SmOccupancy,FP64Activity,FP32Activity分别为85.7%, 78.1%, 28.5%, 57.0%</p>
+<p>根据测试结果，验证了CI，GI隔离的有效性，具体结论如下</p>
+<ol>
+<li>对比各个MIG上任务串行执行，以及并行执行的性能数据，可以有效验证CI，GI隔离的有效性</li>
+<li>划分CI，GI存在一定的性能损失，1g.5gb 上测得的性能并不等与整张卡的1/7，从整张卡的维度来看，存在10%的性能损失。考虑原因，A100 卡总共有108 SMs，但是分为7个MIG实例后，每个MIG实例只有14个SM 14*7 = 98 SMs，有10个SM将无法使用，这10个SM的浪费就是产生性能损失的源头。</li>
+<li>对比2c.3g.20gb 2g.10gb可以发现在2c.3g.20gb（一个GI上软隔离的CI）Tensor计算性能比 2c.3g.20gb（完全隔离的GI)更好一些，同时对比所有CI同时执行FP32GemmTensor，可以发现同一个GI上的CI同时执行GEMM（相比FP32MAD，有一定的显存读写）时，两个CI的计算性能比单独执行时会有所下降，更接近单独GI的性能。即说明2c.3g.20gb性能强于2g.10gb，是由于CI隔离不完全导致的。</li>
+</ol>
+<h3 id="A100卡可以为后续工作带来的价值"><a href="#A100卡可以为后续工作带来的价值" class="headerlink" title="A100卡可以为后续工作带来的价值"></a>A100卡可以为后续工作带来的价值</h3><ol>
+<li>每个MIG实例的完整隔离，可以支持多种虚拟化场景，包括虚拟机，容器</li>
+<li>最小实例的基础计算能力，大约为T4卡的三分之一，P4卡的一半，计算能力适中，内存带宽1,555 GB/s 相比于P4卡 192 GB/s，T4 320+ GB/s，带宽足够充裕，不会成为瓶颈</li>
+<li>存在离线计算和在线推理使用同一种GPU的可能性，打通离线，在线两个GPU资源池<ul>
+<li>T4卡的具体性能指标 16G显存，SM 40, 8 TensorCores/SM, 64 INT32Cores/SM, 64 FP32Cores/SM,</li>
+<li>A100卡的具体性能指标 40G显存，SM 108, 4 Third-generation Tensor Cores/SM, 64 FP32 CUDA Cores/SM,</li>
+</ul>
+</li>
+</ol>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://docs.nvidia.com/datacenter/tesla/mig-user-guide/index.html" target="_blank" rel="external nofollow noopener noreferrer">NVIDIA Multi-Instance GPU User Guide</a></li>
+<li><a href="https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/nvidia-ampere-architecture-whitepaper.pdf" target="_blank" rel="external nofollow noopener noreferrer">NVIDIA Ampere Architecture WhitePaper</a></li>
+<li><a href="https://docs.google.com/document/d/1Dxx5MwG_GiBeKOuMNwv4QbO8OqA7XFdzn7fzzI7AQDg" target="_blank" rel="external nofollow noopener noreferrer">Design Document: Challenges Supporting MIG in Kubernetes</a></li>
+<li><a href="https://docs.nvidia.com/datacenter/cloud-native/kubernetes/mig-k8s.html" target="_blank" rel="external nofollow noopener noreferrer">User Guide: MIG Support in Kubernetes</a></li>
+<li><a href="https://github.com/NVIDIA/k8s-device-plugin/issues/180" target="_blank" rel="external nofollow noopener noreferrer">Github Issue: k8s device plugin Supporting MIG</a></li>
+<li><a href="https://docs.google.com/document/d/1mdgMQ8g7WmaI_XVVRrCvHPFPOMCm5LQD5JefgAh6N8g" target="_blank" rel="external nofollow noopener noreferrer">PoC: Supporting MIG in Kubernetes</a></li>
+<li><a href="https://docs.google.com/document/d/1bshSIcWNYRZGfywgwRHa07C0qRyOYKxWYxClbeJM-WM" target="_blank" rel="external nofollow noopener noreferrer">Steps to Enable MIG Support in Kubernetes</a></li>
+<li><a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html" target="_blank" rel="external nofollow noopener noreferrer">Install NVIDIA Container Toolkit Guide</a></li>
+<li><a href="https://developer.nvidia.com/zh-cn/blog/nvidia-ampere-architecture-in-depth/" target="_blank" rel="external nofollow noopener noreferrer">深度了解 NVIDIA Ampere 架构</a></li>
+<li><a href="https://blog.csdn.net/han2529386161/article/details/106411138" target="_blank" rel="external nofollow noopener noreferrer">NVIDIA GPU A100 Ampere 架构深度解析</a></li>
+<li><a href="https://help.didiyun.com/hc/kb/article/1414838/" target="_blank" rel="external nofollow noopener noreferrer">https://help.didiyun.com/hc/kb/article/1414838/</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/6e1a1f6e/" rel="bookmark">【异构计算】GPU 虚拟化</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/ccdd2b68/" rel="bookmark">macOS 使用 Vagrant 管理虚拟机</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/65866329/" rel="bookmark">虚拟化技术概览</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/f07e2cff/" rel="bookmark">网络虚拟化</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/574111db/" rel="bookmark">【异构计算】在Docker中使用GPU</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/4e8612ed/" title="【异构计算】NVIDIA GPU MIG">http://houmin.cc/posts/4e8612ed/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E8%99%9A%E6%8B%9F%E5%8C%96/" rel="tag"><i class="fa fa-tag"></i> 虚拟化</a>
+              <a href="/tags/GPU/" rel="tag"><i class="fa fa-tag"></i> GPU</a>
+              <a href="/tags/MIG/" rel="tag"><i class="fa fa-tag"></i> MIG</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/cf391335/" rel="next" title="【异构计算】GPU 共享">
+                  <i class="fa fa-chevron-left"></i> 【异构计算】GPU 共享
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/6e1a1f6e/" rel="prev" title="【异构计算】GPU 虚拟化">
+                  【异构计算】GPU 虚拟化 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#MIG-技术简介"><span class="nav-number">1.</span> <span class="nav-text">MIG 技术简介</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#基本概念"><span class="nav-number">1.1.</span> <span class="nav-text">基本概念</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#GPU-Instance"><span class="nav-number">1.1.1.</span> <span class="nav-text">GPU Instance</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Compute-Instance"><span class="nav-number">1.1.2.</span> <span class="nav-text">Compute Instance</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#架构对比"><span class="nav-number">1.2.</span> <span class="nav-text">架构对比</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MIG-隔离"><span class="nav-number">1.3.</span> <span class="nav-text">MIG 隔离</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GPU-Partitioning"><span class="nav-number">1.4.</span> <span class="nav-text">GPU Partitioning</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MIG-技术使用"><span class="nav-number">2.</span> <span class="nav-text">MIG 技术使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#驱动安装"><span class="nav-number">2.1.</span> <span class="nav-text">驱动安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#开启MIG支持"><span class="nav-number">2.2.</span> <span class="nav-text">开启MIG支持</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查询可分配-GI-信息"><span class="nav-number">2.3.</span> <span class="nav-text">查询可分配 GI 信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查询-GI-placements"><span class="nav-number">2.4.</span> <span class="nav-text">查询 GI placements</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#创建-GPU-Instances"><span class="nav-number">2.5.</span> <span class="nav-text">创建 GPU Instances</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查询-GPU-Instance"><span class="nav-number">2.6.</span> <span class="nav-text">查询 GPU Instance</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#创建-Compute-Instance"><span class="nav-number">2.7.</span> <span class="nav-text">创建 Compute Instance</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查询-Compute-Instance"><span class="nav-number">2.8.</span> <span class="nav-text">查询 Compute Instance</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#删除-CPU-Instance"><span class="nav-number">2.9.</span> <span class="nav-text">删除 CPU Instance</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用-MIG"><span class="nav-number">3.</span> <span class="nav-text">使用 MIG</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Bare-Metal"><span class="nav-number">3.1.</span> <span class="nav-text">Bare-Metal</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Container"><span class="nav-number">3.2.</span> <span class="nav-text">Container</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#前置条件"><span class="nav-number">3.2.1.</span> <span class="nav-text">前置条件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#运行容器"><span class="nav-number">3.2.2.</span> <span class="nav-text">运行容器</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Kubernetes"><span class="nav-number">3.3.</span> <span class="nav-text">Kubernetes</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#前置依赖"><span class="nav-number">3.3.1.</span> <span class="nav-text">前置依赖</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#None"><span class="nav-number">3.3.2.</span> <span class="nav-text">None</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Single"><span class="nav-number">3.3.3.</span> <span class="nav-text">Single</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Mixed"><span class="nav-number">3.3.4.</span> <span class="nav-text">Mixed</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#当前TKE的问题"><span class="nav-number">3.3.5.</span> <span class="nav-text">当前TKE的问题</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#划分MIG后的性能对比"><span class="nav-number">4.</span> <span class="nav-text">划分MIG后的性能对比</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#整块卡的性能"><span class="nav-number">4.1.</span> <span class="nav-text">整块卡的性能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MIG卡的性能"><span class="nav-number">4.2.</span> <span class="nav-text">MIG卡的性能</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#各CI串行执行"><span class="nav-number">4.2.1.</span> <span class="nav-text">各CI串行执行</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#各CI并行执行"><span class="nav-number">4.2.2.</span> <span class="nav-text">各CI并行执行</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#A100卡可以为后续工作带来的价值"><span class="nav-number">4.3.</span> <span class="nav-text">A100卡可以为后续工作带来的价值</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">5.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">154</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">219</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.9m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">56:29</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

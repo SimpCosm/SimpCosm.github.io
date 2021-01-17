@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="「阅读光影」是在2021年新推出的栏目，涉及到阅读与光影，主要用于记录阅读和观影中的感悟与笔记，作为内容输入的输出管道。在今年的后续时间里，将按照2021的 阅读计划 和 观影计划，对所读所看的内容进行记录与总结。 这里是2021年「阅读光影」第一期：从「纸牌屋」看美国政治生态，将以纸牌屋为起点，介绍美国政治的宏观图景。在拜登总统即将就职的当下，在特朗普总统遭到历史上首次的第二次弹劾的当下，在美国">
+<meta name="keywords" content="美国,政治">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从「纸牌屋」看美国政治生态">
+<meta property="og:url" content="http://houmin.cc/posts/c2e89645/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="「阅读光影」是在2021年新推出的栏目，涉及到阅读与光影，主要用于记录阅读和观影中的感悟与笔记，作为内容输入的输出管道。在今年的后续时间里，将按照2021的 阅读计划 和 观影计划，对所读所看的内容进行记录与总结。 这里是2021年「阅读光影」第一期：从「纸牌屋」看美国政治生态，将以纸牌屋为起点，介绍美国政治的宏观图景。在拜登总统即将就职的当下，在特朗普总统遭到历史上首次的第二次弹劾的当下，在美国">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-01-17_usa-seperation-of-power.png">
+<meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/7/78/Washington%2C_D.C._locator_map.svg">
+<meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/9/92/Map_of_USA_with_state_names_2.svg">
+<meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/d/d7/117th_United_States_Senate.svg">
+<meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/b/b9/2010_census_reapportionment.jpg">
+<meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/2/25/%28117th%29_US_House_of_Representatives.svg">
+<meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/a/a4/SOU2007.jpg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-17_state-of-the-union-address-2016.jpg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-17_state-of-the-union-address-2020.jpg">
+<meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/c/c7/Supreme_Court_of_the_United_States_-_Roberts_Court_2018.jpg">
+<meta property="og:updated_time" content="2021-01-17T14:47:08.130Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-01-17_usa-seperation-of-power.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/c2e89645/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>从「纸牌屋」看美国政治生态 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+<link rel="stylesheet" href="/assets/css/APlayer.min.css" class="aplayer-style-marker">
+<script src="/assets/js/APlayer.min.js" class="aplayer-script-marker"></script>
+<script src="/assets/js/Meting.min.js" class="meting-script-marker"></script>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/c2e89645/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          从「纸牌屋」看美国政治生态
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-01-10 13:06:17" itemprop="dateCreated datePublished" datetime="2021-01-10T13:06:17+08:00">2021-01-10</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E9%98%85%E8%AF%BB%E5%85%89%E5%BD%B1/" itemprop="url" rel="index">
+                    <span itemprop="name">阅读光影</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/c2e89645/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/c2e89645/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>8 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>「阅读光影」是在2021年新推出的栏目，涉及到阅读与光影，主要用于记录阅读和观影中的感悟与笔记，作为内容输入的输出管道。在今年的后续时间里，将按照2021的 <a href="https://www.douban.com/doulist/133636602/" target="_blank" rel="external nofollow noopener noreferrer">阅读计划</a> 和 <a href="https://www.douban.com/doulist/133864290/" target="_blank" rel="external nofollow noopener noreferrer">观影计划</a>，对所读所看的内容进行记录与总结。</p>
+<p>这里是2021年「阅读光影」第一期：<code>从「纸牌屋」看美国政治生态</code>，将以纸牌屋为起点，介绍美国政治的宏观图景。在拜登总统即将就职的当下，在特朗普总统遭到历史上首次的第二次弹劾的当下，在美国国会遭遇两百年来的首次占领的当下，美国的政治图景开始在眼前越发的生动立体。</p>
+
+    <div id="aplayer-EcaHdTZD" class="aplayer aplayer-tag-marker meting-tag-marker" data-id="26238376" data-server="netease" data-type="song" data-mode="circulation" data-autoplay="false" data-mutex="true" data-listmaxheight="340px" data-preload="auto" data-theme="#555"></div>
+<a id="more"></a>
+<h2 id="三权分立"><a href="#三权分立" class="headerlink" title="三权分立"></a>三权分立</h2><p>首先我们来到「纸牌屋」这场大戏上演的主要地点：美国首都——华盛顿哥伦比亚特区。在下面的地图中，你可以看到 白宫 <code>The White House</code>、国会山 <code>Capitol Hill</code>，在国会山上你可以看到美国国会大厦 <code>United States Capitol</code>、美国最高法院 <code>Supreme Court of the United States</code>。</p>
+<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d99370.36297142891!2d-77.08461552967614!3d38.89370913932197!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89b7c6de5af6e45b%3A0xc2524522d4885d2a!2z5ZOl5Lym5q-U5Lqa5Yy65Y2O55ub6aG_5ZOl5Lym5q-U5Lqa54m55Yy6!5e0!3m2!1szh-CN!2sus!4v1610869187028!5m2!1szh-CN!2sus" width="1200" height="750" frameborder="0" style="border:0;" allowfullscreen aria-hidden="false" tabindex="0"></iframe>
+
+<p>这三个建筑即代表着美国的三权分立：</p>
+<ul>
+<li><strong>立法权力</strong>归<strong>美国国会</strong></li>
+<li><strong>行政权力</strong>归<strong>美国总统</strong></li>
+<li><strong>司法权力</strong>归<strong>美国最高法院</strong></li>
+</ul>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-01-17_usa-seperation-of-power.png"></p>
+<p>如果我们把地图缩小，在更大的尺度看 <a href="https://en.wikipedia.org/wiki/Washington,_D.C." target="_blank" rel="external nofollow noopener noreferrer">华盛顿</a>，我们可以看到实际上 <code>Washington</code>距离美国东海岸很近，实际上是处于 <code>Virginia</code> 和 <code>Maryland</code> 之间的一块很小的地方。关于美国首都的故事你们也许听过，这是一个美国联邦政府与南北方地方政府权力斗争与妥协的过程。</p>
+<p>在 1775 年美国独立战争打响时，当时美国最大的城市是位于宾夕法尼亚州的 <a href="https://en.wikipedia.org/wiki/Philadelphia" target="_blank" rel="external nofollow noopener noreferrer"><strong>费城</strong>，<code>Philadelphia</code></a>，1776年7月4日签署的「独立宣言」的联邦会议也是在费城举办。除了因为独立战争战况紧急，到1783年前联邦议会基本都是在费城办公。1783年的 <a href="https://en.wikipedia.org/wiki/Pennsylvania_Mutiny_of_1783" target="_blank" rel="external nofollow noopener noreferrer"><code>费城兵变</code></a> 使得联邦议会将办公场所从费城迁到了纽约。这次兵变起因是经历了独立战争的民兵要求联邦政府支付他们在美国独立战争期间的兵役酬劳，但是联邦议会既没有财权满足士兵要求，也没有兵权弹压哗变，而宾夕法尼亚州政府也不施加援手，联邦国会议员只得仓皇逃离费城。</p>
+<p>费城兵变将联邦「弱政府」的弊端暴露无疑，国会要求从各州管辖范围中划拨出一块独立的联邦直属辖区作为首都，这样一旦再出现类似之前宾州兵变的情况，国会便可绕过州政府、直接动用警力弹压。这时候南方蓄奴州与北方自由州之间的严重对立，使得双方都不能接受未来的永久首都落在对方的「势力范围」内，北方希望将首都定在纽约或者费城；而南方希望将首都定于南方。最终美国南北双方协商，各作让步，在美国南方离北方不远的地方新建一个城市作为美国的首都，这即是华盛顿哥伦比亚特区。</p>
+<p><img alt data-src="https://upload.wikimedia.org/wikipedia/commons/7/78/Washington%2C_D.C._locator_map.svg"></p>
+<p>OK，关于美国首都的讨论暂时到这，在进一步介绍美国三权分立各部门前，这里先熟悉下美国行政区划：从最初独立战争时期建国十三州，到现在星条旗上的五十个州，美国扩张历史可以参考<a href="https://www.bilibili.com/video/BV1Ht4y1Q7qJ" target="_blank" rel="external nofollow noopener noreferrer">这里</a>。</p>
+<p><img alt data-src="https://upload.wikimedia.org/wikipedia/commons/9/92/Map_of_USA_with_state_names_2.svg"></p>
+<h3 id="国会"><a href="#国会" class="headerlink" title="国会"></a>国会</h3><p>美国国会是宪法规定的最高立法机构，其采用两院制，是 <a href="https://en.wikipedia.org/wiki/Connecticut_Compromise" target="_blank" rel="external nofollow noopener noreferrer"><strong>1787 Connecticut Compromise</strong></a> 的结果：</p>
+<ul>
+<li><a href="https://zh.wikipedia.org/wiki/弗吉尼亚方案" target="_blank" rel="external nofollow noopener noreferrer">弗吉尼亚方案</a>：两院制，各州国会两院议员的数目与其人口总数成正比，对人口数较大的州更友好</li>
+<li><a href="https://zh.wikipedia.org/wiki/新泽西方案" target="_blank" rel="external nofollow noopener noreferrer">新泽西方案</a>：一院制，所有的州无论大小，其代表权完全相同，对小州相对更友好</li>
+</ul>
+<p>在<a href="https://en.wikipedia.org/wiki/Constitutional_Convention_(United_States" target="_blank" rel="external nofollow noopener noreferrer">1787年联邦会议</a>)，经过激烈的争吵与讨论，最终确定国会采用两院制，两院之间并无从属关系：</p>
+<ul>
+<li>上议院为参议院 Senate：每个州都有两名参议员，与人口数无关，任期为6年，更少有党派气氛，不太受大众情绪干扰</li>
+<li>下议院为众议院 House of Representatives：每个州在众议院中拥有的席位比例以人口为基准，更具党派氛围，贴近民意公论</li>
+</ul>
+<h4 id="参议院"><a href="#参议院" class="headerlink" title="参议院"></a>参议院</h4><p>参议院的总票数为100票，50个州每周两票，与各州人口无关。参议员任期为六年，相互交错，每隔两年改选约三分之一的席位。</p>
+<p>作为美国上议院，参议院主要指责如下：</p>
+<ul>
+<li>批准或拒绝批准条约、解除已签署条约</li>
+<li>确认内阁成员、最高法院大法官、联邦法官、军队负责人、监管机构、大使等</li>
+<li>如果没有副总统候选人获得美国选举人投票的过半数，则由参议院负责从获得选举人票数最多的两人中选出一人担任该职务</li>
+<li>参议院对被众议院弹劾的人进行审判</li>
+</ul>
+<p>参议院议长和主持会议的是美国副总统。在副总统缺席时，传统上由拥有多数席位党派的资深成员担任<strong>参议院临时议长</strong>，主持参议院工作。</p>
+<p>当前参议院领导层如下：</p>
+<ul>
+<li>多数党领袖：多数党参议院一把手，现在是米奇·麦康奈尔，对内代表本党利益，对外则代表参议院。</li>
+<li>多数党党鞭：多数党参议院二把手，确保本党议员按党的路线和原则投票，并建议本党领袖对未按要求投票的议员进行处罚。</li>
+<li>少数党领袖：少数党参议院一把手，维护本党团结，增强凝聚力，推进本党立法议程。</li>
+<li>少数党党鞭：少数党参议院二把手，确保本党议员按党的路线和原则投票，并建议本党领袖对未按要求投票的议员进行处罚。</li>
+</ul>
+<p><img alt data-src="https://upload.wikimedia.org/wikipedia/commons/d/d7/117th_United_States_Senate.svg"></p>
+<h4 id="众议院"><a href="#众议院" class="headerlink" title="众议院"></a>众议院</h4><p>全国众议员票数为435票，众议院席位之分配以各州人口数作基础，以每10年举行一次的人口普查为依据，但各州至少要有一名代表。下图是按照2010年人口普查统计分配每州的众议员人数，可以看到加州、德州和佛州是三个人口大州，票数也更多。</p>
+<p><img alt data-src="https://upload.wikimedia.org/wikipedia/commons/b/b9/2010_census_reapportionment.jpg"></p>
+<p>众议员任期为2年，无连任限制。众议院的职责包括：</p>
+<ul>
+<li>提出和财政有关的动议、宣战权、终战权（又称撤兵权）</li>
+<li>在总统选举中没有候选人获得多数选票时选择总统和副总统</li>
+<li>弹劾总统、首席大法官及主要官员。</li>
+</ul>
+<p><img alt data-src="https://upload.wikimedia.org/wikipedia/commons/2/25/%28117th%29_US_House_of_Representatives.svg"></p>
+<p>下面介绍下众议院中关键的领导人：众议院议长(The Speaker)、多数派领袖、多数派党鞭、少数派领袖、少数派党鞭。</p>
+<p>众议院议长：</p>
+<ul>
+<li>众议员选举产生，传统上为多数党领导人。众议院议长继任总统之顺序仅次于兼任参议院议长的美国副总统，为政坛上第三重要的领袖人物。</li>
+<li>当在总统职位与国会由不同政党掌握的情况下，众议院议长成为事实上的<strong>反对党领袖</strong>。</li>
+<li>在 <a href="https://zh.wikipedia.org/wiki/2016%E5%B9%B4%E7%BE%8E%E5%9C%8B%E7%9C%BE%E8%AD%B0%E9%99%A2%E9%81%B8%E8%88%89" target="_blank" rel="external nofollow noopener noreferrer">2016年众议院选举</a>中，共和党在众议院取得多数席位 241 席，众议院为共和党领袖<a href="https://zh.wikipedia.org/wiki/保羅·萊恩" target="_blank" rel="external nofollow noopener noreferrer">保罗·莱恩</a></li>
+<li>在 <a href="https://zh.wikipedia.org/wiki/2018%E5%B9%B4%E7%BE%8E%E5%9B%BD%E4%BC%97%E8%AE%AE%E9%99%A2%E9%80%89%E4%B8%BE" target="_blank" rel="external nofollow noopener noreferrer">2018年众议院选举</a>中，也即是特朗普总统的中期选举中，民主党重新赢得多数席位<strong>235</strong>席，众议院议长为民主党领袖<a href="https://zh.wikipedia.org/wiki/蘭希·佩洛西" target="_blank" rel="external nofollow noopener noreferrer">兰希·佩洛西</a></li>
+<li>在 <a href="https://zh.wikipedia.org/wiki/2020%E5%B9%B4%E7%BE%8E%E5%9C%8B%E7%9C%BE%E8%AD%B0%E9%99%A2%E9%81%B8%E8%88%89" target="_blank" rel="external nofollow noopener noreferrer">2020年众议院选举</a>中，民主党继续保持多数席位<strong>222</strong>席，共和党获得212席，众议院议长仍然为民主党领袖<strong>佩洛西</strong></li>
+</ul>
+<p>美国总统每年都会在年初前往国会山发表 <a href="https://zh.wikipedia.org/wiki/%E5%9B%BD%E6%83%85%E5%92%A8%E6%96%87" target="_blank" rel="external nofollow noopener noreferrer">国情咨文 State of the Union address</a>，位于其身后的即是美国参议院议长和众议院议长。这里有几张有意思的图片：</p>
+<p><img alt="2007年国情咨文，时任总统小布什为共和党人，众议院当时为民主党多数派，议长为佩洛西" data-src="https://upload.wikimedia.org/wikipedia/commons/a/a4/SOU2007.jpg"></p>
+<p><img alt="2016年国情咨文，时任奥巴马总统为民主党人，众议院当时为共和党多数派，议长为Paul Ryan" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-17_state-of-the-union-address-2016.jpg"></p>
+<p><img alt="2020年国情咨文，时任总统特朗普为共和党人，众议院当时为民主党多数派，议长为佩洛西" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-17_state-of-the-union-address-2020.jpg"></p>
+<p>Emmm，特朗普发表演讲后佩洛西就将其国情咨文讲稿给撕了，开始演讲前佩洛西给特朗普打招呼也没反应，总之就很尴尬，具体的视频可以看<a href="https://www.youtube.com/watch?v=fvJkcCRyVSI" target="_blank" rel="external nofollow noopener noreferrer">这里</a>。</p>
+<p>除了众议院议长外，接下来就是 <a href="https://en.wikipedia.org/wiki/Party_leaders_of_the_United_States_House_of_Representatives" target="_blank" rel="external nofollow noopener noreferrer">House Party Leader</a> ：</p>
+<ul>
+<li>多数派领袖：多数党的党内二号领导人</li>
+<li>多数派党鞭：多数党的党内三号领导人，Frank Underwood 即是作为民主党党鞭，试图确保本党议员参与议会议事并按本党意志投票。按照「纸牌屋」里面表现的，最关键的事情就是数票数，确保某项法案得以在众议院通过。</li>
+<li>少数派领袖：少数党的党内一号领导人</li>
+<li>少数派党鞭：少数党的党内二号领导人</li>
+</ul>
+<p>与参议员相比，众议员较依赖所属政党，并通常会依照政党领袖意向来投票。政党领袖选择委员会主席的权力可激励议员们合作。其结果是，众议院中的领导地位较参议院中重要，众议院中的氛围被认为更具党派之见。</p>
+<h3 id="内阁"><a href="#内阁" class="headerlink" title="内阁"></a>内阁</h3><p>大选结束后，当选总统可以自己组建内阁，自己向参议院提名候选人，经参议院审批和同意后，任命大使、公使及领事、最高法院的法官等各种行政部门领导人。从法理上说，美国总统从是美国的联邦政府行政分支的领导人和负责人，而内阁不过是总统的辅助结构和下属，没有宪法上的独立地位和法人代表权。</p>
+<p>下面对于美国内阁关键角色进行介绍，参考 <a href="https://en.wikipedia.org/wiki/Cabinet_of_the_United_States" target="_blank" rel="external nofollow noopener noreferrer">美国内阁</a>：</p>
+<h4 id="Vice-President"><a href="#Vice-President" class="headerlink" title="Vice President"></a>Vice President</h4><p>副总统和总统一同由选举产生，他既是美国行政分支的第二位领导人，也是立法分支参议院的议长。一旦总统于任内死亡、辞职或被撤职，副总统会立刻继任。</p>
+<ul>
+<li>1963年，美国总统约翰 · 肯尼迪遇刺身亡，时任副总统 林登 · 约翰逊继任美国总统</li>
+<li>1974年，美国总统尼克松因为水门事件遭遇弹劾，尼克松主动请辞，杰拉尔德·福特继任美国总统</li>
+<li>拜登政府的副总统位哈里斯，是为美国首任女性副总统。</li>
+</ul>
+<h4 id="Secretary-of-State"><a href="#Secretary-of-State" class="headerlink" title="Secretary of State"></a>Secretary of State</h4><p>国务卿，是美国内阁中所有成员的首席，主管外交事务，相当于其他国家的外交部长。</p>
+<p>按照美国总统继任顺序，国务卿排在第四位，排在美国副总统、众议院议长、参议院临时议长之后。而副总统和参议院临时议长更多具有象征意义，美国政治权力当中，国务卿的真正实权相比副总统和参议院临时议长还要大，故国务卿的真正权力仅次于总统和美国众议院议长。</p>
+<ul>
+<li>基辛格曾任尼克松的国务卿</li>
+<li>希拉里曾任奥巴马的国务卿</li>
+</ul>
+<h4 id="Secretary-of-the-Treasury"><a href="#Secretary-of-the-Treasury" class="headerlink" title="Secretary of the Treasury"></a>Secretary of the Treasury</h4><p>财政部长，负责财政和金融事务。财政部长是美国总统的<strong>主要经济顾问</strong>，是政府经济和<strong>财政政策</strong>的关键制定者，负责国内和国际金融、经济和财税政策的阐叙，管理国债，监督财政部执法机关的执法行为等事务，并担任美国政府的财务代理人。</p>
+<p>按照美国总统继任顺序，国务卿排在第五位，排在国务卿之后。</p>
+<ul>
+<li>汉密尔顿是美国首任财政部部长，建立了美国中央银行，奠定了美国经济体系的基本框架</li>
+<li><a href="https://zh.wikipedia.org/wiki/亨利·保尔森" target="_blank" rel="external nofollow noopener noreferrer">亨利·保尔森</a> 是2008年金融危机期间的财政部长，其在08年金融危机中的应对措施至今仍充满争议</li>
+<li>拜登政府的财政部长为<strong><a href="https://en.wikipedia.org/wiki/Janet_Yellen" target="_blank" rel="external nofollow noopener noreferrer">Janet Yellen</a></strong> ，其曾在2014年到2018年担任美联储主席</li>
+</ul>
+<h4 id="Secretary-of-Defense"><a href="#Secretary-of-Defense" class="headerlink" title="Secretary of Defense"></a>Secretary of Defense</h4><p>国防部长</p>
+<h4 id="Attorney-General"><a href="#Attorney-General" class="headerlink" title="Attorney General"></a>Attorney General</h4><p>司法部长</p>
+<p>除此之外，还有一些内阁级别的官员</p>
+<h4 id="White-House-Chief-of-Staff"><a href="#White-House-Chief-of-Staff" class="headerlink" title="White House Chief of Staff"></a>White House Chief of Staff</h4><p>白宫办公厅主任，也称作白宫幕僚长。</p>
+<h3 id="最高法院"><a href="#最高法院" class="headerlink" title="最高法院"></a>最高法院</h3><p>美国最高法院通常由一名首席大法官和八名大法官组成。大法官均有美国总统提名，并在美国参议院投票通过后方可任命。一旦获参议院确认任命，法官享有终身任期，他们就无需再服从其原先的政党、总统、参议院的意志来审判。法官保留他们的职位直到去世、辞职、退休或弹劾（不过至今未出现法官被罢免的情况）</p>
+<p>当前首席大法官为罗伯茨，下图是2020年9月18日前美国九大大法官合照，罗伯茨处于最中间。在其两次分别是托马斯大法官和金斯伯格大法官。2020年9月18日，金斯伯格 (RBG) 大法官去世，之后特朗普提名 <strong><a href="https://zh.wikipedia.org/wiki/艾米·康尼·巴雷特" target="_blank" rel="external nofollow noopener noreferrer">艾米·康尼·巴雷特</a></strong> 进入最高法院。</p>
+<p>在金斯伯格大法官去世前，首席大法官罗伯茨被认为是法院的中位数大法官（处于意识形态光谱的中间，有四位大法官比他更自由，四位大法官比他更保守），使他成为法院的意识形态中心。金斯伯格大法官去世后，美国最高法院越加保守。</p>
+<p><img alt="罗伯茨法院，2018.10.06-2020.09.18" data-src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Supreme_Court_of_the_United_States_-_Roberts_Court_2018.jpg"></p>
+<h2 id="选举总统"><a href="#选举总统" class="headerlink" title="选举总统"></a>选举总统</h2><h3 id="党内初选"><a href="#党内初选" class="headerlink" title="党内初选"></a>党内初选</h3><h3 id="总统大选"><a href="#总统大选" class="headerlink" title="总统大选"></a>总统大选</h3><h2 id="媒体监督"><a href="#媒体监督" class="headerlink" title="媒体监督"></a>媒体监督</h2>
+    </div>
+
+    
+    
+    
+      
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/c2e89645/" title="从「纸牌屋」看美国政治生态">http://houmin.cc/posts/c2e89645/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E7%BE%8E%E5%9B%BD/" rel="tag"><i class="fa fa-tag"></i> 美国</a>
+              <a href="/tags/%E6%94%BF%E6%B2%BB/" rel="tag"><i class="fa fa-tag"></i> 政治</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/b4058e1b/" rel="next" title="【系统监控】GPU 监控">
+                  <i class="fa fa-chevron-left"></i> 【系统监控】GPU 监控
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#三权分立"><span class="nav-number">1.</span> <span class="nav-text">三权分立</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#国会"><span class="nav-number">1.1.</span> <span class="nav-text">国会</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#参议院"><span class="nav-number">1.1.1.</span> <span class="nav-text">参议院</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#众议院"><span class="nav-number">1.1.2.</span> <span class="nav-text">众议院</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#内阁"><span class="nav-number">1.2.</span> <span class="nav-text">内阁</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Vice-President"><span class="nav-number">1.2.1.</span> <span class="nav-text">Vice President</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Secretary-of-State"><span class="nav-number">1.2.2.</span> <span class="nav-text">Secretary of State</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Secretary-of-the-Treasury"><span class="nav-number">1.2.3.</span> <span class="nav-text">Secretary of the Treasury</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Secretary-of-Defense"><span class="nav-number">1.2.4.</span> <span class="nav-text">Secretary of Defense</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Attorney-General"><span class="nav-number">1.2.5.</span> <span class="nav-text">Attorney General</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#White-House-Chief-of-Staff"><span class="nav-number">1.2.6.</span> <span class="nav-text">White House Chief of Staff</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#最高法院"><span class="nav-number">1.3.</span> <span class="nav-text">最高法院</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#选举总统"><span class="nav-number">2.</span> <span class="nav-text">选举总统</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#党内初选"><span class="nav-number">2.1.</span> <span class="nav-text">党内初选</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总统大选"><span class="nav-number">2.2.</span> <span class="nav-text">总统大选</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#媒体监督"><span class="nav-number">3.</span> <span class="nav-text">媒体监督</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">154</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">219</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.9m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">56:29</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>
