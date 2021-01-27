@@ -236,6 +236,204 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/3f069334/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/posts/3f069334/" class="post-title-link" itemprop="url">【Kubernetes】Device Plugin</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-16 15:31:42" itemprop="dateCreated datePublished" datetime="2020-11-16T15:31:42+08:00">2020-11-16</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>41k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1:14</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Kubernetes 原生支持对于CPU和内存资源的发现，但是有很多其他的设备 kubelet不能原生处理，比如GPU、FPGA、RDMA、存储设备和其他类似的异构计算资源设备。为了能够使用这些设备资源，我们需要进行各个设备的初始化和设置。按照 Kubernetes 的 <code>OutOfTree</code> 的哲学理念，我们不应该把各个厂商的设备初始化设置相关代码与 Kubernetes 核心代码放在一起。与之相反，我们需要一种机制能够让各个设备厂商向 Kubelet 上报设备资源，而不需要修改 Kubernetes 核心代码。这即是 <code>Device Plugin</code> 这一机制的来源，本文将介绍 Device Plugin 的实现原理，并介绍其使用。</p>
+
+          
+          <div class="out-img-topic">
+            <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-21_k8s-device-plugin.png" class="image-topic">
+          </div>
+          
+
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/posts/3f069334/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/5004f8e5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/posts/5004f8e5/" class="post-title-link" itemprop="url">【异构计算】GPU 与 CUDA</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-15 13:16:10" itemprop="dateCreated datePublished" datetime="2020-11-15T13:16:10+08:00">2020-11-15</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>21k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>37 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>随着近年来深度学习的爆发，原来被用于图形渲染的GPU被大量用于并行加速深度学习的模型训练中，在这个过程中 CUDA 作为 NVIDIA 推出的基于GPU的一个通用并行计算平台和编程模型也得到了广泛的使用。或许你已经十分了解 <a href="../b893097a/">现代CPU的体系架构</a>，但是对于GPU还不甚清晰，GPU的体系架构到底和CPU有何区别，CUDA模型是什么，我们该如何使用 CUDA实现并行计算，本文将为你扫盲祛魅，本文中使用到的所有代码可以在我的 <a href="https://github.com/SimpCosm/cuda-tutorial" target="_blank" rel="external nofollow noopener noreferrer">Github</a> 中找到。</p>
+
+          
+          <div class="out-img-topic">
+            <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-11-20_nvidia-tesla-v100.png" class="image-topic">
+          </div>
+          
+
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/posts/5004f8e5/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/b86144be/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -303,7 +501,7 @@
       
           <p>Back on track，本周继续「朝花夕拾」的定期发布，这里是今年的第二十四期「The Social Dilemma」，标题来自最新 Netflix 推出的一个剧情式纪录片。本期会简单聊聊社交困境，除了纪录片所涵盖的内容，还包括自己从字面上对其的漫无边际的延伸思考。</p>
 
-    <div id="aplayer-oolwznOf" class="aplayer aplayer-tag-marker meting-tag-marker" data-id="446874778" data-server="netease" data-type="song" data-mode="circulation" data-autoplay="false" data-mutex="true" data-listmaxheight="340px" data-preload="auto" data-theme="#555"></div>
+    <div id="aplayer-KdpJsZaF" class="aplayer aplayer-tag-marker meting-tag-marker" data-id="446874778" data-server="netease" data-type="song" data-mode="circulation" data-autoplay="false" data-mutex="true" data-listmaxheight="340px" data-preload="auto" data-theme="#555"></div>
 
           
           <div class="out-img-topic">
@@ -408,7 +606,7 @@
 <p>一点禅灯半轮月，今宵寒较昨宵多。</p>
 </blockquote>
 
-    <div id="aplayer-cyUYJmwr" class="aplayer aplayer-tag-marker meting-tag-marker" data-id="1331892086" data-server="netease" data-type="song" data-mode="circulation" data-autoplay="false" data-mutex="true" data-listmaxheight="340px" data-preload="auto" data-theme="#555"></div>
+    <div id="aplayer-ZOspxlFx" class="aplayer aplayer-tag-marker meting-tag-marker" data-id="1331892086" data-server="netease" data-type="song" data-mode="circulation" data-autoplay="false" data-mutex="true" data-listmaxheight="340px" data-preload="auto" data-theme="#555"></div>
 
           
           <div class="out-img-topic">
@@ -692,7 +890,7 @@
       
           <p>像是配上了加速马达，生活的时针走的越来越快。就感觉我还是两个月前写下的 <a href="../fa1a82ad/">25岁生日快乐</a>，今天我又开始这一年一度的仪式。</p>
 
-    <div id="aplayer-WhCylSDn" class="aplayer aplayer-tag-marker meting-tag-marker" data-id="26427662" data-server="netease" data-type="song" data-mode="circulation" data-autoplay="false" data-mutex="true" data-listmaxheight="340px" data-preload="auto" data-theme="#555"></div>
+    <div id="aplayer-wiiJukXk" class="aplayer aplayer-tag-marker meting-tag-marker" data-id="26427662" data-server="netease" data-type="song" data-mode="circulation" data-autoplay="false" data-mutex="true" data-listmaxheight="340px" data-preload="auto" data-theme="#555"></div>
 
           
           <div class="out-img-topic">
@@ -1009,204 +1207,6 @@
   
   
 
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/ebd3de16/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
-      <meta itemprop="name" content="Houmin">
-      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Houmin">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/posts/ebd3de16/" class="post-title-link" itemprop="url">2020-09-18-k8s-events</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-09-18 10:33:39" itemprop="dateCreated datePublished" datetime="2020-09-18T10:33:39+08:00">2020-09-18</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
-                    <span itemprop="name">术业专攻</span>
-                  </a>
-                </span>
-            </span>
-
-          
-  
-  
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>3.6k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>7 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Event is a report of an event somewhere in the cluster. It generally denotes some state change in the system.</span></span><br><span class="line"><span class="keyword">type</span> Event <span class="keyword">struct</span> &#123;</span><br><span class="line">	metav1.TypeMeta <span class="string">`json:",inline"`</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	metav1.ObjectMeta <span class="string">`json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// Required. Time when this Event was first observed.</span></span><br><span class="line">	EventTime metav1.MicroTime <span class="string">`json:"eventTime" protobuf:"bytes,2,opt,name=eventTime"`</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// Data about the Event series this event represents or nil if it's a singleton Event.</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	Series *EventSeries <span class="string">`json:"series,omitempty" protobuf:"bytes,3,opt,name=series"`</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// Name of the controller that emitted this Event, e.g. `kubernetes.io/kubelet`.</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	ReportingController <span class="keyword">string</span> <span class="string">`json:"reportingController,omitempty" protobuf:"bytes,4,opt,name=reportingController"`</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// ID of the controller instance, e.g. `kubelet-xyzf`.</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	ReportingInstance <span class="keyword">string</span> <span class="string">`json:"reportingInstance,omitempty" protobuf:"bytes,5,opt,name=reportingInstance"`</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// What action was taken/failed regarding to the regarding object.</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	Action <span class="keyword">string</span> <span class="string">`json:"action,omitempty" protobuf:"bytes,6,name=action"`</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// Why the action was taken.</span></span><br><span class="line">	Reason <span class="keyword">string</span> <span class="string">`json:"reason,omitempty" protobuf:"bytes,7,name=reason"`</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// The object this Event is about. In most cases it's an Object reporting controller implements.</span></span><br><span class="line">	<span class="comment">// E.g. ReplicaSetController implements ReplicaSets and this event is emitted because</span></span><br><span class="line">	<span class="comment">// it acts on some changes in a ReplicaSet object.</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	Regarding corev1.ObjectReference <span class="string">`json:"regarding,omitempty" protobuf:"bytes,8,opt,name=regarding"`</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// Optional secondary object for more complex actions. E.g. when regarding object triggers</span></span><br><span class="line">	<span class="comment">// a creation or deletion of related object.</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	Related *corev1.ObjectReference <span class="string">`json:"related,omitempty" protobuf:"bytes,9,opt,name=related"`</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// Optional. A human-readable description of the status of this operation.</span></span><br><span class="line">	<span class="comment">// Maximal length of the note is 1kB, but libraries should be prepared to</span></span><br><span class="line">	<span class="comment">// handle values up to 64kB.</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	Note <span class="keyword">string</span> <span class="string">`json:"note,omitempty" protobuf:"bytes,10,opt,name=note"`</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// Type of this event (Normal, Warning), new types could be added in the</span></span><br><span class="line">	<span class="comment">// future.</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	Type <span class="keyword">string</span> <span class="string">`json:"type,omitempty" protobuf:"bytes,11,opt,name=type"`</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// Deprecated field assuring backward compatibility with core.v1 Event type</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	DeprecatedSource corev1.EventSource <span class="string">`json:"deprecatedSource,omitempty" protobuf:"bytes,12,opt,name=deprecatedSource"`</span></span><br><span class="line">	<span class="comment">// Deprecated field assuring backward compatibility with core.v1 Event type</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	DeprecatedFirstTimestamp metav1.Time <span class="string">`json:"deprecatedFirstTimestamp,omitempty" protobuf:"bytes,13,opt,name=deprecatedFirstTimestamp"`</span></span><br><span class="line">	<span class="comment">// Deprecated field assuring backward compatibility with core.v1 Event type</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	DeprecatedLastTimestamp metav1.Time <span class="string">`json:"deprecatedLastTimestamp,omitempty" protobuf:"bytes,14,opt,name=deprecatedLastTimestamp"`</span></span><br><span class="line">	<span class="comment">// Deprecated field assuring backward compatibility with core.v1 Event type</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	DeprecatedCount <span class="keyword">int32</span> <span class="string">`json:"deprecatedCount,omitempty" protobuf:"varint,15,opt,name=deprecatedCount"`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// EventSeries contain information on series of events, i.e. thing that was/is happening</span></span><br><span class="line"><span class="comment">// continuously for some time.</span></span><br><span class="line"><span class="keyword">type</span> EventSeries <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// Number of occurrences in this series up to the last heartbeat time</span></span><br><span class="line">	Count <span class="keyword">int32</span> <span class="string">`json:"count" protobuf:"varint,1,opt,name=count"`</span></span><br><span class="line">	<span class="comment">// Time when last Event from the series was seen before last heartbeat.</span></span><br><span class="line">	LastObservedTime metav1.MicroTime <span class="string">`json:"lastObservedTime" protobuf:"bytes,2,opt,name=lastObservedTime"`</span></span><br><span class="line">	<span class="comment">// Information whether this series is ongoing or finished.</span></span><br><span class="line">	<span class="comment">// Deprecated. Planned removal for 1.18</span></span><br><span class="line">	State EventSeriesState <span class="string">`json:"state" protobuf:"bytes,3,opt,name=state"`</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-          
-          <div class="out-img-topic">
-            <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2019-10-18_city.jpg" class="image-topic">
-          </div>
-          
-
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/posts/ebd3de16/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/c57001b4/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
-      <meta itemprop="name" content="Houmin">
-      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Houmin">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/posts/c57001b4/" class="post-title-link" itemprop="url">【系统监控】时序数据库 InfluxDB</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-09-16 12:16:58" itemprop="dateCreated datePublished" datetime="2020-09-16T12:16:58+08:00">2020-09-16</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
-                    <span itemprop="name">术业专攻</span>
-                  </a>
-                </span>
-            </span>
-
-          
-  
-  
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>22k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>40 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>InfluxDB 是使用 Go 编写的基于时间序列的数据库，用于存储大量带有时间戳的数据，报错 DevOps 监控，日志数据，应用程序的指标、数据分析数据等等。通过 InfluxDB 自动保存数据，你不需要删除和清理，只需要定义一段时间 DB 会帮你自动清理。</p>
-
-          
-          <div class="out-img-topic">
-            <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-09-16_influxdb.svg" class="image-topic">
-          </div>
-          
-
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/posts/c57001b4/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
   </div>
 
   
@@ -1256,7 +1256,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">154</span>
+          <span class="site-state-item-count">157</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1268,7 +1268,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">219</span>
+        <span class="site-state-item-count">222</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -1342,7 +1342,7 @@
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">56:29</span>
+    <span title="站点阅读时长">58:15</span>
 </div>
 
         

@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="本文讲解的是 Kubernetes 中 Pod 的生命周期，包括生命周期的不同阶段、存活和就绪探针、重启策略等。">
+<meta name="keywords" content="k8s,pod">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Kubernetes】Pod 生命周期与状态">
+<meta property="og:url" content="http://houmin.cc/posts/320e9610/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="本文讲解的是 Kubernetes 中 Pod 的生命周期，包括生命周期的不同阶段、存活和就绪探针、重启策略等。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://jimmysong.io/kubernetes-handbook/images/kubernetes-pod-life-cycle.jpg">
+<meta property="og:updated_time" content="2021-01-27T10:37:15.237Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://jimmysong.io/kubernetes-handbook/images/kubernetes-pod-life-cycle.jpg">
+
+<link rel="canonical" href="http://houmin.cc/posts/320e9610/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Kubernetes】Pod 生命周期与状态 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/320e9610/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Kubernetes】Pod 生命周期与状态
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-09-08 17:14:20" itemprop="dateCreated datePublished" datetime="2020-09-08T17:14:20+08:00">2020-09-08</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/320e9610/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/320e9610/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>15k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>27 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文讲解的是 Kubernetes 中 Pod 的生命周期，包括生命周期的不同阶段、存活和就绪探针、重启策略等。</p>
+<a id="more"></a>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Pod <span class="keyword">struct</span> &#123;</span><br><span class="line">	metav1.TypeMeta <span class="string">`json:",inline"`</span></span><br><span class="line">	metav1.ObjectMeta <span class="string">`json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`</span></span><br><span class="line"></span><br><span class="line">	Spec PodSpec <span class="string">`json:"spec,omitempty" protobuf:"bytes,2,opt,name=spec"`</span></span><br><span class="line">	Status PodStatus <span class="string">`json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>PodStatus</code> 对象反映了 Pod 的状态，其数据结构如下所示：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> PodStatus <span class="keyword">struct</span> &#123;</span><br><span class="line">	Phase PodPhase <span class="string">`json:"phase,omitempty" protobuf:"bytes,1,opt,name=phase,casttype=PodPhase"`</span></span><br><span class="line">	Conditions []PodCondition <span class="string">`json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,2,rep,name=conditions"`</span></span><br><span class="line">	Message <span class="keyword">string</span> <span class="string">`json:"message,omitempty" protobuf:"bytes,3,opt,name=message"`</span></span><br><span class="line">	Reason <span class="keyword">string</span> <span class="string">`json:"reason,omitempty" protobuf:"bytes,4,opt,name=reason"`</span></span><br><span class="line">	<span class="comment">// nominatedNodeName is set only when this pod preempts other pods on the node, but it cannot be</span></span><br><span class="line">	<span class="comment">// scheduled right away as preemption victims receive their graceful termination periods.</span></span><br><span class="line">	<span class="comment">// This field does not guarantee that the pod will be scheduled on this node. Scheduler may decide</span></span><br><span class="line">	<span class="comment">// to place the pod elsewhere if other nodes become available sooner. Scheduler may also decide to</span></span><br><span class="line">	<span class="comment">// give the resources on this node to a higher priority pod that is created after preemption.</span></span><br><span class="line">	<span class="comment">// As a result, this field may be different than PodSpec.nodeName when the pod is</span></span><br><span class="line">	<span class="comment">// scheduled.</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	NominatedNodeName <span class="keyword">string</span> <span class="string">`json:"nominatedNodeName,omitempty" protobuf:"bytes,11,opt,name=nominatedNodeName"`</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// IP address of the host to which the pod is assigned. Empty if not yet scheduled.</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	HostIP <span class="keyword">string</span> <span class="string">`json:"hostIP,omitempty" protobuf:"bytes,5,opt,name=hostIP"`</span></span><br><span class="line">	<span class="comment">// IP address allocated to the pod. Routable at least within the cluster.</span></span><br><span class="line">	<span class="comment">// Empty if not yet allocated.</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	PodIP <span class="keyword">string</span> <span class="string">`json:"podIP,omitempty" protobuf:"bytes,6,opt,name=podIP"`</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// podIPs holds the IP addresses allocated to the pod. If this field is specified, the 0th entry must</span></span><br><span class="line">	<span class="comment">// match the podIP field. Pods may be allocated at most 1 value for each of IPv4 and IPv6. This list</span></span><br><span class="line">	<span class="comment">// is empty if no IPs have been allocated yet.</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	<span class="comment">// +patchStrategy=merge</span></span><br><span class="line">	<span class="comment">// +patchMergeKey=ip</span></span><br><span class="line">	PodIPs []PodIP <span class="string">`json:"podIPs,omitempty" protobuf:"bytes,12,rep,name=podIPs" patchStrategy:"merge" patchMergeKey:"ip"`</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// RFC 3339 date and time at which the object was acknowledged by the Kubelet.</span></span><br><span class="line">	<span class="comment">// This is before the Kubelet pulled the container image(s) for the pod.</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	StartTime *metav1.Time <span class="string">`json:"startTime,omitempty" protobuf:"bytes,7,opt,name=startTime"`</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// The list has one entry per init container in the manifest. The most recent successful</span></span><br><span class="line">	<span class="comment">// init container will have ready = true, the most recently started container will have</span></span><br><span class="line">	<span class="comment">// startTime set.</span></span><br><span class="line">	<span class="comment">// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-and-container-status</span></span><br><span class="line">	InitContainerStatuses []ContainerStatus <span class="string">`json:"initContainerStatuses,omitempty" protobuf:"bytes,10,rep,name=initContainerStatuses"`</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// The list has one entry per container in the manifest. Each entry is currently the output</span></span><br><span class="line">	<span class="comment">// of `docker inspect`.</span></span><br><span class="line">	<span class="comment">// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-and-container-status</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	ContainerStatuses []ContainerStatus <span class="string">`json:"containerStatuses,omitempty" protobuf:"bytes,8,rep,name=containerStatuses"`</span></span><br><span class="line">	<span class="comment">// The Quality of Service (QOS) classification assigned to the pod based on resource requirements</span></span><br><span class="line">	<span class="comment">// See PodQOSClass type for available QOS classes</span></span><br><span class="line">	<span class="comment">// More info: https://git.k8s.io/community/contributors/design-proposals/node/resource-qos.md</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	QOSClass PodQOSClass <span class="string">`json:"qosClass,omitempty" protobuf:"bytes,9,rep,name=qosClass"`</span></span><br><span class="line">	<span class="comment">// Status for any ephemeral containers that have run in this pod.</span></span><br><span class="line">	<span class="comment">// This field is alpha-level and is only populated by servers that enable the EphemeralContainers feature.</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	EphemeralContainerStatuses []ContainerStatus <span class="string">`json:"ephemeralContainerStatuses,omitempty" protobuf:"bytes,13,rep,name=ephemeralContainerStatuses"`</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Pod-Phase"><a href="#Pod-Phase" class="headerlink" title="Pod Phase"></a>Pod Phase</h2><p>pod从创建到最后的创建成功会分别处于不同的阶段，在源码中用PodPhase来表示不同的阶段：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">PodPending PodPhase = <span class="string">"Pending"</span></span><br><span class="line">PodRunning PodPhase = <span class="string">"Running"</span></span><br><span class="line">PodSucceeded PodPhase = <span class="string">"Succeeded"</span></span><br><span class="line">PodFailed PodPhase = <span class="string">"Failed"</span></span><br><span class="line">PodUnknown PodPhase = <span class="string">"Unknown"</span></span><br></pre></td></tr></table></figure>
+<p>一个pod的完整创建，通常会伴随着各种事件的产生，k8s种事件的种类总共只有4种：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Added    EventType = <span class="string">"ADDED"</span></span><br><span class="line">Modified EventType = <span class="string">"MODIFIED"</span></span><br><span class="line">Deleted  EventType = <span class="string">"DELETED"</span></span><br><span class="line">Error    EventType = <span class="string">"ERROR"</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>Pending 创建pod的请求已经被k8s接受，但是容器并没有启动成功，可能处在：写数据到etcd，调度，pull镜像，启动容器这四个阶段中的任何一个阶段，pending伴随的事件通常会有：ADDED, Modified这两个事件的产生。</li>
+<li>Running pod已经绑定到node节点，并且所有的容器已经启动成功，或者至少有一个容器在运行，或者在重启中。</li>
+<li>Succeeded pod中的所有的容器已经正常的自行退出，并且k8s永远不会自动重启这些容器，一般会是在部署job的时候会出现。</li>
+<li>Failed pod中的所有容器已经终止，并且至少有一个容器已经终止于失败（退出非零退出代码或被系统停止）。</li>
+<li>Unknown 由于某种原因，无法获得pod的状态，通常是由于与pod的主机通信错误。</li>
+</ul>
+<p>Pod 的 phase 是 Pod 在其生命周期中的简单宏观概述。该阶段并不是对容器或 Pod 的综合汇总，也不是为了做为综合状态机。<code>Pod Phase</code>的数量和含义是严格指定的。除了本文档中列举的状态外，不应该再假定 Pod 有其他的 <code>phase</code> 值。</p>
+<p>下面是 <code>phase</code> 可能的值：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">// PodPending means the pod has been accepted by the system, but one or more of the containers</span></span><br><span class="line"><span class="comment">// has not been started. This includes time before being bound to a node, as well as time spent</span></span><br><span class="line"><span class="comment">// pulling images onto the host.	</span></span><br><span class="line"> PodPending PodPhase = <span class="string">"Pending"</span></span><br><span class="line"><span class="comment">// PodRunning means the pod has been bound to a node and all of the containers have been started.</span></span><br><span class="line"><span class="comment">// At least one container is still running or is in the process of being restarted.</span></span><br><span class="line">PodRunning PodPhase = <span class="string">"Running"</span></span><br><span class="line"><span class="comment">// PodSucceeded means that all containers in the pod have voluntarily terminated</span></span><br><span class="line"><span class="comment">// with a container exit code of 0, and the system is not going to restart any of these containers.</span></span><br><span class="line">PodSucceeded PodPhase = <span class="string">"Succeeded"</span></span><br><span class="line"><span class="comment">// PodFailed means that all containers in the pod have terminated, and at least one container has</span></span><br><span class="line"><span class="comment">// terminated in a failure (exited with a non-zero exit code or was stopped by the system).</span></span><br><span class="line">PodFailed PodPhase = <span class="string">"Failed"</span></span><br><span class="line"><span class="comment">// PodUnknown means that for some reason the state of the pod could not be obtained, typically due</span></span><br><span class="line"><span class="comment">// to an error in communicating with the host of the pod.</span></span><br><span class="line">PodUnknown PodPhase = <span class="string">"Unknown"</span></span><br></pre></td></tr></table></figure>
+<p>下图是Pod的生命周期示意图，从图中可以看到Pod状态的变化。</p>
+<p><img alt="Pod的生命周期示意图" data-src="https://jimmysong.io/kubernetes-handbook/images/kubernetes-pod-life-cycle.jpg"></p>
+<h2 id="Pod-Condition"><a href="#Pod-Condition" class="headerlink" title="Pod Condition"></a>Pod Condition</h2><p>PodStatus 对象中包含一个 PodCondition 数组。 PodCondition 数组的每个元素都有一个 <code>type</code> 字段和一个 <code>status</code> 字段</p>
+<ul>
+<li><code>type</code> 字段是字符串，可能的值有 PodScheduled、Ready、Initialized、Unschedulable和ContainersReady</li>
+<li><code>status</code> 字段是一个字符串，可能的值有 True、False 和 Unknown。</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> PodCondition <span class="keyword">struct</span> &#123;</span><br><span class="line">	Type PodConditionType <span class="string">`json:"type" protobuf:"bytes,1,opt,name=type,casttype=PodConditionType"`</span></span><br><span class="line">	Status ConditionStatus <span class="string">`json:"status" protobuf:"bytes,2,opt,name=status,casttype=ConditionStatus"`</span></span><br><span class="line">	LastProbeTime metav1.Time <span class="string">`json:"lastProbeTime,omitempty" protobuf:"bytes,3,opt,name=lastProbeTime"`</span></span><br><span class="line">	LastTransitionTime metav1.Time <span class="string">`json:"lastTransitionTime,omitempty" protobuf:"bytes,4,opt,name=lastTransitionTime"`</span></span><br><span class="line">	Reason <span class="keyword">string</span> <span class="string">`json:"reason,omitempty" protobuf:"bytes,5,opt,name=reason"`</span></span><br><span class="line">	Message <span class="keyword">string</span> <span class="string">`json:"message,omitempty" protobuf:"bytes,6,opt,name=message"`</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>Condition Type</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ContainersReady indicates whether all containers in the pod are ready.</span></span><br><span class="line">ContainersReady PodConditionType = <span class="string">"ContainersReady"</span></span><br><span class="line"><span class="comment">// PodInitialized means that all init containers in the pod have started successfully.</span></span><br><span class="line">PodInitialized PodConditionType = <span class="string">"Initialized"</span></span><br><span class="line"><span class="comment">// PodReady means the pod is able to service requests and should be added to the</span></span><br><span class="line"><span class="comment">// load balancing pools of all matching services.</span></span><br><span class="line">PodReady PodConditionType = <span class="string">"Ready"</span></span><br><span class="line"><span class="comment">// PodScheduled represents status of the scheduling process for this pod.</span></span><br><span class="line">PodScheduled PodConditionType = <span class="string">"PodScheduled"</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>PodScheduled： Pod 的调度状态</li>
+<li>Initialized： Pod中的所有 Init Containers 已经初启动完毕</li>
+<li>ContainersReady： Pod中的所有的容器可以提供服务了</li>
+<li>Ready： Pod 可以提供服务，并且应该被加到匹配的负载均衡池中</li>
+</ul>
+<p><strong>Condition Status</strong></p>
+<p>代表了当前pod是否处于某一个阶段（PodScheduled，Ready，Initialized，ContainersReady），<code>true</code> 表示处于，<code>false</code>表示不处于。</p>
+<h2 id="Container-State"><a href="#Container-State" class="headerlink" title="Container State"></a>Container State</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ContainerState <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// Details about a waiting container</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	Waiting *ContainerStateWaiting <span class="string">`json:"waiting,omitempty" protobuf:"bytes,1,opt,name=waiting"`</span></span><br><span class="line">	<span class="comment">// Details about a running container</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	Running *ContainerStateRunning <span class="string">`json:"running,omitempty" protobuf:"bytes,2,opt,name=running"`</span></span><br><span class="line">	<span class="comment">// Details about a terminated container</span></span><br><span class="line">	<span class="comment">// +optional</span></span><br><span class="line">	Terminated *ContainerStateTerminated <span class="string">`json:"terminated,omitempty" protobuf:"bytes,3,opt,name=terminated"`</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="容器探针"><a href="#容器探针" class="headerlink" title="容器探针"></a>容器探针</h2><p>探针是由 <a href="https://kubernetes.io/docs/admin/kubelet/" target="_blank" rel="external nofollow noopener noreferrer">kubelet</a> 对容器执行的定期诊断。要执行诊断，kubelet 调用由容器实现的 <a href="https://godoc.org/k8s.io/kubernetes/pkg/api/v1#Handler" target="_blank" rel="external nofollow noopener noreferrer">Handler</a>。有三种类型的处理程序：</p>
+<ul>
+<li>ExecAction：在容器内执行指定命令。如果命令退出时返回码为 0 则认为诊断成功。</li>
+<li>TCPSocketAction：对指定端口上的容器的 IP 地址进行 TCP 检查。如果端口打开，则诊断被认为是成功的。</li>
+<li>HTTPGetAction：对指定的端口和路径上的容器的 IP 地址执行 HTTP Get 请求。如果响应的状态码大于等于200 且小于 400，则诊断被认为是成功的。</li>
+</ul>
+<p>每次探测都将获得以下三种结果之一：</p>
+<ul>
+<li>成功：容器通过了诊断。</li>
+<li>失败：容器未通过诊断。</li>
+<li>未知：诊断失败，因此不会采取任何行动。</li>
+</ul>
+<p>Kubelet 可以选择是否执行在容器上运行的两种探针执行和做出反应：</p>
+<ul>
+<li><code>livenessProbe</code>：指示容器是否正在运行。如果存活探测失败，则 kubelet 会杀死容器，并且容器将受到其 <a href="https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy" target="_blank" rel="external nofollow noopener noreferrer">重启策略</a> 的影响。如果容器不提供存活探针，则默认状态为 <code>Success</code>。</li>
+<li><code>readinessProbe</code>：指示容器是否准备好服务请求。如果就绪探测失败，端点控制器将从与 Pod 匹配的所有 Service 的端点中删除该 Pod 的 IP 地址。初始延迟之前的就绪状态默认为 <code>Failure</code>。如果容器不提供就绪探针，则默认状态为 <code>Success</code>。</li>
+</ul>
+<h3 id="该什么时候使用存活（liveness）和就绪（readiness）探针"><a href="#该什么时候使用存活（liveness）和就绪（readiness）探针" class="headerlink" title="该什么时候使用存活（liveness）和就绪（readiness）探针?"></a>该什么时候使用存活（liveness）和就绪（readiness）探针?</h3><p>如果容器中的进程能够在遇到问题或不健康的情况下自行崩溃，则不一定需要存活探针; kubelet 将根据 Pod 的<code>restartPolicy</code> 自动执行正确的操作。</p>
+<p>如果您希望容器在探测失败时被杀死并重新启动，那么请指定一个存活探针，并指定<code>restartPolicy</code> 为 Always 或 OnFailure。</p>
+<p>如果要仅在探测成功时才开始向 Pod 发送流量，请指定就绪探针。在这种情况下，就绪探针可能与存活探针相同，但是 spec 中的就绪探针的存在意味着 Pod 将在没有接收到任何流量的情况下启动，并且只有在探针探测成功后才开始接收流量。</p>
+<p>如果您希望容器能够自行维护，您可以指定一个就绪探针，该探针检查与存活探针不同的端点。</p>
+<p>请注意，如果您只想在 Pod 被删除时能够排除请求，则不一定需要使用就绪探针；在删除 Pod 时，Pod 会自动将自身置于未完成状态，无论就绪探针是否存在。当等待 Pod 中的容器停止时，Pod 仍处于未完成状态。</p>
+<h3 id="readinessGates"><a href="#readinessGates" class="headerlink" title="readinessGates"></a>readinessGates</h3><p>自 Kubernetes 1.14（该版本 <code>readinessGates</code> GA，在1.11 版本是为 alpha）起默认支持 Pod 就绪检测机制扩展。</p>
+<p>应用程序可以向 PodStatus 注入额外的反馈或信号：Pod readiness。要使用这个功能，请在 PodSpec 中设置 <code>readinessGates</code> 来指定 kubelet 评估 Pod readiness 的附加条件列表。</p>
+<p>Readiness gates 由 Pod 的 <code>status.condition</code> 字段的当前状态决定。如果 Kubernetes 在 Pod 的 <code>status.conditions</code> 字段中找不到这样的条件，则该条件的状态默认为 “False”。</p>
+<p>下面是一个例子。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">readinessGates:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">conditionType:</span> <span class="string">"www.example.com/feature-1"</span></span><br><span class="line"><span class="attr">status:</span></span><br><span class="line">  <span class="attr">conditions:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">type:</span> <span class="string">Ready</span>                              <span class="comment"># 内置的 Pod 状态</span></span><br><span class="line">      <span class="attr">status:</span> <span class="string">"False"</span></span><br><span class="line">      <span class="attr">lastProbeTime:</span> <span class="literal">null</span></span><br><span class="line">      <span class="attr">lastTransitionTime:</span> <span class="number">2018</span><span class="number">-01</span><span class="string">-01T00:00:00Z</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">type:</span> <span class="string">"www.example.com/feature-1"</span>        <span class="comment"># 附加的额外的 Pod 状态</span></span><br><span class="line">      <span class="attr">status:</span> <span class="string">"False"</span></span><br><span class="line">      <span class="attr">lastProbeTime:</span> <span class="literal">null</span></span><br><span class="line">      <span class="attr">lastTransitionTime:</span> <span class="number">2018</span><span class="number">-01</span><span class="string">-01T00:00:00Z</span></span><br><span class="line">  <span class="attr">containerStatuses:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">containerID:</span> <span class="string">docker://abcd...</span></span><br><span class="line">      <span class="attr">ready:</span> <span class="literal">true</span></span><br><span class="line"><span class="string">...</span></span><br></pre></td></tr></table></figure>
+<p>您添加的 Pod 条件的名称必须符合 Kubernetes 的 <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set" target="_blank" rel="external nofollow noopener noreferrer">label key 格式</a>。</p>
+<p>只有到 Pod 中的所有容器状态都是 Ready，且 Pod 附加的额外状态检测的 <code>readinessGates</code> 条件也是 Ready 的时候，Pod 的状态才是 Ready。</p>
+<h2 id="Pod-和容器状态"><a href="#Pod-和容器状态" class="headerlink" title="Pod 和容器状态"></a>Pod 和容器状态</h2><p>有关 Pod 容器状态的详细信息，请参阅 PodStatus 和 ContainerStatus。请注意，报告的 Pod 状态信息取决于当前的 ContainerState。</p>
+<h2 id="Restart-Policy"><a href="#Restart-Policy" class="headerlink" title="Restart Policy"></a>Restart Policy</h2><p>PodSpec 中有一个 <code>restartPolicy</code> 字段，可能的值为 Always、OnFailure 和 Never。默认为 Always。 <code>restartPolicy</code> 适用于 Pod 中的所有容器。<code>restartPolicy</code> 仅指通过同一节点上的 kubelet 重新启动容器。失败的容器由 kubelet 以五分钟为上限的指数退避延迟（10秒，20秒，40秒…）重新启动，并在成功执行十分钟后重置。如 <a href="https://kubernetes.io/docs/user-guide/pods/#durability-of-pods-or-lack-thereof" target="_blank" rel="external nofollow noopener noreferrer">Pod 文档</a> 中所述，一旦绑定到一个节点，Pod 将永远不会重新绑定到另一个节点。</p>
+<h2 id="Pod-的生命"><a href="#Pod-的生命" class="headerlink" title="Pod 的生命"></a>Pod 的生命</h2><p>一般来说，Pod 不会消失，直到人为销毁他们。这可能是一个人或控制器。这个规则的唯一例外是成功或失败的 <code>phase</code> 超过一段时间（由 master 确定）的Pod将过期并被自动销毁。</p>
+<p>有三种可用的控制器：</p>
+<ul>
+<li><p>使用 <a href="https://kubernetes.io/docs/concepts/jobs/run-to-completion-finite-workloads/" target="_blank" rel="external nofollow noopener noreferrer">Job</a> 运行预期会终止的 Pod，例如批量计算。Job 仅适用于重启策略为 <code>OnFailure</code> 或 <code>Never</code> 的 Pod。</p>
+</li>
+<li><p>对预期不会终止的 Pod 使用 <a href="https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller/" target="_blank" rel="external nofollow noopener noreferrer">ReplicationController</a>、<a href="https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/" target="_blank" rel="external nofollow noopener noreferrer">ReplicaSet</a> 和 <a href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/" target="_blank" rel="external nofollow noopener noreferrer">Deployment</a> ，例如 Web 服务器。 ReplicationController 仅适用于具有 <code>restartPolicy</code> 为 Always 的 Pod。</p>
+</li>
+<li>提供特定于机器的系统服务，使用 <a href="https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/" target="_blank" rel="external nofollow noopener noreferrer">DaemonSet</a> 为每台机器运行一个 Pod 。</li>
+</ul>
+<p>所有这三种类型的控制器都包含一个 PodTemplate。建议创建适当的控制器，让它们来创建 Pod，而不是直接自己创建 Pod。这是因为单独的 Pod 在机器故障的情况下没有办法自动复原，而控制器却可以。</p>
+<p>如果节点死亡或与集群的其余部分断开连接，则 Kubernetes 将应用一个策略将丢失节点上的所有 Pod 的 <code>phase</code> 设置为 Failed。</p>
+<h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><h3 id="高级-liveness-探针示例"><a href="#高级-liveness-探针示例" class="headerlink" title="高级 liveness 探针示例"></a>高级 liveness 探针示例</h3><p>存活探针由 kubelet 来执行，因此所有的请求都在 kubelet 的网络命名空间中进行。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">test:</span> <span class="string">liveness</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">liveness-http</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">args:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">/server</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">k8s.gcr.io/liveness</span></span><br><span class="line">    <span class="attr">livenessProbe:</span></span><br><span class="line">      <span class="attr">httpGet:</span></span><br><span class="line">        <span class="comment"># when "host" is not defined, "PodIP" will be used</span></span><br><span class="line">        <span class="comment"># host: my-host</span></span><br><span class="line">        <span class="comment"># when "scheme" is not defined, "HTTP" scheme will be used. Only "HTTP" and "HTTPS" are allowed</span></span><br><span class="line">        <span class="comment"># scheme: HTTPS</span></span><br><span class="line">        <span class="attr">path:</span> <span class="string">/healthz</span></span><br><span class="line">        <span class="attr">port:</span> <span class="number">8080</span></span><br><span class="line">        <span class="attr">httpHeaders:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">X-Custom-Header</span></span><br><span class="line">          <span class="attr">value:</span> <span class="string">Awesome</span></span><br><span class="line">      <span class="attr">initialDelaySeconds:</span> <span class="number">15</span></span><br><span class="line">      <span class="attr">timeoutSeconds:</span> <span class="number">1</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">liveness</span></span><br></pre></td></tr></table></figure>
+<h3 id="状态示例"><a href="#状态示例" class="headerlink" title="状态示例"></a>状态示例</h3><ul>
+<li>Pod 中只有一个容器并且正在运行。容器成功退出。<ul>
+<li>记录完成事件。</li>
+<li>如果 <code>restartPolicy</code> 为：<ul>
+<li>Always：重启容器；Pod <code>phase</code> 仍为 Running。</li>
+<li>OnFailure：Pod <code>phase</code> 变成 Succeeded。</li>
+<li>Never：Pod <code>phase</code> 变成 Succeeded。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Pod 中只有一个容器并且正在运行。容器退出失败。<ul>
+<li>记录失败事件。</li>
+<li>如果 <code>restartPolicy</code> 为：<ul>
+<li>Always：重启容器；Pod <code>phase</code> 仍为 Running。</li>
+<li>OnFailure：重启容器；Pod <code>phase</code> 仍为 Running。</li>
+<li>Never：Pod <code>phase</code> 变成 Failed。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Pod 中有两个容器并且正在运行。容器1退出失败。<ul>
+<li>记录失败事件。</li>
+<li>如果 restartPolicy 为：<ul>
+<li>Always：重启容器；Pod <code>phase</code> 仍为 Running。</li>
+<li>OnFailure：重启容器；Pod <code>phase</code> 仍为 Running。</li>
+<li>Never：不重启容器；Pod <code>phase</code> 仍为 Running。</li>
+</ul>
+</li>
+<li>如果有容器1没有处于运行状态，并且容器2退出：<ul>
+<li>记录失败事件。</li>
+<li>如果 <code>restartPolicy</code> 为：<ul>
+<li>Always：重启容器；Pod <code>phase</code> 仍为 Running。</li>
+<li>OnFailure：重启容器；Pod <code>phase</code> 仍为 Running。</li>
+<li>Never：Pod <code>phase</code> 变成 Failed。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Pod 中只有一个容器并处于运行状态。容器运行时内存超出限制：<ul>
+<li>容器以失败状态终止。</li>
+<li>记录 OOM 事件。</li>
+<li>如果 <code>restartPolicy</code> 为：<ul>
+<li>Always：重启容器；Pod <code>phase</code> 仍为 Running。</li>
+<li>OnFailure：重启容器；Pod <code>phase</code> 仍为 Running。</li>
+<li>Never: 记录失败事件；Pod <code>phase</code> 仍为 Failed。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Pod 正在运行，磁盘故障：<ul>
+<li>杀掉所有容器。</li>
+<li>记录适当事件。</li>
+<li>Pod <code>phase</code> 变成 Failed。</li>
+<li>如果使用控制器来运行，Pod 将在别处重建。</li>
+</ul>
+</li>
+<li>Pod 正在运行，其节点被分段。<ul>
+<li>节点控制器等待直到超时。</li>
+<li>节点控制器将 Pod <code>phase</code> 设置为 Failed。</li>
+<li>如果是用控制器来运行，Pod 将在别处重建。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="Kubelet"><a href="#Kubelet" class="headerlink" title="Kubelet"></a>Kubelet</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> ErrCrashLoopBackOff = errors.New(<span class="string">"CrashLoopBackOff"</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> (</span><br><span class="line">	<span class="comment">// ErrContainerNotFound returned when a container in the given pod with the</span></span><br><span class="line">	<span class="comment">// given container name was not found, amongst those managed by the kubelet.</span></span><br><span class="line">	ErrContainerNotFound = errors.New(<span class="string">"no matching container"</span>)</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> (</span><br><span class="line">	ErrRunContainer     = errors.New(<span class="string">"RunContainerError"</span>)</span><br><span class="line">	ErrKillContainer    = errors.New(<span class="string">"KillContainerError"</span>)</span><br><span class="line">	ErrVerifyNonRoot    = errors.New(<span class="string">"VerifyNonRootError"</span>)</span><br><span class="line">	ErrRunInitContainer = errors.New(<span class="string">"RunInitContainerError"</span>)</span><br><span class="line">	ErrCreatePodSandbox = errors.New(<span class="string">"CreatePodSandboxError"</span>)</span><br><span class="line">	ErrConfigPodSandbox = errors.New(<span class="string">"ConfigPodSandboxError"</span>)</span><br><span class="line">	ErrKillPodSandbox   = errors.New(<span class="string">"KillPodSandboxError"</span>)</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> (</span><br><span class="line">	ErrSetupNetwork    = errors.New(<span class="string">"SetupNetworkError"</span>)</span><br><span class="line">	ErrTeardownNetwork = errors.New(<span class="string">"TeardownNetworkError"</span>)</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<h2 id="k8s-pod-状态分析"><a href="#k8s-pod-状态分析" class="headerlink" title="k8s pod 状态分析"></a>k8s pod 状态分析</h2><p>以下通过创建一个pod来具体的看看从pod创建到成功所触发的事件，以及pod相关状态的改变</p>
+<figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl <span class="built_in">apply</span> -f busybox.yaml</span><br></pre></td></tr></table></figure>
+<p>第一步：写入数据到etcd</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">event type: ADDED </span><br><span class="line">event object: </span><br><span class="line">&#123;</span><br><span class="line">	<span class="attr">"phase"</span>: <span class="string">"Pending"</span>,</span><br><span class="line">	<span class="attr">"qosClass"</span>: <span class="string">"BestEffort"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第二步：开始被调度，但是还未调度到具体node上，请注意：PodScheduled的 status=“true”</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">event type: MODIFIED</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"phase"</span>: <span class="string">"Pending"</span>,</span><br><span class="line">  <span class="attr">"conditions"</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">"type"</span>: <span class="string">"PodScheduled"</span>,</span><br><span class="line">      <span class="attr">"status"</span>: <span class="string">"True"</span>,</span><br><span class="line">      <span class="attr">"lastProbeTime"</span>: <span class="literal">null</span>,</span><br><span class="line">      <span class="attr">"lastTransitionTime"</span>: <span class="string">"2017-06-06T07:57:06Z"</span></span><br><span class="line">    &#125;</span><br><span class="line">  ],</span><br><span class="line">  <span class="attr">"qosClass"</span>: <span class="string">"BestEffort"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第三步：被调度到了具体的node上hostip绑定了，并且被所有初始化容器已经启动完毕（注意我的busybox.yaml中pod没有指定init container，所以这里很快就被设置成true）,被调度到的节点watch到并开始创建容器（此阶段是在拉去镜像）然后创建容器 ，而此时Ready的status是false，仔细看会发现，containerStatus的状态未waiting</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">event type:</span> <span class="string">MODIFIED</span></span><br><span class="line"><span class="string">&#123;</span></span><br><span class="line">  <span class="attr">"phase":</span> <span class="string">"Pending"</span><span class="string">,</span></span><br><span class="line">  <span class="attr">"conditions":</span> <span class="string">[</span></span><br><span class="line">    <span class="string">&#123;</span></span><br><span class="line">      <span class="attr">"type":</span> <span class="string">"Initialized"</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"status":</span> <span class="string">"True"</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"lastProbeTime":</span> <span class="literal">null</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"lastTransitionTime":</span> <span class="string">"2017-06-06T07:57:06Z"</span></span><br><span class="line">    <span class="string">&#125;,</span></span><br><span class="line">    <span class="string">&#123;</span></span><br><span class="line">      <span class="attr">"type":</span> <span class="string">"Ready"</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"status":</span> <span class="string">"False"</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"lastProbeTime":</span> <span class="literal">null</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"lastTransitionTime":</span> <span class="string">"2017-06-06T07:57:06Z"</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"reason":</span> <span class="string">"ContainersNotReady"</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"message":</span> <span class="string">"containers with unready status: [busybox]"</span></span><br><span class="line">    <span class="string">&#125;,</span></span><br><span class="line">    <span class="string">&#123;</span></span><br><span class="line">      <span class="attr">"type":</span> <span class="string">"PodScheduled"</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"status":</span> <span class="string">"True"</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"lastProbeTime":</span> <span class="literal">null</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"lastTransitionTime":</span> <span class="string">"2017-06-06T07:57:06Z"</span></span><br><span class="line">    <span class="string">&#125;</span></span><br><span class="line">  <span class="string">],</span></span><br><span class="line">  <span class="attr">"hostIP":</span> <span class="string">"10.39.1.35"</span><span class="string">,</span></span><br><span class="line">  <span class="attr">"startTime":</span> <span class="string">"2017-06-06T07:57:06Z"</span><span class="string">,</span></span><br><span class="line">  <span class="attr">"containerStatuses":</span> <span class="string">[</span></span><br><span class="line">    <span class="string">&#123;</span></span><br><span class="line">      <span class="attr">"name":</span> <span class="string">"busybox"</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"state":</span> <span class="string">&#123;</span></span><br><span class="line">        <span class="attr">"waiting":</span> <span class="string">&#123;</span></span><br><span class="line">          <span class="attr">"reason":</span> <span class="string">"ContainerCreating"</span></span><br><span class="line">        <span class="string">&#125;</span></span><br><span class="line">      <span class="string">&#125;,</span></span><br><span class="line">      <span class="attr">"lastState":</span> <span class="string">&#123;&#125;,</span></span><br><span class="line">      <span class="attr">"ready":</span> <span class="literal">false</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"restartCount":</span> <span class="number">0</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"image":</span> <span class="string">"busybox"</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"imageID":</span> <span class="string">""</span></span><br><span class="line">    <span class="string">&#125;</span></span><br><span class="line">  <span class="string">],</span></span><br><span class="line">  <span class="attr">"qosClass":</span> <span class="string">"BestEffort"</span></span><br><span class="line"><span class="string">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>第四步：容器创建成功，Ready的status=“true”，此时容器的status也为running，这个时候，对应的pod的PodPhase也应该为running</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">event type:</span> <span class="string">MODIFIED</span></span><br><span class="line"><span class="string">&#123;</span></span><br><span class="line">  <span class="attr">"phase":</span> <span class="string">"Running"</span><span class="string">,</span></span><br><span class="line">  <span class="attr">"conditions":</span> <span class="string">[</span></span><br><span class="line">    <span class="string">&#123;</span></span><br><span class="line">      <span class="attr">"type":</span> <span class="string">"Initialized"</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"status":</span> <span class="string">"True"</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"lastProbeTime":</span> <span class="literal">null</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"lastTransitionTime":</span> <span class="string">"2017-06-06T07:57:06Z"</span></span><br><span class="line">    <span class="string">&#125;,</span></span><br><span class="line">    <span class="string">&#123;</span></span><br><span class="line">      <span class="attr">"type":</span> <span class="string">"Ready"</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"status":</span> <span class="string">"True"</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"lastProbeTime":</span> <span class="literal">null</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"lastTransitionTime":</span> <span class="string">"2017-06-06T07:57:08Z"</span></span><br><span class="line">    <span class="string">&#125;,</span></span><br><span class="line">    <span class="string">&#123;</span></span><br><span class="line">      <span class="attr">"type":</span> <span class="string">"PodScheduled"</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"status":</span> <span class="string">"True"</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"lastProbeTime":</span> <span class="literal">null</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"lastTransitionTime":</span> <span class="string">"2017-06-06T07:57:06Z"</span></span><br><span class="line">    <span class="string">&#125;</span></span><br><span class="line">  <span class="string">],</span></span><br><span class="line">  <span class="attr">"hostIP":</span> <span class="string">"10.39.1.35"</span><span class="string">,</span></span><br><span class="line">  <span class="attr">"podIP":</span> <span class="string">"192.168.107.204"</span><span class="string">,</span></span><br><span class="line">  <span class="attr">"startTime":</span> <span class="string">"2017-06-06T07:57:06Z"</span><span class="string">,</span></span><br><span class="line">  <span class="attr">"containerStatuses":</span> <span class="string">[</span></span><br><span class="line">    <span class="string">&#123;</span></span><br><span class="line">      <span class="attr">"name":</span> <span class="string">"busybox"</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"state":</span> <span class="string">&#123;</span></span><br><span class="line">        <span class="attr">"running":</span> <span class="string">&#123;</span></span><br><span class="line">          <span class="attr">"startedAt":</span> <span class="string">"2017-06-06T07:57:08Z"</span></span><br><span class="line">        <span class="string">&#125;</span></span><br><span class="line">      <span class="string">&#125;,</span></span><br><span class="line">      <span class="attr">"lastState":</span> <span class="string">&#123;&#125;,</span></span><br><span class="line">      <span class="attr">"ready":</span> <span class="literal">true</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"restartCount":</span> <span class="number">0</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"image":</span> <span class="string">"busybox:latest"</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"imageID":</span> <span class="string">"docker-pullable://busybox@sha256:c79345819a6882c31b41bc771d9a94fc52872fa651b36771fbe0c8461d7ee558"</span><span class="string">,</span></span><br><span class="line">      <span class="attr">"containerID":</span> <span class="string">"docker://a6af9d58c7dabf55fdfe8d4222b2c16349e3b49b3d0eca4bc761fdb571f3cf44"</span></span><br><span class="line">    <span class="string">&#125;</span></span><br><span class="line">  <span class="string">],</span></span><br><span class="line">  <span class="attr">"qosClass":</span> <span class="string">"BestEffort"</span></span><br><span class="line"><span class="string">&#125;</span></span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer 启动分析</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/fdbf86e3/" rel="bookmark">【Kubernetes】网络模型</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/b88b921f/" rel="bookmark">【Kubernetes】Pod</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/1141907b/" rel="bookmark">【Kubernetes】Apiserver Install</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/320e9610/" title="【Kubernetes】Pod 生命周期与状态">http://houmin.cc/posts/320e9610/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
+              <a href="/tags/pod/" rel="tag"><i class="fa fa-tag"></i> pod</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/b88b921f/" rel="next" title="【Kubernetes】Pod">
+                  <i class="fa fa-chevron-left"></i> 【Kubernetes】Pod
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/c57d800c/" rel="prev" title="【Kubernetes】CRD">
+                  【Kubernetes】CRD <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Pod-Phase"><span class="nav-number">1.</span> <span class="nav-text">Pod Phase</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Pod-Condition"><span class="nav-number">2.</span> <span class="nav-text">Pod Condition</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Container-State"><span class="nav-number">3.</span> <span class="nav-text">Container State</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#容器探针"><span class="nav-number">4.</span> <span class="nav-text">容器探针</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#该什么时候使用存活（liveness）和就绪（readiness）探针"><span class="nav-number">4.1.</span> <span class="nav-text">该什么时候使用存活（liveness）和就绪（readiness）探针?</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#readinessGates"><span class="nav-number">4.2.</span> <span class="nav-text">readinessGates</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Pod-和容器状态"><span class="nav-number">5.</span> <span class="nav-text">Pod 和容器状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Restart-Policy"><span class="nav-number">6.</span> <span class="nav-text">Restart Policy</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Pod-的生命"><span class="nav-number">7.</span> <span class="nav-text">Pod 的生命</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#示例"><span class="nav-number">8.</span> <span class="nav-text">示例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#高级-liveness-探针示例"><span class="nav-number">8.1.</span> <span class="nav-text">高级 liveness 探针示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#状态示例"><span class="nav-number">8.2.</span> <span class="nav-text">状态示例</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Kubelet"><span class="nav-number">9.</span> <span class="nav-text">Kubelet</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#k8s-pod-状态分析"><span class="nav-number">10.</span> <span class="nav-text">k8s pod 状态分析</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">222</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.9m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">58:15</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

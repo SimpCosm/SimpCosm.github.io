@@ -75,7 +75,13 @@
 <meta property="og:image" content="https://i.loli.net/2020/01/28/IPSwuRVbgTDKnhB.jpg">
 <meta property="og:image" content="https://i.loli.net/2020/01/29/bexu9Qt26K7FiND.jpg">
 <meta property="og:image" content="https://i.loli.net/2020/01/29/95RPciVgDqtSmNb.jpg">
-<meta property="og:updated_time" content="2020-09-23T12:33:40.611Z">
+<meta property="og:image" content="http://support.huawei.com/huaweiconnect/enterprise/data/attachment/forum/dm/ecommunity/uploads/2015/1123/16/5652c940898f4.png">
+<meta property="og:image" content="https://ying-zhang.github.io/img/vnet-vxlan.png">
+<meta property="og:image" content="http://img.blog.csdn.net/20160113005124711?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQv/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center">
+<meta property="og:image" content="https://img2018.cnblogs.com/blog/1003074/201908/1003074-20190818212117123-110105023.png">
+<meta property="og:image" content="https://img2018.cnblogs.com/blog/1003074/201908/1003074-20190818212132522-51828271.png">
+<meta property="og:image" content="https://img2018.cnblogs.com/blog/1003074/201908/1003074-20190818212148493-1847024907.png">
+<meta property="og:updated_time" content="2021-01-26T02:52:57.672Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://images2017.cnblogs.com/blog/431521/201712/431521-20171214124122201-325159441.png">
 
@@ -312,14 +318,14 @@
                 <i class="fa fa-file-word-o"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>19k</span>
+              <span>30k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>35 分钟</span>
+              <span>54 分钟</span>
             </span>
 
         </div>
@@ -393,7 +399,7 @@
 <h3 id="代码示例"><a href="#代码示例" class="headerlink" title="代码示例"></a>代码示例</h3><p>这里写了一个程序，它收到tun设备的数据包之后，只打印出收到了多少字节的数据包，其它的什么都不做，如何编程请参考后面的参考链接。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;net/if.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/ioctl.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/stat.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;fcntl.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/if_tun.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">tun_alloc</span><span class="params">(<span class="keyword">int</span> flags)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">ifreq</span> <span class="title">ifr</span>;</span></span><br><span class="line">    <span class="keyword">int</span> fd, err;</span><br><span class="line">    <span class="keyword">char</span> *clonedev = <span class="string">"/dev/net/tun"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ((fd = <span class="built_in">open</span>(clonedev, O_RDWR)) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> fd;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">memset</span>(&amp;ifr, <span class="number">0</span>, <span class="keyword">sizeof</span>(ifr));</span><br><span class="line">    ifr.ifr_flags = flags;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ((err = ioctl(fd, TUNSETIFF, (<span class="keyword">void</span> *) &amp;ifr)) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">close</span>(fd);</span><br><span class="line">        <span class="keyword">return</span> err;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"Open tun/tap device: %s for reading...\n"</span>, ifr.ifr_name);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> fd;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> tun_fd, nread;</span><br><span class="line">    <span class="keyword">char</span> <span class="built_in">buffer</span>[<span class="number">1500</span>];</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Flags: IFF_TUN   - TUN device (no Ethernet headers)</span></span><br><span class="line"><span class="comment">     *        IFF_TAP   - TAP device</span></span><br><span class="line"><span class="comment">     *        IFF_NO_PI - Do not provide packet information</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    tun_fd = tun_alloc(IFF_TUN | IFF_NO_PI);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (tun_fd &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        perror(<span class="string">"Allocating interface"</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">        nread = <span class="built_in">read</span>(tun_fd, <span class="built_in">buffer</span>, <span class="keyword">sizeof</span>(<span class="built_in">buffer</span>));</span><br><span class="line">        <span class="keyword">if</span> (nread &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            perror(<span class="string">"Reading from interface"</span>);</span><br><span class="line">            <span class="built_in">close</span>(tun_fd);</span><br><span class="line">            <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"Read %d bytes from tun/tap device\n"</span>, nread);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h3 id="虚拟设备演示"><a href="#虚拟设备演示" class="headerlink" title="虚拟设备演示"></a>虚拟设备演示</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#--------------------------第一个shell窗口----------------------</span></span><br><span class="line"><span class="comment">#将上面的程序保存成tun.c，然后编译</span></span><br><span class="line">dev@debian:~$ gcc tun.c -o tun</span><br><span class="line"></span><br><span class="line"><span class="comment">#启动tun程序，程序会创建一个新的tun设备，</span></span><br><span class="line"><span class="comment">#程序会阻塞在这里，等着数据包过来</span></span><br><span class="line">dev@debian:~$ sudo ./tun</span><br><span class="line">Open tun/tap device tun1 <span class="keyword">for</span> reading...</span><br><span class="line">Read 84 bytes from tun/tap device</span><br><span class="line">Read 84 bytes from tun/tap device</span><br><span class="line">Read 84 bytes from tun/tap device</span><br><span class="line">Read 84 bytes from tun/tap device</span><br><span class="line"></span><br><span class="line"><span class="comment">#--------------------------第二个shell窗口----------------------</span></span><br><span class="line"><span class="comment">#启动抓包程序，抓经过tun1的包</span></span><br><span class="line"><span class="comment"># tcpdump -i tun1</span></span><br><span class="line">tcpdump: verbose output suppressed, use -v or -vv <span class="keyword">for</span> full protocol decode</span><br><span class="line">listening on tun1, link-type RAW (Raw IP), capture size 262144 bytes</span><br><span class="line">19:57:13.473101 IP 192.168.3.11 &gt; 192.168.3.12: ICMP <span class="built_in">echo</span> request, id 24028, seq 1, length 64</span><br><span class="line">19:57:14.480362 IP 192.168.3.11 &gt; 192.168.3.12: ICMP <span class="built_in">echo</span> request, id 24028, seq 2, length 64</span><br><span class="line">19:57:15.488246 IP 192.168.3.11 &gt; 192.168.3.12: ICMP <span class="built_in">echo</span> request, id 24028, seq 3, length 64</span><br><span class="line">19:57:16.496241 IP 192.168.3.11 &gt; 192.168.3.12: ICMP <span class="built_in">echo</span> request, id 24028, seq 4, length 64</span><br><span class="line"></span><br><span class="line"><span class="comment">#--------------------------第三个shell窗口----------------------</span></span><br><span class="line"><span class="comment">#./tun启动之后，通过ip link命令就会发现系统多了一个tun设备，</span></span><br><span class="line"><span class="comment">#在我的测试环境中，多出来的设备名称叫tun1，在你的环境中可能叫tun0</span></span><br><span class="line"><span class="comment">#新的设备没有ip，我们先给tun1配上IP地址</span></span><br><span class="line">dev@debian:~$ sudo ip addr add 192.168.3.11/24 dev tun1</span><br><span class="line"></span><br><span class="line"><span class="comment">#默认情况下，tun1没有起来，用下面的命令将tun1启动起来</span></span><br><span class="line">dev@debian:~$ sudo ip link <span class="built_in">set</span> tun1 up</span><br><span class="line"></span><br><span class="line"><span class="comment">#尝试ping一下192.168.3.0/24网段的IP，</span></span><br><span class="line"><span class="comment">#根据默认路由，该数据包会走tun1设备，</span></span><br><span class="line"><span class="comment">#由于我们的程序中收到数据包后，啥都没干，相当于把数据包丢弃了，</span></span><br><span class="line"><span class="comment">#所以这里的ping根本收不到返回包，</span></span><br><span class="line"><span class="comment">#但在前两个窗口中可以看到这里发出去的四个icmp echo请求包，</span></span><br><span class="line"><span class="comment">#说明数据包正确的发送到了应用程序里面，只是应用程序没有处理该包</span></span><br><span class="line">dev@debian:~$ ping -c 4 192.168.3.12</span><br><span class="line">PING 192.168.3.12 (192.168.3.12) 56(84) bytes of data.</span><br><span class="line"></span><br><span class="line">--- 192.168.3.12 ping statistics ---</span><br><span class="line">4 packets transmitted, 0 received, 100% packet loss, time 3023ms</span><br></pre></td></tr></table></figure>
-<h2 id="Veth"><a href="#Veth" class="headerlink" title="Veth"></a>Veth</h2><p>veth虚拟网络设备一端连着协议栈，另外一端不是物理网络，而是另一个veth设备，成对的veth设备中一个数据包发送出去后会直接到另一个veth设备上去。每个veth设备都可以被配置IP地址，并参与三层 IP 网络路由过程。</p>
+<h2 id="Veth"><a href="#Veth" class="headerlink" title="Veth"></a>Veth</h2><p>veth 虚拟网络设备一端连着协议栈，另外一端不是物理网络，而是另一个veth 设备，成对的veth设备中一个数据包发送出去后会直接到另一个veth设备上去。每个veth设备都可以被配置IP地址，并参与三层 IP 网络路由过程。</p>
 <p>下面就是一个典型的veth设备对的例子：</p>
 <p><img alt="network-device-veth.jpg" data-src="https://i.loli.net/2020/01/28/dOA19SeZHPLanYC.jpg"></p>
 <p>我们配置物理网卡eth0的IP为<code>12.124.10.11</code>， 而成对出现的veth设备分别为veth0和veth1，它们的IP分别是<code>20.1.0.10</code>和<code>20.1.0.11</code>。</p>
@@ -416,7 +422,7 @@
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip link add name br0 type bridge</span></span><br><span class="line"><span class="comment"># ip link set br0 up</span></span><br></pre></td></tr></table></figure>
 <p><img alt="network-device-bridge-1.jpg" data-src="https://i.loli.net/2020/01/28/JljuUAEyNRfb6Dq.jpg"></p>
 <p>但是这样创建出来的bridge一端连接着协议栈，其他端口什么也没有连接，因此我们需要将其他设备连接到该bridge才能有实际的功能。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip link add veth0 type veth peer name veth1</span></span><br><span class="line"><span class="comment"># ip addr add 20.1.0.10/24 dev veth0</span></span><br><span class="line"><span class="comment"># ip addr add 20.1.0.11/24 dev veth1</span></span><br><span class="line"><span class="comment"># ip link set veth0 up</span></span><br><span class="line"><span class="comment"># ip link set veth1 up</span></span><br><span class="line"><span class="comment"># 将veth0连接到br0</span></span><br><span class="line"><span class="comment"># ip link set dev veth0 master br0</span></span><br><span class="line"><span class="comment"># 通过bridge link命令可以看到bridge上连接了哪些设备</span></span><br><span class="line"><span class="comment"># bridge link</span></span><br><span class="line">6: veth0 state UP : &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 master br0 state forwarding priority 32 cost 2</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip link add veth0 type veth peer name veth1</span></span><br><span class="line"><span class="comment"># ip addr add 20.1.0.10/24 dev veth0</span></span><br><span class="line"><span class="comment"># ip addr add 20.1.0.11/24 dev veth1</span></span><br><span class="line"><span class="comment"># ip link set veth0 up</span></span><br><span class="line"><span class="comment"># ip link set veth1 up</span></span><br><span class="line"><span class="comment"># 将veth0连接到br0</span></span><br><span class="line"><span class="comment"># ip link set dev veth0 master br0</span></span><br><span class="line"><span class="comment"># 通过 bridge link 命令可以看到bridge上连接了哪些设备</span></span><br><span class="line"><span class="comment"># bridge link</span></span><br><span class="line">6: veth0 state UP : &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 master br0 state forwarding priority 32 cost 2</span><br></pre></td></tr></table></figure>
 <p><img alt="network-device-bridge-2.jpg" data-src="https://i.loli.net/2020/01/28/NCUXi4l7zBo83ev.jpg"></p>
 <p>事实上，一旦br0和veth0连接后，它们之间将变成双向通道，但是内核协议栈和veth0之间变成了单通道，协议栈能发数据给veth0，但veth0从外面收到的数据不会转发给协议栈 ，同时br0的MAC地址变成了veth0的MAC地址。我们可以验证一下：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ping -c 1 -I veth0 20.1.0.11</span></span><br><span class="line">PING 20.1.0.11 (20.1.0.11) from 20.1.0.10 veth0: 56(84) bytes of data.</span><br><span class="line">From 20.1.0.10 icmp_seq=1 Destination Host Unreachable</span><br><span class="line"></span><br><span class="line">--- 20.1.0.11 ping statistics ---</span><br><span class="line">1 packets transmitted, 0 received, +1 errors, 100% packet loss, time 0ms</span><br></pre></td></tr></table></figure>
@@ -436,7 +442,7 @@
 <p><strong>容器</strong></p>
 <p>而对于容器网络来说，每个容器的网络设备单独的网络命名空间中，所以很好地不同容器的协议栈，我们在接下来的笔记中进一步讨论不同的容器实现。</p>
 <p><img alt="network-device-docker.jpg" data-src="https://i.loli.net/2020/01/28/IPSwuRVbgTDKnhB.jpg"></p>
-<h2 id="VxLAN"><a href="#VxLAN" class="headerlink" title="VxLAN"></a>VxLAN</h2><h2 id="IPIP"><a href="#IPIP" class="headerlink" title="IPIP"></a>IPIP</h2><p>上一篇笔记中，我们在介绍网络设备的时候了解了一种典型的通过TUN/TAP设备来实现VPN的原理，但是并没有实践TUN/TAP虚拟网络设备具体在linux中怎么发挥实际的功能。这篇笔记我们就来看看在云计算领域中一种非常典型的IPIP隧道如何TUN设备来实现。</p>
+<h2 id="IPIP"><a href="#IPIP" class="headerlink" title="IPIP"></a>IPIP</h2><p>上一篇笔记中，我们在介绍网络设备的时候了解了一种典型的通过TUN/TAP设备来实现VPN的原理，但是并没有实践TUN/TAP虚拟网络设备具体在linux中怎么发挥实际的功能。这篇笔记我们就来看看在云计算领域中一种非常典型的IPIP隧道如何TUN设备来实现。</p>
 <h3 id="IPIP隧道"><a href="#IPIP隧道" class="headerlink" title="IPIP隧道"></a>IPIP隧道</h3><p>上一篇笔记中我们也提到了，TUN网络设备能将三层（IP）网络包封装在另外一个三层网络包之中，看起来通过TUN设备发送出来的数据包会像会这样：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">MAC: xx:xx:xx:xx:xx:xx</span><br><span class="line">IP Header: &lt;new destination IP&gt;</span><br><span class="line">IP Body:</span><br><span class="line">  IP: &lt;original destination IP&gt;</span><br><span class="line">  TCP: stuff</span><br><span class="line">  HTTP: stuff</span><br></pre></td></tr></table></figure>
 <p>这就是典型的IPIP隧道数据包的结构。Linux原生支持好几种不同的IPIP隧道类型，但都依赖于TUN网络设备，我们可以通过命令<code>ip tunnel help</code>来查看IPIP隧道的相关类型以及操作：</p>
@@ -544,6 +550,178 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">ip_protocol_deliver_rcu</span><span class="params">(struct net *net, struct sk_buff *skb, <span class="keyword">int</span> protocol)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">net_protocol</span> *<span class="title">ipprot</span>;</span></span><br><span class="line">	<span class="keyword">int</span> raw, ret;</span><br><span class="line"></span><br><span class="line">resubmit:</span><br><span class="line">	raw = raw_local_deliver(skb, protocol);</span><br><span class="line"></span><br><span class="line">	ipprot = rcu_dereference(inet_protos[protocol]);</span><br><span class="line">	<span class="keyword">if</span> (ipprot) &#123;</span><br><span class="line">		<span class="keyword">if</span> (!ipprot-&gt;no_policy) &#123;</span><br><span class="line">			<span class="keyword">if</span> (!xfrm4_policy_check(<span class="literal">NULL</span>, XFRM_POLICY_IN, skb)) &#123;</span><br><span class="line">				kfree_skb(skb);</span><br><span class="line">				<span class="keyword">return</span>;</span><br><span class="line">			&#125;</span><br><span class="line">			nf_reset_ct(skb);</span><br><span class="line">		&#125;</span><br><span class="line">		ret = INDIRECT_CALL_2(ipprot-&gt;handler, tcp_v4_rcv, udp_rcv,</span><br><span class="line">				      skb);</span><br><span class="line">		<span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">			protocol = -ret;</span><br><span class="line">			<span class="keyword">goto</span> resubmit;</span><br><span class="line">		&#125;</span><br><span class="line">		__IP_INC_STATS(net, IPSTATS_MIB_INDELIVERS);</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> (!raw) &#123;</span><br><span class="line">			<span class="keyword">if</span> (xfrm4_policy_check(<span class="literal">NULL</span>, XFRM_POLICY_IN, skb)) &#123;</span><br><span class="line">				__IP_INC_STATS(net, IPSTATS_MIB_INUNKNOWNPROTOS);</span><br><span class="line">				icmp_send(skb, ICMP_DEST_UNREACH,</span><br><span class="line">					  ICMP_PROT_UNREACH, <span class="number">0</span>);</span><br><span class="line">			&#125;</span><br><span class="line">			kfree_skb(skb);</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			__IP_INC_STATS(net, IPSTATS_MIB_INDELIVERS);</span><br><span class="line">			consume_skb(skb);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>From <a href="https://github.com/torvalds/linux/blob/master/net/ipv4/ip_input.c#L187-L224" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/torvalds/linux/blob/master/net/ipv4/ip_input.c#L187-L224</a></p>
 <p>可以看到，ipip模块会根据数据包的协议类型去解封，然后将解封后的skb数据包再做一次解封。以上只是一些非常浅显的分析，如果大家感兴趣，推荐去多看看ipip模块的源代码实现。</p>
+<h2 id="VLAN"><a href="#VLAN" class="headerlink" title="VLAN"></a>VLAN</h2><h2 id="VxLAN"><a href="#VxLAN" class="headerlink" title="VxLAN"></a>VxLAN</h2><p>VXLAN 全称是 <code>Virtual eXtensible Local Area Network</code>，虚拟可扩展的局域网。它是一种 overlay 技术，通过三层的网络来搭建虚拟的二层网络。rfc7348 (参考资料1) 上的介绍是这样的：</p>
+<blockquote>
+<p>A framework for overlaying virtualized layer 2 networks over lay 3 networks.</p>
+</blockquote>
+<p>每一个技术出来都有它要解决的问题，VXLAN 也不例外，那么我们先看看 VXLAN 到底要解决哪些问题。</p>
+<ul>
+<li>虚拟化（虚拟机和容器）的兴起使得一个数据中心会有成千上万的机器需要通信，而传统的 VLAN 技术只能支持 4096 个网络上限，已经满足不了不断扩展的数据中心规模</li>
+<li>越来越多的数据中心（尤其是公有云服务）需要提供多租户的功能，不同用户之间需要独立地分配 ip 和 MAC 地址，如何保证这个功能的扩展性和正确性也是一个待解决的问题</li>
+<li>云计算业务对业务灵活性要求很高，虚拟机可能会大规模迁移，并保证网络一直可用，也就是大二层的概念。解决这个问题同时保证二层的广播域不会过分扩大，也是云计算网络的要求</li>
+</ul>
+<p>传统二层+三层的网络在应对这些要求时变得力不从心，虽然很多改进型的技术比如堆叠、SVF、TRILL 等能够增加二层的范围，努力改进经典网络，但是要做到对网络改动小同时保证灵活性高却非常困难。</p>
+<p>为了解决这些问题，有很多方案被提出来，vxlan 就是其中之一。vxlan 是 VMware、Cisco 等一众大型企业共同推出的，目前标准文档在 <a href="https://tools.ietf.org/html/rfc7348" target="_blank" rel="external nofollow noopener noreferrer">RFC7348</a>。</p>
+<h3 id="VXLAN-模型"><a href="#VXLAN-模型" class="headerlink" title="VXLAN 模型"></a>VXLAN 模型</h3><p>vxlan 这类隧道网络的一个特点是对原有的网络架构影响小，原来的网络不需要做任何改动，在原来网络基础上架设一层新的网络。</p>
+<p>vxlan 自然会引入一些新的概念，这部分就讲讲它们。下面这张图 是 vxlan 的工作模型，它创建在原来的 IP 网络（三层）上，只要是三层可达（能够通过 IP 互相通信）的网络就能部署 vxlan。在每个端点上都有一个 vtep 负责 vxlan 协议报文的封包和解包，也就是在虚拟报文上封装 vtep 通信的报文头部。物理网络上可以创建多个 vxlan 网络，这些 vxlan 网络可以认为是一个隧道，不同节点的虚拟机能够通过隧道直连。每个 vxlan 网络由唯一的 VNI 标识，不同的 vxlan 可以不相互影响。</p>
+<p><img alt="img" data-src="http://support.huawei.com/huaweiconnect/enterprise/data/attachment/forum/dm/ecommunity/uploads/2015/1123/16/5652c940898f4.png"></p>
+<ul>
+<li>VTEP（VXLAN Tunnel Endpoints）：vxlan 网络的边缘设备，用来进行 vxlan 报文的处理（封包和解包）。vtep 可以是网络设备（比如交换机），也可以是一台机器（比如虚拟化集群中的宿主机）</li>
+<li>VNI（VXLAN Network Identifier）：VNI 是每个 vxlan 的标识，是个 24 位整数，一共有 2^24 = 16,777,216（一千多万），一般每个 VNI 对应一个租户，也就是说使用 vxlan 搭建的公有云可以理论上可以支撑千万级别的租户</li>
+<li>Tunnel：隧道是一个逻辑上的概念，在 vxlan 模型中并没有具体的物理实体想对应。隧道可以看做是一种虚拟通道，vxlan 通信双方（图中的虚拟机）认为自己是在直接通信，并不知道底层网络的存在。从整体来说，每个 vxlan 网络像是为通信的虚拟机搭建了一个单独的通信通道，也就是隧道</li>
+</ul>
+<p>现在来说，这些概念还是非常晦涩难理解的，我们会在下面具体讲解 vxlan 网络的报文和通信流程，希望文章结束之后再回来看这些概念能明白它们的意思。</p>
+<h3 id="VXLAN-报文解析"><a href="#VXLAN-报文解析" class="headerlink" title="VXLAN 报文解析"></a>VXLAN 报文解析</h3><p>前面说过，vxlan 在三层网络上构建一个虚拟的二层网络出来，这一点能够在 vxlan 的报文上很明显地体现出来。</p>
+<p>下图是 vxlan 协议的报文，白色的部分是虚拟机发送报文（二层帧，包含了 MAC 头部、IP 头部和传输层头部的报文），前面加了 vxlan 头部用来专门保存 vxlan 相关的内容，在前面是标准的 UDP 协议头部（UDP 头部、IP 头部和 MAC 头部）用来在底层网路上传输报文。</p>
+<p><img alt="img" data-src="https://ying-zhang.github.io/img/vnet-vxlan.png"></p>
+<p>从这个报文中可以看到三个部分：</p>
+<ol>
+<li>最外层的 UDP 协议报文用来在底层网络上传输，也就是 vtep之间互相通信的基础</li>
+<li>中间是 VXLAN 头部，vtep 接受到报文之后，去除前面的 UDP 协议部分，根据这部分来处理 vxlan 的逻辑，主要是根据 VNI 发送到最终的虚拟机</li>
+<li>最里面是原始的报文，也就是虚拟机看到的报文内容</li>
+</ol>
+<p>报文各个部分的意义如下：</p>
+<ul>
+<li>VXLAN header：vxlan 协议相关的部分，一共 8 个字节<ul>
+<li>VXLAN flags：标志位</li>
+<li>Reserved：保留位</li>
+<li>VNID：24 位的 VNI 字段，这也是 vxlan 能支持千万租户的地方</li>
+<li>Reserved：保留字段</li>
+</ul>
+</li>
+<li>UDP 头部，8 个字节<ul>
+<li>UDP 应用通信双方是 vtep 应用，其中目的端口就是接收方 vtep 使用的端口，IANA 分配的端口是 4789</li>
+</ul>
+</li>
+<li>IP 头部：20 字节<ul>
+<li>主机之间通信的地址，可能是主机的网卡 IP 地址，也可能是多播 IP 地址</li>
+</ul>
+</li>
+<li>MAC 头部：14 字节<ul>
+<li>主机之间通信的 MAC 地址，源 MAC 地址为主机 MAC 地址，目的 MAC 地址为下一跳设备的 MAC 地址</li>
+</ul>
+</li>
+</ul>
+<p>可以看出 vxlan 协议比原始报文多 50 字节的内容，这会降低网络链路传输有效数据的比例。vxlan 头部最重要的是 VNID 字段，其他的保留字段主要是为了未来的扩展，目前留给不同的厂商用这些字段添加自己的功能。</p>
+<h3 id="vxlan-网络通信过程"><a href="#vxlan-网络通信过程" class="headerlink" title="vxlan 网络通信过程"></a>vxlan 网络通信过程</h3><p>通过上节的内容，我们大致了解 vxlan 报文的发送过程。虚拟机的报文通过 vtep 添加上 vxlan 以及外部的报文层，然后发送出去，对方 vtep 收到之后拆除 vxlan 头部然后根据 VNI 把原始报文发送到目的虚拟机。</p>
+<p>上面的过程是双方已经知道所有通信信息的过程，但是在第一次通信之前还有很多问题有解决：</p>
+<ul>
+<li>哪些 vtep 需要加到一个相同的 VNI 组？</li>
+<li>发送方虚拟机怎么知道对方的 MAC 地址？</li>
+<li>vtep 怎么知道目的虚拟机在哪一台宿主机上？</li>
+</ul>
+<p>这三个问题可以归结为同一个问题：vxlan 网络怎么感知彼此的存在并选择正确的路径传输报文？</p>
+<p>而且第一个问题也是不用回答的，因为 vtep 形成的组是虚构的概念，只有某些 vtep 能够正确地传递报文，它们就是在同一个组内。也就是说，我们只要回答后面两个问题就行。</p>
+<p>要回答这两个问题，我们还是回到 vxlan 协议报文上，看看一个完整的 vxlan 报文需要哪些信息。</p>
+<ul>
+<li>内层报文：通信的虚拟机双方要么直接使用 IP 地址，要么通过 DNS 等方式已经获取了对方的 IP 地址，因此网络层地址已经知道。同一个网络的虚拟机需要通信，还需要知道<strong>对方虚拟机的 MAC 地址</strong>，vxlan 需要一个机制来实现传统网络 ARP 的功能</li>
+<li>vxlan 头部：只需要知道 VNI，这一般是直接配置在 vtep 上的，要么是提前规划写死的，要么是根据内部报文自动生成的，也不需要担心</li>
+<li>UDP 头部：最重要的是源地址和目的地址的端口，源地址端口是系统生成并管理的，目的端口也是写死的，比如 IANA 规定的 4789 端口，这部分也不需要担心</li>
+<li>IP 头部：IP 头部关心的是 vtep 双方的 IP 地址，源地址可以很简单确定，目的地址是<strong>虚拟机所在地址宿主机 vtep 的 IP 地址</strong>，这个也需要由某种方式来确定</li>
+<li>MAC 头部：如果 vtep 的 IP 地址确定了，MAC 地址可以通过经典的 ARP 方式来获取，毕竟 vtep 网络在同一个三层，经典网络架构那一套就能直接用了</li>
+</ul>
+<p>总结一下，一个 vxlan 报文需要确定两个地址信息：目的虚拟机的 MAC 地址和目的 vtep 的 IP 地址，如果 VNI 也是动态感知的，那么 vtep 就需要一个三元组：</p>
+<blockquote>
+<p>内部 MAC &lt;—&gt; VNI &lt;—&gt; VTEP IP</p>
+</blockquote>
+<p>根据实现的不同，一般分为两种方式：多播和控制中心。多播的概念是同个 vxlan 网络的 vtep 加入到同一个多播网络，如果需要知道以上信息，就在组内发送多播来查询；控制中心的概念是在某个集中式的地方保存了所有虚拟机的上述信息，自动化告知 vtep 它需要的信息。</p>
+<p>针对这两种方式，我们下面就分别分析。</p>
+<h4 id="多播"><a href="#多播" class="headerlink" title="多播"></a>多播</h4><p>多播的概念和工作原理不是这里的重点，所以就不介绍了。简单来说，每个多播组对应一个多播 IP 地址，往这个多播 IP 地址发送的报文会发给多播组的所有主机。</p>
+<p>为什么要使用多播？因为 vxlan 的底层网络是三层的，广播地址无法穿越三层网络，要给 vxlan 网络所有 vtep 发送报文只能通过多播。</p>
+<p>下图是在多播模式下，vxlan 的报文工作流程，位于左下方的 机器 A 要通过 vxlan 网络发送报文给右下方的机器 B。</p>
+<p><img alt="img" data-src="http://img.blog.csdn.net/20160113005124711?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQv/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center"></p>
+<p>vtep 建立的时候会通过配置加入到多播组（具体做法取决于实现），图中的多播组 IP 地址是 <code>239.1.1.1</code>。</p>
+<ol>
+<li>机器 A 只知道对方的 IP 地址，不知道 MAC 地址，因此会发送 ARP 报文进行查询，内部的 ARP 报文很普通，目标地址为全 1 的广播地址</li>
+<li>vtep 收到 ARP 报文，发现虚拟机目的 MAC 为广播地址，封装上 vxlan 协议头部之后（外层 IP 为多播组 IP，MAC 地址为多播组的 MAC 地址），发送给多播组 <code>239.1.1.1</code>，支持多播的底层网络设备（交换机和路由器）会把报文发送给组内所有的成员</li>
+<li>vtep 接收到 vxlan 封装的 ARP 请求，去掉 vxlan 头部，并通过报文学习到发送方 &lt;虚拟机 MAC - VNI - Vtep IP&gt; 三元组保存起来，把原来的 ARP 报文广播给主机</li>
+<li>主机接收到 ARP 请求报文，如果 ARP 报文请求的是自己的 MAC 地址，就返回 ARP 应答</li>
+<li>vtep-2 此时已经知道发送放的虚拟机和 vtep 信息，把 ARP 应答添加上 vxlan 头部（外部 IP 地址为 vtep-1 的 IP 地址，VNI 是原来报文的 VNI）之后通过单播发送出去</li>
+<li>vtep-1 接收到报文，并学习到报文中的三元组，记录下来。然后 vtep 进行解包，知道内部的 IP 和 MAC 地址，并转发给目的虚拟机</li>
+<li>虚拟机拿到 ARP 应答报文，就知道了到目的虚拟机的 MAC 地址</li>
+</ol>
+<p>在这个过程中，只有一次多播，因为 vtep 有自动学习的能力，后续的报文都是通过单播直接发送的。可以看到，多播报文非常浪费，每次的多播其实只有一个报文是有效的，如果某个多播组的 vtep 数量很多，这个浪费是非常大的。但是多播组也有它的实现起来比较简单，不需要中心化的控制，只有底层网络支持多播，只有配置好多播组就能自动发现了。</p>
+<p>单播报文的发送过程就是上述应答报文的逻辑，应该也非常容易理解了。还有一种通信方式，那就是不同 VNI 网络之间的通信，这个需要用到 vxlan 网关（可以是物理网络设备，也可以是软件），它接收到一个 vxlan 网络报文之后解压，根据特定的逻辑添加上另外一个 vxlan 头部转发出去。</p>
+<p>因为并不是所有的网络设备都支持多播，再加上多播方式带来的报文浪费，在实际生产中这种方式很少用到。</p>
+<h4 id="分布式控制中心"><a href="#分布式控制中心" class="headerlink" title="分布式控制中心"></a>分布式控制中心</h4><p>从多播的流程可以看出来，其实 vtep 发送报文最关键的就是知道对方虚拟机的 MAC 地址和虚拟机所在主机的 vtep IP 地址。如果能够事先知道这两个信息，直接告诉 vtep，那么就不需要多播了。</p>
+<p>在虚拟机和容器的场景中，当虚拟机或者容器启动还没有进行网络通讯时，我们就可以知道它的 IP 和 MAC（可能是用某种方式获取，也有可能是事先控制这两个地址），分布式控制中心保存了这些信息。除此之外，控制中心还保存了每个 vxlan 网络有哪些 vtep，这些 vtep 的地址是多少。有了这些信息，vtep 就能发送报文时直接查询并添加头部，不需要多播去满网络地问了。</p>
+<p>一般情况下，在每个 vtep 所在的节点都会有一个 agent，它会和控制中心通信，获取 vtep 需要的信息以某种方式告诉 vtep。具体的做法取决于具体的实现，每种实现可能会更新不同的信息给 vtep，比如 HER（Head End Replication）只是把多播组替换成多个单播报文，也就是把多播组所有的 VTEP IP 地址告诉 vtep，这样查询的时候不是发送多播，而是给组内每个 vtep 发送一个单播报文；有些实现只是告诉 vtep 目的虚拟机的 MAC 地址信息；有些实现告诉 MAC 地址对应的 vtep IP 地址。</p>
+<p>此外，什么时候告诉 vtep 这些信息也是有区别的。一般有两种方式：常见的是一旦知道了虚拟机的三元组信息就告诉 vtep（即使某个 vtep 用不到这个信息，因为它管理的虚拟机不会和这个地址通信），一般这时候第一次通信还没有发生；另外一种方式是在第一次通信时，当 vtep 需要这些信息的时候以某种方式通知 agent，然后 agent 这时候才告诉 vtep 信息。</p>
+<p>分布式控制的 vxlan 是一种典型的 SDN 架构，也是目前使用最广泛的方式。因为它的实现多样，而且每种实现都有些许差距，这里不便来具体的例子来说明，只要明白了上面的原理，不管是什么样的实现，都能很快上手。</p>
+<h3 id="vxlan-网络带来新的问题"><a href="#vxlan-网络带来新的问题" class="headerlink" title="vxlan 网络带来新的问题"></a>vxlan 网络带来新的问题</h3><p>vxlan 协议给虚拟网络带来了灵活性和扩展性，让云计算网络能够像计算、存储资源那样按需扩展，并灵活分布。和计算机领域所有技术一样，这也是一种 tradeoff，相对于经典网络来说，vxlan 主要的问题是它的复杂性和额外的开销。</p>
+<h4 id="额外的报文和计算"><a href="#额外的报文和计算" class="headerlink" title="额外的报文和计算"></a>额外的报文和计算</h4><p>这一点可容易看出来，每个 vxlan 报文都有额外的 50 字节开销，如果加上 vlan 字段，开销要到 54 字节。这对于小报文的传输是非常昂贵的操作，试想如果某个报文应用数据才几个字节，原来的网络头部加上 vxlan 报文头部都能有 100 字节的控制信息。</p>
+<p>额外的报文也带来了额外的计算量，每个 vxlan 报文的封包和解包操作都是必须的，如果用软件来实现这些步骤，额外的计算量也是不可以忽略的影响。</p>
+<h4 id="复杂度"><a href="#复杂度" class="headerlink" title="复杂度"></a>复杂度</h4><p>vxlan 另外一个缺点是复杂度，虽然经典网络在应对云计算时捉紧见拙，但是经典网络模型已经发展了很久，所有的部署、监控、运维都比较成熟。如果使用 vxlan 网络，那么所有的这些都要重新学习，时间和人力成本必然会大大提高。</p>
+<h2 id="MACVLAN"><a href="#MACVLAN" class="headerlink" title="MACVLAN"></a>MACVLAN</h2><p>macvlan 本身是 linxu kernel 模块，其功能是允许在同一个物理网卡上配置多个 MAC 地址，即多个 interface，每个 interface 可以配置自己的 IP。<strong>macvlan 本质上是一种网卡虚拟化技术(最大优点是性能极好)</strong></p>
+<p>可以在linux命令行执行<code>lsmod | grep macvlan</code> 查看当前内核是否加载了该driver；如果没有查看到，可以通过<code>modprobe macvlan</code>来载入，然后重新查看。内核代码路径 <code>/drivers/net/macvlan.c</code></p>
+<p> Macvlan 允许你在主机的一个网络接口上配置多个虚拟的网络接口，这些网络 <code>interface</code> 有自己独立的 MAC 地址，也可以配置上 IP 地址进行通信。Macvlan 下的虚拟机或者容器网络和主机在同一个网段中，共享同一个广播域。Macvlan 和 <code>Bridge</code> 比较相似，但因为它省去了 Bridge 的存在，所以配置和调试起来比较简单，而且效率也相对高。除此之外，Macvlan 自身也完美支持 <code>VLAN</code>。</p>
+<h3 id="工作模式-Bridge-VS-MACVlan"><a href="#工作模式-Bridge-VS-MACVlan" class="headerlink" title="工作模式(Bridge VS MACVlan)"></a>工作模式(Bridge VS MACVlan)</h3><p>Bridge Mode</p>
+<ul>
+<li>Bridge 是二层设备，仅用来处理二层的通讯。</li>
+<li>Bridge 使用 MAC 地址表来决定怎么转发帧（<code>Frame</code>）。</li>
+<li>Bridge 会从 host 之间的通讯数据包中学习 MAC 地址。</li>
+<li>可以是硬件设备，也可以是纯软件实现(例如：<code>Linux Bridge</code>)。</li>
+</ul>
+<p>提示:</p>
+<p>​    <strong>Bridge 有可能会遇到二层环路，如有需要，可以开启 STP 来防止出现环路。</strong></p>
+<p>MACVlan Mode</p>
+<ul>
+<li>可让使用者在同一张实体网卡上设定多个 MAC 地址。</li>
+<li>上述设定的 MAC 地址的网卡称为子接口（<code>sub interface</code>）；而实体网卡则称为父接口（<code>parent interface</code>）。</li>
+<li><code>parent interface</code> 可以是一个物理接口（eth0），可以是一个 802.1q 的子接口（eth0.10），也可以是 <code>bonding</code> 接口。</li>
+<li>可在 parent/sub interface 上设定的不只是 MAC 地址，IP 地址同样也可以被设定。</li>
+<li><code>sub interface</code> 无法直接与 <code>parent interface</code> 通讯 (带有 sub interface 的 VM 或容器无法与 host 直接通讯)。</li>
+<li>若 VM 或容器需要与 host 通讯，那就必须额外建立一个 <code>sub interface</code> 给 host 用。</li>
+<li>sub interface 通常以 <code>mac0@eth0</code> 的形式来命名以方便区別。</li>
+</ul>
+<h3 id="MACVlan模式"><a href="#MACVlan模式" class="headerlink" title="MACVlan模式"></a>MACVlan模式</h3><ul>
+<li>Bridge：属于同一个parent接口的macvlan接口之间挂到同一个bridge上，可以二层互通（macvlan接口都无法与parent 接口互通）。</li>
+<li>VPEA（Virtual Ethernet Port Aggregator）：所有接口的流量都需要到外部switch才能够到达其他接口。</li>
+<li>Private：接口只接受发送给自己MAC地址的报文。</li>
+<li>Passthru: 父接口和相应的MacVLAN接口捆绑在一起，这种模式每个父接口只能和一个 Macvlan 虚拟网卡接口进行捆绑，并且 Macvlan 虚拟网卡接口继承父接口的 MAC 地址。</li>
+</ul>
+<p>前三种模式示意图:</p>
+<p><img alt="image" data-src="https://img2018.cnblogs.com/blog/1003074/201908/1003074-20190818212117123-110105023.png"></p>
+<h3 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h3><p>Bridge Mode:创建了两个macvlan接口，分别放到两个netns中；然后验证这两个macvlan口之间客户互通。</p>
+<p>设置网卡混杂模式(PROMISC网卡混杂标志)：</p>
+<figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[root<span class="meta">@localhost</span> ~]<span class="comment">#ifconfig ens224 promisc</span></span><br><span class="line">[root<span class="meta">@localhost</span> ~]<span class="comment"># ifconfig ens224</span></span><br><span class="line">ens224: flags=4419<span class="variable">&lt;UP,BROADCAST,RUNNING,**PROMISC**,MULTICAST&gt;</span> mtu 1500</span><br></pre></td></tr></table></figure>
+<p>创建两个macvlan接口，其parent接口都是ens224</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@localhost ~]#<span class="built_in"> ip </span>link <span class="builtin-name">add</span> link ens224 name macv1<span class="built_in"> type </span>macvlan mode bridge</span><br><span class="line">[root@localhost ~]#<span class="built_in"> ip </span>link <span class="builtin-name">add</span> link ens224 name macv2<span class="built_in"> type </span>macvlan mode bridge</span><br></pre></td></tr></table></figure>
+<p>查看接口状态:</p>
+<p><a href="https://img2018.cnblogs.com/blog/1003074/201908/1003074-20190818212124738-783912216.png" target="_blank" rel="external nofollow noopener noreferrer"><img alt="image" data-src="https://img2018.cnblogs.com/blog/1003074/201908/1003074-20190818212132522-51828271.png"></a></p>
+<p>创建namespace<br>[root@localhost ~]# ip netns add net1<br>[root@localhost ~]# ip netns add net2</p>
+<p>将macvlan接口插入到namespace<br>[root@localhost ~]# ip link set macv1 netns net1<br>[root@localhost ~]# ip link set macv2 netns net2</p>
+<p>设置网卡IP,设置网卡UP状态<br>ip netns exec net1 ip addr add 52.1.1.151/24 dev macv1<br>ip netns exec net2 ip addr add 52.1.1.152/24 dev macv2</p>
+<p>设置网卡IP,设置网卡UP状态<br>[root@localhost ~]#ip netns exec net1 ip addr add 52.1.1.151/24 dev macv1<br>[root@localhost ~]#ip netns exec net2 ip addr add 52.1.1.152/24 dev macv2<br>[root@localhost ~]#ip netns exec net1 ip link set macv1 up<br>[root@localhost ~]#ip netns exec net2 ip link set macv2 up</p>
+<p>查看网卡状态</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">[root@localhost ~]#<span class="built_in"> ip </span>netns exec net1<span class="built_in"> ip </span>a</span><br><span class="line">1: lo: &lt;LOOPBACK&gt; mtu 65536 qdisc noop state DOWN<span class="built_in"> group default </span>qlen 1000</span><br><span class="line">   link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00</span><br><span class="line">4: macv1@if3: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UNKNOWN<span class="built_in"> group default </span>qlen 1000</span><br><span class="line">   link/ether 4e:a1:51:a9:3f:ef brd ff:ff:ff:ff:ff:ff link-netnsid 0</span><br><span class="line">   inet 52.1.1.151/24 scope global eth0</span><br><span class="line">   valid_lft forever preferred_lft forever</span><br><span class="line">[root@localhost ~]#<span class="built_in"> ip </span>netns exec net2<span class="built_in"> ip </span>a</span><br><span class="line">1: lo: &lt;LOOPBACK&gt; mtu 65536 qdisc noop state DOWN<span class="built_in"> group default </span>qlen 1000</span><br><span class="line">   link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00</span><br><span class="line">5: macv2@if3: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UNKNOWN<span class="built_in"> group default </span>qlen 1000</span><br><span class="line">   link/ether fe:b5:85:c1:77:c1 brd ff:ff:ff:ff:ff:ff link-netnsid 0</span><br><span class="line">   inet 52.1.1.152/24 scope global macv2</span><br><span class="line">   valid_lft forever preferred_lft forever</span><br></pre></td></tr></table></figure>
+<p>ping测试结果:<br>net1和net2无法ping通宿主机,ping自己也不通.2个容器互相ping没有问题</p>
+<p>更改容器内网卡名字</p>
+<p>ip netns exec net1 ip link set mac1 name eth0</p>
+<h2 id="IPVLAN"><a href="#IPVLAN" class="headerlink" title="IPVLAN"></a>IPVLAN</h2><p>IPVlan 和 macvlan 类似，都是从一个主机接口虚拟出多个虚拟网络接口。一个重要的区别就是所有的虚拟接口都有相同的 macv 地址，而拥有不同的 ip 地址。因为所有的虚拟接口要共享 mac 地址，所有有些需要注意的地方：</p>
+<ul>
+<li>DHCP 协议分配 ip 的时候一般会用 mac 地址作为机器的标识。这个情况下，客户端动态获取 ip 的时候需要配置唯一的 ClientID 字段，并且 DHCP server 也要正确配置使用该字段作为机器标识，而不是使用 mac 地址 </li>
+</ul>
+<blockquote>
+<p> Ipvlan 是 linux kernel 比较新的特性，linux kernel 3.19 开始支持 ipvlan，但是比较稳定推荐的版本是 &gt;=4.2（因为 docker 对之前版本的支持有 bug）,具体代码见内核目录：<code>/drivers/net/ipvlan/</code></p>
+</blockquote>
+<h3 id="ipvlan模式"><a href="#ipvlan模式" class="headerlink" title="ipvlan模式"></a>ipvlan模式</h3><p>L2:</p>
+<p>ipvlan L2 模式和 macvlan bridge 模式工作原理很相似，父接口作为交换机来转发子接口的数据。同一个网络的子接口可以通过父接口来转发数据，而如果想发送到其他网络，报文则会通过父接口的路由转发出去。</p>
+<p>L3:</p>
+<p>ipvlan 有点像路由器的功能，它在各个虚拟网络和主机网络之间进行不同网络报文的路由转发工作。只要父接口相同，即使虚拟机/容器不在同一个网络，也可以互相 ping 通对方，因为 ipvlan 会在中间做报文的转发工作。</p>
+<p>模式架构图:</p>
+<p><a href="https://img2018.cnblogs.com/blog/1003074/201908/1003074-20190818212141511-935245092.png" target="_blank" rel="external nofollow noopener noreferrer"><img alt="image" data-src="https://img2018.cnblogs.com/blog/1003074/201908/1003074-20190818212148493-1847024907.png"></a></p>
+<h3 id="实验-1"><a href="#实验-1" class="headerlink" title="实验"></a>实验</h3><p>创建IPVlan L3模式<br>[root@localhost ~]#ip link add link ens224 ipvlan1 type ipvlan mode l3<br>[root@localhost ~]#ip link add link ens224 ipvlan2 type ipvlan mode l3</p>
+<p>注意看ipvlan1 和ipvlan2 的MAC地址跟ens224的一样<br>[root@localhost ~]# ip link<br>1: lo: <loopback,up,lower_up> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000<br>   link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00<br>2: ens192: <broadcast,multicast,up,lower_up> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000<br>   link/ether 00:0c:29:05:18:ac brd ff:ff:ff:ff:ff:ff<br>3: ens224: <broadcast,multicast,up,lower_up> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000<br>   link/ether <strong>00:0c:29:05:18:b6</strong> brd ff:ff:ff:ff:ff:ff<br>4: ipvlan1@enp0s3: <broadcast,multicast> mtu 1500 qdisc noop state DOWN group default qlen 1000<br>   link/ether <strong>00:0c:29:05:18:b6</strong> brd ff:ff:ff:ff:ff:ff<br>5: ipvlan2@enp0s3: <broadcast,multicast> mtu 1500 qdisc noop state DOWN group default qlen 1000<br>   link/ether <strong>00:0c:29:05:18:b6</strong> brd ff:ff:ff:ff:ff:ff</broadcast,multicast></broadcast,multicast></broadcast,multicast,up,lower_up></broadcast,multicast,up,lower_up></loopback,up,lower_up></p>
+<p>创建ns绑定接口</p>
+<p>[root@localhost ~]#ip net add net-1<br>[root@localhost ~]#ip net add net-2<br>[root@localhost ~]#ip link set ipvlan1 netns net-1<br>[root@localhost ~]#ip link set ipvlan2 netns net-2</p>
+<p>配置IP<br>[root@localhost ~]#ip net exec net-1 ip addr add 10.0.2.18/24 dev ipvlan1<br>[root@localhost ~]#ip net exec net-2 ip addr add 10.0.3.19/24 dev ipvlan2<br>[root@localhost ~]#ip net exec net-1 ip link set ipvlan1 up<br>[root@localhost ~]#ip net exec net-2 ip link set ipvlan2 up</p>
+<p>增加路由<br>[root@localhost ~]#ip net exec net-1 route add default dev ipvlan1<br>[root@localhost ~]#ip net exec net-2 route add default dev ipvlan2</p>
+<p>ping测试<br>2个ns可以正常互相ping通,无法ping通宿主机IP</p>
+<p>抓取ARP报文，结果无法在L3模式中抓到ARP，说明二层广播和组播都不处理，工作在L3.(这就是和L2模式的区别)<br>[root@localhost ~]#ip net exec net-1 tcpdump -ni ipvlan1 -p arp</p>
+<p>创建L2模式，其余操作跟L3一样<br>ip link add link enp0s3 ipvlan1 type ipvlan mode l2<br>ip link add link enp0s3 ipvlan2 type ipvlan mode l2</p>
+<p>区别在于L2可以在2个ns中抓取到ARP报文</p>
+<p>总结:<br>    ipvlan L3模式中外部网络默认情况下是不知道 ipvlan 虚拟出来的网络的，如果不在外部路由器上配置好对应的路由规则，ipvlan 的网络是不能被外部直接访问的。</p>
 <h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
 <li><a href="https://ring0.me/2014/02/network-virtualization-techniques/" target="_blank" rel="external nofollow noopener noreferrer">https://ring0.me/2014/02/network-virtualization-techniques/</a></li>
 <li><a href="https://backreference.org/2010/03/26/tuntap-interface-tutorial/" target="_blank" rel="external nofollow noopener noreferrer">https://backreference.org/2010/03/26/tuntap-interface-tutorial/</a></li>
@@ -563,19 +741,19 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/3675eff/" rel="bookmark">半虚拟化 I/O 框架 virtio</a></div>
+    </li>
+    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/ccdd2b68/" rel="bookmark">macOS 使用 Vagrant 管理虚拟机</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/65866329/" rel="bookmark">虚拟化技术概览</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/4e8612ed/" rel="bookmark">【异构计算】NVIDIA GPU MIG</a></div>
-    </li>
-    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/6e1a1f6e/" rel="bookmark">【异构计算】GPU 虚拟化</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/941301e/" rel="bookmark">Linux网络包收发流程</a></div>
+      <div class="popular-posts-title"><a href="/posts/4e8612ed/" rel="bookmark">【异构计算】NVIDIA GPU MIG</a></div>
     </li>
   </ul>
 
@@ -637,8 +815,8 @@
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
-                <a href="/posts/3675eff/" rel="prev" title="virtio">
-                  virtio <i class="fa fa-chevron-right"></i>
+                <a href="/posts/3675eff/" rel="prev" title="半虚拟化 I/O 框架 virtio">
+                  半虚拟化 I/O 框架 virtio <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>
@@ -679,7 +857,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#网络虚拟化"><span class="nav-number">1.</span> <span class="nav-text">网络虚拟化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#传统网络架构"><span class="nav-number">1.1.</span> <span class="nav-text">传统网络架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟化网络架构"><span class="nav-number">1.2.</span> <span class="nav-text">虚拟化网络架构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NAT"><span class="nav-number">2.</span> <span class="nav-text">NAT</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Tun-Tap"><span class="nav-number">3.</span> <span class="nav-text">Tun/Tap</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#代码示例"><span class="nav-number">3.1.</span> <span class="nav-text">代码示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟设备演示"><span class="nav-number">3.2.</span> <span class="nav-text">虚拟设备演示</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Veth"><span class="nav-number">4.</span> <span class="nav-text">Veth</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bridge"><span class="nav-number">5.</span> <span class="nav-text">Bridge</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VxLAN"><span class="nav-number">6.</span> <span class="nav-text">VxLAN</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IPIP"><span class="nav-number">7.</span> <span class="nav-text">IPIP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#IPIP隧道"><span class="nav-number">7.1.</span> <span class="nav-text">IPIP隧道</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#one-to-one"><span class="nav-number">7.2.</span> <span class="nav-text">one-to-one</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#one-to-many"><span class="nav-number">7.3.</span> <span class="nav-text">one-to-many</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#under-the-hood"><span class="nav-number">7.4.</span> <span class="nav-text">under the hood</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">8.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#网络虚拟化"><span class="nav-number">1.</span> <span class="nav-text">网络虚拟化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#传统网络架构"><span class="nav-number">1.1.</span> <span class="nav-text">传统网络架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟化网络架构"><span class="nav-number">1.2.</span> <span class="nav-text">虚拟化网络架构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NAT"><span class="nav-number">2.</span> <span class="nav-text">NAT</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Tun-Tap"><span class="nav-number">3.</span> <span class="nav-text">Tun/Tap</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#代码示例"><span class="nav-number">3.1.</span> <span class="nav-text">代码示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟设备演示"><span class="nav-number">3.2.</span> <span class="nav-text">虚拟设备演示</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Veth"><span class="nav-number">4.</span> <span class="nav-text">Veth</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bridge"><span class="nav-number">5.</span> <span class="nav-text">Bridge</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IPIP"><span class="nav-number">6.</span> <span class="nav-text">IPIP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#IPIP隧道"><span class="nav-number">6.1.</span> <span class="nav-text">IPIP隧道</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#one-to-one"><span class="nav-number">6.2.</span> <span class="nav-text">one-to-one</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#one-to-many"><span class="nav-number">6.3.</span> <span class="nav-text">one-to-many</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#under-the-hood"><span class="nav-number">6.4.</span> <span class="nav-text">under the hood</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VLAN"><span class="nav-number">7.</span> <span class="nav-text">VLAN</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VxLAN"><span class="nav-number">8.</span> <span class="nav-text">VxLAN</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#VXLAN-模型"><span class="nav-number">8.1.</span> <span class="nav-text">VXLAN 模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#VXLAN-报文解析"><span class="nav-number">8.2.</span> <span class="nav-text">VXLAN 报文解析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#vxlan-网络通信过程"><span class="nav-number">8.3.</span> <span class="nav-text">vxlan 网络通信过程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#多播"><span class="nav-number">8.3.1.</span> <span class="nav-text">多播</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分布式控制中心"><span class="nav-number">8.3.2.</span> <span class="nav-text">分布式控制中心</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#vxlan-网络带来新的问题"><span class="nav-number">8.4.</span> <span class="nav-text">vxlan 网络带来新的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#额外的报文和计算"><span class="nav-number">8.4.1.</span> <span class="nav-text">额外的报文和计算</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#复杂度"><span class="nav-number">8.4.2.</span> <span class="nav-text">复杂度</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MACVLAN"><span class="nav-number">9.</span> <span class="nav-text">MACVLAN</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#工作模式-Bridge-VS-MACVlan"><span class="nav-number">9.1.</span> <span class="nav-text">工作模式(Bridge VS MACVlan)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MACVlan模式"><span class="nav-number">9.2.</span> <span class="nav-text">MACVlan模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实验"><span class="nav-number">9.3.</span> <span class="nav-text">实验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IPVLAN"><span class="nav-number">10.</span> <span class="nav-text">IPVLAN</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ipvlan模式"><span class="nav-number">10.1.</span> <span class="nav-text">ipvlan模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实验-1"><span class="nav-number">10.2.</span> <span class="nav-text">实验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">11.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -694,7 +872,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">154</span>
+          <span class="site-state-item-count">157</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -706,7 +884,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">219</span>
+        <span class="site-state-item-count">222</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -780,7 +958,7 @@
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">56:29</span>
+    <span title="站点阅读时长">58:15</span>
 </div>
 
         

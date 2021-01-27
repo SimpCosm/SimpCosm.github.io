@@ -55,13 +55,15 @@
   };
 </script>
 
-  <meta name="keywords" content="k8s,scheduler,framework">
+  <meta name="description" content="本文介绍了 Scheduler Framework Plugin 的原理与实现。">
+<meta name="keywords" content="k8s,scheduler,framework">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Kubernetes】Scheduler Framework Plugin">
 <meta property="og:url" content="http://houmin.cc/posts/c76a4acd/index.html">
 <meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="本文介绍了 Scheduler Framework Plugin 的原理与实现。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-12-11T03:03:07.699Z">
+<meta property="og:updated_time" content="2021-01-27T09:47:07.318Z">
 <meta name="twitter:card" content="summary">
 
 <link rel="canonical" href="http://houmin.cc/posts/c76a4acd/">
@@ -297,7 +299,7 @@
                 <i class="fa fa-file-word-o"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>0</span>
+              <span>36</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
@@ -316,7 +318,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        
+        <p>本文介绍了 <code>Scheduler Framework Plugin</code> 的原理与实现。</p>
+<a id="more"></a>
     </div>
 
     
@@ -332,13 +335,13 @@
       <div class="popular-posts-title"><a href="/posts/3bc1a603/" rel="bookmark">【Kubernetes】ApiServer 启动分析</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes】Scheduling Strategy</a></div>
-    </li>
-    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/4dfc7d29/" rel="bookmark">【Kubernetes】Scheduler Events</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/cd171e18/" rel="bookmark">【Kubernetes】Scheduler Extender</a></div>
+      <div class="popular-posts-title"><a href="/posts/b130e91a/" rel="bookmark">【Kubernetes】Scheduling Strategy</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/19ee095/" rel="bookmark">【Kubernetes】Coscheduling</a></div>
     </li>
   </ul>
 
@@ -457,7 +460,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">154</span>
+          <span class="site-state-item-count">157</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -469,7 +472,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">219</span>
+        <span class="site-state-item-count">222</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -543,7 +546,7 @@
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">56:29</span>
+    <span title="站点阅读时长">58:15</span>
 </div>
 
         

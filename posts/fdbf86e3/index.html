@@ -69,7 +69,7 @@
 <meta property="og:image" content="https://i.loli.net/2020/02/06/GHx9uAwfB1gIZby.gif">
 <meta property="og:image" content="https://i.loli.net/2020/02/06/U4hore5AYECQSpW.gif">
 <meta property="og:image" content="https://i.loli.net/2020/02/06/tl49uMmabT2fXpd.gif">
-<meta property="og:updated_time" content="2020-11-27T03:26:43.641Z">
+<meta property="og:updated_time" content="2021-01-25T12:50:53.850Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://i.loli.net/2020/02/06/qjRy3SpGvOfxWIA.png">
 
@@ -386,7 +386,42 @@
 <li><strong>Calico</strong>主要是采用了修改主机路由，节点之间采用BGP的协议去进行路由的同步。但是现实中的网络并不总是支持BGP路由的，因此Calico也支持内核中的IPIP模式，使用overlay的方式来传输数据；</li>
 </ul>
 <p>下表是几种主流Kubernetes网络方案的对比：</p>
-<p>| A | Overlay-Network | Host-RouteTable | NetworkPolicy Support | Decentralized IP Allocation | | – | — | — | — | — | | Flannel | UDP/VXLAN | Host-GW | N | N | | Weave | UDP/VXLAN | N/A | Y | Y | | Calico | IPIP | BGP | Y | N |</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>A</th>
+<th>Overlay-Network</th>
+<th>Host-RouteTable</th>
+<th>NetworkPolicy Support</th>
+<th>Decentralized IP Allocation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Flannel</td>
+<td>UDP/VXLAN</td>
+<td>Host-GW</td>
+<td>N</td>
+<td>N</td>
+</tr>
+<tr>
+<td>Weave</td>
+<td>UDP/VXLAN</td>
+<td>N/A</td>
+<td>Y</td>
+<td>Y</td>
+</tr>
+<tr>
+<td>Calico</td>
+<td>IPIP</td>
+<td>BGP</td>
+<td>Y</td>
+<td>N</td>
+</tr>
+</tbody>
+</table>
+</div>
 <h2 id="策略控制-Network-Policy"><a href="#策略控制-Network-Policy" class="headerlink" title="策略控制(Network Policy)"></a>策略控制(Network Policy)</h2><p>Network Policy)是Kubernetes提供的基于策略的网络控制，用于隔离应用并提高安全性。它使用Kubernetes中常用的标签选择器模拟传统的分段网络，并通过策略控制它们之间的东西流量以及与外部交流的南北流量。</p>
 <blockquote>
 <p>Note: 确保使用的网络插件支持策略控制(Network Policy)，比如Flannel就没有实现Network Policy；</p>
@@ -419,10 +454,10 @@
       <div class="popular-posts-title"><a href="/posts/c425bfaf/" rel="bookmark">【Kubernetes】Network Policy</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/8dfd4de5/" rel="bookmark">【Kubernetes】Ingress</a></div>
+      <div class="popular-posts-title"><a href="/posts/cfed77f0/" rel="bookmark">【Kubernetes】Service</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/cfed77f0/" rel="bookmark">【Kubernetes】Service</a></div>
+      <div class="popular-posts-title"><a href="/posts/8dfd4de5/" rel="bookmark">【Kubernetes】Ingress</a></div>
     </li>
   </ul>
 
@@ -543,7 +578,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">154</span>
+          <span class="site-state-item-count">157</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -555,7 +590,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">219</span>
+        <span class="site-state-item-count">222</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -629,7 +664,7 @@
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">56:29</span>
+    <span title="站点阅读时长">58:15</span>
 </div>
 
         
