@@ -55,24 +55,22 @@
   };
 </script>
 
-  <meta name="description" content="依赖管理机制软件包管理问题，难点，其他语言是怎么做的，Go语言怎么演进的？ An explicit goal for Go from the beginning was to be able to build Go code using only the information found in the source itself, not needing to write a makefile">
+  <meta name="description" content="依赖管理是每一种编程语言无法避免的一个问题，在一个复杂的项目中如何管理其依赖的软件版本，如何避免 「菱形依赖」 ，如何实现 Reproducible Build，如何实现依赖软件版本的平稳升级，都是在大型软件工程中需要正视和解决的问题。从 Java 的 Maven，到 Rust 的 Cargo，再到 NodeJS 的 npm，各个语言都给出了自己的解决方案。对于 Go 语言，从最早的 GOPATH">
 <meta name="keywords" content="Go,Dependency Management,Package Management">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Go语言设计与实现】Go Module">
 <meta property="og:url" content="http://houmin.cc/posts/55d129f1/index.html">
 <meta property="og:site_name" content="Houmin">
-<meta property="og:description" content="依赖管理机制软件包管理问题，难点，其他语言是怎么做的，Go语言怎么演进的？ An explicit goal for Go from the beginning was to be able to build Go code using only the information found in the source itself, not needing to write a makefile">
+<meta property="og:description" content="依赖管理是每一种编程语言无法避免的一个问题，在一个复杂的项目中如何管理其依赖的软件版本，如何避免 「菱形依赖」 ，如何实现 Reproducible Build，如何实现依赖软件版本的平稳升级，都是在大型软件工程中需要正视和解决的问题。从 Java 的 Maven，到 Rust 的 Cargo，再到 NodeJS 的 npm，各个语言都给出了自己的解决方案。对于 Go 语言，从最早的 GOPATH">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://tonybai.com/wp-content/uploads/google-trunk-based-and-release-branch-dev-model.png">
-<meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/9/28/16d76259e2243468">
-<meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/9/28/16d76259e244d232">
-<meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/9/28/16d76260c9b62f20">
-<meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/9/28/16d7626035b57218?imageView2">
-<meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/9/28/16d7625ca879e03a">
-<meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/9/28/16d76270adc1426d">
-<meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/9/28/16d7625ce242f466">
-<meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/9/28/16d7625db94698c1">
-<meta property="og:updated_time" content="2020-10-24T11:34:11.394Z">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-06_go-mod-impver.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-06_go-mod-version-select.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-06_go-mod-version-select-list.png">
+<meta property="og:image" content="https://xuanwo.io/2019/05/27/go-modules/version-select-list.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02_05_go-module-proxy-life-of-a-query.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-05_go-module-sumdb.png">
+<meta property="og:updated_time" content="2021-02-06T15:30:56.046Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://tonybai.com/wp-content/uploads/google-trunk-based-and-release-branch-dev-model.png">
 
@@ -309,14 +307,14 @@
                 <i class="fa fa-file-word-o"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>13k</span>
+              <span>15k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>24 分钟</span>
+              <span>27 分钟</span>
             </span>
 
         </div>
@@ -328,207 +326,292 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h2 id="依赖管理机制"><a href="#依赖管理机制" class="headerlink" title="依赖管理机制"></a>依赖管理机制</h2><p>软件包管理问题，难点，其他语言是怎么做的，Go语言怎么演进的？</p><blockquote>
-<p>An explicit goal for Go from the beginning was to be able to build Go code using only the information found in the source itself, not needing to write a makefile or one of the many modern replacements for makefiles. If Go needed a configuration file to explain how to build your program, then Go would have failed.</p>
-</blockquote><a id="more"></a>
-
-<h3 id="GOPATH"><a href="#GOPATH" class="headerlink" title="GOPATH"></a>GOPATH</h3><p>Go 的包管理方式是逐渐演进的， 最初是 monorepo 模式，所有的包都放在 GOPATH 里面，使用类似命名空间的包路径区分包，不过这种包管理显然是有问题，由于包依赖可能会引入破坏性更新，生产环境和测试环境会出现运行不一致的问题。</p>
-<p>Go在构建设计方面深受Google内部开发实践的影响，比如go get的设计就深受<a href="https://cacm.acm.org/magazines/2016/7/204032-why-google-stores-billions-of-lines-of-code-in-a-single-repository/pdf" target="_blank" rel="external nofollow noopener noreferrer">Google内部单一代码仓库(single monorepo)和基于主干(trunk/mainline based)的开发模型</a>的影响：只获取Trunk/mainline代码和版本无感知。</p>
-<p><img alt data-src="https://tonybai.com/wp-content/uploads/google-trunk-based-and-release-branch-dev-model.png"></p>
-<blockquote>
-<p>Google内部基于主干的开发模型：<br>– 所有开发人员基于主干trunk/mainline开发：提交到trunk或从trunk获取最新的代码（同步到本地workspace）<br>– 版本发布时，建立Release branch，release branch实质上就是某一个时刻主干代码的快照；<br>– 必须同步到release branch上的bug fix和增强改进代码也通常是先在主干上提交(commit)，然后再cherry-pick到release branch上</p>
-</blockquote>
-<p>我们知道go get获取的代码会放在<code>$GOPATH/src</code>下面，而go build会在<code>$GOROOT/src</code>和 <code>$GOPATH/src</code>下面按照import path去搜索package，由于go get 获取的都是各个package repo的trunk/mainline的代码，因此，<a href="https://tonybai.com/2015/07/10/some-changes-in-go-1-5/" target="_blank" rel="external nofollow noopener noreferrer">Go 1.5</a>之前的Go compiler都是基于目标Go程序依赖包的trunk/mainline代码去编译的。这样的机制带来的问题是显而易见的，至少包括：</p>
+        <p>依赖管理是每一种编程语言无法避免的一个问题，在一个复杂的项目中如何管理其依赖的软件版本，如何避免 <a href="https://en.wikipedia.org/wiki/Dependency_hell" target="_blank" rel="external nofollow noopener noreferrer">「菱形依赖」</a> ，如何实现 <code>Reproducible Build</code>，如何实现依赖软件版本的平稳升级，都是在大型软件工程中需要正视和解决的问题。从 Java 的 Maven，到 Rust 的 Cargo，再到 NodeJS 的 npm，各个语言都给出了自己的解决方案。对于 Go 语言，从最早的 <code>GOPATH</code>，到 Go 1.5 版本引入的 <code>vendor</code> 机制，以及基于 <code>vendor</code> 实现的 <code>dep</code>、<code>glide</code>、<code>govendor</code> 关键管理工具，各种问题依然存在。<code>Go Team</code> 在 Go 1.11 版本推出 <code>Go Module</code>，抛弃了 <code>GOPATH</code> 以来的设计，引入版本化语义、支持锁定版本等特性。本文将介绍 Go 语言在依赖管理问题上的来龙去脉，并介绍 <code>Go Module</code> 的设计原理与使用方法。</p>
+<a id="more"></a>
+<h2 id="依赖管理"><a href="#依赖管理" class="headerlink" title="依赖管理"></a>依赖管理</h2><p>为什么需要依赖？永远不要重复造轮子，你也不需要重复造轮子，通过复用已有的工作成果可以大大提高工作效率。然而，将已有的工作成果加入到我们自己的项目中作为依赖存在着太多的不确定性：</p>
 <ul>
-<li>因依赖包的trunk的变化，导致不同人获取和编译你的包/程序时得到的结果实质是不同的，即不能实现reproduceable build</li>
-<li>因依赖包的trunk的变化，引入不兼容的实现，导致你的包/程序无法通过编译</li>
-<li>因依赖包演进而无法通过编译，导致你的包/程序无法通过编译</li>
+<li>这个包的 API 会变化</li>
+<li>这个包内部行为会变化</li>
+<li>这个包自己的依赖会变化</li>
+<li>这个包可能已经已经不存在或无法访问</li>
+<li>包与包之间的不同依赖相互冲突等等。</li>
 </ul>
-<h3 id="Vendor"><a href="#Vendor" class="headerlink" title="Vendor"></a>Vendor</h3><p>为了实现reporduceable build，Go 1.5引入了<a href="https://tonybai.com/2015/07/31/understand-go15-vendor/" target="_blank" rel="external nofollow noopener noreferrer">Vendor机制</a>，Go编译器会优先在vendor下搜索依赖的第三方包，这样如果开发者将特定版本的依赖包存放在vendor下面并提交到code repo，那么所有人理论上都会得到同样的编译结果，从而实现reporduceable build。</p>
-<p>在Go 1.5发布后的若干年，gopher们把注意力都集中在如何利用vendor解决包依赖问题，从手工添加依赖到vendor、手工更新依赖，到一众包依赖管理工具的诞生：比如: <a href="https://github.com/kardianos/govendor" target="_blank" rel="external nofollow noopener noreferrer">govendor</a>、<a href="https://github.com/Masterminds/glide" target="_blank" rel="external nofollow noopener noreferrer">glide</a>以及号称准官方工具的<a href="https://github.com/golang/dep" target="_blank" rel="external nofollow noopener noreferrer">dep</a>，努力地尝试着按照当今主流思路解决着诸如：<code>菱形依赖</code>等难题。</p>
-<p>正当gopher认为dep将“顺理成章”地升级为go toolchain一部分的时候，vgo横空出世，并通过对<code>Semantic Import Versioning</code> 和 <code>Minimal Version Selected</code>的设定，在原 Go tools上简单快速地实现了Go原生的包依赖管理方案，vgo就是go module的前身。</p>
-<h3 id="Go-Module"><a href="#Go-Module" class="headerlink" title="Go Module"></a>Go Module</h3><p>不过官方并不认同这种方式，在 v1.11 中加入了 Go Module 作为官方包管理形式，就这样 dep 无奈的结束了使命。最初的 Go Module 提案的名称叫做 vgo，下面为了介绍简称为 gomod。不过在 v1.11 和 v1.12 的 Go 版本中 gomod 是不能直接使用的。可以通过 <code>go env</code> 命令返回值的 <code>GOMOD</code> 字段是否为空来判断是否已经开启了 gomod，如果没有开启，可以通过设置环境变量 <code>export GO111MODULE=on</code> 开启。</p>
-<p>目前 gomod 在 Go v1.12 功能基本稳定，到下一个版本 v1.13 将默认开启，是时候开始在项目中使用 gomod 了。</p>
-<p>自从 Go 官方从去年推出 1.11 之后，增加新的依赖管理模块并且更加易于管理项目中所需要的模块。模块是存储在文件树中的 Go 包的集合，其根目录中包含 go.mod 文件。 go.mod 文件定义了模块的模块路径，它也是用于根目录的导入路径，以及它的依赖性要求。每个依赖性要求都被写为模块路径和特定语义版本。</p>
-<p>从 Go 1.11 开始，Go 允许在 <code>$GOPATH/src</code> 外的任何目录下使用 go.mod 创建项目。在<code>$GOPATH/src</code> 中，为了兼容性，Go 命令仍然在旧的 GOPATH 模式下运行。从 Go 1.13 开始，模块模式将成为默认模式。</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Example"><a href="#Example" class="headerlink" title="Example"></a>Example</h3><p>你可以在 $GOPATH/src 之外的任何地方创建一个新的目录：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ mkdir -p /tmp/scratchpad/repo &amp;&amp; <span class="built_in">cd</span> /tmp/scratchpad/repo</span><br></pre></td></tr></table></figure>
-<p>初始化一个新的模块</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ go mod init github.com/SimpCosm/repo</span><br><span class="line">go: creating new go.mod: module github.com/SimpCosm/repo</span><br></pre></td></tr></table></figure>
+<p>不仅如此，随着软件开发规模的逐步增大，涉及到的外部依赖越来越多，手动管理的所有依赖愈发不可能。所以我们需要依赖管理，我们需要有个工具或者规范来描述和定义包与包之间的依赖关系，并自动化的去处理、解析和满足这些依赖。对于软件依赖管理工具，我们提出了下面两个要求：</p>
+<ul>
+<li>API 稳定性：我们都希望我们依赖的 API 是稳定的，不会因为我们更新了一个小版本就要大规模的重写我们的代码</li>
+<li>可重现构建：相同的源码最后能得到同样的二进制或链接库</li>
+</ul>
+<h3 id="GOPATH"><a href="#GOPATH" class="headerlink" title="GOPATH"></a>GOPATH</h3><p>最初 Go 语言在代码构建设计方面深受Google内部开发实践的影响，这篇文章介绍了 <a href="https://cacm.acm.org/magazines/2016/7/204032-why-google-stores-billions-of-lines-of-code-in-a-single-repository/pdf" target="_blank" rel="external nofollow noopener noreferrer">为什么 Google 要采取这种方式</a>：</p>
+<ul>
+<li>单一代码库：所有的代码包都放在一个单一代码仓库，也即 <code>Single MonoRepo</code>，使用类似命名空间的包路径来区分包</li>
+<li>基于主干开发：所有开发人员基于主干 <code>trunk/mainline</code> 开发，版本发布时所有的<code>bug/fix</code>和增强改进代码都是现在主干代码提交，然后从主干代码 <code>cherry-pick</code>出来一个 <code>release branch</code></li>
+</ul>
+<p><img alt data-src="https://tonybai.com/wp-content/uploads/google-trunk-based-and-release-branch-dev-model.png"></p>
+<p>对应于这种方式，Go 语言设置了 <code>GOPATH</code> 机制: 所有的源代码都在 <code>$GOPATH/src</code> 目录下，执行 <code>go build</code> 会分别在 <code>$GOPATH/pkg</code> 目录下生成编译中间文件和在 <code>$GOPATH/bin</code> 目录下生成可执行文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">.</span><br><span class="line">├── bin <span class="comment"># 放编译后的可执行文件，可执行文件名字与源代码文件名字一样</span></span><br><span class="line">├── pkg <span class="comment"># 放编译后的包文件，包文件名字与所在目录一样，注意：名字与 package 无关</span></span><br><span class="line">└── src <span class="comment"># 放源代码文件</span></span><br><span class="line">  └── github.com/foo/bar</span><br><span class="line">    └── bar.go</span><br></pre></td></tr></table></figure>
+<p>在这种构建方式下，<code>go build</code> 会在<code>$GOROOT/src</code>和 <code>$GOPATH/src</code>下面按照 <code>import path</code> 去搜索package，由于go get 获取的都是各个package repo的 <code>trunk/mainline</code>的代码，因此，Go 1.5 之前的 Go compiler 都是基于目标Go程序依赖包的<code>trunk/mainline</code> 代码去编译的。这种构建方式至少存在以下问题：</p>
+<ul>
+<li><strong>对软件包版本无感知</strong>：<code>go get</code> 拉取软件包时，每次都是get最新的代码，这会导致不同人获取的软件包不同，从而编译的结果不一致</li>
+<li><strong>对第三方软件包没有安全审计</strong>：获取最新的代码很容易引入代码新的Bug，后续运行时出了Bug需要解决，也无法版本跟踪管理</li>
+<li><strong>依赖的完整性无法校验</strong>：基于域名的package名称，域名变化或子路径变化，都会导致无法正常下载依赖</li>
+<li><strong>依赖关系无法持久化</strong>：需要在 <code>go get</code> 的时候找出所有的依赖包，然后一个一个 <code>go get</code> </li>
+</ul>
+<p>这还只是简单的软件依赖的问题，更不用说不同项目依赖同一个项目的不同版本，以及菱形依赖的问题了。</p>
+<h3 id="Vendor"><a href="#Vendor" class="headerlink" title="Vendor"></a>Vendor</h3><p>为了实现 <code>Reproducible Build</code>，Go 1.5 引入了 Vendor 机制，Vendor 机制仍然是基于 <code>GOPATH</code> 机制，只是开发者将其依赖的包放到其工程子目录 <code>vendor</code> 目录下，有点类似于 <code>node.js</code> 的 <code>node_modules</code> ：</p>
+<ul>
+<li>vendor 机制支持嵌套 vendor，vendor中的第三方包中也可以包含vendor目录</li>
+<li>若一个工程中存在着一个包的两个不同版本，可以放在不同的层次的vendor下</li>
+</ul>
+<p>在执行 <code>go build</code> 或 <code>go run</code> 命令时，会按照以下顺序去查找包：</p>
+<ol>
+<li>如果当前目录存在vendor目录，在当前vendor目录查找依赖包</li>
+<li>如果当前目录不存在vendor目录，则到上一级目录继续查找</li>
+<li>重复步骤1-2，直到到达<code>$GOPATH/src</code>目录，查找vendor目录中是否存在依赖包</li>
+<li>如何没有查找到依赖包，则继续在<code>$GOROOT</code>目录查找</li>
+<li>如果没有查找到依赖包，则继续在<code>$GOPATH/src</code>目录查找</li>
+</ol>
+<p>在此基础上，为了让开发者从手动添加依赖、手动更新依赖的困境中摆脱出来，社区开发了一系列的第三方工具，比如 <a href="https://github.com/kardianos/govendor" target="_blank" rel="external nofollow noopener noreferrer">govendor</a>、<a href="https://github.com/Masterminds/glide" target="_blank" rel="external nofollow noopener noreferrer">glide</a> 以及号称准官方工具的<a href="https://github.com/golang/dep" target="_blank" rel="external nofollow noopener noreferrer">dep</a>。这些工具会自动分析工程项目的依赖关系，并且批量下载对应版本的代码库，并复制到项目的 vendor 目录下。这些第三方工具大大提高了方便了开发者管理依赖关系，<a href="https://github.com/golang/dep" target="_blank" rel="external nofollow noopener noreferrer">dep</a> 似乎也即将从实验状态转正。</p>
+<h3 id="Go-Module"><a href="#Go-Module" class="headerlink" title="Go Module"></a>Go Module</h3><p>然而，所有基于 vendor 机制实现的第三方依赖管理工具都存在着以下问题：</p>
+<ul>
+<li>vendor 机制是处于 <code>GOPATH</code> 体系中的，只有项目在 <code>GOPATH/src</code>下，vendor才有意义才起作用</li>
+<li>同样版本的相同软件包，即使在不同工程中都使用了，也必须在各自的 vendor 目录下单独复制一份，无法实现复用</li>
+</ul>
+<p>基于以上的种种问题的考量，社区最终放弃了 vendor 机制，提出了 Go Module 方案，从此 Go 语言项目再也不需要放在 <code>GOPATH</code> 路径下，工程依赖的软件包被统一放到 <code>$GOPATH/pkg/mod</code> 目录下，实现 import 路径与项目路径的解耦。从 Go 1.13 版本开始，Go Module 已经默认开启，</p>
+<h2 id="关键概念"><a href="#关键概念" class="headerlink" title="关键概念"></a>关键概念</h2><h3 id="Semantic-Import-Versioning"><a href="#Semantic-Import-Versioning" class="headerlink" title="Semantic Import Versioning"></a>Semantic Import Versioning</h3><p>这就为我们带来了语义导入版本控制（Semantic Import Versioning）。</p>
+<p>首先所有的模块都必须遵循语义化版本规则：</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-06_go-mod-impver.png"></p>
+<p>其次，当主版本号大于等于 <code>v2</code> 时，这个 Module 的 import path 必须在尾部加上 <code>/vN</code>。</p>
+<ul>
+<li>在 go.mod 文件中： <code>module github.com/my/mod/v2</code></li>
+<li>在 require 的时候： <code>require github.com/my/mod/v2 v2.0.0</code></li>
+<li>在 import 的时候： <code>import &quot;github.com/my/mod/v2/mypkg&quot;</code></li>
+</ul>
+<p>最后，当主版本号为 <code>v0</code> 或者 <code>v1</code> 时，尾部的 <code>/v0</code> 或 <code>/v1</code> 可以省略。</p>
+<p><strong>为什么在 import 路径可以忽略 v0 和 v1 的主版本号呢？</strong></p>
+<ul>
+<li>导入路径中忽略了 v0 版本的原因是：根据语义化版本规范，v0的这些版本完全没有兼容性保证，可以随意的引入破坏性变更，所以不需要显式的写出来</li>
+<li>导入路径中忽略 v1 版本的原因是：考虑到许多开发人员创建一旦到达 v1 版本便永不改变的软件包，这是官方所鼓励的，不认为所有这些开发人员在无意发布 v2 版时都应被迫拥有明确的 v1 版本尾缀，这将导致 v1 版本变成“噪音”且无意义。</li>
+</ul>
+<blockquote>
+<p><strong>Q：使用 Go modules 时可以同时依赖同一个模块的不同的两个或者多个小版本（修订版本号不同）吗？</strong></p>
+<p><strong>A：</strong>不可以的，Go modules 只可以同时依赖一个模块的不同的两个或者多个大版本（主版本号不同）。比如可以同时依赖 <code>example.com/foobar@v1.2.3</code> 和 <code>example.com/foobar/v2@v2.3.4</code>，因为他们的模块路径（module path）不同，Go modules 规定主版本号不是 v0 或者 v1 时，那么主版本号必须显式地出现在模块路径的尾部。但是，同时依赖两个或者多个小版本是不支持的。比如如果模块 A 同时直接依赖了模块 B 和模块 C，且模块 A 直接依赖的是模块 C 的 v1.0.0 版本，然后模块 B 直接依赖的是模块 C 的 v1.0.1 版本，那么最终 Go modules 会为模块 A 选用模块 C 的 v1.0.1 版本而不是模块 A 的 go.mod 文件中指明的 v1.0.0 版本。</p>
+<p>这是因为 Go modules 认为只要主版本号不变，那么剩下的都可以直接升级采用最新的。但是如果采用了最新的结果导致项目 Break 掉了，那么 Go modules 就会 Fallback 到上一个老的版本，比如在前面的例子中就会 Fallback 到 v1.0.0 版本。</p>
+</blockquote>
+<h3 id="Minimal-Version-Selection"><a href="#Minimal-Version-Selection" class="headerlink" title="Minimal Version Selection"></a>Minimal Version Selection</h3><p>现在我们已经可以定义出一个模块了，但是一个模块具体构建的时候到底选择是哪个版本呢？这就涉及到 Go Module 使用的最小版本选择（Minimal Version Selection）算法。它的工作方式是这样的：<strong>我们为每个模块指定的依赖都是可用于构建的最低版本，最后实际选择的版本是所有出现过的最低版本中的最大值</strong>。</p>
+<p>我们现在有这样的一个依赖关系，A 会依赖 B，C，而 B，C 会去依赖 D，D 又会依赖 E。</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-06_go-mod-version-select.png"></p>
+<p>那么我们从 A 开始把每个模块依赖的版本都找出来，这样我们会首先得到一个粗略的清单。然后相同的模块我们总是取最大的版本，这样就能得到最终的依赖列表。</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-06_go-mod-version-select-list.png"></p>
+<p><img alt data-src="https://xuanwo.io/2019/05/27/go-modules/version-select-list.png"></p>
+<p>为什么可以这样呢？</p>
+<ul>
+<li><code>导入兼容性规则</code> 规定了相同的导入路径，新包必须向后兼容旧包，因此只要 D 还是 v1 版本，不管是选择 v1.3 还是 v1.4 都是可以的，不会有破坏性的变更。</li>
+<li><code>语义导入版本控制</code> 规定了不同的大版本需要使用不同的导入路径，因此假设 D 升级到了 v2 版本，那就应当选择 <code>D v1.4</code> 和 <code>D v2.0</code> 这两个包了。</li>
+</ul>
+<p>为什么要这样做呢？</p>
+<p>为了可重现构建，为了降低复杂度。</p>
+<p>大多数包管理工具，包括 <code>dep</code>，<code>cargo</code> 和 <code>pip</code> 等，采用的都是总是选择允许的最新版本（<code>use the newest allowed version</code>）策略。这会带来两个问题：</p>
+<ul>
+<li>第一，<code>允许的最新版本</code>可能会随着外部事件而发生变化，比如说在构建的时候，依赖的一个库刚好发布了一个新版本，这会导致可重现构建失效；</li>
+<li>第二，开发者为了避免依赖在构建期间发生变化，他必须显式的告诉依赖管理工具我不要哪些版本，比如：<code>&gt;= 0.3, &lt;= 0.4</code>。这会导致依赖管理工具花费大量的时间去计算可用的版本，而最终的结果总是让人感到沮丧，A 依赖需要 <code>Z &gt;= 0.5</code> 而 B 依赖需要 <code>Z &lt;= 0.4</code>，关于这一点 Russ Cox 在 <a href="https://research.swtch.com/version-sat" target="_blank" rel="external nofollow noopener noreferrer">Version SAT</a> 给出了更加规范的论述，感兴趣的同学不妨一观。</li>
+</ul>
+<p>与总是选择允许的最新版本相反，Go Module 默认采用的是总是使用允许的最旧的版本。我们在 <code>go.mod</code> 中描述的 <code>vX.Y.Z</code> 实际上是在告诉编译器：“Hey，我最少需要 <code>vX.Y.Z</code> 才能被 Build 出来”，编译器听完了所有模块的话之后按照刚才描述的流程就能选择出允许的最旧的那个版本。</p>
+<h2 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h2><h3 id="初始化项目"><a href="#初始化项目" class="headerlink" title="初始化项目"></a>初始化项目</h3><p>你可以在 <code>$GOPATH/src</code> 之外的任何地方创建一个新的目录存放工程代码，在工程目录下初始化一个新的模块</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ go mod init github.com/SimpCosm/godemo/gomod</span><br><span class="line">go: creating new go.mod: module github.com/SimpCosm/godemo/gomod</span><br></pre></td></tr></table></figure>
 <p>成功之后你会发现目录下会生成一个 go.mod 文件。首行为当前的模块名称，接下来是 go 的使用版本。这两行和 <code>npm package.json</code> 的 <code>name</code> 和 <code>engine</code> 字段的功能很类似。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ cat go.mod</span><br><span class="line">module github.com/SimpCosm/repo</span><br><span class="line"></span><br><span class="line">go 1.14</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ cat go.mod</span><br><span class="line">module github.com/SimpCosm/godemo/gomod</span><br><span class="line"></span><br><span class="line">go 1.14</span><br></pre></td></tr></table></figure>
 <p>创建一个文件 main.go 然后加入以下代码，这里直接 import 了 Go 维护者 Russ Cox 写一个简单的库，</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"rsc.io/quote"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    fmt.Println(quote.Hello())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>编译并且运行</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ go build -o hello</span><br><span class="line">go: finding module <span class="keyword">for</span> package rsc.io/quote</span><br><span class="line">go: downloading rsc.io/quote v1.5.2</span><br><span class="line">go: found rsc.io/quote <span class="keyword">in</span> rsc.io/quote v1.5.2</span><br><span class="line">go: downloading rsc.io/sampler v1.3.0</span><br><span class="line">go: downloading golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c</span><br><span class="line">$ ./hello</span><br><span class="line">Hello, world.</span><br></pre></td></tr></table></figure>
-<p><code>go build</code> 之后，会在 go.mod 引入所需要的依赖包。之后再来看看 go.mod 文件的情况，require 就是本项目所需要的所有依赖包 并且在每个依赖包的后面已经表明了版本号。</p>
-<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">module github.com/SimpCosm/repo</span><br><span class="line"></span><br><span class="line">go <span class="number">1.14</span></span><br><span class="line"></span><br><span class="line">require rsc.io/quote v1<span class="number">.5</span><span class="number">.2</span></span><br></pre></td></tr></table></figure>
-<p>与此同时，工程目录下多了一个 <code>go.sum</code>文件，有点类似于 <code>npm package-lock.json</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ go build -o hello</span><br><span class="line">go: finding module <span class="keyword">for</span> package rsc.io/quote</span><br><span class="line">go: downloading rsc.io/quote v1.5.2</span><br><span class="line">go: found rsc.io/quote <span class="keyword">in</span> rsc.io/quote v1.5.2</span><br><span class="line">go: downloading golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c</span><br><span class="line">$ ./hello</span><br><span class="line">Hello, world.</span><br></pre></td></tr></table></figure>
+<p><code>go build</code> 之后，会在 <code>go.mod</code> 引入所需要的依赖包。之后再来看看 go.mod 文件的情况，require 就是本项目所需要的所有依赖包 并且在每个依赖包的后面已经表明了版本号。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">module github.com/SimpCosm/repo</span><br><span class="line"></span><br><span class="line"><span class="keyword">go</span> <span class="number">1.14</span></span><br><span class="line"></span><br><span class="line">require rsc.io/quote v1<span class="number">.5</span><span class="number">.2</span></span><br></pre></td></tr></table></figure>
+<h3 id="go-mod-文件解析"><a href="#go-mod-文件解析" class="headerlink" title="go.mod 文件解析"></a>go.mod 文件解析</h3><p>为了更进一步的讲解，我们摘取了 Prometheus 项目的 <code>go.mod</code> 文件的片段</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">module github.com/prometheus/prometheus</span><br><span class="line"></span><br><span class="line"><span class="keyword">go</span> <span class="number">1.14</span></span><br><span class="line"></span><br><span class="line">require (</span><br><span class="line">    github.com/Azure/azure-sdk-<span class="keyword">for</span>-<span class="keyword">go</span> v49<span class="number">.2</span><span class="number">.0</span>+incompatible</span><br><span class="line">	  github.com/Azure/<span class="keyword">go</span>-autorest/autorest/to v0<span class="number">.3</span><span class="number">.0</span> <span class="comment">// indirect</span></span><br><span class="line">	  github.com/docker/docker v20<span class="number">.10</span><span class="number">.1</span>+incompatible</span><br><span class="line">	  github.com/prometheus/client_golang v1<span class="number">.9</span><span class="number">.0</span></span><br><span class="line">	  github.com/dgryski/<span class="keyword">go</span>-sip13 v0<span class="number">.0</span><span class="number">.0</span><span class="number">-20200911182023</span><span class="number">-62</span>edffca9245</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">exclude (</span><br><span class="line">    <span class="comment">// Exclude pre-go-mod kubernetes tags, as they are older</span></span><br><span class="line">	  <span class="comment">// than v0.x releases but are picked when we update the dependencies.</span></span><br><span class="line">	  k8s.io/client-<span class="keyword">go</span> v1<span class="number">.4</span><span class="number">.0</span></span><br><span class="line">	  k8s.io/client-<span class="keyword">go</span> v1<span class="number">.4</span><span class="number">.0</span>+incompatible</span><br><span class="line">  	k8s.io/client-<span class="keyword">go</span> v10<span class="number">.0</span><span class="number">.0</span>+incompatible</span><br><span class="line">	  k8s.io/client-<span class="keyword">go</span> v11<span class="number">.0</span><span class="number">.0</span>+incompatible</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">replace (</span><br><span class="line">	k8s.io/klog =&gt; github.com/simonpasquier/klog-gokit v0<span class="number">.3</span><span class="number">.0</span></span><br><span class="line">	k8s.io/klog/v2 =&gt; github.com/simonpasquier/klog-gokit/v2 v2<span class="number">.0</span><span class="number">.1</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<ul>
+<li>module：用于定义当前项目的模块路径</li>
+<li>go：用于标识当前模块的 Go 语言版本，值为初始化模块时的版本，目前来看还只是个标识作用</li>
+<li>require：用于设置一个特定的模块版本</li>
+<li>exclude：用于从使用中排除一个特定的模块版本</li>
+<li>replace：用于将一个模块版本替换为另外一个模块版本。因为有些私有模块无法通过 <code>go get</code> 获取到，可以通过 replace 指令用本地模块替换。</li>
+</ul>
+<p>在 <code>require</code> 指令中，你会发现 <code>github.com/Azure/go-autorest/autorest/to v0.3.0</code> 的后面会有一个 <code>indirect</code> 标识，indirect 标识表示该模块为间接依赖，也就是在当前应用程序中的 import 语句中，并没有发现这个模块的明确引用，有可能是你先手动 <code>go get</code> 拉取下来的，也有可能是你所依赖的模块所依赖的，情况有好几种。</p>
+<p>另外，你也可以看到有一个 <code>+incompatible</code>后缀，这是因为引入的这个 v2+ package 还没有采用 go modules，并且其有一个有效的 <code>semver</code> tag，这时候会添加一个 <code>+incompatible</code>后缀。</p>
+<blockquote>
+<p><strong>Can a module consume a v2+ package that has not opted into modules? What does ‘+incompatible’ mean?</strong></p>
+<p>Yes, a module can import a v2+ package that has not opted into modules, and if the imported v2+ package has a valid <a href="https://semver.org/" target="_blank" rel="external nofollow noopener noreferrer">semver</a> tag, it will be recorded with a <code>+incompatible</code> suffix.</p>
+</blockquote>
+<p>我们还看到，对于 <code>github.com/dgryski/go-sip13</code> 这个项目，其版本号是 <code>v0.0.0</code> 并且后面跟随着一串时间和哈希值。这是因为这个模块还没有发布过 tag，因此它默认取的是主分支最新一次 commit 的 commit 时间和 commithash，也就是 <code>20200911182023-62edffca9245</code>。需要注意的是，所拉取版本的 commit 时间是以UTC时区为准，而并非本地时区。</p>
+<p>exclude 和 replace 这两个动词只作用于当前主模块，也就是当前项目，它所依赖的那些其他模块版本中如果出现了你待替换的那个模块版本的话，Go modules 还是会为你依赖的那个模块版本去拉取你的这个待替换的模块版本。</p>
+<p>举个例子，比如项目 A 直接依赖了模块 B 和模块 C，然后模块 B 也直接依赖了模块 C，那么你在项目 A 中的 go.mod 文件里的 <code>replace c=&gt;~/some/path/c</code> 是只会影响项目 A 里写的代码中，而模块 B 所用到的还是你 replace 之前的那个 c，并不是你替换成的 <code>~/some/path/c</code> 这个。</p>
+<h3 id="go-sum-文件解析"><a href="#go-sum-文件解析" class="headerlink" title="go.sum 文件解析"></a>go.sum 文件解析</h3><p>与此同时，工程目录下多了一个 <code>go.sum</code>文件，有点类似于 <code>npm package-lock.json</code>,其详细罗列了当前项目直接或间接依赖的所有模块版本，并写明了那些模块版本的 SHA-256 哈希值以备 Go 在今后的操作中保证项目所依赖的那些模块版本不会被篡改。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">golang.org&#x2F;x&#x2F;text v0.0.0-20170915032832-14c0d48ead0c h1:qgOY6WgZOaTkIIMiVjBQcw93ERBE4m30iBm00nkL0i8&#x3D;</span><br><span class="line">golang.org&#x2F;x&#x2F;text v0.0.0-20170915032832-14c0d48ead0c&#x2F;go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi&#x2F;IjpwHt7yyuwOQ&#x3D;</span><br><span class="line">rsc.io&#x2F;quote v1.5.2 h1:w5fcysjrx7yqtD&#x2F;aO+QwRjYZOKnaM9Uh2b40tElTs3Y&#x3D;</span><br><span class="line">rsc.io&#x2F;quote v1.5.2&#x2F;go.mod h1:LzX7hefJvL54yjefDEDHNONDjII0t9xZLPXsUe+TKr0&#x3D;</span><br><span class="line">rsc.io&#x2F;sampler v1.3.0 h1:7uVkIFmeBqHfdjD+gZwtXXI+RODJ2Wc4O7MPEh&#x2F;QiW4&#x3D;</span><br><span class="line">rsc.io&#x2F;sampler v1.3.0&#x2F;go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA&#x3D;</span><br></pre></td></tr></table></figure>
-<p>gomod 不会在 <code>$GOPATH/src</code> 目录下保存 <code>rsc.io/quote</code> 包的源码，而是包源码和链接库保存在 <code>$GOPATH/pkg/mod</code> 目录下。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ ls $GOPATH&#x2F;pkg&#x2F;mod</span><br><span class="line">cache      golang.org rsc.io</span><br></pre></td></tr></table></figure>
+<p>可以看到对于每个模块，在 <code>go.sum</code> 中会有两行信息：</p>
+<ul>
+<li>第一行信息是对于该 module 的该版本下整个 module 下所有文件得到的 hash</li>
+<li>第二行信息，也就是加上了 <code>/go.mod</code> 的 hash，是对该 module 的该版本的 <code>go.mod</code> 文件得到的 hash</li>
+<li>每个hash前面有一个 h1 的前缀，这个是以 <code>h&lt;N&gt;:</code>的模式，目前仅仅定义了 h1，使用的是 SHA-256 算法</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># format: &lt;module&gt; &lt;version&gt;[/go.mod] &lt;hash&gt;</span></span><br><span class="line">rsc.io/quote v1.5.2 h1:w5fcysjrx7yqtD/aO+QwRjYZOKnaM9Uh2b40tElTs3Y=</span><br><span class="line">rsc.io/quote v1.5.2/go.mod h1:LzX7hefJvL54yjefDEDHNONDjII0t9xZLPXsUe+TKr0=</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p><strong>Q：在 go.sum 文件中的一个模块版本的 Hash 校验数据什么情况下会成对出现，什么情况下只会存在一行？</strong></p>
+<p><strong>A：</strong>通常情况下，在 go.sum 文件中的一个模块版本的 Hash 校验数据会有两行，前一行是该模块的 ZIP 文件的 Hash 校验数据，后一行是该模块的 go.mod 文件的 Hash 校验数据。但是也有些情况下只会出现一行该模块的 go.mod 文件的 Hash 校验数据，而不包含该模块的 ZIP 文件本身的 Hash 校验数据，这个情况发生在 Go modules 判定为你当前这个项目完全用不到该模块，根本也不会下载该模块的 ZIP 文件，所以就没必要对其作出 Hash 校验保证，只需要对该模块的 go.mod 文件作出 Hash 校验保证即可，因为 go.mod 文件是用得着的，在深入挖取项目依赖的时候要用。</p>
+</blockquote>
+<h3 id="查看全局缓存"><a href="#查看全局缓存" class="headerlink" title="查看全局缓存"></a>查看全局缓存</h3><p>gomod 不会在 <code>$GOPATH/src</code> 目录下保存 <code>rsc.io/quote</code> 包的源码，而是包源码和链接库保存在 <code>$GOPATH/pkg/mod</code> 目录下。在 Go 1.15 版本后，增加了环境变量 <code>GOMODCACHE</code> 可以用来配置 module cache 存放的位置，其默认值为 <code>GOPATH[0]/pkg/mod</code>：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">mod</span></span><br><span class="line">├── <span class="selector-tag">cache</span></span><br><span class="line">├── <span class="selector-tag">github</span><span class="selector-class">.com</span></span><br><span class="line">├── <span class="selector-tag">golang</span><span class="selector-class">.org</span></span><br><span class="line">├── <span class="selector-tag">google</span><span class="selector-class">.golang</span><span class="selector-class">.org</span></span><br><span class="line">├── <span class="selector-tag">gopkg</span><span class="selector-class">.in</span></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>需要注意的是同一个模块版本的数据只缓存一份，所有其它模块共享使用。如果你希望清理所有已缓存的模块版本数据，可以执行 <code>go clean -modcache</code> 命令。</p>
 <p>除了 <code>go run</code> 命令以外，<code>go build</code>、<code>go test</code> 等命令也能自动下载相关依赖包。</p>
-<h3 id="Workflow"><a href="#Workflow" class="headerlink" title="Workflow"></a>Workflow</h3><p>可以看到，在上面的示例中完全没有使用 <code>go get</code> 命令，日常的工作流如下：</p>
+<h3 id="依赖升级"><a href="#依赖升级" class="headerlink" title="依赖升级"></a>依赖升级</h3><p>首先通过 <code>go list -u -m all</code> 命令可以查看所有直接和非直接依赖可用的升级补丁：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ go list -u -m all <span class="comment"># 查看所有直接和非直接依赖可用的升级补丁</span></span><br><span class="line">github.com/SimpCosm/godemo/gomod</span><br><span class="line">golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c [v0.3.5]</span><br><span class="line">rsc.io/quote v1.5.2</span><br><span class="line">rsc.io/sampler v1.3.0 [v1.99.99]</span><br></pre></td></tr></table></figure>
+<p>在 go module 中，<code>go get</code> 的作用是负责为当前正在开发的 module 来解析和添加依赖，然后构建和安装它们。对于每一个依赖包，<code>go get</code> 必须决定拉取哪一个版本。如果执行 <code>go get</code>命令指定了版本，则按照给定的版本拉取依赖包，如下：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>go get golang.org/x/text@latest</td>
+<td>拉取最新的版本，若存在tag，则优先使用</td>
+</tr>
+<tr>
+<td>go get golang.org/x/text@master</td>
+<td>拉取 master 分支的最新 commit</td>
+</tr>
+<tr>
+<td>go get golang.org/x/text@v0.3.2</td>
+<td>拉取 tag 为 v0.3.2 的 commit</td>
+</tr>
+<tr>
+<td>go get golang.org/x/text@342b2e</td>
+<td>拉取 hash 为 342b231 的 commit，最终会被转换为 v0.3.2</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>如果执行 <code>go get</code>没有指定版本，则按照下面逻辑确定版本：</p>
 <ul>
-<li>编写 <code>.go</code> 代码，根据需要添加 import statements</li>
-<li><code>go build</code> 或者 <code>go test</code> 命令会自动添加下载新的依赖来满足 import 的要求，并且更新 <code>go.mod</code> 文件</li>
-<li>当对依赖的版本有特殊要求的时候，可以使用 <code>go get foo@v1.2.3</code>, <code>go get foo@master</code>, <code>go get foo@e3702bed2</code> 命令，或者直接编辑 <code>go.mod</code> 文件</li>
+<li>默认情况下，<code>go get</code> 选择的是最新的 <code>tagged release version</code> ，比如 <code>v0.4.5</code> 或者 <code>v1.2.3</code>。</li>
+<li>如果没有  <code>tagged release version</code> ，则选择最新的 <code>tagged pre-release version</code>，比如 <code>v0.0.1-pre1</code>。</li>
+<li>如果连  <code>tagged pre-release version</code> 也没有，则选择最新的已知 commit。</li>
 </ul>
-<p>使用较多的命令初识：</p>
-<ul>
-<li><code>go list -m all</code> — 查看在编译中所有直接和非直接依赖的最终版本</li>
-<li><code>go list -u -m all</code> — 查看所有直接和非直接依赖可用的升级补丁</li>
-<li><code>go get -u ./...</code> or <code>go get -u=patch ./...</code> (from module root directory) — 更新所有直接和非直接以来到最新版本</li>
-<li><code>go build ./...</code> or <code>go test ./...</code> (from module root directory) — 编译或测试模块中所有package</li>
-<li><code>go mod tidy</code> — 移除不再需要的依赖，并且添加需要的依赖</li>
-<li><code>replace</code> directive or <code>gohack</code> — 使用replace 指令</li>
-<li><code>go mod vendor</code> — 可选的创造 <code>vendor</code> 目录</li>
-</ul>
-<h2 id="New-Concept"><a href="#New-Concept" class="headerlink" title="New Concept"></a>New Concept</h2><p>本小结提供了一些 <code>High-Level</code>的概念介绍。如果想要了解更多的细节，可以看这个40分钟的 <a href="https://www.youtube.com/watch?v=F8nrpe0XWRg&amp;list=PLq2Nv-Sh8EbbIjQgDzapOFeVfv5bGOoPE&amp;index=3&amp;t=0s" target="_blank" rel="external nofollow noopener noreferrer">Russ Cox 介绍 go module背后的设计哲学</a> 视频，也可以看官方的 <a href="https://go.googlesource.com/proposal/+/master/design/24301-versioned-go.md" target="_blank" rel="external nofollow noopener noreferrer">Proposal</a>，或者是早期更详细的 <a href="https://research.swtch.com/vgo" target="_blank" rel="external nofollow noopener noreferrer">vgo博客系列</a> 。</p>
-<h3 id="Modules-定义"><a href="#Modules-定义" class="headerlink" title="Modules 定义"></a>Modules 定义</h3><h3 id="go-mod"><a href="#go-mod" class="headerlink" title="go.mod"></a>go.mod</h3><h3 id="Minimal-Version-Selection"><a href="#Minimal-Version-Selection" class="headerlink" title="Minimal Version Selection"></a>Minimal Version Selection</h3><h3 id="Semantic-Import-Versioning"><a href="#Semantic-Import-Versioning" class="headerlink" title="Semantic Import Versioning"></a>Semantic Import Versioning</h3><h2 id="How-to-Use-Modules"><a href="#How-to-Use-Modules" class="headerlink" title="How to Use Modules"></a>How to Use Modules</h2><h2 id="包管理命令"><a href="#包管理命令" class="headerlink" title="包管理命令"></a>包管理命令</h2><h3 id="安装依赖"><a href="#安装依赖" class="headerlink" title="安装依赖"></a>安装依赖</h3><p>如果要想先下载依赖，那么可以直接像以前那样 <code>go get</code> 即可，不过 gomod 下可以跟语义化版本号，比如 <code>go get foo@v1.2.3</code>，也可以跟 git 的分支或 tag，比如<code>go get foo@master</code>，当然也可以跟 git 提交哈希，比如 <code>go get foo@e3702bed2</code>。需要特别注意的是，gomod 除了遵循语义化版本原则外，还遵循最小版本选择原则，也就是说如果当前版本是 v1.1.0，只会下载不超过这个最大版本号。如果使用 <code>go get foo@master</code>，下次在下载只会和第一次的一样，无论 master 分支是否更新了代码，如下所示，使用包含当前最新提交哈希的虚拟版本号替代直接的 <code>master</code> 版本号。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$ go get golang.org/x/crypto/sha3@master</span><br><span class="line">go: finding golang.org/x/crypto/sha3 latest</span><br><span class="line">go: finding golang.org/x/crypto latest</span><br><span class="line">$ cat go.mod</span><br><span class="line">module github.com/adesight/<span class="built_in">test</span></span><br><span class="line"></span><br><span class="line">go 1.12</span><br><span class="line"></span><br><span class="line">require (</span><br><span class="line">	golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a // indirect</span><br><span class="line">	rsc.io/quote v1.5.2</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
-<p>如果下载所有依赖可以使用 <code>go mod download</code> 命令。</p>
-<h3 id="升级依赖"><a href="#升级依赖" class="headerlink" title="升级依赖"></a>升级依赖</h3><p>查看所有以升级依赖版本：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ go list -u -m all</span><br><span class="line">go: finding golang.org/x/sys latest</span><br><span class="line">go: finding golang.org/x/crypto latest</span><br><span class="line">github.com/adesight/<span class="built_in">test</span></span><br><span class="line">golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a</span><br><span class="line">golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a [v0.0.0-20190316082340-a2f829d7f35f]</span><br><span class="line">golang.org/x/text v0.3.0</span><br><span class="line">rsc.io/quote v1.5.2</span><br><span class="line">rsc.io/sampler v1.99.99</span><br></pre></td></tr></table></figure>
+<p>尽管 <code>go get</code>命令默认拉取最新的模块，但是它并不会使用该模块的依赖的最新版本，相反而是使用该模块请求依赖的版本。举个例子，模块 A 的最新版本 require 模块 B 的 v1.2.3，同时 B 的 v1.2.4 和 v1.3.1 版本同时存在。那么，执行 <code>go get A</code> 将会使用 A 的最新版本，但是使用 B v1.2.3 版本，正如在 A 的 <code>go.mod</code> 中请求的一样。</p>
+<p><code>go get -u</code> 则在默认拉取模块 A 的最新版本情况下，也会使用模块 A 依赖的模块最新版本（同一个 major 版本内的最新版本）。在上面的例子中，<code>go get -u A</code> 将会使用 A 的最新版本，但是使用 B v1.3.1 版本。如果模块 B 依赖于模块 C，但是模块 A 不依赖于模块C，则模块C不会被更新。</p>
+<p><code>go get -u=patch</code>则是默认选择模块 A 的最新 <strong>patch版本</strong>，也会使用模块 A 依赖的模块最新的 <strong>patch版本</strong>。在上面的例子中，<code>go get -u=patch A@latest</code> 将会使用 A 的最新版本，但是使用 B v1.2.4 版本。而命令 <code>go get -u=patch A</code> 则使用模块 A 的一个 <code>patch release</code> 版本。</p>
 <p>升级次级或补丁版本号：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go get -u rsc.io/quote</span><br></pre></td></tr></table></figure>
 <p>仅升级补丁版本号：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go get -u=patch rscio/quote</span><br></pre></td></tr></table></figure>
 <p>升降级版本号，可以使用比较运算符控制：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go get foo@<span class="string">'&lt;v1.6.2'</span></span><br></pre></td></tr></table></figure>
+<p>总结一下：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>go get</td>
+<td>拉取依赖，会进行指定性拉取，并不会更新所依赖的其它模块。</td>
+</tr>
+<tr>
+<td>go get -u</td>
+<td>只会更新主要模块，忽略了单元测试</td>
+</tr>
+<tr>
+<td>go get -u -t</td>
+<td>只会更新主要模块，考虑了单元测试</td>
+</tr>
+<tr>
+<td>go get -u ./…</td>
+<td>递归更新所有子目录的所有模块，没考虑了单元测试</td>
+</tr>
+<tr>
+<td>go get -u -t ./…</td>
+<td>递归更新所有子目录的所有模块，但是考虑了单元测试</td>
+</tr>
+<tr>
+<td>go get -u all</td>
+<td>更新所有模块，推荐使用</td>
+</tr>
+</tbody>
+</table>
+</div>
 <h3 id="移除依赖"><a href="#移除依赖" class="headerlink" title="移除依赖"></a>移除依赖</h3><p>当前代码中不需要了某些包，删除相关代码片段后并没有在 <code>go.mod</code> 文件中自动移出。</p>
 <p>运行下面命令可以移出所有代码中不需要的包：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go mod tidy</span><br></pre></td></tr></table></figure>
 <p>如果仅仅修改 <code>go.mod</code> 配置文件的内容，那么可以运行 <code>go mod edit --droprequire=path</code>，比如要移出 <code>golang.org/x/crypto</code> 包</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go mod edit --droprequire=golang.org/x/crypto</span><br></pre></td></tr></table></figure>
 <h3 id="查看依赖包"><a href="#查看依赖包" class="headerlink" title="查看依赖包"></a>查看依赖包</h3><p>可以直接查看 <code>go.mod</code> 文件，或者使用命令行：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">$ go list -m all</span><br><span class="line">github.com/adesight/<span class="built_in">test</span></span><br><span class="line">golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a</span><br><span class="line">golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a</span><br><span class="line">golang.org/x/text v0.3.0</span><br><span class="line">rsc.io/quote v1.5.2</span><br><span class="line">rsc.io/sampler v1.99.99</span><br><span class="line">$ go list -m -json all <span class="comment"># json 格式输出</span></span><br><span class="line">&#123;</span><br><span class="line">        <span class="string">"Path"</span>: <span class="string">"golang.org/x/text"</span>,</span><br><span class="line">        <span class="string">"Version"</span>: <span class="string">"v0.3.0"</span>,</span><br><span class="line">        <span class="string">"Time"</span>: <span class="string">"2017-12-14T13:08:43Z"</span>,</span><br><span class="line">        <span class="string">"Indirect"</span>: <span class="literal">true</span>,</span><br><span class="line">        <span class="string">"Dir"</span>: <span class="string">"/Users/lishude/go/pkg/mod/golang.org/x/text@v0.3.0"</span>,</span><br><span class="line">        <span class="string">"GoMod"</span>: <span class="string">"/Users/lishude/go/pkg/mod/cache/download/golang.org/x/text/@v/v0.3.0.mod"</span></span><br><span class="line">&#125;</span><br><span class="line">&#123;</span><br><span class="line">        <span class="string">"Path"</span>: <span class="string">"rsc.io/quote"</span>,</span><br><span class="line">        <span class="string">"Version"</span>: <span class="string">"v1.5.2"</span>,</span><br><span class="line">        <span class="string">"Time"</span>: <span class="string">"2018-02-14T15:44:20Z"</span>,</span><br><span class="line">        <span class="string">"Dir"</span>: <span class="string">"/Users/lishude/go/pkg/mod/rsc.io/quote@v1.5.2"</span>,</span><br><span class="line">        <span class="string">"GoMod"</span>: <span class="string">"/Users/lishude/go/pkg/mod/cache/download/rsc.io/quote/@v/v1.5.2.mod"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">$ go list -m all</span><br><span class="line">github.com/SimpCosm/godemo/gomod</span><br><span class="line">golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c</span><br><span class="line">rsc.io/quote v1.5.2</span><br><span class="line">rsc.io/sampler v1.3.0</span><br><span class="line">$ go list -m -json all <span class="comment"># json 格式输出</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="string">"Path"</span>: <span class="string">"github.com/SimpCosm/godemo/gomod"</span>,</span><br><span class="line">	<span class="string">"Main"</span>: <span class="literal">true</span>,</span><br><span class="line">	<span class="string">"Dir"</span>: <span class="string">"/Users/houmin/project/cosmos/godemo/gomod"</span>,</span><br><span class="line">	<span class="string">"GoMod"</span>: <span class="string">"/Users/houmin/project/cosmos/godemo/gomod/go.mod"</span>,</span><br><span class="line">	<span class="string">"GoVersion"</span>: <span class="string">"1.14"</span></span><br><span class="line">&#125;</span><br><span class="line">&#123;</span><br><span class="line">	<span class="string">"Path"</span>: <span class="string">"golang.org/x/text"</span>,</span><br><span class="line">	<span class="string">"Version"</span>: <span class="string">"v0.0.0-20170915032832-14c0d48ead0c"</span>,</span><br><span class="line">	<span class="string">"Time"</span>: <span class="string">"2017-09-15T03:28:32Z"</span>,</span><br><span class="line">	<span class="string">"Indirect"</span>: <span class="literal">true</span>,</span><br><span class="line">	<span class="string">"Dir"</span>: <span class="string">"/Users/houmin/go/pkg/mod/golang.org/x/text@v0.0.0-20170915032832-14c0d48ead0c"</span>,</span><br><span class="line">	<span class="string">"GoMod"</span>: <span class="string">"/Users/houmin/go/pkg/mod/cache/download/golang.org/x/text/@v/v0.0.0-20170915032832-14c0d48ead0c.mod"</span></span><br><span class="line">&#125;</span><br><span class="line">&#123;</span><br><span class="line">	<span class="string">"Path"</span>: <span class="string">"rsc.io/quote"</span>,</span><br><span class="line">	<span class="string">"Version"</span>: <span class="string">"v1.5.2"</span>,</span><br><span class="line">	<span class="string">"Time"</span>: <span class="string">"2018-02-14T15:44:20Z"</span>,</span><br><span class="line">	<span class="string">"Dir"</span>: <span class="string">"/Users/houmin/go/pkg/mod/rsc.io/quote@v1.5.2"</span>,</span><br><span class="line">	<span class="string">"GoMod"</span>: <span class="string">"/Users/houmin/go/pkg/mod/cache/download/rsc.io/quote/@v/v1.5.2.mod"</span></span><br><span class="line">&#125;</span><br><span class="line">&#123;</span><br><span class="line">	<span class="string">"Path"</span>: <span class="string">"rsc.io/sampler"</span>,</span><br><span class="line">	<span class="string">"Version"</span>: <span class="string">"v1.3.0"</span>,</span><br><span class="line">	<span class="string">"Time"</span>: <span class="string">"2018-02-13T19:05:03Z"</span>,</span><br><span class="line">	<span class="string">"Indirect"</span>: <span class="literal">true</span>,</span><br><span class="line">	<span class="string">"Dir"</span>: <span class="string">"/Users/houmin/go/pkg/mod/rsc.io/sampler@v1.3.0"</span>,</span><br><span class="line">	<span class="string">"GoMod"</span>: <span class="string">"/Users/houmin/go/pkg/mod/cache/download/rsc.io/sampler/@v/v1.3.0.mod"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h3 id="模块配置文本格式化"><a href="#模块配置文本格式化" class="headerlink" title="模块配置文本格式化"></a>模块配置文本格式化</h3><p>由于可手动修改 go.mod 文件，所以可能此文件并没有被格式化，使用下面命令进行文本格式化。</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go mod edit -fmt</span><br></pre></td></tr></table></figure>
-<h3 id="发布版本"><a href="#发布版本" class="headerlink" title="发布版本"></a>发布版本</h3><p>发布包新版本和其它包管理工具基本一致，可以直接打标签，不过打标签之前需要在 go.mod 中写入相应的版本号：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ go mod edit --module=github.com/islishude/gomodtest/v2</span><br><span class="line">$ cat go.mod</span><br><span class="line">module github.com/islishude/gomodtest/v2</span><br><span class="line"></span><br><span class="line">go 1.12</span><br><span class="line"></span><br><span class="line">require (</span><br><span class="line">	golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a // indirect</span><br><span class="line">	rsc.io/quote v1.5.2</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
-<p>官方推荐将上述过程在一个新分支来避免混淆，那么类如上述例子可以创建一个 v2 分支，但这个不是强制要求的。</p>
-<p>还有一种方式发布新版本，那就是在主线版本种加入 v2 文件夹，相应的也需要内置 go.mod 这个文件。</p>
-<p>比如上述我们引入的 <a href="https://link.zhihu.com/?target=http%3A//rsc.io/quote" rel="external nofollow noopener noreferrer" target="_blank">http://rsc.io/quote</a> 包，其中 v3 版本是用内置文件夹，而 v2 使用的是 tag。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">$ tree .</span><br><span class="line">.</span><br><span class="line">├── LICENSE</span><br><span class="line">├── README.md</span><br><span class="line">├── buggy</span><br><span class="line">│   └── buggy_test.go</span><br><span class="line">├── go.mod</span><br><span class="line">├── go.sum</span><br><span class="line">├── quote.go</span><br><span class="line">├── quote_test.go</span><br><span class="line">└── v3</span><br><span class="line">    ├── go.mod</span><br><span class="line">    ├── go.sum</span><br><span class="line">    └── quote.go</span><br><span class="line">$ git tag -a</span><br><span class="line">bad</span><br><span class="line">v1.0.0</span><br><span class="line">v1.1.0</span><br><span class="line">v1.2.0</span><br><span class="line">v1.2.1</span><br><span class="line">v1.3.0</span><br><span class="line">v1.4.0</span><br><span class="line">v1.5.0</span><br><span class="line">v1.5.1</span><br><span class="line">v1.5.2</span><br><span class="line">v1.5.3-pre1</span><br><span class="line">v2.0.0</span><br><span class="line">v2.0.1</span><br><span class="line">v3.0.0</span><br><span class="line">v3.1.0</span><br><span class="line">(END)</span><br></pre></td></tr></table></figure>
-<p>根据上面的说明，想必你会看到一个问题，当我们升级主版本号的时候，要更改 module 名称，也就是上面所说的加上版本号，这就存在一个问题，如果我们要更新到主版本号的依赖就没有这么简单了，因为升级的依赖包路径都需要修改，<strong>这个在其它语言包管理以及 Go 第三方包管理工具都不存在的一点</strong>。</p>
-<p>如下所示，升级 <code>rsc.io/quote</code> 到 v3 版本。注意一点，作为例子这里包作者对函数也加上了版本，其实大部分人是不会加的。这个模式叫做 <code>semantic import versioning</code>，也是备受争议，大多数人认为这个没有特别大的作用，而维护者则认为这是为了 Go 下一个十年的必要条件。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line">	<span class="string">"rsc.io/quote/v3"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(quote.HelloV3())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>对于内部开发我觉得还挺好，让大家都了解，不要随意加入破坏性更新。</p>
-<p>不过由于这个不讨喜功能，不同版本可以存在同一个包了。补充一句，对于 v0 和 v1 版本并不需要加入到 import path 内。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line">	q1 <span class="string">"rsc.io/quote"</span></span><br><span class="line">	<span class="string">"rsc.io/quote/v3"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(quote.HelloV3())</span><br><span class="line">	fmt.Println(q1.Hello())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="从老项目迁移"><a href="#从老项目迁移" class="headerlink" title="从老项目迁移"></a>从老项目迁移</h3><p>从很多第三方的包管理工具迁移到 gomod 特别简单，直接运行 <code>go mod init</code> 即可。</p>
-<p>如果没有使用任何第三方包管理工具，除了运行 <code>go mod init</code> 初始化以外，还要使用 <code>go get ./...</code> 下载安装所有依赖包，并更新 <code>go.mod</code> 和 <code>go.sum</code> 文件。</p>
+<h3 id="从老项目迁移"><a href="#从老项目迁移" class="headerlink" title="从老项目迁移"></a>从老项目迁移</h3><p>从很多第三方的包管理工具迁移到 gomod 特别简单，直接运行 <code>go mod init</code> 即可。如果没有使用任何第三方包管理工具，除了运行 <code>go mod init</code> 初始化以外，还要使用 <code>go get ./...</code> 下载安装所有依赖包，并更新 <code>go.mod</code> 和 <code>go.sum</code> 文件。</p>
 <p>默认情况下，<code>go get</code> 命令使用 <code>@latest</code> 版本控制符对所有依赖进行下载，如果想要更改某一个包的版本，可以使用 <code>go mod edit --require</code> 命令，比如要更新 <code>rsc.io/quote</code> 到 v3.1.0 版本。</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go mod edit --require=rsc.io/quote@v3.1.0</span><br></pre></td></tr></table></figure>
-<h3 id="GOSUMDB"><a href="#GOSUMDB" class="headerlink" title="GOSUMDB"></a>GOSUMDB</h3><p>它的值是一个 Go checksum database，用于使 Go 在拉取模块版本时(无论是从源站拉取还是通过 Go module proxy 拉取)保证拉取到的模块版本数据未经篡改，也可以是“off”即禁止 Go 在后续操作中校验模块版本</p>
+<h2 id="依赖拉取"><a href="#依赖拉取" class="headerlink" title="依赖拉取"></a>依赖拉取</h2><p>Go Module 方案通过 <code>Semantic Import Versioning</code> 和 <code>Minimal Version Selection</code>，解决了Go语言项目中的依赖管理问题。但是，即使我们确定了我们依赖的版本，我们如何保证这个版本能够被可靠的拉取到，并且不会被篡改呢？这就引入 Go Proxy 和 Go Checksum Database，<a href="https://about.sourcegraph.com/go/gophercon-2019-go-module-proxy-life-of-a-query/" target="_blank" rel="external nofollow noopener noreferrer">Go module proxy life of a query</a> 非常形象地介绍了 Go Proxy 和 Go Checksum Database 出现的原因和他们是如何解决问题的。这里总结两个主要的原因：</p>
 <ul>
-<li>格式 1：<code>&lt;SUMDB_NAME&gt;+&lt;PUBLIC_KEY&gt;</code>。</li>
-<li>格式 2：<code>&lt;SUMDB_NAME&gt;+&lt;PUBLIC_KEY&gt; &lt;SUMDB_URL&gt;</code>。</li>
-<li>拥有默认值：<code>sum.golang.org</code> (之所以没有按照上面的格式是因为 Go 对默认值做了特殊处理)。</li>
-<li>可被 Go module proxy 代理 (详见：Proxying a Checksum Database)。</li>
-<li><code>sum.golang.org</code> 在中国无法访问，故而更加建议将 GOPROXY 设置为 <code>goproxy.cn</code>，因为 <code>goproxy.cn</code> 支持代理 <code>sum.golang.org</code>。</li>
+<li>如果你依赖的项目作者不再维护自己的代码了，比如说他将原来代码放在 Github 上，有一天突然删除了自己的repo，那么这时你再也不能获得你的依赖代码，你也就无法实现 <code>Reproducible Build</code></li>
+<li>如果你获取到的代码实际上已经被恶意篡改过，那么你构建的程序也就发生了变化。如何能够确认你下载的代码就是你想要的代码呢？</li>
 </ul>
-<h3 id="Go-Checksum-Database"><a href="#Go-Checksum-Database" class="headerlink" title="Go Checksum Database"></a>Go Checksum Database</h3><p>Go checksum database 主要用于保护 Go 不会从任何源头拉到被篡改过的非法 Go 模块版本，其作用（左）和工作机制（右）如下图：</p>
-<p><img alt="image" data-src="https://user-gold-cdn.xitu.io/2019/9/28/16d76259e2243468"></p>
-<p>如果有兴趣的小伙伴可以看看 <a href="https://go.googlesource.com/proposal/+/master/design/25530-sumdb.md#proxying-a-checksum-database" target="_blank" rel="external nofollow noopener noreferrer">Proposal: Secure the Public Go Module Ecosystem</a>，有详细介绍其算法机制，如果想简单一点，查看 <code>go help module-auth</code> 也是一个不错的选择。</p>
-<h3 id="GONOPROXY-GONOSUMDB-GOPRIVATE"><a href="#GONOPROXY-GONOSUMDB-GOPRIVATE" class="headerlink" title="GONOPROXY/GONOSUMDB/GOPRIVATE"></a>GONOPROXY/GONOSUMDB/GOPRIVATE</h3><p>这三个环境变量都是用在当前项目依赖了私有模块，也就是依赖了由 GOPROXY 指定的 Go module proxy 或由 GOSUMDB 指定 Go checksum database 无法访问到的模块时的场景</p>
+<h3 id="Go-Module-Proxy"><a href="#Go-Module-Proxy" class="headerlink" title="Go Module Proxy"></a>Go Module Proxy</h3><p>Go Proxy Module 有以下作用：</p>
 <ul>
-<li>它们三个的值都是一个以英文逗号 “,” 分割的模块路径前缀，匹配规则同 path.Match。</li>
-<li>其中 GOPRIVATE 较为特殊，它的值将作为 GONOPROXY 和 GONOSUMDB 的默认值，所以建议的最佳姿势是只是用 GOPRIVATE。</li>
+<li>集中式模块版本管理</li>
+<li>加快模块版本的拉取速度</li>
+<li>加快项目的构建速度</li>
+<li>使 Go 脱离对于 VCS 的依赖</li>
+<li>防止项目由于依赖某个模块而被其作者删除而 break 掉</li>
+<li>淡化 Vendor 概念</li>
 </ul>
-<p>在使用上来讲，比如 <code>GOPRIVATE=*.corp.example.com</code> 表示所有模块路径以 <code>corp.example.com</code> 的下一级域名 (如 <code>team1.corp.example.com</code>) 为前缀的模块版本都将不经过 Go module proxy 和 Go checksum database，需要注意的是不包括 <code>corp.example.com</code> 本身。</p>
-<h3 id="Global-Caching"><a href="#Global-Caching" class="headerlink" title="Global Caching"></a>Global Caching</h3><p>这个主要是针对 Go modules 的全局缓存数据说明，如下：</p>
+<p>Go module proxy 是一个能够响应 GET 请求的 Web 服务器，通过 <code>go help goproxy</code> 可以获取更多信息，其请求包括</p>
 <ul>
-<li>同一个模块版本的数据只缓存一份，所有其他模块共享使用。</li>
-<li>目前所有模块版本数据均缓存在 <code>$GOPATH/pkg/mod</code>和 <code>$GOPATH/pkg/sum</code> 下，未来或将移至 <code>$GOCACHE/mod</code>和<code>$GOCACHE/sum</code> 下( 可能会在当 <code>$GOPATH</code> 被淘汰后)。</li>
-<li>可以使用 <code>go clean -modcache</code> 清理所有已缓存的模块版本数据。</li>
+<li><code>GET $GOPROXY/&lt;module&gt;/@v/list</code> ：返回给定 module 的已知 version 的 list，每行一个 version</li>
+<li><code>GET $GOPROXY/&lt;module&gt;/@v/&lt;version&gt;.info</code>：返回一个 JSON 格式的描述该 module 的元数据</li>
+<li><code>GET $GOPROXY/&lt;module&gt;/@v/&lt;version&gt;.mod</code>：返回某个 module 指定 version 的 go.mod 文件</li>
+<li><code>GET $GOPROXY/&lt;module&gt;/@v/&lt;version&gt;.zip</code>：返回某个 module 指定 version 的 源代码压缩包</li>
+<li><code>GET $GOPROXY/&lt;module&gt;/@latest</code>：返回该 module 最新版本的JSON 格式的描述该 module 的元数据</li>
 </ul>
-<p>另外在 Go1.11 之后 GOCACHE 已经不允许设置为 off 了，我想着这也是为了模块数据缓存移动位置做准备，因此大家应该尽快做好适配。</p>
-<h2 id="快速迁移项目至-Go-Modules"><a href="#快速迁移项目至-Go-Modules" class="headerlink" title="快速迁移项目至 Go Modules"></a>快速迁移项目至 Go Modules</h2><ul>
-<li>第一步: 升级到 Go 1.13。</li>
-<li>第二步: 让 GOPATH 从你的脑海中完全消失，早一步踏入未来。<ul>
-<li>修改 GOBIN 路径（可选）：<code>go env -w GOBIN=$HOME/bin</code>。</li>
-<li>打开 Go modules：<code>go env -w GO111MODULE=on</code>。</li>
-<li>设置 GOPROXY：<code>go env -w GOPROXY=https://goproxy.cn,direct</code> # 在中国是必须的，因为它的默认值被墙了。</li>
-</ul>
-</li>
-<li>第三步(可选): 按照你喜欢的目录结构重新组织你的所有项目。</li>
-<li>第四步: 在你项目的根目录下执行 <code>go mod init &lt;OPTIONAL_MODULE_PATH&gt;</code> 以生成 go.mod 文件。</li>
-<li>第五步: 想办法说服你身边所有的人都去走一下前四步。</li>
-</ul>
-<h2 id="迁移后-go-get-行为的改变"><a href="#迁移后-go-get-行为的改变" class="headerlink" title="迁移后 go get 行为的改变"></a>迁移后 go get 行为的改变</h2><ul>
-<li><p>用 <code>go help module-get</code> 和 <code>go help gopath-get</code>分别去了解 Go modules 启用和未启用两种状态下的 go get 的行为</p>
-</li>
-<li><p>用 <code>go get</code> 拉取新的依赖</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02_05_go-module-proxy-life-of-a-query.png"></p>
+<p>在当前，module 的元数据格式为，以后可能会被扩展：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Info <span class="keyword">struct</span> &#123;</span><br><span class="line">    Version <span class="keyword">string</span>    <span class="comment">// version string</span></span><br><span class="line">    Time    time.Time <span class="comment">// commit time</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Go 提供了 <code>GOPROXY</code> 环境变量用于配置 Go Module Proxy 地址，其默认值是：<code>https://proxy.golang.org,direct</code>。在国内，<code>proxy.golang.org</code> 无法访问，需要设置国内的 Go 模块代理，执行如下命令：</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="keyword">go</span> env -<span class="keyword">w</span> GOPROXY=http<span class="variable">s:</span>//goproxy.<span class="keyword">cn</span>,direct</span><br></pre></td></tr></table></figure>
 <ul>
-<li>拉取最新的版本(优先择取 tag)：<code>go get golang.org/x/text@latest</code></li>
-<li>拉取 <code>master</code> 分支的最新 commit：<code>go get golang.org/x/text@master</code></li>
-<li>拉取 tag 为 v0.3.2 的 commit：<code>go get golang.org/x/text@v0.3.2</code></li>
+<li><code>GOPROXY</code>的值是一个以英文逗号 <code>,</code> 分割的 Go 模块代理列表，允许设置多个模块代理，假设你不想使用，也可以将其设置为 <code>off</code> ，这将会禁止 Go 在后续操作中使用任何 Go 模块代理</li>
+<li><code>direct</code> 是一个特殊指示符，用于指示 Go 回源到模块版本的源地址去抓取（比如 GitHub 等），场景如下：当值列表中上一个 Go 模块代理返回 404 或 410 错误时，Go 自动尝试列表中的下一个，遇见 <code>direct</code> 时回源，也就是回到源地址去抓取</li>
 </ul>
-</li>
-<li>拉取 hash 为 342b231 的 commit，最终会被转换为 v0.3.2：<code>go get golang.org/x/text@342b2e</code><ul>
-<li>用 <code>go get -u</code> 更新现有的依赖</li>
-</ul>
-</li>
-<li><p>用 <code>go mod download</code> 下载 go.mod 文件中指明的所有依赖</p>
+<h3 id="Go-Checksum-Database"><a href="#Go-Checksum-Database" class="headerlink" title="Go Checksum Database"></a>Go Checksum Database</h3><p>Go Checksum Database 用于在拉取模块版本时，保证拉取到的模块版本数据未经过篡改，若发现不一致，也就是可能存在篡改，将会立即中止。</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-05_go-module-sumdb.png"></p>
+<p>Go 提供了 <code>GOSUMDB</code> 环境变量用于配置 Go Checksum Database 的地址，其默认值为：<code>sum.golang.org</code>。在国内这个地址也是无法访问的，但是 GOSUMDB 可以被 Go 模块代理所代理。先前我们所设置的模块代理 <code>goproxy.cn</code> 就能支持代理 <code>sum.golang.org</code>，所以在设置 GOPROXY 后，你可以不需要过度关心这个问题。</p>
+<p>若对 GOSUMDB 的值有自定义需求，其支持如下格式：</p>
 <ul>
-<li>用 <code>go mod tidy</code> 整理现有的依赖</li>
-<li>用 <code>go mod graph</code> 查看现有的依赖结构</li>
-<li>用 <code>go mod init</code> 生成 go.mod 文件 (Go 1.13 中唯一一个可以生成 go.mod 文件的子命令)</li>
+<li>格式 1：<code>&lt;SUMDB_NAME&gt;+&lt;PUBLIC_KEY&gt;</code></li>
+<li>格式 2：<code>&lt;SUMDB_NAME&gt;+&lt;PUBLIC_KEY&gt; &lt;SUMDB_URL&gt;</code></li>
 </ul>
-</li>
-<li><p>用 <code>go mod edit</code> 编辑 go.mod 文件</p>
-</li>
-<li><p>用 <code>go mod vendor</code> 导出现有的所有依赖 (事实上 Go modules 正在淡化 Vendor 的概念)</p>
-</li>
-<li><p>用 <code>go mod verify</code> 校验一个模块是否被篡改过</p>
-</li>
-</ul>
-<p>这里我们注意到有两点比较特别，分别是：</p>
-<ul>
-<li>第一点：为什么 “拉取 hash 为 342b231 的 commit，最终会被转换为 v0.3.2” 呢。这是因为虽然我们设置了拉取 @342b2e commit，但是因为 Go modules 会与 tag 进行对比，若发现对应的 commit 与 tag 有关联，则进行转换。</li>
-<li>第二点：为什么不建议使用 <code>go mod vendor</code>，因为 Go modules 正在淡化 Vendor 的概念，很有可能 Go2 就去掉了。</li>
-</ul>
-<h2 id="使用-Go-Modules-时常遇见的坑"><a href="#使用-Go-Modules-时常遇见的坑" class="headerlink" title="使用 Go Modules 时常遇见的坑"></a>使用 Go Modules 时常遇见的坑</h2><h3 id="判断项目是否启用了-Go-Modules"><a href="#判断项目是否启用了-Go-Modules" class="headerlink" title="判断项目是否启用了 Go Modules"></a>判断项目是否启用了 Go Modules</h3><ul>
-<li><p><img alt="image" data-src="https://user-gold-cdn.xitu.io/2019/9/28/16d76259e244d232"></p>
-</li>
-</ul>
-<h3 id="坑-2-管理-Go-的环境变量"><a href="#坑-2-管理-Go-的环境变量" class="headerlink" title="坑 2: 管理 Go 的环境变量"></a>坑 2: 管理 Go 的环境变量</h3><p><img alt="image" data-src="https://user-gold-cdn.xitu.io/2019/9/28/16d76260c9b62f20"></p>
-<p>这里主要是提到 Go1.13 新增了 <code>go env -w</code> 用于写入环境变量，而写入的地方是 <code>os.UserConfigDir</code> 所返回的路径，需要注意的是 <code>go env -w</code> 不会覆写。</p>
-<h3 id="坑-3-从-dep、glide-等迁移至-Go-Modules"><a href="#坑-3-从-dep、glide-等迁移至-Go-Modules" class="headerlink" title="坑 3: 从 dep、glide 等迁移至 Go Modules"></a>坑 3: 从 dep、glide 等迁移至 Go Modules</h3><p><img alt="image" data-src="https://user-gold-cdn.xitu.io/2019/9/28/16d7626035b57218?imageView2"></p>
-<p>这里主要是指从旧有的依赖包管理工具（dep/glide 等）进行迁移时，因为 BUG 的原因会导致不经过 GOPROXY 的代理，解决方法有如下两个：</p>
-<ul>
-<li>手动创建一个 go.mod 文件，再执行 go mod tidy 进行补充。</li>
-<li>上代理，相当于不使用 GOPROXY 了。</li>
-</ul>
-<h3 id="坑-4-拉取私有模块"><a href="#坑-4-拉取私有模块" class="headerlink" title="坑 4:拉取私有模块"></a>坑 4:拉取私有模块</h3><p><img alt="image" data-src="https://user-gold-cdn.xitu.io/2019/9/28/16d7625ca879e03a"></p>
-<p>这里主要想涉及两块知识点，如下：</p>
-<ul>
-<li>GOPROXY 是无权访问到任何人的私有模块的，所以你放心，安全性没问题。</li>
-<li>GOPROXY 除了设置模块代理的地址以外，还需要增加 “direct” 特殊标识才可以成功拉取私有库。</li>
-</ul>
-<h3 id="坑-5-更新现有的模块"><a href="#坑-5-更新现有的模块" class="headerlink" title="坑 5:更新现有的模块"></a>坑 5:更新现有的模块</h3><p><img alt="image" data-src="https://user-gold-cdn.xitu.io/2019/9/28/16d76270adc1426d"></p>
-<h3 id="坑-6-主版本号"><a href="#坑-6-主版本号" class="headerlink" title="坑 6:主版本号"></a>坑 6:主版本号</h3><p><img alt="image" data-src="https://user-gold-cdn.xitu.io/2019/9/28/16d7625ce242f466"></p>
-<h2 id="Go-Module-Proxy"><a href="#Go-Module-Proxy" class="headerlink" title="Go Module Proxy"></a>Go Module Proxy</h2><p><img alt="image" data-src="https://user-gold-cdn.xitu.io/2019/9/28/16d7625db94698c1"></p>
-<p>在这里再次强调了 Go Module Proxy 的作用（图左），以及其对应的协议交互流程（图右），有兴趣的小伙伴可以认真看一下。</p>
-<h2 id="Q-amp-A"><a href="#Q-amp-A" class="headerlink" title="Q&amp;A"></a>Q&amp;A</h2><p><strong>Q：如何解决 Go 1.13 在从 GitLab 拉取模块版本时遇到的，Go 错误地按照非期望值的路径寻找目标模块版本结果致使最终目标模块拉取失败的问题？</strong></p>
-<p><strong>A：</strong>GitLab 中配合 goget 而设置的 <code>&lt;meta&gt;</code> 存在些许问题，导致 Go 1.13 错误地识别了模块的具体路径，这是个 Bug，据说在 GitLab 的新版本中已经被修复了，详细内容可以看 <a href="https://github.com/golang/go/issues/34094" target="_blank" rel="external nofollow noopener noreferrer">github.com/golang/go/i…</a> 这个 Issue。然后目前的解决办法的话除了升级 GitLab 的版本外，还可以参考 <a href="https://github.com/developer-learning/night-reading-go/issues/468#issuecomment-535850154" target="_blank" rel="external nofollow noopener noreferrer">github.com/developer-l…</a> 这条回复。</p>
-<p><strong>Q：使用 Go modules 时可以同时依赖同一个模块的不同的两个或者多个小版本（修订版本号不同）吗？</strong></p>
-<p><strong>A：</strong>不可以的，Go modules 只可以同时依赖一个模块的不同的两个或者多个大版本（主版本号不同）。比如可以同时依赖 <code>example.com/foobar@v1.2.3</code> 和 <code>example.com/foobar/v2@v2.3.4</code>，因为他们的模块路径（module path）不同，Go modules 规定主版本号不是 v0 或者 v1 时，那么主版本号必须显式地出现在模块路径的尾部。但是，同时依赖两个或者多个小版本是不支持的。比如如果模块 A 同时直接依赖了模块 B 和模块 C，且模块 A 直接依赖的是模块 C 的 v1.0.0 版本，然后模块 B 直接依赖的是模块 C 的 v1.0.1 版本，那么最终 Go modules 会为模块 A 选用模块 C 的 v1.0.1 版本而不是模块 A 的 go.mod 文件中指明的 v1.0.0 版本。</p>
-<p>这是因为 Go modules 认为只要主版本号不变，那么剩下的都可以直接升级采用最新的。但是如果采用了最新的结果导致项目 Break 掉了，那么 Go modules 就会 Fallback 到上一个老的版本，比如在前面的例子中就会 Fallback 到 v1.0.0 版本。</p>
-<p><strong>Q：在 go.sum 文件中的一个模块版本的 Hash 校验数据什么情况下会成对出现，什么情况下只会存在一行？</strong></p>
-<p><strong>A：</strong>通常情况下，在 go.sum 文件中的一个模块版本的 Hash 校验数据会有两行，前一行是该模块的 ZIP 文件的 Hash 校验数据，后一行是该模块的 go.mod 文件的 Hash 校验数据。但是也有些情况下只会出现一行该模块的 go.mod 文件的 Hash 校验数据，而不包含该模块的 ZIP 文件本身的 Hash 校验数据，这个情况发生在 Go modules 判定为你当前这个项目完全用不到该模块，根本也不会下载该模块的 ZIP 文件，所以就没必要对其作出 Hash 校验保证，只需要对该模块的 go.mod 文件作出 Hash 校验保证即可，因为 go.mod 文件是用得着的，在深入挖取项目依赖的时候要用。</p>
-<p><strong>Q：能不能更详细地讲解一下 go.mod 文件中的 replace 动词的行为以及用法？</strong></p>
-<p><strong>A：</strong>这个 replace 动词的作用是把一个“模块版本”替换为另外一个“模块版本”，这是“模块版本”和“模块版本（module path）”之间的替换，“=&gt;”标识符前面的内容是待替换的“模块版本”的“模块路径”，后面的内容是要替换的目标“模块版本”的所在地，即路径，这个路径可以是一个本地磁盘的相对路径，也可以是一个本地磁盘的绝对路径，还可以是一个网络路径，但是这个目标路径并不会在今后你的项目代码中作为你“导入路径（import path）”出现，代码里的“导入路径”还是得以你替换成的这个目标“模块版本”的“模块路径”作为前缀。</p>
-<p>另外需要注意，Go modules 是不支持在 “导入路径” 里写相对路径的。举个例子，如果项目 A 依赖了模块 B，比如模块 B 的“模块路径”是 <code>example.com/b</code>，然后它在的磁盘路径是 <code>~/b</code>，在项目 A 里的 go.mod 文件中你有一行 <code>replace example.com/b=&gt;~/b</code>，然后在项目 A 里的代码中的“导入路基”就是 <code>import&quot;example.com/b&quot;</code>，而不是 <code>import&quot;~/b&quot;</code>，剩下的工作是 Go modules 帮你自动完成了的。</p>
-<p>然后就是我在分享中也提到了， exclude 和 replace 这两个动词只作用于当前主模块，也就是当前项目，它所依赖的那些其他模块版本中如果出现了你待替换的那个模块版本的话，Go modules 还是会为你依赖的那个模块版本去拉取你的这个待替换的模块版本。</p>
-<p>举个例子，比如项目 A 直接依赖了模块 B 和模块 C，然后模块 B 也直接依赖了模块 C，那么你在项目 A 中的 go.mod 文件里的 <code>replace c=&gt;~/some/path/c</code> 是只会影响项目 A 里写的代码中，而模块 B 所用到的还是你 replace 之前的那个 c，并不是你替换成的 <code>~/some/path/c</code> 这个。</p>
+<p>也可以将其设置为 <code>off</code>，也就是禁止 Go 在后续操作中校验模块版本。</p>
+<h3 id="拉取私有模块"><a href="#拉取私有模块" class="headerlink" title="拉取私有模块"></a>拉取私有模块</h3><p>常见的公共 Go Module Proxy，比如 <code>proxy.golang.org</code> 和 <code>goproxy.cn</code> 都是无权访问任何人的私有模块的。即使不使用任何 Go Module Proxy，也就是将 <code>GOPROXY</code> 设置为 direct，默认情况下 Go 也是无法抓取私有模块的，参见 <a href="https://golang.org/doc/faq#git_https" target="_blank" rel="external nofollow noopener noreferrer">这里</a> 。</p>
+<p>解决的方法是，想办法修改 VCS 的拉取行为，比如使用 git 的时候，在 <code>$HOME/.gitconfig</code> 文件中追加：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[url <span class="string">"ssh://git@github.com/"</span>]</span><br><span class="line">	insteadOf = https://github.com/</span><br></pre></td></tr></table></figure>
+<p>给 git 添加了这个配置之后，git 将使用 ssh 协议拉取代码，而不是 HTTPS 协议拉取代码。</p>
+<p>与此同时，需要在 <code>GOPROXY</code> 设置一个 fallback 选项，也就是说访问前面的 proxy 地址失败后，使用 direct 去代码原地址拉取</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go env -w GOPROXY=https://goproxy.cn,direct</span><br></pre></td></tr></table></figure>
+<p>除此之外，还可以通过 <code>GONOPROXY</code> 或者 <code>GOPRIVATE</code> 环境变量来告诉 Go 在拉取哪些模块时忽略 Go Module Proxy 。</p>
 <h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
-<li><a href="https://www.youtube.com/watch?v=F8nrpe0XWRg&amp;list=PLq2Nv-Sh8EbbIjQgDzapOFeVfv5bGOoPE&amp;index=3&amp;t=0s" target="_blank" rel="external nofollow noopener noreferrer">Russ Cox 介绍 go module背后的设计哲学</a></li>
+<li><a href="https://cacm.acm.org/magazines/2016/7/204032-why-google-stores-billions-of-lines-of-code-in-a-single-repository/pdf" target="_blank" rel="external nofollow noopener noreferrer">Why google stores billions of lines of code in a single repository</a></li>
+<li><a href="https://www.youtube.com/watch?v=F8nrpe0XWRg&amp;list=PLq2Nv-Sh8EbbIjQgDzapOFeVfv5bGOoPE&amp;index=3&amp;t=0s" target="_blank" rel="external nofollow noopener noreferrer">Russ Cox 介绍 go module 背后的设计哲学</a></li>
 <li><a href="https://go.googlesource.com/proposal/+/master/design/24301-versioned-go.md" target="_blank" rel="external nofollow noopener noreferrer">Go Module Proposal</a></li>
-<li><a href="https://research.swtch.com/vgo" target="_blank" rel="external nofollow noopener noreferrer">vgo博客系列</a> </li>
-<li><a href="https://eddycjy.com/posts/go/go-moduels/2020-02-28-go-modules/" target="_blank" rel="external nofollow noopener noreferrer">https://eddycjy.com/posts/go/go-moduels/2020-02-28-go-modules/</a></li>
+<li><a href="https://research.swtch.com/vgo-mvs" target="_blank" rel="external nofollow noopener noreferrer">Minimal Version Selection</a></li>
+<li><a href="https://research.swtch.com/vgo" target="_blank" rel="external nofollow noopener noreferrer">vgo博客系列</a></li>
+<li><a href="https://github.com/golang/go/wiki/Modules" target="_blank" rel="external nofollow noopener noreferrer">Go Module Wiki</a></li>
+<li><a href="https://about.sourcegraph.com/go/gophercon-2019-go-module-proxy-life-of-a-query/" target="_blank" rel="external nofollow noopener noreferrer">Go module proxy life of a query</a></li>
+<li><a href="https://go.googlesource.com/proposal/+/master/design/25530-sumdb.md#proxying-a-checksum-database" target="_blank" rel="external nofollow noopener noreferrer">Proposal: Secure the Public Go Module Ecosystem</a></li>
 </ul>
 
     </div>
@@ -549,10 +632,10 @@
       <div class="popular-posts-title"><a href="/posts/171a4821/" rel="bookmark">【Awesome Go】Cobra</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/e3978252/" rel="bookmark">【Awesome Go】Go RESTful</a></div>
+      <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/c3c43baa/" rel="bookmark">【Go语言设计与实现】Hash Table</a></div>
+      <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
     </li>
   </ul>
 
@@ -657,7 +740,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#依赖管理机制"><span class="nav-number">1.</span> <span class="nav-text">依赖管理机制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#GOPATH"><span class="nav-number">1.1.</span> <span class="nav-text">GOPATH</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Vendor"><span class="nav-number">1.2.</span> <span class="nav-text">Vendor</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Go-Module"><span class="nav-number">1.3.</span> <span class="nav-text">Go Module</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Quick-Start"><span class="nav-number">2.</span> <span class="nav-text">Quick Start</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Example"><span class="nav-number">2.1.</span> <span class="nav-text">Example</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Workflow"><span class="nav-number">2.2.</span> <span class="nav-text">Workflow</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#New-Concept"><span class="nav-number">3.</span> <span class="nav-text">New Concept</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Modules-定义"><span class="nav-number">3.1.</span> <span class="nav-text">Modules 定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#go-mod"><span class="nav-number">3.2.</span> <span class="nav-text">go.mod</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Minimal-Version-Selection"><span class="nav-number">3.3.</span> <span class="nav-text">Minimal Version Selection</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Semantic-Import-Versioning"><span class="nav-number">3.4.</span> <span class="nav-text">Semantic Import Versioning</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#How-to-Use-Modules"><span class="nav-number">4.</span> <span class="nav-text">How to Use Modules</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#包管理命令"><span class="nav-number">5.</span> <span class="nav-text">包管理命令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#安装依赖"><span class="nav-number">5.1.</span> <span class="nav-text">安装依赖</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#升级依赖"><span class="nav-number">5.2.</span> <span class="nav-text">升级依赖</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#移除依赖"><span class="nav-number">5.3.</span> <span class="nav-text">移除依赖</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看依赖包"><span class="nav-number">5.4.</span> <span class="nav-text">查看依赖包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#模块配置文本格式化"><span class="nav-number">5.5.</span> <span class="nav-text">模块配置文本格式化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#发布版本"><span class="nav-number">5.6.</span> <span class="nav-text">发布版本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#从老项目迁移"><span class="nav-number">5.7.</span> <span class="nav-text">从老项目迁移</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GOSUMDB"><span class="nav-number">5.8.</span> <span class="nav-text">GOSUMDB</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Go-Checksum-Database"><span class="nav-number">5.9.</span> <span class="nav-text">Go Checksum Database</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GONOPROXY-GONOSUMDB-GOPRIVATE"><span class="nav-number">5.10.</span> <span class="nav-text">GONOPROXY/GONOSUMDB/GOPRIVATE</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Global-Caching"><span class="nav-number">5.11.</span> <span class="nav-text">Global Caching</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#快速迁移项目至-Go-Modules"><span class="nav-number">6.</span> <span class="nav-text">快速迁移项目至 Go Modules</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#迁移后-go-get-行为的改变"><span class="nav-number">7.</span> <span class="nav-text">迁移后 go get 行为的改变</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用-Go-Modules-时常遇见的坑"><span class="nav-number">8.</span> <span class="nav-text">使用 Go Modules 时常遇见的坑</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#判断项目是否启用了-Go-Modules"><span class="nav-number">8.1.</span> <span class="nav-text">判断项目是否启用了 Go Modules</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#坑-2-管理-Go-的环境变量"><span class="nav-number">8.2.</span> <span class="nav-text">坑 2: 管理 Go 的环境变量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#坑-3-从-dep、glide-等迁移至-Go-Modules"><span class="nav-number">8.3.</span> <span class="nav-text">坑 3: 从 dep、glide 等迁移至 Go Modules</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#坑-4-拉取私有模块"><span class="nav-number">8.4.</span> <span class="nav-text">坑 4:拉取私有模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#坑-5-更新现有的模块"><span class="nav-number">8.5.</span> <span class="nav-text">坑 5:更新现有的模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#坑-6-主版本号"><span class="nav-number">8.6.</span> <span class="nav-text">坑 6:主版本号</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Go-Module-Proxy"><span class="nav-number">9.</span> <span class="nav-text">Go Module Proxy</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Q-amp-A"><span class="nav-number">10.</span> <span class="nav-text">Q&amp;A</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">11.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#依赖管理"><span class="nav-number">1.</span> <span class="nav-text">依赖管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#GOPATH"><span class="nav-number">1.1.</span> <span class="nav-text">GOPATH</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Vendor"><span class="nav-number">1.2.</span> <span class="nav-text">Vendor</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Go-Module"><span class="nav-number">1.3.</span> <span class="nav-text">Go Module</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关键概念"><span class="nav-number">2.</span> <span class="nav-text">关键概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Semantic-Import-Versioning"><span class="nav-number">2.1.</span> <span class="nav-text">Semantic Import Versioning</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Minimal-Version-Selection"><span class="nav-number">2.2.</span> <span class="nav-text">Minimal Version Selection</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用方法"><span class="nav-number">3.</span> <span class="nav-text">使用方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#初始化项目"><span class="nav-number">3.1.</span> <span class="nav-text">初始化项目</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#go-mod-文件解析"><span class="nav-number">3.2.</span> <span class="nav-text">go.mod 文件解析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#go-sum-文件解析"><span class="nav-number">3.3.</span> <span class="nav-text">go.sum 文件解析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看全局缓存"><span class="nav-number">3.4.</span> <span class="nav-text">查看全局缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#依赖升级"><span class="nav-number">3.5.</span> <span class="nav-text">依赖升级</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#移除依赖"><span class="nav-number">3.6.</span> <span class="nav-text">移除依赖</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看依赖包"><span class="nav-number">3.7.</span> <span class="nav-text">查看依赖包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#模块配置文本格式化"><span class="nav-number">3.8.</span> <span class="nav-text">模块配置文本格式化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#从老项目迁移"><span class="nav-number">3.9.</span> <span class="nav-text">从老项目迁移</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#依赖拉取"><span class="nav-number">4.</span> <span class="nav-text">依赖拉取</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Go-Module-Proxy"><span class="nav-number">4.1.</span> <span class="nav-text">Go Module Proxy</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Go-Checksum-Database"><span class="nav-number">4.2.</span> <span class="nav-text">Go Checksum Database</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#拉取私有模块"><span class="nav-number">4.3.</span> <span class="nav-text">拉取私有模块</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">5.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -672,7 +755,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-count">159</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -684,7 +767,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">222</span>
+        <span class="site-state-item-count">223</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -752,13 +835,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">1.9m</span>
+    <span title="站点总字数">2m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">58:15</span>
+    <span title="站点阅读时长">59:37</span>
 </div>
 
         

@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="所谓容器网络需要结局的两大核心问题是： 容器IP地址的管理 容器之间的相互通信 其中，容器IP地址的管理包括容器IP地址的分配与回收，而容器之间的相互通信包括同一主机容器之间和跨主机容器之间通信两种场景。这两个问题也不能完全分开来看，因为不同的解决方案往往要同时考虑以上两点。容器网络的发展已经相对成熟，这篇笔记先对主流容器网络模型做一些概述，然后将进一步对典型的容器网络模型展开实践。">
+<meta name="keywords" content="container,docker,网络">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Docker 容器网络模型">
+<meta property="og:url" content="http://houmin.cc/posts/9ca050a2/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="所谓容器网络需要结局的两大核心问题是： 容器IP地址的管理 容器之间的相互通信 其中，容器IP地址的管理包括容器IP地址的分配与回收，而容器之间的相互通信包括同一主机容器之间和跨主机容器之间通信两种场景。这两个问题也不能完全分开来看，因为不同的解决方案往往要同时考虑以上两点。容器网络的发展已经相对成熟，这篇笔记先对主流容器网络模型做一些概述，然后将进一步对典型的容器网络模型展开实践。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://i.loli.net/2020/01/31/lWUKNw5Tbp3cArC.jpg">
+<meta property="og:image" content="https://i.loli.net/2020/01/30/RjzDdbcK7uJ546Q.jpg">
+<meta property="og:image" content="https://i.loli.net/2020/01/30/ighFPJUxGuNRTZE.jpg">
+<meta property="og:image" content="https://i.loli.net/2020/01/31/47Z5U3BQlN1AotR.jpg">
+<meta property="og:image" content="https://i.loli.net/2020/01/31/Ykjeivl2GS5WrCF.jpg">
+<meta property="og:updated_time" content="2021-01-27T11:44:47.514Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/01/31/lWUKNw5Tbp3cArC.jpg">
+
+<link rel="canonical" href="http://houmin.cc/posts/9ca050a2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Docker 容器网络模型 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/9ca050a2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Docker 容器网络模型
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-04-13 20:40:04" itemprop="dateCreated datePublished" datetime="2020-04-13T20:40:04+08:00">2020-04-13</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/9ca050a2/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/9ca050a2/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>15k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>27 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <a id="more"></a><p>所谓容器网络需要结局的两大核心问题是：</p><ol>
+<li>容器IP地址的管理</li>
+<li>容器之间的相互通信</li>
+</ol><p>其中，容器IP地址的管理包括容器IP地址的分配与回收，而容器之间的相互通信包括同一主机容器之间和跨主机容器之间通信两种场景。这两个问题也不能完全分开来看，因为不同的解决方案往往要同时考虑以上两点。容器网络的发展已经相对成熟，这篇笔记先对主流容器网络模型做一些概述，然后将进一步对典型的容器网络模型展开实践。</p><a id="more"></a>
+
+
+
+<h2 id="CNM-vs-CNI"><a href="#CNM-vs-CNI" class="headerlink" title="CNM vs CNI"></a>CNM vs CNI</h2><p>关于容器网络，Docker与Kubernetes分别提出了不同的规范标准：</p>
+<ul>
+<li>Docker采用的 <a href="https://github.com/docker/libnetwork/blob/master/docs/design.md" target="_blank" rel="external nofollow noopener noreferrer">CNM</a>(Container Network Model)</li>
+<li>Kunernetes支持的 <a href="https://github.com/containernetworking/cni" target="_blank" rel="external nofollow noopener noreferrer">CNI</a> 模型 (Container Network Interface)</li>
+</ul>
+<p>CNM基于<a href="https://github.com/docker/libnetwork" target="_blank" rel="external nofollow noopener noreferrer">libnetwork</a>，是Docker内置的模型规范，它的总体架构如下图所示：</p>
+<p><img alt="cnm-model.jpg" data-src="https://i.loli.net/2020/01/31/lWUKNw5Tbp3cArC.jpg"></p>
+<p>可以看到，CNM规范主要定义了以下三个组件：</p>
+<ul>
+<li>Sandbox: 每个Sandbox包一个容器网络栈(network stack)的配置：容器的网口、路由表和DNS设置等，Sandbox可以通过Linux网络命名空间netns来实现</li>
+<li>Endpoint: 每个Sandbox通过Endpoint加入到一个Network里，Endpoint可以通过Linux虚拟网络设备veth对来实现</li>
+<li>Network: 一组能相互直接通信的Endpoint，Network可以通过Linux网桥设备bridge，VLAN等实现</li>
+</ul>
+<p>可以看到，底层实现原理还是我们之前介绍过的Linux虚拟网络设备，网络命名空间等。CNM规范的典型场景是这样的：用户可以创建一个或多个Network，一个容器Sandbox可以通过Endpoint加入到一个或多个Network，同一个Network中容器Sanbox可以通信，不同Network中的容器Sandbox隔离。这样就可以实现从容器与网络的解耦，也就是锁，在创建容器之前，可以先创建网络，然后决定让容器加入哪个网络。</p>
+<p>但是，为什么Kubernetes没有采用 CNM 规范标准，而是选择CNI，感兴趣的话可以去看看Kubernetes的官方博客文章<a href="https://kubernetes.io/blog/2016/01/why-kubernetes-doesnt-use-libnetwork/" target="_blank" rel="external nofollow noopener noreferrer">Why Kubernetes doesn’t use libnetwork</a>，总的来说，不使用CNM最关键的一点是，是因为Kubernetes考虑到CNM在一定程度上和container runtime耦合度太高，因此以Kubernetes为领导的其他一些组织开始制定新的CNI规范。CNI并不是 Docker 原生支持的，它是为容器技术设计的通用型网络接口，因此CNI接口可以很容易地从高层向底层调用，但从底层到高层却不是很方便，所以一些常见的CNI插件很难在Docker层面激活。但是这两个模型全都支持插件化，也就是说我们每个人都可以按照这两套网络规范来编写自己的具体网络实现。</p>
+<p>docker通过libnetwork原生支持的网络模式可以通过<code>docker network ls</code>来看：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># docker network ls</span></span><br><span class="line">NETWORK ID          NAME                DRIVER              SCOPE</span><br><span class="line">f559b082c95f        bridge              bridge              <span class="built_in">local</span></span><br><span class="line">5f11ccbbf488        host                host                <span class="built_in">local</span></span><br><span class="line">97aedfe8792d        none                null                <span class="built_in">local</span></span><br></pre></td></tr></table></figure>
+<p>可以看到三种网络模型，在创建容器的时候可以通过<code>--network</code>来指定要使用的模型。其中bridge是默认的网络模型，我们接下来将会介绍并模拟实现bridge模型；none不创建任何网络，host网络模型即使用主机网络，它不会创建新的netns网络命名空间。</p>
+<blockquote>
+<p>Note: 如果<a href="https://docs.docker.com/network/overlay/" target="_blank" rel="external nofollow noopener noreferrer">enable了docker swarm</a>，那么你还会看到<code>overlay</code>网络模型，后面我们会详细介绍docker原生overlay网络模型的实现原理。</p>
+</blockquote>
+<h2 id="bridge网络"><a href="#bridge网络" class="headerlink" title="bridge网络"></a>bridge网络</h2><p>bridge桥接网络是docker默认的网络模型，如果我们在创建容器的时候不指定网络模型，则默认使用<code>bridge</code>。bridge网络模型可以解决单宿主机上的容器之间的通信以及容器服务对外的暴露，实现原理也很简单：</p>
+<p><img alt="network-docker-bridge-1.jpg" data-src="https://i.loli.net/2020/01/30/RjzDdbcK7uJ546Q.jpg"></p>
+<p>可以看到，bridge网络模型主要依赖于大名鼎鼎的docker0网桥以及veth虚拟网络设备对实现，通过之前笔记对于linux虚拟网络设备的了解，我们知道veth设备对对于从一个设备发出的数据包，会直接出现在另一个网络设备上，即使不在一个netns网络命名空间中，所以将veth设备对实际上是连接不同netns网络命名空间的”网线”，docker0网桥设备充当不同容器网络的网关。事实上，我们一旦而当以bridge网络模式创建容器时，会自动创建相应的veth设备对，其中一端连接到docker0网桥，另外一端连接到容器网络的eth0虚拟网卡。</p>
+<p>首先我们在安装了docker的宿主机上查看网桥设备docker0和路由规则：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip link show docker0</span></span><br><span class="line">4: docker0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP mode DEFAULT group default</span><br><span class="line">    link/ether 02:42:59:c8:67:c0 brd ff:ff:ff:ff:ff:ff</span><br><span class="line"><span class="comment"># ip route ls</span></span><br><span class="line">...</span><br><span class="line">172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1</span><br></pre></td></tr></table></figure>
+<p>然后使用默认的bridge网络模式创建一个容器，并查看宿主机端的veth设备对：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># docker run -d --name mynginx  nginx:latest</span></span><br><span class="line"><span class="comment"># ip link show type veth</span></span><br><span class="line">11: veth42772d8@if10: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue master docker0 state UP mode DEFAULT group default</span><br><span class="line">    link/ether e2:a3:89:76:14:f3 brd ff:ff:ff:ff:ff:ff link-netnsid 0</span><br><span class="line"><span class="comment"># bridge link</span></span><br><span class="line">11: veth42772d8 state UP @if10: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 master docker0 state forwarding priority 32 cost 2</span><br></pre></td></tr></table></figure>
+<p>可以看到新的veth设备对的一端<code>veth42772d8</code>已经连接到<code>docker0</code>网桥，那么另外一端呢？</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ls /var/run/docker/netns/</span></span><br><span class="line">62fd67d9ef3e  default</span><br><span class="line"><span class="comment"># nsenter --net=/var/run/docker/netns/62fd67d9ef3e ip link show type veth</span></span><br><span class="line">10: eth0@if11: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP mode DEFAULT group default</span><br><span class="line">    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0</span><br><span class="line"><span class="comment"># nsenter --net=/var/run/docker/netns/62fd67d9ef3e ip addr show  type veth</span></span><br><span class="line">10: eth0@if11: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP group default</span><br><span class="line">    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0</span><br><span class="line">    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br></pre></td></tr></table></figure>
+<p>正如我们设想的那样，veth设备的另外一端处于新的netns网络命名空间<code>62fd67d9ef3e</code>中，并且IP地址为<code>172.17.0.2/16</code>，与<code>docker0</code>处于同一子网中。</p>
+<blockquote>
+<p>Note: 如果我们创建了映射到<code>/var/run/docker/netns/</code>的符号链接<code>/var/run/netns</code>，就不用使用<code>nsenter</code>命令或者进入容器内部查看veth设备对的另外一端，直接使用如下<code>iproute2</code>工具包</p>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip netns show</span></span><br><span class="line">62fd67d9ef3e (id: 0)</span><br><span class="line">default</span><br><span class="line"><span class="comment"># ip netns exec 62fd67d9ef3e ip link show type veth</span></span><br><span class="line">10: eth0@if11: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP mode DEFAULT group default</span><br><span class="line">    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0</span><br><span class="line"><span class="comment"># ip netns exec 62fd67d9ef3e ip addr show type veth</span></span><br><span class="line">10: eth0@if11: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP group default</span><br><span class="line">    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0</span><br><span class="line">    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br></pre></td></tr></table></figure>
+<h2 id="bridge网络模拟"><a href="#bridge网络模拟" class="headerlink" title="bridge网络模拟"></a>bridge网络模拟</h2><p>我们加下来就模拟一下bridge网络模型的实现，基本的网络拓扑图如下所示：</p>
+<p><img alt="network-docker-bridge-2.jpg" data-src="https://i.loli.net/2020/01/30/ighFPJUxGuNRTZE.jpg"></p>
+<ol>
+<li><p>首先创建两个netns网络命名空间：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip netns add netns_A</span></span><br><span class="line"><span class="comment"># ip netns add netns_B</span></span><br><span class="line"><span class="comment"># ip netns</span></span><br><span class="line">netns_B</span><br><span class="line">netns_A</span><br><span class="line">default</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在default网络命名空间中创建网桥设备mybr0，并分配IP地址<code>172.18.0.1/16</code>使其成为对应子网的网关：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip link add name mybr0 type bridge</span></span><br><span class="line"><span class="comment"># ip addr add 172.18.0.1/16 dev mybr0</span></span><br><span class="line"><span class="comment"># ip link show mybr0</span></span><br><span class="line">12: mybr0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000</span><br><span class="line">link/ether ae:93:35:ab:59:2a brd ff:ff:ff:ff:ff:ff</span><br><span class="line"><span class="comment"># ip route</span></span><br><span class="line">...</span><br><span class="line">172.18.0.0/16 dev mybr0 proto kernel scope link src 172.18.0.1</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>接下来，创建veth设备对并连接在第一步创建的两个netns网络命名空间：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip link add vethA type veth peer name vethpA</span></span><br><span class="line"><span class="comment"># ip link show vethA</span></span><br><span class="line">14: vethA@vethpA: &lt;BROADCAST,MULTICAST&gt; mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1000</span><br><span class="line">link/ether da:f1:fd:19:6b:4a brd ff:ff:ff:ff:ff:ff</span><br><span class="line"><span class="comment"># ip link show vethpA</span></span><br><span class="line">13: vethpA@vethA: &lt;BROADCAST,MULTICAST&gt; mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1000</span><br><span class="line">link/ether 86:d6:16:43:54:9e brd ff:ff:ff:ff:ff:ff</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>将上一步创建的veth设备对的一端<code>vethA</code>连接到<code>mybr0</code>网桥并启动：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip link set dev vethA master mybr0</span></span><br><span class="line"><span class="comment"># ip link set vethA up</span></span><br><span class="line"><span class="comment"># bridge link</span></span><br><span class="line">14: vethA state LOWERLAYERDOWN @vethpA: &lt;NO-CARRIER,BROADCAST,MULTICAST,UP&gt; mtu 1500 master mybr0 state disabled priority 32 cost 2</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>将veth设备对的另一端<code>vethpA</code>放到netns网络命名空间<code>netns_A</code>中并配置IP启动：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip link set vethpA netns netns_A</span></span><br><span class="line"><span class="comment"># ip netns exec netns_A ip link set vethpA name eth0</span></span><br><span class="line"><span class="comment"># ip netns exec netns_A ip addr add 172.18.0.2/16 dev eth0</span></span><br><span class="line"><span class="comment"># ip netns exec netns_A ip link set eth0 up</span></span><br><span class="line"><span class="comment"># ip netns exec netns_A ip addr show type veth</span></span><br><span class="line">13: eth0@if14: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP group default qlen 1000</span><br><span class="line">link/ether 86:d6:16:43:54:9e brd ff:ff:ff:ff:ff:ff link-netnsid 0</span><br><span class="line">inet 172.18.0.2/16 scope global eth0</span><br><span class="line">   valid_lft forever preferred_lft forever</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>现在就可以验证从<code>netns_A</code>网络命名空间中访问<code>mybr0</code>网关：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip netns exec netns_A ping -c 2 172.18.0.1</span></span><br><span class="line">PING 172.18.0.1 (172.18.0.1) 56(84) bytes of data.</span><br><span class="line">64 bytes from 172.18.0.1: icmp_seq=1 ttl=64 time=0.096 ms</span><br><span class="line">64 bytes from 172.18.0.1: icmp_seq=2 ttl=64 time=0.069 ms</span><br><span class="line"></span><br><span class="line">--- 172.18.0.1 ping statistics ---</span><br><span class="line">2 packets transmitted, 2 received, 0% packet loss, time 1004ms</span><br><span class="line">rtt min/avg/max/mdev = 0.069/0.082/0.096/0.016 m</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>若想要从从<code>netns_A</code>网络命名空间中非<code>172.18.0.0/16</code>的地址，就需要增加一条默认默认路由：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip netns exec netns_A ip route add default via 172.18.0.1</span></span><br><span class="line"><span class="comment"># ip netns exec netns_A ip route</span></span><br><span class="line">default via 172.18.0.1 dev eth0</span><br><span class="line">172.18.0.0/16 dev eth0 proto kernel scope link src 172.18.0.2</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<blockquote>
+<p>Note: 如果你此时尝试去ping其他的公网地址，eg. <code>google.com</code>，是ping不通的，是因为ping的出去的数据包（ICMP包）的源地址没有做源地址转换(snat)，导致ICMP包有去无回；Docker是通过设置<code>iptables</code>实现源地址转换的。</p>
+</blockquote>
+<ol>
+<li><p>接下来，按照上述步骤创建连接<code>default</code>和<code>netns_B</code>网络命名空间veth设备对：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip link add vethB type veth peer name vethpB</span></span><br><span class="line"><span class="comment"># ip link set dev vethB master mybr0</span></span><br><span class="line"><span class="comment"># ip link set vethB up</span></span><br><span class="line"><span class="comment"># ip link set vethpB netns netns_B</span></span><br><span class="line"><span class="comment"># ip netns exec netns_B ip link set vethpB name eth0</span></span><br><span class="line"><span class="comment"># ip netns exec netns_B ip addr add 172.18.0.3/16 dev eth0</span></span><br><span class="line"><span class="comment"># ip netns exec netns_B ip link set eth0 up</span></span><br><span class="line"><span class="comment"># ip netns exec netns_B ip route add default via 172.18.0.1</span></span><br><span class="line"><span class="comment"># ip netns exec netns_B ip add show eth0</span></span><br><span class="line">15: eth0@if16: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP group default qlen 1000</span><br><span class="line">link/ether 0e:2f:c6:de:fe:24 brd ff:ff:ff:ff:ff:ff link-netnsid 0</span><br><span class="line">inet 172.18.0.3/16 scope global eth0</span><br><span class="line">   valid_lft forever preferred_lft forever</span><br><span class="line"><span class="comment"># ip netns exec netns_B ip route show</span></span><br><span class="line">default via 172.18.0.1 dev eth0</span><br><span class="line">172.18.0.0/16 dev eth0 proto kernel scope link src 172.18.0.3</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>默认情况下把Linux会把网桥设备bridge的<code>FORWORD</code>功能禁用，所以在<code>netns_A</code>里面是ping不通<code>netns_B</code>的，需要额外增加一条iptables规则：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -A FORWARD -i mybr0 -j ACCEPT</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>现在就可以验证两个netns网络命名空间之间可以互通：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip netns exec netns_A ping -c 2 172.18.0.3</span></span><br><span class="line">PING 172.18.0.3 (172.18.0.3) 56(84) bytes of data.</span><br><span class="line">64 bytes from 172.18.0.3: icmp_seq=1 ttl=64 time=0.091 ms</span><br><span class="line">64 bytes from 172.18.0.3: icmp_seq=2 ttl=64 time=0.093 ms</span><br><span class="line"></span><br><span class="line">--- 172.18.0.3 ping statistics ---</span><br><span class="line">2 packets transmitted, 2 received, 0% packet loss, time 1027ms</span><br><span class="line">rtt min/avg/max/mdev = 0.091/0.092/0.093/0.001 ms</span><br><span class="line"><span class="comment"># ip netns exec netns_B ping -c 2 172.18.0.2</span></span><br><span class="line">PING 172.18.0.2 (172.18.0.2) 56(84) bytes of data.</span><br><span class="line">64 bytes from 172.18.0.2: icmp_seq=1 ttl=64 time=0.259 ms</span><br><span class="line">64 bytes from 172.18.0.2: icmp_seq=2 ttl=64 time=0.078 ms</span><br><span class="line"></span><br><span class="line">--- 172.18.0.2 ping statistics ---</span><br><span class="line">2 packets transmitted, 2 received, 0% packet loss, time 1030ms</span><br><span class="line">rtt min/avg/max/mdev = 0.078/0.168/0.259/0.091 ms</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>实际上，此时两个netns网络命名空间处于同一个子网中，所以网桥设备<code>mybr0</code>还是在二层（数据链路层）起到的作用，只需要对方的MAC地址就可以访问。</p>
+<p>但是如果需要从两个netns网络命名空间访问其他网段的地址，这个时候就需要设置默认网桥设备<code>mybr0</code>充当的默认网关地址就发挥作用了：来自于两个netns网络命名空间的数据包发现目标IP地址并不是本子网地址，于是发给网关<code>mybr0</code>，此时网桥设备<code>mybr0</code>其实工作在三层（IP网络层），它收到数据包之后，查看本地路由与目标IP地址，寻找下一跳的地址。</p>
+<p>当然，如果需要从两个netns网络命名空间访问其他公网地址.eg. <code>google.com</code>，需要这是iptables来做源地址转换，这里就不细细展开来说。</p>
+<hr>
+<p>上一篇我们介绍的bridge网络模型主要用于解决同一主机间的容器相互访问以及容器对外暴露服务的问题，并没有涉及到怎么解决跨主机容器之间互相访问的问题。</p>
+<p>对于跨主机的容器间的相互访问问题，我们能想到的最直观的解决方案就是直接使用宿主机host网络，这时，容器完全复用复用宿主机的网络设备以及协议栈，容器的IP就是主机的IP，这样，只要宿主机主机能通信，容器也就自然能通信。但是这样，为了暴露容器服务，每个容器需要占用宿主机上的一个端口，通过这个端口和外界通信。所以，就需要手动维护端口的分配，不要使不同的容器服务运行在一个端口上，正因为如此，这种容器网络模型很难被推广到生产环境。</p>
+<p>因此解决跨主机通信的可行方案主要是让容器配置与宿主机不一样的IP地址，往往是在现有二层或三层网络之上再构建起来一个独立的overlay网络，这个网络通常会有自己独立的IP地址空间、交换或者路由的实现。但是由于容器有自己独立配置的IP地址，underlay平面的底层网络设备如交换机、路由器等完全不感知这些IP的存在，也就导致容器的IP不能直接路由出去实现跨主机通信。</p>
+<p>为了解决容器独立IP地址间的访问问题，主要有以下两个思路：</p>
+<ol>
+<li>修改底层网络设备配置，加入容器网络IP地址的管理，修改路由器网关等，该方式主要和SDN(Software define networking)结合。</li>
+<li>完全不修改底层网络设备配置，复用原有的underlay平面网络，解决容器跨主机通信，主要有如下两种方式:<ul>
+<li>隧道传输(Overlay)： 将容器的数据包封装到原主机网络的三层或者四层数据包中，然后使用主机网络的IP或者TCP/UDP传输到目标主机，目标主机拆包后再转发给目标容器。Overlay隧道传输常见方案包括Vxlan、ipip等，目前使用Overlay隧道传输技术的主流容器网络有Flannel等。</li>
+<li>修改主机路由：把容器网络加到主机路由表中，把主机网络设备当作容器网关，通过路由规则转发到指定的主机，实现容器的三层互通。目前通过路由技术实现容器跨主机通信的网络如Flannel host-gw、Calico等。</li>
+</ul>
+</li>
+</ol>
+<h2 id="技术术语"><a href="#技术术语" class="headerlink" title="技术术语"></a>技术术语</h2><p>在开始之前，我们总结一些在容器网络的介绍文章里面看到各种技术术语：</p>
+<ul>
+<li>IPAM: IP Address Management，即IP地址管理。IPAM并不是容器时代特有的词汇，传统的标准网络协议比如DHCP其实也是一种IPAM，负责从MAC地址分发IP地址；但是到了容器时代我们提到IPAM，我们特指为每一个容器实例分配和回收IP地址，保证一个集群里面的所有容器都分配全局唯一的IP地址；主流的做法包括：基于CIDR的IP地址段分配地或精确为每一个容器分配IP。</li>
+<li>Overlay：在容器时代，就是在主机现有二层（数据链路层）或三层（IP网络层）基础之上再构建起来一个独立的网络，这个overlay网络通常会有自己独立的IP地址空间、交换或者路由的实现。</li>
+<li>IPIP: 一种基于Linux网络设备TUN实现的隧道协议，允许将三层（IP）网络包封装在另外一个三层网络包之发送和接收，详情请看之前IPIP隧道的<a href="https://morven.life/notes/networking-3-ipip/" target="_blank" rel="external nofollow noopener noreferrer">介绍笔记</a>。</li>
+<li>IPSec: 跟IPIP隧道协议类似，是一个点对点的一个加密通信协议，一般会用到Overlay网络的数据隧道里。</li>
+<li>VXLAN：最主要是解决VLAN支持虚拟网络数量（4096）过少的问题而由VMware、Cisco、RedHat等联合提出的解决方案。VXLAN可以支持在一个VPC(Virtual Private Cloud)划分多达1600万个虚拟网络。</li>
+<li>BGP: 主干网自治网络的路由协议，当代的互联网由很多小的AS自治网络(Autonomous system)构成，自治网络之间的三层路由是由BGP实现的，简单来说，通过BGP协议AS告诉其他AS自己子网里都包括哪些IP地址段，自己的AS编号以及一些其他的信息。</li>
+<li>SDN: Software-Defined Networking，一种广义的概念，通过软件方式快速配置网络，往往包括一个中央控制层来集中配置底层基础网络设施。</li>
+</ul>
+<h2 id="Docker原生overlay"><a href="#Docker原生overlay" class="headerlink" title="Docker原生overlay"></a>Docker原生overlay</h2><p>Docker原生支持overlay网络来解决容器间的跨主机通信问题，事实上，对于Docker原生支持的overlay网络，Laurent Bernaille在DockerCon 2017上详细剖析了它的实现原理，甚至还有从头开始一步步实现Docker的overlay网络的实践教程，这三篇文章为：</p>
+<ul>
+<li><a href="https://blog.d2si.io/2017/04/25/deep-dive-into-docker-overlay-networks-part-1/" target="_blank" rel="external nofollow noopener noreferrer">Deep dive into docker overlay networks part 1</a></li>
+<li><a href="https://blog.d2si.io/2017/05/09/deep-dive-into-docker-overlay-networks-part-2/" target="_blank" rel="external nofollow noopener noreferrer">Deep dive into docker overlay networks part 2</a></li>
+<li><a href="https://blog.d2si.io/2017/08/20/deep-dive-3-into-docker-overlay-networks-part-3/" target="_blank" rel="external nofollow noopener noreferrer">Deep dive into docker overlay networks part 3</a></li>
+</ul>
+<p>所以在这里我就只是大致介绍一下Docker原生支持的overlay网络模型的大致原理：</p>
+<p><img alt="docker-overlay.jpg" data-src="https://i.loli.net/2020/01/31/47Z5U3BQlN1AotR.jpg"></p>
+<p>从上面的网络模型图可以看出，对于docker原生的overlay网络来说，处理容器对外访问的南北流量个容器之间相互访问的东西流量分别使用不同的Linux网络设备：</p>
+<ul>
+<li>南北流量：类似于bridge网络模型，通过主机的网桥设备充当网关，然后使用veth设备对分别连接主机网桥和容器内网卡设备，最后通过主机网卡发送接收对外的数据包，需要注意的是，对外数据包需要做地址转化nat</li>
+<li>东西流量：另外在主机上单独增加一个网桥设备，然后使用veth设备对分别连接主机网桥和容器内网卡设备，同时主机内网桥设备还绑定了vxlan设备，vxlan设备将跨主机的容器数据包封装成vxlan数据包发送到目标主机，然后解封装后转发给对应的容器。</li>
+</ul>
+<p>需要注意的是，虽然跨主机的两个容器是通过Overlay通信的，但容器自己不能感知，因为它们只认为彼此都在一个子网中，只需要知道对方的MAC地址，可以通过ARP协议广播学习获取IP与MAC地址转换。当然通过VXLAN隧道广播ARP包理论上也没有问题，问题是该方案将导致广播包过多，广播的成本会很大。</p>
+<p>Docker给出的方案是通过<strong>ARP代理+静态配置</strong>解决ARP广播问题，容器的地址信息保存到到KV数据库etcd中。这样就可以通过静态配置的方式填充IP和MAC地址表（neigh表）替换使用ARP广播的方式，所以vxlan设备还负责本地容器的ARP代理：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip link show vxlan0 | grep proxy_arp</span></span><br><span class="line"><span class="comment"># ip neigh</span></span><br><span class="line">192.168.0.103 dev vxlan0 lladdr 02:42:0a:14:00:03 PERMANENT</span><br><span class="line">192.168.0.104 dev vxlan0 lladdr 02:42:0a:14:00:04 PERMANENT</span><br></pre></td></tr></table></figure>
+<p>上面neign信息中的<code>PERMANENT</code>代表静态配置而不是通过学习获取的，而<code>192.168.0.103</code>和<code>192.168.0.104</code>是另外两个容器的IP地址。每当有新的容器创建时，Docker通过通知节点更新本地neigh ARP表。</p>
+<p>另外，容器之间的数据包最终还是通过VXLAN隧道传输的，因此需要知道数据包的目标容器在哪个Node节点。当Node数量达到一定数量级之后，如果采用和ARP一样的广播洪泛的方式学习，那么显然同样存在性能问题，实际上也很少使用这种方案，在硬件SDN中通常使用BGP EVPN技术实现VXLAN的控制平面，而Docker解决的办法和ARP类似，通过静态配置的方式填充VTEP（VXLAN Tunnel Endpoint）表，我们可以查看容器网络namespace的转发表（Forward database，简称fdb）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># bridge fdb</span></span><br><span class="line">...</span><br><span class="line">82:fa:1d:48:14:04 dev vxlan0 dst 10.0.0.10 link-netnsid 0 self permanent</span><br><span class="line">82:fa:1d:48:14:05 dev vxlan0 dst 10.0.0.11 link-netnsid 0 self permanent</span><br></pre></td></tr></table></figure>
+<p>上面的转发表信息表示MAC地址<code>82:fa:1d:48:14:04</code>的对端VTEP地址为<code>10.0.0.10</code>，而<code>82:fa:1d:48:14:04</code>的对端VTEP地址为<code>10.0.0.10</code>,permanent说明这两条转发表记录都是静态配置的，而这些数据来源依然是KV数据库etcd，这些VTEP地址为容器所在的主机的IP地址。</p>
+<h2 id="Flannel"><a href="#Flannel" class="headerlink" title="Flannel"></a>Flannel</h2><p>Flannel网络是目前最主流的容器网络之一，同时支持overlay和修改主机路由两种模式。 Flannel和Docker原生Overlay网络不同的是，后者的所有Node节点共享一个子网，而Flannel初始化时通常指定一个16位的网络，然后每个Node单独分配一个独立的24位子网。由于Node都在不同的子网，跨节点通信本质为三层通信，也就不存在二层的ARP广播问题了。</p>
+<p>另外，Flannel之所以被认为非常简单优雅的是，不像Docker原生overlay网络需要在容器内部再增加一个网桥设备专门用于overlay网络的通信，Flannel只需要使用Docker最原生的docker0网络，除了需要为每个Node配置subnet外，几乎不改变原有的Docker网络模型。</p>
+<p><img alt="docker-flannel.jpg" data-src="https://i.loli.net/2020/01/31/Ykjeivl2GS5WrCF.jpg"></p>
+<p>正如上面这张图看到的那样，Flannel在Docker最原生的docker0网桥设备和veth设备对的基础上，为了每个node单独分配了一个子网：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Node Name</th>
+<th>Node IP</th>
+<th>Node Subnet</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Node 1</td>
+<td>192.168.1.101</td>
+<td>10.0.1.0/24</td>
+</tr>
+<tr>
+<td>Node 2</td>
+<td>192.168.1.102</td>
+<td>10.0.2.0/24</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>我们也可以看到，容器对外流量的访问以及统一主机上的容器之前的访问完全与docker原生的bridge模式相同。那么，怎么实现跨主机间的容器相互访问呢？</p>
+<p>前面说过，Flannel同时提供了overlay和修改主机路由两种方式，其中overlay方式主要通过vxlan隧道，而修改主机路由则是通过配置主机静态路由的方式。</p>
+<h3 id="vxlan隧道"><a href="#vxlan隧道" class="headerlink" title="vxlan隧道"></a>vxlan隧道</h3><p>查看主机node1的本地静态路由：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># node1</span></span><br><span class="line"><span class="comment"># ip route show</span></span><br><span class="line">...</span><br><span class="line">10.0.1.0/24 dev docker0 proto kernel scope link src 10.0.1.1</span><br><span class="line">10.0.2.0/24 via 10.0.2.0 dev flannel.1 onlink</span><br><span class="line"><span class="comment"># node2</span></span><br><span class="line"><span class="comment"># ip route show</span></span><br><span class="line">...</span><br><span class="line">10.0.2.0/24 dev docker0 proto kernel scope link src 10.0.2.1</span><br><span class="line">10.0.1.0/24 via 10.0.1.0 dev flannel.1 onlink</span><br></pre></td></tr></table></figure>
+<p>可以看到，对于每个主机，当前子网都可以直接通过docker0网桥直接访问，而其他的子网则需要特殊的网络设备<code>flannel.1</code>来访问，它是一个Linux的vxlan网络设备，其中<code>.1</code>为VNI值，默认值为1。</p>
+<p>因为同一主机的容器处于同一子网，因此直接通过ARP学习即可，而不同主机上的容器处于不同的子网，所以不涉及ARP广播泛洪的问题。但是，vxlan网络设备<code>flannel.1</code>如何知道对端VTEP地址呢？我们来看一下转发表fdb：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># bridge fdb | grep flannel</span></span><br><span class="line">82:fa:1d:48:14:00 dev flannel.1 dst 192.168.1.102 self permanent</span><br></pre></td></tr></table></figure>
+<p>其中<code>192.168.1.102</code>是另外一个Node的IP地址，即VTEP地址，而<code>82:fa:1d:48:14:00</code>是对端网络设备<code>flannel.1</code>的MAC地址，从permanent可以看出转发表是由Flannel静态添加的，这些信息可以保存在etcd中。</p>
+<p>相对于docker原生的overlay来说，除了增加或者减少Node，需要Flannel配合配置静态路由以及fdb表，容器的创建与删除完全不需要Flannel干预，事实上Flannel也不需要知道有没有新的容器创建或者删除。</p>
+<h3 id="host-gw路由"><a href="#host-gw路由" class="headerlink" title="host-gw路由"></a>host-gw路由</h3><p>上面我们介绍了Flannel通过vxlan隧道搭建overlay实现容器间的跨主机通信，其实Flannel支持通过host-gw，也就是修改主机路由的方式实现容器间的跨主机通信，此时每个Node都相当于一个路由器，作为容器的网关，负责容器的路由转发。</p>
+<p>对于Flannel的host-gw修改主机路由的方式，我们后面有机会在详细去剖析。需要说明的是host-gw的方式相对overlay由于少了vxlan的封包拆包过程，直接路由数据包到目的地址，因此性能相对要好。不过正是由于它是通过添加静态路由的方式实现，每个宿主机相当于是容器的网关，因此每个宿主机必须在同一个子网内，否则跨子网由于链路层不通导致无法实现路由。</p>
+<h2 id="Calico"><a href="#Calico" class="headerlink" title="Calico"></a>Calico</h2><p>Calico采用和Flannel host-gw类似的方式，即通过修改主机路由的方式实现容器间的跨主机通信，不同的地方在于Flannel通过flanneld进程逐一添加主机静态路由实现，而Calico则是通过BGP协议实现节点间路由规则的相互学习广播。</p>
+<p>Calico也会像Flannel一样会为每个主机节点分配一个子网，只不过Calico默认分配的是26位子网，不同于Flannel默认分配的24位子网：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Node Name</th>
+<th>Node IP</th>
+<th>Node Subnet</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Node 1</td>
+<td>172.16.31.155</td>
+<td>10.1.83.192⁄26</td>
+</tr>
+<tr>
+<td>Node 2</td>
+<td>172.16.32.117</td>
+<td>10.1.32.192⁄26</td>
+</tr>
+<tr>
+<td>Node 2</td>
+<td>172.16.32.120</td>
+<td>10.1.147.128⁄26</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Calico通过BGP协议动态调价路由，那么我们就来看看主机的路由规则：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># node1</span></span><br><span class="line"><span class="comment"># ip route show</span></span><br><span class="line">...</span><br><span class="line">blackhole 10.1.83.192/26  proto bird</span><br><span class="line">10.1.83.193 dev cali8632426305e  scope link</span><br><span class="line">10.1.83.194 dev cali87c063cc2db  scope link</span><br><span class="line">10.1.32.192/26 via 172.16.32.117 dev tunl0  proto bird onlink</span><br><span class="line">10.1.147.128/26 via 172.16.32.120 dev tunl0  proto bird onlink</span><br></pre></td></tr></table></figure>
+<p>可以看到，Calico修改主机路由来实现容器间的跨主机通信方式和Flannel host-gw一样，下一跳直接指向对应主机的IP，把主机当作容器的网关。但Calico会增加一条blackhole的规则，将非法的容器IP直接丢弃；另外一个不一样的地方是数据包到达宿主机后，Flannel会通过路由转发流量到bridge网络设备中，再由bridge设备转发给容器，而Calico则为每个容器IP生成一条路由规则，直接指向容器的网卡对端。当容器数量达到一定规模之后，主机路由规则数量也会越来越多，性能会是个问题。Calico给出的解决方案是<a href="https://docs.projectcalico.org/v3.5/usage/routereflector" target="_blank" rel="external nofollow noopener noreferrer">路由反射器(route reflector)</a>。</p>
+<p>此外，需要注意的是，我们知道Flannel host-gw的方式只支持每个宿主机在同一个子网内，才可以添加静态路由规则，不能支持跨网段的主机node，那么Calico支持吗？</p>
+<p>答案是肯定的，Calico在安装的时候可以指定是否打开ipip模式，也就是ipip隧道。在我的实验环境中，ipip模式已经打开，如果你观察得够仔细的话，你会发现主机路由中发往其他主机上的容器的路由要经过<code>tunl0</code>网络设备，我们来看一下<code>tunl0</code>网络设备的类型：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip link show tunl0</span></span><br><span class="line">5: tunl0@NONE: &lt;NOARP,UP,LOWER_UP&gt; mtu 1430 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1</span><br><span class="line">    link/ipip 0.0.0.0 brd 0.0.0.0</span><br></pre></td></tr></table></figure>
+<p>可以看到，<code>tunl0</code>其实是Linux的TUN网络设备，它会在不同主机节点间开启IPIP隧道，也就是说，即使主机节点处于三层（IP）网络中，数据包还是可以通过隧道发送到目标主机，在由目标主机转发给对应的容器。这时Calico其实采用的是overlay的方式。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://kubernetes.io/blog/2016/01/why-kubernetes-doesnt-use-libnetwork/" target="_blank" rel="external nofollow noopener noreferrer">Why Kubernetes doesn’t use libnetwork</a></li>
+<li><a href="https://blog.d2si.io/2017/04/25/deep-dive-into-docker-overlay-networks-part-1/" target="_blank" rel="external nofollow noopener noreferrer">Deep dive into docker overlay networks part 1</a></li>
+<li><a href="https://blog.d2si.io/2017/05/09/deep-dive-into-docker-overlay-networks-part-2/" target="_blank" rel="external nofollow noopener noreferrer">Deep dive into docker overlay networks part 2</a></li>
+<li><a href="https://blog.d2si.io/2017/08/20/deep-dive-3-into-docker-overlay-networks-part-3/" target="_blank" rel="external nofollow noopener noreferrer">Deep dive into docker overlay networks part 3</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/f5d73ad0/" rel="bookmark">Hexo 博客容器化</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/574111db/" rel="bookmark">【异构计算】在Docker中使用GPU</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/fdbf86e3/" rel="bookmark">【Kubernetes】网络模型</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/89dc9bfd/" rel="bookmark">【Kubernetes】Container Runtime Interface</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/58272b06/" rel="bookmark">【Kubernetes】监控的可观测性</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/9ca050a2/" title="Docker 容器网络模型">http://houmin.cc/posts/9ca050a2/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/container/" rel="tag"><i class="fa fa-tag"></i> container</a>
+              <a href="/tags/docker/" rel="tag"><i class="fa fa-tag"></i> docker</a>
+              <a href="/tags/%E7%BD%91%E7%BB%9C/" rel="tag"><i class="fa fa-tag"></i> 网络</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/f07e2cff/" rel="next" title="网络虚拟化">
+                  <i class="fa fa-chevron-left"></i> 网络虚拟化
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/3675eff/" rel="prev" title="半虚拟化 I/O 框架 virtio">
+                  半虚拟化 I/O 框架 virtio <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#CNM-vs-CNI"><span class="nav-number">1.</span> <span class="nav-text">CNM vs CNI</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#bridge网络"><span class="nav-number">2.</span> <span class="nav-text">bridge网络</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#bridge网络模拟"><span class="nav-number">3.</span> <span class="nav-text">bridge网络模拟</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#技术术语"><span class="nav-number">4.</span> <span class="nav-text">技术术语</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Docker原生overlay"><span class="nav-number">5.</span> <span class="nav-text">Docker原生overlay</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Flannel"><span class="nav-number">6.</span> <span class="nav-text">Flannel</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#vxlan隧道"><span class="nav-number">6.1.</span> <span class="nav-text">vxlan隧道</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#host-gw路由"><span class="nav-number">6.2.</span> <span class="nav-text">host-gw路由</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Calico"><span class="nav-number">7.</span> <span class="nav-text">Calico</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">8.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">159</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">223</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">2m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">59:37</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

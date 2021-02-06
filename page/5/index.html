@@ -644,7 +644,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/posts/89dc9bfd/" class="post-title-link" itemprop="url">【Kubernetes】CRI</a>
+            <a href="/posts/89dc9bfd/" class="post-title-link" itemprop="url">【Kubernetes】Container Runtime Interface</a>
         </h2>
 
         <div class="post-meta">
@@ -695,7 +695,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>众所周知，在 k8s 集群中 Node 上负责启动和管理容器的最底层软件是 <code>Container Runtime</code>，其中使用最为广泛的容器运行时是 Docker。但是，k8s 支持的容器运行时不止于 Docker，还支持像 rkt、containerd、kata 等容器运行时。为了提高系统设计的可扩展性和代码的可维护性，k8s 把 kubelet 对容器的操作统一地抽象成一个接口，在 1.5 版本 <a href="https://kubernetes.io/blog/2016/12/container-runtime-interface-cri-in-kubernetes/" target="_blank" rel="external nofollow noopener noreferrer">引入了 CRI</a> 。CRI，<code>Container Runtime Interface</code>，作为在 Kubelet 和 容器运行时之间的一个中间抽象层，Kubelet 只需要和这个接口打交道，而容器只需要提供一个该接口的实现，给 Kubelet 暴露出 gRPC 服务即可。</p>
+          <p>众所周知，在 k8s 集群中 Node 上负责启动和管理容器的最底层软件是 <code>Container Runtime</code>，其中使用最为广泛的容器运行时是 Docker。但是，k8s 支持的容器运行时不止于 Docker，还支持像 rkt、containerd、kata 等容器运行时。为了提高系统设计的可扩展性和代码的可维护性，k8s 把 kubelet 对容器的操作统一地抽象成一个接口，在 1.5 版本 <a href="https://kubernetes.io/blog/2016/12/container-runtime-interface-cri-in-kubernetes/" target="_blank" rel="external nofollow noopener noreferrer">引入了 CRI</a> 。CRI 作为在 Kubelet 和 容器运行时之间的一个中间抽象层，Kubelet 只需要和这个接口打交道，而容器只需要提供一个该接口的实现，给 Kubelet 暴露出 gRPC 服务即可。</p>
 
           
           <div class="out-img-topic">
@@ -1258,7 +1258,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-count">159</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1270,7 +1270,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">222</span>
+        <span class="site-state-item-count">223</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -1338,13 +1338,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">1.9m</span>
+    <span title="站点总字数">2m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">58:15</span>
+    <span title="站点阅读时长">59:37</span>
 </div>
 
         

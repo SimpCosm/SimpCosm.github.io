@@ -58,7 +58,7 @@
   <meta name="description" content="众所周知，在 k8s 集群中 Node 上负责启动和管理容器的最底层软件是 Container Runtime，其中使用最为广泛的容器运行时是 Docker。但是，k8s 支持的容器运行时不止于 Docker，还支持像 rkt、containerd、kata 等容器运行时。为了提高系统设计的可扩展性和代码的可维护性，k8s 把 kubelet 对容器的操作统一地抽象成一个接口，在 1.5 版本 引">
 <meta name="keywords" content="container,k8s,cri">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【Kubernetes】CRI">
+<meta property="og:title" content="【Kubernetes】Container Runtime Interface">
 <meta property="og:url" content="http://houmin.cc/posts/89dc9bfd/index.html">
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="众所周知，在 k8s 集群中 Node 上负责启动和管理容器的最底层软件是 Container Runtime，其中使用最为广泛的容器运行时是 Docker。但是，k8s 支持的容器运行时不止于 Docker，还支持像 rkt、containerd、kata 等容器运行时。为了提高系统设计的可扩展性和代码的可维护性，k8s 把 kubelet 对容器的操作统一地抽象成一个接口，在 1.5 版本 引">
@@ -70,7 +70,7 @@
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-25_k8s-cri-interface.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-27_k8s-cri-container.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-27_k8s-cri-shim-streaming.png">
-<meta property="og:updated_time" content="2021-01-27T09:24:09.009Z">
+<meta property="og:updated_time" content="2021-01-27T11:20:39.828Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-27_k8s-cri.png">
 
@@ -88,7 +88,7 @@
   };
 </script>
 
-  <title>【Kubernetes】CRI | Houmin</title>
+  <title>【Kubernetes】Container Runtime Interface | Houmin</title>
   
 
 
@@ -256,7 +256,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          【Kubernetes】CRI
+          【Kubernetes】Container Runtime Interface
         </h2>
 
         <div class="post-meta">
@@ -326,7 +326,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>众所周知，在 k8s 集群中 Node 上负责启动和管理容器的最底层软件是 <code>Container Runtime</code>，其中使用最为广泛的容器运行时是 Docker。但是，k8s 支持的容器运行时不止于 Docker，还支持像 rkt、containerd、kata 等容器运行时。为了提高系统设计的可扩展性和代码的可维护性，k8s 把 kubelet 对容器的操作统一地抽象成一个接口，在 1.5 版本 <a href="https://kubernetes.io/blog/2016/12/container-runtime-interface-cri-in-kubernetes/" target="_blank" rel="external nofollow noopener noreferrer">引入了 CRI</a> 。CRI，<code>Container Runtime Interface</code>，作为在 Kubelet 和 容器运行时之间的一个中间抽象层，Kubelet 只需要和这个接口打交道，而容器只需要提供一个该接口的实现，给 Kubelet 暴露出 gRPC 服务即可。</p>
+        <p>众所周知，在 k8s 集群中 Node 上负责启动和管理容器的最底层软件是 <code>Container Runtime</code>，其中使用最为广泛的容器运行时是 Docker。但是，k8s 支持的容器运行时不止于 Docker，还支持像 rkt、containerd、kata 等容器运行时。为了提高系统设计的可扩展性和代码的可维护性，k8s 把 kubelet 对容器的操作统一地抽象成一个接口，在 1.5 版本 <a href="https://kubernetes.io/blog/2016/12/container-runtime-interface-cri-in-kubernetes/" target="_blank" rel="external nofollow noopener noreferrer">引入了 CRI</a> 。CRI 作为在 Kubelet 和 容器运行时之间的一个中间抽象层，Kubelet 只需要和这个接口打交道，而容器只需要提供一个该接口的实现，给 Kubelet 暴露出 gRPC 服务即可。</p>
 <a id="more"></a>
 <h2 id="CRI-架构"><a href="#CRI-架构" class="headerlink" title="CRI 架构"></a>CRI 架构</h2><h3 id="CRI-Shim"><a href="#CRI-Shim" class="headerlink" title="CRI Shim"></a>CRI Shim</h3><p>CRI 机制要求 <code>Container Runtime</code> 实现一个 <code>CRI gRPC Server</code>, 该 <code>gRPC Server</code> 需要监听本地的 <code>Unix socket</code>，而 <code>Kubelet</code> 则作为 <code>gRPC Client</code> 运行。这即是 <code>CRI Shim</code>，扮演的是kubelet和容器项目之间的垫片，它的作用是实现CRI规定的每个接口，然后把具体的CRI请求翻译成对后端容器项目的请求或操作 。在当前 <code>k8s 1.20</code> 版本，除了 dockershim 还包含在 kubelet 代码中之外，其他容器运行时的 <code>CRI shim</code> 都需要自己实现并部署在宿主机上。在不久的将来，<a href="https://kubernetes.io/blog/2020/12/02/dont-panic-kubernetes-and-docker/" target="_blank" rel="external nofollow noopener noreferrer"><code>dockershim</code> 也会被移出</a>。</p>
 <p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-27_k8s-cri.png"></p>
@@ -508,7 +508,7 @@
       <div class="popular-posts-title"><a href="/posts/f5d73ad0/" rel="bookmark">Hexo 博客容器化</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/d8b96fe4/" rel="bookmark">【Kubernetes】开篇</a></div>
+      <div class="popular-posts-title"><a href="/posts/9ca050a2/" rel="bookmark">Docker 容器网络模型</a></div>
     </li>
   </ul>
 
@@ -542,7 +542,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://houmin.cc/posts/89dc9bfd/" title="【Kubernetes】CRI">http://houmin.cc/posts/89dc9bfd/</a>
+    <a href="http://houmin.cc/posts/89dc9bfd/" title="【Kubernetes】Container Runtime Interface">http://houmin.cc/posts/89dc9bfd/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -628,7 +628,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-count">159</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -640,7 +640,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">222</span>
+        <span class="site-state-item-count">223</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -708,13 +708,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">1.9m</span>
+    <span title="站点总字数">2m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">58:15</span>
+    <span title="站点阅读时长">59:37</span>
 </div>
 
         
