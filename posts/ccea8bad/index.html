@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="很多系统中都有守护进程，它们能够在后台监控系统的运行状态，在出现意外情况时及时响应。系统监控是 Go 语言运行时的重要组成部分，它会每隔一段时间检查 Go 语言运行时，确保程序没有进入异常状态。本节会介绍 Go 语言系统监控的设计与实现原理，包括它的启动、执行过程以及主要职责。">
+<meta name="keywords" content="Go">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Go语言设计与实现】System Monitor">
+<meta property="og:url" content="http://houmin.cc/posts/ccea8bad/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="很多系统中都有守护进程，它们能够在后台监控系统的运行状态，在出现意外情况时及时响应。系统监控是 Go 语言运行时的重要组成部分，它会每隔一段时间检查 Go 语言运行时，确保程序没有进入异常状态。本节会介绍 Go 语言系统监控的设计与实现原理，包括它的启动、执行过程以及主要职责。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-system-monitor.png">
+<meta property="og:updated_time" content="2021-02-07T11:38:15.892Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-system-monitor.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/ccea8bad/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Go语言设计与实现】System Monitor | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/ccea8bad/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Go语言设计与实现】System Monitor
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-05-10 12:21:53" itemprop="dateCreated datePublished" datetime="2020-05-10T12:21:53+08:00">2020-05-10</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/ccea8bad/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/ccea8bad/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>7.7k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>14 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>很多系统中都有守护进程，它们能够在后台监控系统的运行状态，在出现意外情况时及时响应。系统监控是 Go 语言运行时的重要组成部分，它会每隔一段时间检查 Go 语言运行时，确保程序没有进入异常状态。本节会介绍 Go 语言系统监控的设计与实现原理，包括它的启动、执行过程以及主要职责。</p>
+<a id="more"></a>
+<h2 id="设计原理"><a href="#设计原理" class="headerlink" title="设计原理"></a>设计原理</h2><p>在支持多任务的操作系统中，守护进程（Daemon）是在后台运行的计算机程序。守护进程不会由用户直接操作，它一般会在操作系统启动时自动运行。Kubernetes 的 DaemonSet 和 Go 语言的系统监控都使用类似设计提供一些通用的功能：</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-system-monitor.png"></p>
+<p>守护进程是很有效的设计，它在整个系统的生命周期中都会存在，会随着系统的启动而启动，系统的结束而结束。在操作系统和 Kubernetes 中，我们经常会将数据库服务、日志服务以及监控服务等进程作为守护进程运行。</p>
+<p>Go 语言的系统监控也起到了很重要的作用，它在内部启动了一个不会中止的循环，在循环的内部会轮询网络、抢占长期运行或者处于系统调用的 Goroutine 以及触发垃圾回收，通过这些行为，它能够让系统的运行状态变得更健康。</p>
+<h2 id="监控循环"><a href="#监控循环" class="headerlink" title="监控循环"></a>监控循环</h2><p>当 Go 语言程序启动时，运行时会在第一个 Goroutine 中调用 <a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/proc.go#L113" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.main</code></a> 启动主程序，该函数会在系统栈中创建新的线程：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">if</span> GOARCH != <span class="string">"wasm"</span> &#123;</span><br><span class="line">		systemstack(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			newm(sysmon, <span class="literal">nil</span>)</span><br><span class="line">		&#125;)</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/proc.go#L1703" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.newm</code></a> 会创建一个存储待执行函数和处理器的新结构体 <a href="https://github.com/golang/go/blob/753d56d3642eb83848aa39e65982a9fc77e722d7/src/runtime/runtime2.go#L473" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.m</code></a>。运行时执行系统监控不需要处理器，系统监控的 Goroutine 会直接在创建的线程上运行：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newm</span><span class="params">(fn <span class="keyword">func</span>()</span>, _<span class="title">p_</span> *<span class="title">p</span>)</span> &#123;</span><br><span class="line">	mp := allocm(_p_, fn)</span><br><span class="line">	mp.nextp.set(_p_)</span><br><span class="line">	mp.sigmask = initSigmask</span><br><span class="line">	...</span><br><span class="line">	newm1(mp)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/proc.go#L1735" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.newm1</code></a> 会调用特定平台的 <a href="https://github.com/golang/go/blob/8e0be05ec7c369387c0ed3c9cf37968c6d3afbbd/src/runtime/os_linux.go#L139" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.newsproc</code></a> 通过系统调用 <code>clone</code> 创建一个新的线程并在新的线程中执行 <a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/proc.go#L1041" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mstart</code></a>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newosproc</span><span class="params">(mp *m)</span></span> &#123;</span><br><span class="line">	stk := unsafe.Pointer(mp.g0.stack.hi)</span><br><span class="line">	<span class="keyword">var</span> oset sigset</span><br><span class="line">	sigprocmask(_SIG_SETMASK, &amp;sigset_all, &amp;oset)</span><br><span class="line">	ret := clone(cloneFlags, stk, unsafe.Pointer(mp), unsafe.Pointer(mp.g0), unsafe.Pointer(funcPC(mstart)))</span><br><span class="line">	sigprocmask(_SIG_SETMASK, &amp;oset, <span class="literal">nil</span>)</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在新创建的线程中，我们会执行存储在 <a href="https://github.com/golang/go/blob/753d56d3642eb83848aa39e65982a9fc77e722d7/src/runtime/runtime2.go#L473" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.m</code></a> 结构体中的 <a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/proc.go#L4455" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.sysmon</code></a> 函数启动系统监控：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">sysmon</span><span class="params">()</span></span> &#123;</span><br><span class="line">	sched.nmsys++</span><br><span class="line">	checkdead()</span><br><span class="line"></span><br><span class="line">	lasttrace := <span class="keyword">int64</span>(<span class="number">0</span>)</span><br><span class="line">	idle := <span class="number">0</span></span><br><span class="line">	delay := <span class="keyword">uint32</span>(<span class="number">0</span>)</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> idle == <span class="number">0</span> &#123;</span><br><span class="line">			delay = <span class="number">20</span></span><br><span class="line">		&#125; <span class="keyword">else</span> <span class="keyword">if</span> idle &gt; <span class="number">50</span> &#123;</span><br><span class="line">			delay *= <span class="number">2</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> delay &gt; <span class="number">10</span>*<span class="number">1000</span> &#123;</span><br><span class="line">			delay = <span class="number">10</span> * <span class="number">1000</span></span><br><span class="line">		&#125;</span><br><span class="line">		usleep(delay)</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当运行时刚刚调用上述函数时，会先通过 <a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/proc.go#L4345" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.checkdead</code></a> 检查是否存在死锁，然后进入核心的监控循环；系统监控在每次循环开始时都会通过 <code>usleep</code> 挂起当前线程，该函数的参数是微秒，运行时会遵循以下的规则决定休眠时间：</p>
+<ul>
+<li>初始的休眠时间是 20μs；</li>
+<li>最长的休眠时间是 10ms；</li>
+<li>当系统监控在 50 个循环中都没有唤醒 Goroutine 时，休眠时间在每个循环都会倍增；</li>
+</ul>
+<p>当程序趋于稳定之后，系统监控的触发时间就会稳定在 10ms。它除了会检查死锁之外，还会在循环中完成以下的工作：</p>
+<ul>
+<li>运行计时器 — 获取下一个需要被触发的计时器；</li>
+<li>轮询网络 — 获取需要处理的到期文件描述符；</li>
+<li>抢占处理器 — 抢占运行时间较长的或者处于系统调用的 Goroutine；</li>
+<li>垃圾回收 — 在满足条件时触发垃圾收集回收内存；</li>
+</ul>
+<p>我们在这一节中会依次介绍系统监控是如何处理五种不同工作的。</p>
+<h3 id="检查死锁"><a href="#检查死锁" class="headerlink" title="检查死锁"></a>检查死锁</h3><p>系统监控通过 <a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/proc.go#L4345" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.checkdead</code></a> 检查运行时是否发生了死锁，我们可以将检查死锁的过程分成以下三个步骤：</p>
+<ol>
+<li>检查是否存在正在运行的线程；</li>
+<li>检查是否存在正在运行的 Goroutine；</li>
+<li>检查处理器上是否存在计时器；</li>
+</ol>
+<p>该函数首先会检查 Go 语言运行时中正在运行的线程数量，我们通过调度器中的多个字段计算该值的结果：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">checkdead</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> run0 <span class="keyword">int32</span></span><br><span class="line">	run := mcount() - sched.nmidle - sched.nmidlelocked - sched.nmsys</span><br><span class="line">	<span class="keyword">if</span> run &gt; run0 &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> run &lt; <span class="number">0</span> &#123;</span><br><span class="line">		<span class="built_in">print</span>(<span class="string">"runtime: checkdead: nmidle="</span>, sched.nmidle, <span class="string">" nmidlelocked="</span>, sched.nmidlelocked, <span class="string">" mcount="</span>, mcount(), <span class="string">" nmsys="</span>, sched.nmsys, <span class="string">"\n"</span>)</span><br><span class="line">		throw(<span class="string">"checkdead: inconsistent counts"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li><a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/proc.go#L3745" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcount</code></a> 根据下一个待创建的线程 id 和释放的线程数得到系统中存在的线程数；</li>
+<li><code>nmidle</code> 是处于空闲状态的线程数量；</li>
+<li><code>nmidlelocked</code> 是处于锁定状态的线程数量；</li>
+<li><code>nmsys</code> 是处于系统调用的线程数量；</li>
+</ol>
+<p>利用上述几个线程相关数据，我们可以得到正在运行的线程数，如果线程数量大于 0，说明当前程序不存在死锁；如果线程数小于 0，说明当前程序的状态不一致；如果线程数等于 0，我们需要进一步检查程序的运行状态：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">checkdead</span><span class="params">()</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	grunning := <span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(allgs); i++ &#123;</span><br><span class="line">		gp := allgs[i]</span><br><span class="line">		<span class="keyword">if</span> isSystemGoroutine(gp, <span class="literal">false</span>) &#123;</span><br><span class="line">			<span class="keyword">continue</span></span><br><span class="line">		&#125;</span><br><span class="line">		s := readgstatus(gp)</span><br><span class="line">		<span class="keyword">switch</span> s &amp;^ _Gscan &#123;</span><br><span class="line">		<span class="keyword">case</span> _Gwaiting, _Gpreempted:</span><br><span class="line">			grunning++</span><br><span class="line">		<span class="keyword">case</span> _Grunnable, _Grunning, _Gsyscall:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">"runtime: checkdead: find g "</span>, gp.goid, <span class="string">" in status "</span>, s, <span class="string">"\n"</span>)</span><br><span class="line">			throw(<span class="string">"checkdead: runnable g"</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	unlock(&amp;allglock)</span><br><span class="line">	<span class="keyword">if</span> grunning == <span class="number">0</span> &#123;</span><br><span class="line">		throw(<span class="string">"no goroutines (main called runtime.Goexit) - deadlock!"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>当存在 Goroutine 处于 <code>_Grunnable</code>、<code>_Grunning</code> 和 <code>_Gsyscall</code> 状态时，意味着程序发生了死锁；</li>
+<li>当所有的 Goroutine 都处于 <code>_Gidle</code>、<code>_Gdead</code> 和 <code>_Gcopystack</code> 状态时，意味着主程序调用了 <a href="https://github.com/golang/go/blob/a38a917aee626a9b9d5ce2b93964f586bf759ea0/src/runtime/asm_386.s#L1336" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.goexit</code></a>；</li>
+</ol>
+<p>当运行时存在等待的 Goroutine 并且不存在正在运行的 Goroutine 时，我们会检查处理器中存在的计时器<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-sysmon/#fn:1" target="_blank" rel="external nofollow noopener noreferrer">1</a>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">checkdead</span><span class="params">()</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">for</span> _, _p_ := <span class="keyword">range</span> allp &#123;</span><br><span class="line">		<span class="keyword">if</span> <span class="built_in">len</span>(_p_.timers) &gt; <span class="number">0</span> &#123;</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	throw(<span class="string">"all goroutines are asleep - deadlock!"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果处理器中存在等待的计时器，那么所有的 Goroutine 陷入休眠状态是合理的，不过如果不存在等待的计时器，运行时就会直接报错并退出程序。</p>
+<h3 id="运行计时器"><a href="#运行计时器" class="headerlink" title="运行计时器"></a>运行计时器</h3><p>在系统监控的循环中，我们通过 <a href="https://github.com/golang/go/blob/a38a917aee626a9b9d5ce2b93964f586bf759ea0/src/runtime/time_nofake.go#L18" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.nanotime</code></a> 和 <a href="https://github.com/golang/go/blob/67539f6c532414bff9eca1a1d56f5e0192dd6fca/src/runtime/time.go#L1010" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.timeSleepUntil</code></a> 获取当前时间和计时器下一次需要唤醒的时间；当前调度器需要执行垃圾回收或者所有处理器都处于闲置状态时，如果没有需要触发的计时器，那么系统监控可以暂时陷入休眠：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">sysmon</span><span class="params">()</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		...</span><br><span class="line">		now := nanotime()</span><br><span class="line">		next, _ := timeSleepUntil()</span><br><span class="line">		<span class="keyword">if</span> debug.schedtrace &lt;= <span class="number">0</span> &amp;&amp; (sched.gcwaiting != <span class="number">0</span> || atomic.Load(&amp;sched.npidle) == <span class="keyword">uint32</span>(gomaxprocs)) &#123;</span><br><span class="line">			lock(&amp;sched.lock)</span><br><span class="line">			<span class="keyword">if</span> atomic.Load(&amp;sched.gcwaiting) != <span class="number">0</span> || atomic.Load(&amp;sched.npidle) == <span class="keyword">uint32</span>(gomaxprocs) &#123;</span><br><span class="line">				<span class="keyword">if</span> next &gt; now &#123;</span><br><span class="line">					atomic.Store(&amp;sched.sysmonwait, <span class="number">1</span>)</span><br><span class="line">					unlock(&amp;sched.lock)</span><br><span class="line">					sleep := forcegcperiod / <span class="number">2</span></span><br><span class="line">					<span class="keyword">if</span> next-now &lt; sleep &#123;</span><br><span class="line">						sleep = next - now</span><br><span class="line">					&#125;</span><br><span class="line">					...</span><br><span class="line">					notetsleep(&amp;sched.sysmonnote, sleep)</span><br><span class="line">					...</span><br><span class="line">					now = nanotime()</span><br><span class="line">					next, _ = timeSleepUntil()</span><br><span class="line">					lock(&amp;sched.lock)</span><br><span class="line">					atomic.Store(&amp;sched.sysmonwait, <span class="number">0</span>)</span><br><span class="line">					noteclear(&amp;sched.sysmonnote)</span><br><span class="line">				&#125;</span><br><span class="line">				idle = <span class="number">0</span></span><br><span class="line">				delay = <span class="number">20</span></span><br><span class="line">			&#125;</span><br><span class="line">			unlock(&amp;sched.lock)</span><br><span class="line">		&#125;</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">if</span> next &lt; now &#123;</span><br><span class="line">			startm(<span class="literal">nil</span>, <span class="literal">false</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>休眠的时间会依据强制 GC 的周期 <code>forcegcperiod</code> 和计时器下次触发的时间确定，<a href="https://github.com/golang/go/blob/10e7bc994f47a71472c49f84ab782fdfe44bf22e/src/runtime/lock_sema.go#L157" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.notesleep</code></a> 会使用信号量同步系统监控即将进入休眠的状态。当系统监控被唤醒之后，我们会重新计算当前时间和下一个计时器需要触发的时间、调用 <a href="https://github.com/golang/go/blob/10e7bc994f47a71472c49f84ab782fdfe44bf22e/src/runtime/lock_sema.go#L124" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.noteclear</code></a> 通知系统监控被唤醒并重置休眠的间隔。</p>
+<p>如果在这之后，我们发现下一个计时器需要触发的时间小于当前时间，这也就说明所有的线程可能正在忙于运行 Goroutine，系统监控会启动新的线程来触发计时器，避免计时器的到期时间有较大的偏差。</p>
+<h3 id="轮询网络"><a href="#轮询网络" class="headerlink" title="轮询网络"></a>轮询网络</h3><p>如果上一次轮询网络已经过去了 10ms，那么系统监控还会在循环中轮询网络，检查是否有待执行的文件描述符：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">sysmon</span><span class="params">()</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		...</span><br><span class="line">		lastpoll := <span class="keyword">int64</span>(atomic.Load64(&amp;sched.lastpoll))</span><br><span class="line">		<span class="keyword">if</span> netpollinited() &amp;&amp; lastpoll != <span class="number">0</span> &amp;&amp; lastpoll+<span class="number">10</span>*<span class="number">1000</span>*<span class="number">1000</span> &lt; now &#123;</span><br><span class="line">			atomic.Cas64(&amp;sched.lastpoll, <span class="keyword">uint64</span>(lastpoll), <span class="keyword">uint64</span>(now))</span><br><span class="line">			list := netpoll(<span class="number">0</span>)</span><br><span class="line">			<span class="keyword">if</span> !list.empty() &#123;</span><br><span class="line">				incidlelocked(<span class="number">-1</span>)</span><br><span class="line">				injectglist(&amp;list)</span><br><span class="line">				incidlelocked(<span class="number">1</span>)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述函数会非阻塞地调用 <a href="https://github.com/golang/go/blob/cfe2ab42e764d2eea3a3339aac1eaff97520baa0/src/runtime/netpoll_epoll.go#L99" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpoll</code></a> 检查待执行的文件描述符并通过 <a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/proc.go#L2421" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.injectglist</code></a> 将所有处于就绪状态的 Goroutine 加入全局运行队列中：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">injectglist</span><span class="params">(glist *gList)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> glist.empty() &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	lock(&amp;sched.lock)</span><br><span class="line">	<span class="keyword">var</span> n <span class="keyword">int</span></span><br><span class="line">	<span class="keyword">for</span> n = <span class="number">0</span>; !glist.empty(); n++ &#123;</span><br><span class="line">		gp := glist.pop()</span><br><span class="line">		casgstatus(gp, _Gwaiting, _Grunnable)</span><br><span class="line">		globrunqput(gp)</span><br><span class="line">	&#125;</span><br><span class="line">	unlock(&amp;sched.lock)</span><br><span class="line">	<span class="keyword">for</span> ; n != <span class="number">0</span> &amp;&amp; sched.npidle != <span class="number">0</span>; n-- &#123;</span><br><span class="line">		startm(<span class="literal">nil</span>, <span class="literal">false</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	*glist = gList&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>该函数会将所有 Goroutine 的状态从 <code>_Gwaiting</code> 切换至 <code>_Grunnable</code> 并加入全局运行队列等待运行，如果当前程序中存在空闲的处理器，就会通过 <a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/proc.go#L1845" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.startm</code></a> 函数启动线程来执行这些任务。</p>
+<h3 id="抢占处理器"><a href="#抢占处理器" class="headerlink" title="抢占处理器"></a>抢占处理器</h3><p>系统调用会在循环中调用 <a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/proc.go#L4569" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.retake</code></a> 函数抢占处于运行或者系统调用中的处理器，该函数会遍历运行时的全局处理器，每个处理器都存储了一个 <a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/proc.go#L4558" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.sysmontick</code></a> 结构体：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> sysmontick <span class="keyword">struct</span> &#123;</span><br><span class="line">	schedtick   <span class="keyword">uint32</span></span><br><span class="line">	schedwhen   <span class="keyword">int64</span></span><br><span class="line">	syscalltick <span class="keyword">uint32</span></span><br><span class="line">	syscallwhen <span class="keyword">int64</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>该结构体中的四个字段分别存储了处理器的调度次数、处理器上次调度时间、系统调用的次数以及系统调用的时间。<a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/proc.go#L4569" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.retake</code></a> 中的循环包含了两种不同的抢占逻辑：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">retake</span><span class="params">(now <span class="keyword">int64</span>)</span> <span class="title">uint32</span></span> &#123;</span><br><span class="line">	n := <span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(allp); i++ &#123;</span><br><span class="line">		_p_ := allp[i]</span><br><span class="line">		pd := &amp;_p_.sysmontick</span><br><span class="line">		s := _p_.status</span><br><span class="line">		<span class="keyword">if</span> s == _Prunning || s == _Psyscall &#123;</span><br><span class="line">			t := <span class="keyword">int64</span>(_p_.schedtick)</span><br><span class="line">			<span class="keyword">if</span> pd.schedwhen+forcePreemptNS &lt;= now &#123;</span><br><span class="line">				preemptone(_p_)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> s == _Psyscall &#123;</span><br><span class="line">			<span class="keyword">if</span> runqempty(_p_) &amp;&amp; atomic.Load(&amp;sched.nmspinning)+atomic.Load(&amp;sched.npidle) &gt; <span class="number">0</span> &amp;&amp; pd.syscallwhen+<span class="number">10</span>*<span class="number">1000</span>*<span class="number">1000</span> &gt; now &#123;</span><br><span class="line">				<span class="keyword">continue</span></span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> atomic.Cas(&amp;_p_.status, s, _Pidle) &#123;</span><br><span class="line">				n++</span><br><span class="line">				_p_.syscalltick++</span><br><span class="line">				handoffp(_p_)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">uint32</span>(n)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li><p>当处理器处于 <code>_Prunning</code> 或者 <code>_Psyscall</code> 状态时，如果上一次触发调度的时间已经过去了 10ms，我们就会通过 <a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/proc.go#L4666" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.preemptone</code></a> 抢占当前处理器；</p>
+</li>
+<li><p>当处理器处于</p>
+</li>
+</ol>
+   <figure class="highlight sqf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">_Psyscall</span></span><br></pre></td></tr></table></figure>
+<p>   状态时，在满足以下两种情况下会调用</p>
+<p>   <code>runtime.handoffp</code></p>
+<p>   让出处理器的使用权：</p>
+<ol>
+<li>当处理器的运行队列不为空或者不存在空闲处理器时<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-sysmon/#fn:2" target="_blank" rel="external nofollow noopener noreferrer">2</a>；</li>
+<li>当系统调用时间超过了 10ms 时<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-sysmon/#fn:3" target="_blank" rel="external nofollow noopener noreferrer">3</a>；</li>
+</ol>
+<p>系统监控通过在循环中抢占处理器来避免同一个 Goroutine 占用线程太长时间造成饥饿问题。</p>
+<h3 id="垃圾回收"><a href="#垃圾回收" class="headerlink" title="垃圾回收"></a>垃圾回收</h3><p>在最后，系统监控还会决定是否需要触发强制垃圾回收，<a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/proc.go#L4455" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.sysmon</code></a> 会构建 <a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/mgc.go#L1163" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.gcTrigger</code></a> 结构体并调用 <a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/mgc.go#L1191" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.gcTrigger.test</code></a> 函数判断是否需要触发垃圾回收：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">sysmon</span><span class="params">()</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">if</span> t := (gcTrigger&#123;kind: gcTriggerTime, now: now&#125;); t.test() &amp;&amp; atomic.Load(&amp;forcegc.idle) != <span class="number">0</span> &#123;</span><br><span class="line">			lock(&amp;forcegc.lock)</span><br><span class="line">			forcegc.idle = <span class="number">0</span></span><br><span class="line">			<span class="keyword">var</span> list gList</span><br><span class="line">			list.push(forcegc.g)</span><br><span class="line">			injectglist(&amp;list)</span><br><span class="line">			unlock(&amp;forcegc.lock)</span><br><span class="line">		&#125;</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果需要触发垃圾回收，我们会将用于垃圾回收的 Goroutine 加入全局队列，让调度器选择合适的处理器去执行。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>运行时通过系统监控来触发线程的抢占、网络的轮询和垃圾回收，保证 Go 语言运行时的可用性。系统监控能够很好地解决尾延迟的问题，减少调度器调度 Goroutine 的饥饿问题并保证计时器在尽可能准确的时间触发。</p>
+<h2 id="扩展阅读"><a href="#扩展阅读" class="headerlink" title="扩展阅读"></a>扩展阅读</h2><hr>
+<ol>
+<li>Ian Lance Taylor. Apr 2019. “runtime: initial scheduler changes for timers on P’s” <a href="https://github.com/golang/go/commit/06ac26279cb93140bb2b03bcef9a3300c166cade" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/golang/go/commit/06ac26279cb93140bb2b03bcef9a3300c166cade</a> <a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-sysmon/#fnref:1" target="_blank" rel="external nofollow noopener noreferrer">↩︎</a></li>
+<li>Dmitry Vyukov. Mar 2013. “runtime: improved scheduler” <a href="https://github.com/golang/go/commit/779c45a50700bda0f6ec98429720802e6c1624e8" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/golang/go/commit/779c45a50700bda0f6ec98429720802e6c1624e8</a> <a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-sysmon/#fnref:2" target="_blank" rel="external nofollow noopener noreferrer">↩︎</a></li>
+<li>Dmitry Vyukov. Jan 2014. “runtime: tune P retake logic” <a href="https://github.com/golang/go/commit/179d41feccc29260d1a16294647df218f1a6746a" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/golang/go/commit/179d41feccc29260d1a16294647df218f1a6746a</a> <a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-sysmon/#fnref:3" target="_blank" rel="external nofollow noopener noreferrer">↩︎</a></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/e87a4e07/" rel="bookmark">【Go语言设计与实现】String</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/4e214fa9/" rel="bookmark">【Go语言设计与实现】Function</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/c31234d9/" rel="bookmark">【Go语言设计与实现】Interface</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/ccea8bad/" title="【Go语言设计与实现】System Monitor">http://houmin.cc/posts/ccea8bad/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Go/" rel="tag"><i class="fa fa-tag"></i> Go</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/839ed42b/" rel="next" title="【Go语言设计与实现】Net Poller">
+                  <i class="fa fa-chevron-left"></i> 【Go语言设计与实现】Net Poller
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/6494d4e0/" rel="prev" title="【Go语言设计与实现】内存分配器">
+                  【Go语言设计与实现】内存分配器 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#设计原理"><span class="nav-number">1.</span> <span class="nav-text">设计原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#监控循环"><span class="nav-number">2.</span> <span class="nav-text">监控循环</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#检查死锁"><span class="nav-number">2.1.</span> <span class="nav-text">检查死锁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#运行计时器"><span class="nav-number">2.2.</span> <span class="nav-text">运行计时器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#轮询网络"><span class="nav-number">2.3.</span> <span class="nav-text">轮询网络</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#抢占处理器"><span class="nav-number">2.4.</span> <span class="nav-text">抢占处理器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#垃圾回收"><span class="nav-number">2.5.</span> <span class="nav-text">垃圾回收</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">3.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#扩展阅读"><span class="nav-number">4.</span> <span class="nav-text">扩展阅读</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">170</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">230</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">2.2m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">65:25</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

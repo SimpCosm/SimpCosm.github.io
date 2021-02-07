@@ -67,10 +67,9 @@
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-06_go-mod-impver.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-06_go-mod-version-select.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-06_go-mod-version-select-list.png">
-<meta property="og:image" content="https://xuanwo.io/2019/05/27/go-modules/version-select-list.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02_05_go-module-proxy-life-of-a-query.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-05_go-module-sumdb.png">
-<meta property="og:updated_time" content="2021-02-06T15:30:56.046Z">
+<meta property="og:updated_time" content="2021-02-07T11:15:55.139Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://tonybai.com/wp-content/uploads/google-trunk-based-and-release-branch-dev-model.png">
 
@@ -266,7 +265,7 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2020-08-07 22:07:31" itemprop="dateCreated datePublished" datetime="2020-08-07T22:07:31+08:00">2020-08-07</time>
+              <time title="创建时间：2020-05-07 22:07:31" itemprop="dateCreated datePublished" datetime="2020-05-07T22:07:31+08:00">2020-05-07</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -402,7 +401,6 @@
 <p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-06_go-mod-version-select.png"></p>
 <p>那么我们从 A 开始把每个模块依赖的版本都找出来，这样我们会首先得到一个粗略的清单。然后相同的模块我们总是取最大的版本，这样就能得到最终的依赖列表。</p>
 <p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-06_go-mod-version-select-list.png"></p>
-<p><img alt data-src="https://xuanwo.io/2019/05/27/go-modules/version-select-list.png"></p>
 <p>为什么可以这样呢？</p>
 <ul>
 <li><code>导入兼容性规则</code> 规定了相同的导入路径，新包必须向后兼容旧包，因此只要 D 还是 v1 版本，不管是选择 v1.3 还是 v1.4 都是可以的，不会有破坏性的变更。</li>
@@ -623,19 +621,19 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/4dea1165/" rel="bookmark">【Go语言设计与实现】Test</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/cb5a5d4d/" rel="bookmark">【Go语言设计与实现】代码即文档</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/171a4821/" rel="bookmark">【Awesome Go】Cobra</a></div>
-    </li>
-    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/e87a4e07/" rel="bookmark">【Go语言设计与实现】String</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/4e214fa9/" rel="bookmark">【Go语言设计与实现】Function</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/c31234d9/" rel="bookmark">【Go语言设计与实现】Interface</a></div>
     </li>
   </ul>
 
@@ -690,16 +688,16 @@
 
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
-                <a href="/posts/77ffac6b/" rel="next" title="【Go语言设计与实现】同步原语">
-                  <i class="fa fa-chevron-left"></i> 【Go语言设计与实现】同步原语
+                <a href="/posts/8e2bf8a2/" rel="next" title="【Go语言设计与实现】Go Scheduler">
+                  <i class="fa fa-chevron-left"></i> 【Go语言设计与实现】Go Scheduler
                 </a>
             </div>
 
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
-                <a href="/posts/47d0d3b/" rel="prev" title="所谓生活">
-                  所谓生活 <i class="fa fa-chevron-right"></i>
+                <a href="/posts/726de05a/" rel="prev" title="【Go语言设计与实现】Timer">
+                  【Go语言设计与实现】Timer <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>
@@ -755,7 +753,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">159</span>
+          <span class="site-state-item-count">170</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -767,7 +765,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">223</span>
+        <span class="site-state-item-count">230</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -835,13 +833,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">2m</span>
+    <span title="站点总字数">2.2m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">59:37</span>
+    <span title="站点阅读时长">65:25</span>
 </div>
 
         

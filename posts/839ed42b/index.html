@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="在今天，大部分的服务都是 I&#x2F;O 密集型的，应用程序会花费大量时间等待 I&#x2F;O 操作执行完成。网络轮询器就是 Go 语言运行时用来处理 I&#x2F;O 操作的关键组件，它使用了操作系统提供的 I&#x2F;O 多路复用机制增强程序的并发处理能力。本节会深入分析 Go 语言网络轮询器的设计与实现原理。">
+<meta name="keywords" content="网络,Go,源码阅读">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Go语言设计与实现】Net Poller">
+<meta property="og:url" content="http://houmin.cc/posts/839ed42b/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="在今天，大部分的服务都是 I&#x2F;O 密集型的，应用程序会花费大量时间等待 I&#x2F;O 操作执行完成。网络轮询器就是 Go 语言运行时用来处理 I&#x2F;O 操作的关键组件，它使用了操作系统提供的 I&#x2F;O 多路复用机制增强程序的并发处理能力。本节会深入分析 Go 语言网络轮询器的设计与实现原理。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://img.draveness.me/2020-02-09-15812482347815-blocking-io-model.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-09-15812482347824-non-blocking-io-model.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-09-15812482347833-io-multiplexing.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-09-15812482347842-io-multiplexing-model.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_netpoll-modules.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-09-15812482347860-poll-desc-list.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-09-15812482347868-netpoll-deadline.png">
+<meta property="og:updated_time" content="2021-02-07T11:37:12.294Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img.draveness.me/2020-02-09-15812482347815-blocking-io-model.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/839ed42b/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Go语言设计与实现】Net Poller | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/839ed42b/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Go语言设计与实现】Net Poller
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-05-09 12:21:12" itemprop="dateCreated datePublished" datetime="2020-05-09T12:21:12+08:00">2020-05-09</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/839ed42b/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/839ed42b/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>12k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>22 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>在今天，大部分的服务都是 I/O 密集型的，应用程序会花费大量时间等待 I/O 操作执行完成。网络轮询器就是 Go 语言运行时用来处理 I/O 操作的关键组件，它使用了操作系统提供的 I/O 多路复用机制增强程序的并发处理能力。本节会深入分析 Go 语言网络轮询器的设计与实现原理。</p>
+<a id="more"></a>
+<h2 id="设计原理"><a href="#设计原理" class="headerlink" title="设计原理"></a>设计原理</h2><p>网络轮询器不仅用于监控网络 I/O，还能用于监控文件的 I/O，它利用了操作系统提供的 I/O 多路复用模型来提升 I/O 设备的利用率以及程序的性能。本节会分别介绍常见的几种 I/O 模型以及 Go 语言运行时的网络轮询器如何使用多模块设计在不同的操作系统上支持多路复用。</p>
+<h3 id="I-O-模型"><a href="#I-O-模型" class="headerlink" title="I/O 模型"></a>I/O 模型</h3><p>操作系统中包含阻塞 I/O、非阻塞 I/O、信号驱动 I/O 与异步 I/O 以及 I/O 多路复用五种 I/O 模型。我们在本节中会介绍上述五种模型中的三种：</p>
+<ul>
+<li>阻塞 I/O 模型；</li>
+<li>非阻塞 I/O 模型；</li>
+<li>I/O 多路复用模型；</li>
+</ul>
+<p>在 Unix 和类 Unix 操作系统中，文件描述符（File descriptor，FD）是用于访问文件或者其他 I/O 资源的抽象句柄，例如：管道或者网络套接字<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-netpoller/#fn:1" target="_blank" rel="external nofollow noopener noreferrer">1</a>。而不同的 I/O 模型会使用不同的方式操作文件描述符。</p>
+<h4 id="阻塞-I-O"><a href="#阻塞-I-O" class="headerlink" title="阻塞 I/O"></a>阻塞 I/O</h4><p>阻塞 I/O 是最常见的 I/O 模型，对文件和网络的读写操作在默认情况下都是阻塞的。当我们通过 <code>read</code> 或者 <code>write</code> 等系统调用对文件进行读写时，应用程序就会被阻塞：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">ssize_t</span> <span class="title">read</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">void</span> *buf, <span class="keyword">size_t</span> count)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">ssize_t</span> <span class="title">write</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">const</span> <span class="keyword">void</span> *buf, <span class="keyword">size_t</span> nbytes)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>如下图所示，当我们执行 <code>read</code> 系统调用时，应用程序会从用户态陷入内核态，内核会检查文件描述符是否可读；当文件描述符中存在数据时，操作系统内核会将准备好的数据拷贝给应用程序并将控制权交回。</p>
+<p><img alt="blocking-io-mode" data-src="https://img.draveness.me/2020-02-09-15812482347815-blocking-io-model.png"></p>
+<p><strong>图 6-39 阻塞 I/O 模型</strong></p>
+<p>操作系统中多数的 I/O 操作都是如上所示的阻塞请求，一旦执行 I/O 操作，应用程序就会陷入阻塞等待 I/O 操作的结束。</p>
+<h4 id="非阻塞-I-O"><a href="#非阻塞-I-O" class="headerlink" title="非阻塞 I/O"></a>非阻塞 I/O</h4><p>当进程把一个文件描述符设置成非阻塞时，执行 <code>read</code> 和 <code>write</code> 等 I/O 操作就会立刻返回。在 C 语言中，我们可以使用如下所示的代码片段将一个文件描述符设置成非阻塞的：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> flags = fcntl(fd, F_GETFL, <span class="number">0</span>);</span><br><span class="line">fcntl(fd, F_SETFL, flags | O_NONBLOCK);</span><br></pre></td></tr></table></figure>
+<p>在上述代码中，最关键的就是系统调用 <a href="https://github.com/torvalds/linux/blob/f757165705e92db62f85a1ad287e9251d1f2cd82/fs/fcntl.c#L448" target="_blank" rel="external nofollow noopener noreferrer"><code>fcntl</code></a> 和参数 <code>O_NONBLOCK</code>，<a href="https://github.com/torvalds/linux/blob/f757165705e92db62f85a1ad287e9251d1f2cd82/fs/fcntl.c#L448" target="_blank" rel="external nofollow noopener noreferrer"><code>fcntl</code></a> 为我们提供了操作文件描述符的能力，我们可以通过它修改文件描述符的特性。当我们将文件描述符修改成非阻塞后，读写文件就会经历以下流程：</p>
+<p><img alt="non-blocking-io-mode" data-src="https://img.draveness.me/2020-02-09-15812482347824-non-blocking-io-model.png"></p>
+<p><strong>图 6-40 非阻塞 I/O 模型</strong></p>
+<p>第一次从文件描述符中读取数据会触发系统调用并返回 <code>EAGAIN</code> 错误，<code>EAGAIN</code> 意味着该文件描述符还在等待缓冲区中的数据；随后，应用程序会不断轮询调用 <code>read</code> 直到它的返回值大于 0，这时应用程序就可以对读取操作系统缓冲区中的数据并进行操作。进程使用非阻塞的 I/O 操作时，可以在等待过程中执行其他的任务，增加 CPU 资源的利用率。</p>
+<h4 id="I-O-多路复用"><a href="#I-O-多路复用" class="headerlink" title="I/O 多路复用"></a>I/O 多路复用</h4><p>I/O 多路复用被用来处理同一个事件循环中的多个 I/O 事件。I/O 多路复用需要使用特定的系统调用，最常见的系统调用就是 <a href="https://github.com/torvalds/linux/blob/f757165705e92db62f85a1ad287e9251d1f2cd82/fs/select.c#L722" target="_blank" rel="external nofollow noopener noreferrer"><code>select</code></a>，该函数可以同时监听最多 1024 个文件描述符的可读或者可写状态：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">select</span><span class="params">(<span class="keyword">int</span> nfds, fd_set *<span class="keyword">restrict</span> readfds, fd_set *<span class="keyword">restrict</span> writefds, fd_set *<span class="keyword">restrict</span> errorfds, struct timeval *<span class="keyword">restrict</span> timeout)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>除了标准的 <a href="https://github.com/torvalds/linux/blob/f757165705e92db62f85a1ad287e9251d1f2cd82/fs/select.c#L722" target="_blank" rel="external nofollow noopener noreferrer"><code>select</code></a> 函数之外，操作系统中还提供了一个比较相似的 <code>poll</code> 函数，它使用链表存储文件描述符，摆脱了 1024 的数量上限。</p>
+<p><img alt="io-multiplexing" data-src="https://img.draveness.me/2020-02-09-15812482347833-io-multiplexing.png"></p>
+<p><strong>图 6-41 I/O 多路复用函数监听文件描述符</strong></p>
+<p>多路复用函数会阻塞的监听一组文件描述符，当文件描述符的状态转变为可读或者可写时，<code>select</code> 会返回可读或者可写事件的个数，应用程序就可以在输入的文件描述符中查找哪些可读或者可写，然后执行相应的操作。</p>
+<p><img alt="io-multiplexing-mode" data-src="https://img.draveness.me/2020-02-09-15812482347842-io-multiplexing-model.png"></p>
+<p><strong>图 6-42 I/O 多路复用模型</strong></p>
+<p>I/O 多路复用模型是效率较高的 I/O 模型，它可以同时阻塞监听了一组文件描述符的状态。很多高性能的服务和应用程序都会使用这一模型来处理 I/O 操作，例如：Redis 和 Nginx 等。</p>
+<h3 id="多模块"><a href="#多模块" class="headerlink" title="多模块"></a>多模块</h3><p>Go 语言在网络轮询器中使用 I/O 多路复用模型处理 I/O 操作，但是他没有选择最常见的系统调用 <code>select</code><a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-netpoller/#fn:2" target="_blank" rel="external nofollow noopener noreferrer">2</a>。虽然 <code>select</code> 也可以提供 I/O 多路复用的能力，但是使用它有比较多的限制：</p>
+<ul>
+<li>监听能力有限 — 最多只能监听 1024 个文件描述符；</li>
+<li>内存拷贝开销大 — 需要维护一个较大的数据结构存储文件描述符，该结构需要拷贝到内核中；</li>
+<li>时间复杂度 𝑂(𝑛)O(n) — 返回准备就绪的事件个数后，需要遍历所有的文件描述符；</li>
+</ul>
+<p>为了提高 I/O 多路复用的性能，不同的操作系统也都实现了自己的 I/O 多路复用函数，例如：<code>epoll</code>、<code>kqueue</code> 和 <code>evport</code> 等。Go 语言为了提高在不同操作系统上的 I/O 操作性能，使用平台特定的函数实现了多个版本的网络轮询模块：</p>
+<ul>
+<li><a href="https://github.com/golang/go/blob/master/src/runtime/netpoll_epoll.go" target="_blank" rel="external nofollow noopener noreferrer"><code>src/runtime/netpoll_epoll.go</code></a></li>
+<li><a href="https://github.com/golang/go/blob/master/src/runtime/netpoll_kqueue.go" target="_blank" rel="external nofollow noopener noreferrer"><code>src/runtime/netpoll_kqueue.go</code></a></li>
+<li><a href="https://github.com/golang/go/blob/master/src/runtime/netpoll_solaris.go" target="_blank" rel="external nofollow noopener noreferrer"><code>src/runtime/netpoll_solaris.go</code></a></li>
+<li><a href="https://github.com/golang/go/blob/master/src/runtime/netpoll_windows.go" target="_blank" rel="external nofollow noopener noreferrer"><code>src/runtime/netpoll_windows.go</code></a></li>
+<li><a href="https://github.com/golang/go/blob/master/src/runtime/netpoll_aix.go" target="_blank" rel="external nofollow noopener noreferrer"><code>src/runtime/netpoll_aix.go</code></a></li>
+<li><a href="https://github.com/golang/go/blob/master/src/runtime/netpoll_fake.go" target="_blank" rel="external nofollow noopener noreferrer"><code>src/runtime/netpoll_fake.go</code></a></li>
+</ul>
+<p>这些模块在不同平台上实现了相同的功能，构成了一个常见的树形结构。编译器在编译 Go 语言程序时，会根据目标平台选择树中特定的分支进行编译：</p>
+<p><img alt="多模块网络轮询器" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_netpoll-modules.png"></p>
+<p>如果目标平台是 Linux，那么就会根据文件中的 <code>// +build linux</code> 编译指令选择 <a href="https://github.com/golang/go/blob/master/src/runtime/netpoll_epoll.go" target="_blank" rel="external nofollow noopener noreferrer"><code>src/runtime/netpoll_epoll.go</code></a> 并使用 <code>epoll</code> 函数处理用户的 I/O 操作。</p>
+<h4 id="接口"><a href="#接口" class="headerlink" title="接口"></a>接口</h4><p><code>epoll</code>、<code>kqueue</code>、<code>solaries</code> 等多路复用模块都要实现以下五个函数，这五个函数构成一个虚拟的接口：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">netpollinit</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">netpollopen</span><span class="params">(fd <span class="keyword">uintptr</span>, pd *pollDesc)</span> <span class="title">int32</span></span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">netpoll</span><span class="params">(delta <span class="keyword">int64</span>)</span> <span class="title">gList</span></span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">netpollBreak</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">netpollIsPollDescriptor</span><span class="params">(fd <span class="keyword">uintptr</span>)</span> <span class="title">bool</span></span></span><br></pre></td></tr></table></figure>
+<p>上述函数在网络轮询器中分别扮演了不同的作用：</p>
+<ul>
+<li><p><a href="https://github.com/golang/go/blob/cfe2ab42e764d2eea3a3339aac1eaff97520baa0/src/runtime/netpoll_epoll.go#L27" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollinit</code></a> — 初始化网络轮询器，通过 <a href="https://github.com/golang/go/blob/bc593eac2dc63d979a575eccb16c7369a5ff81e0/src/sync/once.go#L12-L20" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.Once</code></a> 和 <code>netpollInited</code> 变量保证函数只会调用一次；</p>
+</li>
+<li><p><a href="https://github.com/golang/go/blob/cfe2ab42e764d2eea3a3339aac1eaff97520baa0/src/runtime/netpoll_epoll.go#L59" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollopen</code></a> — 监听文件描述符上的边缘触发事件，创建事件并加入监听；</p>
+</li>
+<li><p><code>runtime.netpoll</code></p>
+</li>
+</ul>
+<p>  — 轮询网络并返回一组已经准备就绪的 Goroutine，传入的参数会决定它的行为</p>
+<p>  <a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-netpoller/#fn:3" target="_blank" rel="external nofollow noopener noreferrer">3</a></p>
+<p>  ；</p>
+<ul>
+<li>如果参数小于 0，无限期等待文件描述符就绪；</li>
+<li>如果参数等于 0，非阻塞地轮询网络；</li>
+<li>如果参数大于 0，阻塞特定时间轮询网络；</li>
+</ul>
+<ul>
+<li><p><a href="https://github.com/golang/go/blob/cfe2ab42e764d2eea3a3339aac1eaff97520baa0/src/runtime/netpoll_epoll.go#L76" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollBreak</code></a> — 唤醒网络轮询器，例如：计时器向前修改时间时会通过该函数中断网络轮询器<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-netpoller/#fn:4" target="_blank" rel="external nofollow noopener noreferrer">4</a>；</p>
+</li>
+<li><p><a href="https://github.com/golang/go/blob/cfe2ab42e764d2eea3a3339aac1eaff97520baa0/src/runtime/netpoll_epoll.go#L55" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollIsPollDescriptor</code></a> — 判断文件描述符是否被轮询器使用；</p>
+</li>
+</ul>
+<p>我们在这里只需要了解多路复用模块中的几个函数，本节的后半部分会详细分析各个函数的实现原理。</p>
+<h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><p>操作系统中 I/O 多路复用函数会监控文件描述符的可读或者可写，而 Go 语言网络轮询器会监听 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L60" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.pollDesc</code></a> 结构体的状态，该结构会封装操作系统的文件描述符：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> pollDesc <span class="keyword">struct</span> &#123;</span><br><span class="line">	link *pollDesc</span><br><span class="line"></span><br><span class="line">	lock    mutex</span><br><span class="line">	fd      <span class="keyword">uintptr</span></span><br><span class="line">	...</span><br><span class="line">	rseq    <span class="keyword">uintptr</span></span><br><span class="line">	rg      <span class="keyword">uintptr</span></span><br><span class="line">	rt      timer</span><br><span class="line">	rd      <span class="keyword">int64</span></span><br><span class="line">	wseq    <span class="keyword">uintptr</span></span><br><span class="line">	wg      <span class="keyword">uintptr</span></span><br><span class="line">	wt      timer</span><br><span class="line">	wd      <span class="keyword">int64</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>该结构体中包含用于监控可读和可写状态的变量，我们按照功能将它们分成以下四组：</p>
+<ul>
+<li><code>rseq</code> 和 <code>wseq</code> — 表示文件描述符被重用或者计时器被重置<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-netpoller/#fn:5" target="_blank" rel="external nofollow noopener noreferrer">5</a>；</li>
+<li><code>rg</code> 和 <code>wg</code> — 表示二进制的信号量，可能为 <code>pdReady</code>、<code>pdWait</code>、等待文件描述符可读或者可写的 Goroutine 以及 <code>nil</code>；</li>
+<li><code>rd</code> 和 <code>wd</code> — 等待文件描述符可读或者可写的截止日期；</li>
+<li><code>rt</code> 和 <code>wt</code> — 用于等待文件描述符的计时器；</li>
+</ul>
+<p>除了上述八个变量之外，该结构体中还保存了用于保护数据的互斥锁、文件描述符。<a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L60" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.pollDesc</code></a> 结构体会使用 <code>link</code> 字段串联成一个链表存储在 <a href="https://github.com/golang/go/blob/04e80fb2c9e502c011d367ad36307290df07cb41/src/runtime/netpoll.go#L85" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.pollCache</code></a> 中：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> pollCache <span class="keyword">struct</span> &#123;</span><br><span class="line">	lock  mutex</span><br><span class="line">	first *pollDesc</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/golang/go/blob/04e80fb2c9e502c011d367ad36307290df07cb41/src/runtime/netpoll.go#L85" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.pollCache</code></a> 是运行时包中的全局变量，该结构体中包含一个用于保护轮询数据的互斥锁和链表头：</p>
+<p><img alt="poll-desc-list" data-src="https://img.draveness.me/2020-02-09-15812482347860-poll-desc-list.png"></p>
+<p><strong>图 6-44 轮询缓存链表</strong></p>
+<p>运行时会在第一次调用 <a href="https://github.com/golang/go/blob/04e80fb2c9e502c011d367ad36307290df07cb41/src/runtime/netpoll.go#L510" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.pollCache.alloc</code></a> 方法时初始化总大小约为 4KB 的 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L60" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.pollDesc</code></a> 结构体，<a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/malloc.go#L1288" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.persistentalloc</code></a> 会保证这些数据结构初始化在不会触发垃圾回收的内存中，让这些数据结构只能被内部的 <code>epoll</code> 和 <code>kqueue</code> 模块引用：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *pollCache)</span> <span class="title">alloc</span><span class="params">()</span> *<span class="title">pollDesc</span></span> &#123;</span><br><span class="line">	lock(&amp;c.lock)</span><br><span class="line">	<span class="keyword">if</span> c.first == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">const</span> pdSize = unsafe.Sizeof(pollDesc&#123;&#125;)</span><br><span class="line">		n := pollBlockSize / pdSize</span><br><span class="line">		<span class="keyword">if</span> n == <span class="number">0</span> &#123;</span><br><span class="line">			n = <span class="number">1</span></span><br><span class="line">		&#125;</span><br><span class="line">		mem := persistentalloc(n*pdSize, <span class="number">0</span>, &amp;memstats.other_sys)</span><br><span class="line">		<span class="keyword">for</span> i := <span class="keyword">uintptr</span>(<span class="number">0</span>); i &lt; n; i++ &#123;</span><br><span class="line">			pd := (*pollDesc)(add(mem, i*pdSize))</span><br><span class="line">			pd.link = c.first</span><br><span class="line">			c.first = pd</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	pd := c.first</span><br><span class="line">	c.first = pd.link</span><br><span class="line">	unlock(&amp;c.lock)</span><br><span class="line">	<span class="keyword">return</span> pd</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>每次调用该结构体都会返回链表头还没有被使用的 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L60" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.pollDesc</code></a>，这种批量初始化的做法能够增加网络轮询器的吞吐量。Go 语言运行时会调用 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L172" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.pollCache.free</code></a> 方法释放已经用完的 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L60" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.pollDesc</code></a> 结构，它会直接将结构体插入链表的最前面：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *pollCache)</span> <span class="title">free</span><span class="params">(pd *pollDesc)</span></span> &#123;</span><br><span class="line">	lock(&amp;c.lock)</span><br><span class="line">	pd.link = c.first</span><br><span class="line">	c.first = pd</span><br><span class="line">	unlock(&amp;c.lock)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述方法没有重置 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L60" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.pollDesc</code></a> 结构体中的字段，该结构体被重复利用时才会由 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L132" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.poll_runtime_pollOpen</code></a> 函数重置。</p>
+<h2 id="多路复用"><a href="#多路复用" class="headerlink" title="多路复用"></a>多路复用</h2><p>网络轮询器实际上就是对 I/O 多路复用技术的封装，本节将通过以下的三个过程分析网络轮询器的实现原理：</p>
+<ol>
+<li>网络轮询器的初始化；</li>
+<li>如何向网络轮询器中加入待监控的任务；</li>
+<li>如何从网络轮询器中获取触发的事件；</li>
+</ol>
+<p>上述三个过程包含了网络轮询器相关的方方面面，能够让我们对其实现有完整的理解。需要注意的是，我们在分析实现时会遵循以下两个规则：</p>
+<ol>
+<li>因为不同 I/O 多路复用模块的实现大同小异，本节会使用 Linux 操作系统上的 <code>epoll</code> 实现；</li>
+<li>因为处理读事件和写事件的逻辑类似，本节会省略写事件相关的代码；</li>
+</ol>
+<h3 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h3><p>因为文件 I/O、网络 I/O 以及计时器都依赖网络轮询器，所以 Go 语言会通过以下两条不同路径初始化网络轮询器：</p>
+<ol>
+<li><a href="https://github.com/golang/go/blob/master/src/internal/poll/fd_poll_runtime.go#L37" target="_blank" rel="external nofollow noopener noreferrer"><code>internal/poll.pollDesc.init</code></a> — 通过 <a href="https://github.com/golang/go/blob/cfe2ab42e764d2eea3a3339aac1eaff97520baa0/src/net/fd_unix.go#L45" target="_blank" rel="external nofollow noopener noreferrer"><code>net.netFD.init</code></a> 和 <a href="https://github.com/golang/go/blob/cfe2ab42e764d2eea3a3339aac1eaff97520baa0/src/os/file_unix.go#L108" target="_blank" rel="external nofollow noopener noreferrer"><code>os.newFile</code></a> 初始化网络 I/O 和文件 I/O 的轮询信息时；</li>
+<li><a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L278" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.doaddtimer</code></a> — 向处理器中增加新的计时器时；</li>
+</ol>
+<p>网络轮询器的初始化会使用 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L104" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.poll_runtime_pollServerInit</code></a> 和 <a href="https://github.com/golang/go/blob/04e80fb2c9e502c011d367ad36307290df07cb41/src/runtime/netpoll.go#L108" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollGenericInit</code></a> 两个函数：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">poll_runtime_pollServerInit</span><span class="params">()</span></span> &#123;</span><br><span class="line">	netpollGenericInit()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">netpollGenericInit</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> atomic.Load(&amp;netpollInited) == <span class="number">0</span> &#123;</span><br><span class="line">		lock(&amp;netpollInitLock)</span><br><span class="line">		<span class="keyword">if</span> netpollInited == <span class="number">0</span> &#123;</span><br><span class="line">			netpollinit()</span><br><span class="line">			atomic.Store(&amp;netpollInited, <span class="number">1</span>)</span><br><span class="line">		&#125;</span><br><span class="line">		unlock(&amp;netpollInitLock)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/golang/go/blob/04e80fb2c9e502c011d367ad36307290df07cb41/src/runtime/netpoll.go#L108" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollGenericInit</code></a> 会调用平台上特定实现的 <a href="https://github.com/golang/go/blob/cfe2ab42e764d2eea3a3339aac1eaff97520baa0/src/runtime/netpoll_epoll.go#L27" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollinit</code></a> 函数，即 Linux 上的 <code>epoll</code>，它主要做了以下几件事情：</p>
+<ol>
+<li>是调用 <code>epollcreate1</code> 创建一个新的 <code>epoll</code> 文件描述符，这个文件描述符会在整个程序的生命周期中使用；</li>
+<li>通过 <a href="https://github.com/golang/go/blob/904e1136c226b2b6ca31969acbf90ae44ecf8dc0/src/runtime/nbpipe_pipe2.go#L9" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.nonblockingPipe</code></a> 创建一个用于通信的管道；</li>
+<li>使用 <code>epollctl</code> 将用于读取数据的文件描述符打包成 <code>epollevent</code> 事件加入监听；</li>
+</ol>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> (</span><br><span class="line">	epfd <span class="keyword">int32</span> = <span class="number">-1</span></span><br><span class="line">	netpollBreakRd, netpollBreakWr <span class="keyword">uintptr</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">netpollinit</span><span class="params">()</span></span> &#123;</span><br><span class="line">	epfd = epollcreate1(_EPOLL_CLOEXEC)</span><br><span class="line">	r, w, _ := nonblockingPipe()</span><br><span class="line">	ev := epollevent&#123;</span><br><span class="line">		events: _EPOLLIN,</span><br><span class="line">	&#125;</span><br><span class="line">	*(**<span class="keyword">uintptr</span>)(unsafe.Pointer(&amp;ev.data)) = &amp;netpollBreakRd</span><br><span class="line">	epollctl(epfd, _EPOLL_CTL_ADD, r, &amp;ev)</span><br><span class="line">	netpollBreakRd = <span class="keyword">uintptr</span>(r)</span><br><span class="line">	netpollBreakWr = <span class="keyword">uintptr</span>(w)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>初始化的管道为我们提供了中断多路复用等待文件描述符中事件的方法，<a href="https://github.com/golang/go/blob/cfe2ab42e764d2eea3a3339aac1eaff97520baa0/src/runtime/netpoll_epoll.go#L76" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollBreak</code></a> 函数会向管道中写入数据唤醒 <code>epoll</code>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">netpollBreak</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">var</span> b <span class="keyword">byte</span></span><br><span class="line">		n := write(netpollBreakWr, unsafe.Pointer(&amp;b), <span class="number">1</span>)</span><br><span class="line">		<span class="keyword">if</span> n == <span class="number">1</span> &#123;</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> n == -_EINTR &#123;</span><br><span class="line">			<span class="keyword">continue</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> n == -_EAGAIN &#123;</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因为目前的计时器由网络轮询器管理和触发，它能够让网络轮询器立刻返回并让运行时检查是否有需要触发的计时器。</p>
+<h3 id="轮询事件"><a href="#轮询事件" class="headerlink" title="轮询事件"></a>轮询事件</h3><p>调用 <a href="https://github.com/golang/go/blob/master/src/internal/poll/fd_poll_runtime.go#L37" target="_blank" rel="external nofollow noopener noreferrer"><code>internal/poll.pollDesc.init</code></a> 初始化文件描述符时不止会初始化网络轮询器，还会通过 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L132" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.poll_runtime_pollOpen</code></a> 函数重置轮询信息 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L60" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.pollDesc</code></a> 并调用 <a href="https://github.com/golang/go/blob/cfe2ab42e764d2eea3a3339aac1eaff97520baa0/src/runtime/netpoll_epoll.go#L59" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollopen</code></a> 初始化轮询事件：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">poll_runtime_pollOpen</span><span class="params">(fd <span class="keyword">uintptr</span>)</span> <span class="params">(*pollDesc, <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	pd := pollcache.alloc()</span><br><span class="line">	lock(&amp;pd.lock)</span><br><span class="line">	<span class="keyword">if</span> pd.wg != <span class="number">0</span> &amp;&amp; pd.wg != pdReady &#123;</span><br><span class="line">		throw(<span class="string">"runtime: blocked write on free polldesc"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">	pd.fd = fd</span><br><span class="line">	pd.closing = <span class="literal">false</span></span><br><span class="line">	pd.everr = <span class="literal">false</span></span><br><span class="line">	...</span><br><span class="line">	pd.wseq++</span><br><span class="line">	pd.wg = <span class="number">0</span></span><br><span class="line">	pd.wd = <span class="number">0</span></span><br><span class="line">	unlock(&amp;pd.lock)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> errno <span class="keyword">int32</span></span><br><span class="line">	errno = netpollopen(fd, pd)</span><br><span class="line">	<span class="keyword">return</span> pd, <span class="keyword">int</span>(errno)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/golang/go/blob/cfe2ab42e764d2eea3a3339aac1eaff97520baa0/src/runtime/netpoll_epoll.go#L59" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollopen</code></a> 的实现非常简单，它会调用 <code>epollctl</code> 向全局的轮询文件描述符 <code>epfd</code> 中加入新的轮询事件监听文件描述符的可读和可写状态：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">netpollopen</span><span class="params">(fd <span class="keyword">uintptr</span>, pd *pollDesc)</span> <span class="title">int32</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> ev epollevent</span><br><span class="line">	ev.events = _EPOLLIN | _EPOLLOUT | _EPOLLRDHUP | _EPOLLET</span><br><span class="line">	*(**pollDesc)(unsafe.Pointer(&amp;ev.data)) = pd</span><br><span class="line">	<span class="keyword">return</span> -epollctl(epfd, _EPOLL_CTL_ADD, <span class="keyword">int32</span>(fd), &amp;ev)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从全局的 <code>epfd</code> 中删除待监听的文件描述符可以使用 <a href="https://github.com/golang/go/blob/cfe2ab42e764d2eea3a3339aac1eaff97520baa0/src/runtime/netpoll_epoll.go#L66" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollclose</code></a> 函数，因为该函数的实现与 <a href="https://github.com/golang/go/blob/cfe2ab42e764d2eea3a3339aac1eaff97520baa0/src/runtime/netpoll_epoll.go#L59" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollopen</code></a> 比较相似，所以这里就不展开分析了。</p>
+<h3 id="事件循环"><a href="#事件循环" class="headerlink" title="事件循环"></a>事件循环</h3><p>本节将继续介绍网络轮询器的核心逻辑，也就是事件循环。我们将从以下的两个部分介绍事件循环的实现原理：</p>
+<ul>
+<li>Goroutine 让出线程并等待读写事件；</li>
+<li>多路复用等待读写事件的发生并返回；</li>
+</ul>
+<p>上述过程连接了操作系统中的 I/O 多路复用机制和 Go 语言的运行时，在两个不同体系之间构建了桥梁，我们将分别介绍上述的两个过程。</p>
+<h4 id="等待事件"><a href="#等待事件" class="headerlink" title="等待事件"></a>等待事件</h4><p>当我们在文件描述符上执行读写操作时，如果文件描述符不可读或者不可写，当前 Goroutine 就会执行 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L194" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.poll_runtime_pollWait</code></a> 检查 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L60" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.pollDesc</code></a> 的状态并调用 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L394" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollblock</code></a> 等待文件描述符的可读或者可写：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">poll_runtime_pollWait</span><span class="params">(pd *pollDesc, mode <span class="keyword">int</span>)</span> <span class="title">int</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">for</span> !netpollblock(pd, <span class="keyword">int32</span>(mode), <span class="literal">false</span>) &#123;</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">netpollblock</span><span class="params">(pd *pollDesc, mode <span class="keyword">int32</span>, waitio <span class="keyword">bool</span>)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	gpp := &amp;pd.rg</span><br><span class="line">	<span class="keyword">if</span> mode == <span class="string">'w'</span> &#123;</span><br><span class="line">		gpp = &amp;pd.wg</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">if</span> waitio || netpollcheckerr(pd, mode) == <span class="number">0</span> &#123;</span><br><span class="line">		gopark(netpollblockcommit, unsafe.Pointer(gpp), waitReasonIOWait, traceEvGoBlockNet, <span class="number">5</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L394" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollblock</code></a> 是 Goroutine 等待 I/O 事件的关键函数，它会使用运行时提供的 <a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/proc.go#L287" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.gopark</code></a> 让出当前线程，将 Goroutine 转换到休眠状态并等待运行时的唤醒。</p>
+<h4 id="轮询等待"><a href="#轮询等待" class="headerlink" title="轮询等待"></a>轮询等待</h4><p>Go 语言的运行时会在调度或者系统监控中调用 <a href="https://github.com/golang/go/blob/cfe2ab42e764d2eea3a3339aac1eaff97520baa0/src/runtime/netpoll_epoll.go#L99" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpoll</code></a> 轮询网络，该函数的执行过程可以分成以下几个部分：</p>
+<ol>
+<li>根据传入的 <code>delay</code> 计算 <code>epoll</code> 系统调用需要等待的时间；</li>
+<li>调用 <code>epollwait</code> 等待可读或者可写事件的发生；</li>
+<li>在循环中依次处理 <code>epollevent</code> 事件；</li>
+</ol>
+<p>因为传入 <code>delay</code> 的单位是纳秒，下面这段代码会将纳秒转换成毫秒：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">netpoll</span><span class="params">(delay <span class="keyword">int64</span>)</span> <span class="title">gList</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> waitms <span class="keyword">int32</span></span><br><span class="line">	<span class="keyword">if</span> delay &lt; <span class="number">0</span> &#123;</span><br><span class="line">		waitms = <span class="number">-1</span></span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> delay == <span class="number">0</span> &#123;</span><br><span class="line">		waitms = <span class="number">0</span></span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> delay &lt; <span class="number">1e6</span> &#123;</span><br><span class="line">		waitms = <span class="number">1</span></span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> delay &lt; <span class="number">1e15</span> &#123;</span><br><span class="line">		waitms = <span class="keyword">int32</span>(delay / <span class="number">1e6</span>)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		waitms = <span class="number">1e9</span></span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>计算了需要等待的时间之后，<a href="https://github.com/golang/go/blob/cfe2ab42e764d2eea3a3339aac1eaff97520baa0/src/runtime/netpoll_epoll.go#L99" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpoll</code></a> 会执行 <code>epollwait</code> 等待文件描述符转换成可读或者可写，如果该函数返回了负值，就可能返回空的 Goroutine 列表或者重新调用 <code>epollwait</code> 陷入等待：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">	<span class="keyword">var</span> events [<span class="number">128</span>]epollevent</span><br><span class="line">retry:</span><br><span class="line">	n := epollwait(epfd, &amp;events[<span class="number">0</span>], <span class="keyword">int32</span>(<span class="built_in">len</span>(events)), waitms)</span><br><span class="line">	<span class="keyword">if</span> n &lt; <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> waitms &gt; <span class="number">0</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> gList&#123;&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">goto</span> retry</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>当 <code>epollwait</code> 函数返回的值大于 0 时，就意味着被监控的文件描述符出现了待处理的事件，我们在如下所示的循环中就会依次处理这些事件：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">	<span class="keyword">var</span> toRun gList</span><br><span class="line">	<span class="keyword">for</span> i := <span class="keyword">int32</span>(<span class="number">0</span>); i &lt; n; i++ &#123;</span><br><span class="line">		ev := &amp;events[i]</span><br><span class="line">		<span class="keyword">if</span> *(**<span class="keyword">uintptr</span>)(unsafe.Pointer(&amp;ev.data)) == &amp;netpollBreakRd &#123;</span><br><span class="line">			...</span><br><span class="line">			<span class="keyword">continue</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">var</span> mode <span class="keyword">int32</span></span><br><span class="line">		<span class="keyword">if</span> ev.events&amp;(_EPOLLIN|_EPOLLRDHUP|_EPOLLHUP|_EPOLLERR) != <span class="number">0</span> &#123;</span><br><span class="line">			mode += <span class="string">'r'</span></span><br><span class="line">		&#125;</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">if</span> mode != <span class="number">0</span> &#123;</span><br><span class="line">			pd := *(**pollDesc)(unsafe.Pointer(&amp;ev.data))</span><br><span class="line">			pd.everr = <span class="literal">false</span></span><br><span class="line">			netpollready(&amp;toRun, pd, mode)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> toRun</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>处理的事件总共包含两种，一种是调用 <a href="https://github.com/golang/go/blob/cfe2ab42e764d2eea3a3339aac1eaff97520baa0/src/runtime/netpoll_epoll.go#L76" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollBreak</code></a> 函数触发的事件，该函数的作用是中断网络轮询器；另一种是其他文件描述符的正常读写事件，对于这些事件，我们会交给 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L344" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollready</code></a> 处理：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">netpollready</span><span class="params">(toRun *gList, pd *pollDesc, mode <span class="keyword">int32</span>)</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> rg, wg *g</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">if</span> mode == <span class="string">'w'</span> || mode == <span class="string">'r'</span>+<span class="string">'w'</span> &#123;</span><br><span class="line">		wg = netpollunblock(pd, <span class="string">'w'</span>, <span class="literal">true</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">if</span> wg != <span class="literal">nil</span> &#123;</span><br><span class="line">		toRun.push(wg)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L429" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollunblock</code></a> 会在读写事件发生时，将 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L60" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.pollDesc</code></a> 中的读或者写信号量转换成 <code>pdReady</code> 并返回其中存储的 Goroutine；如果返回的 Goroutine 不会为空，那么该 Goroutine 就会被加入 <code>toRun</code> 列表，运行时会将列表中的全部 Goroutine 加入运行队列并等待调度器的调度。</p>
+<h3 id="截止日期"><a href="#截止日期" class="headerlink" title="截止日期"></a>截止日期</h3><p>网络轮询器和计时器的关系非常紧密，这不仅仅是因为网络轮询器负责计时器的唤醒，还因为文件和网络 I/O 的截止日期也由网络轮询器负责处理。截止日期在 I/O 操作中，尤其是网络调用中很关键，网络请求存在很高的不确定因素，我们需要设置一个截止日期保证程序的正常运行，这时就需要用到网络轮询器中的 <a href="https://github.com/golang/go/blob/cfe2ab42e764d2eea3a3339aac1eaff97520baa0/src/runtime/netpoll.go#L224" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.poll_runtime_pollSetDeadline</code></a> 函数：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">poll_runtime_pollSetDeadline</span><span class="params">(pd *pollDesc, d <span class="keyword">int64</span>, mode <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	rd0, wd0 := pd.rd, pd.wd</span><br><span class="line">	<span class="keyword">if</span> d &gt; <span class="number">0</span> &#123;</span><br><span class="line">		d += nanotime()</span><br><span class="line">	&#125;</span><br><span class="line">	pd.rd = d</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">if</span> pd.rt.f == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> pd.rd &gt; <span class="number">0</span> &#123;</span><br><span class="line">			pd.rt.f = netpollReadDeadline</span><br><span class="line">			pd.rt.arg = pd</span><br><span class="line">			pd.rt.seq = pd.rseq</span><br><span class="line">			resettimer(&amp;pd.rt, pd.rd)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> pd.rd != rd0 &#123;</span><br><span class="line">		pd.rseq++</span><br><span class="line">		<span class="keyword">if</span> pd.rd &gt; <span class="number">0</span> &#123;</span><br><span class="line">			modtimer(&amp;pd.rt, pd.rd, <span class="number">0</span>, rtf, pd, pd.rseq)</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			deltimer(&amp;pd.rt)</span><br><span class="line">			pd.rt.f = <span class="literal">nil</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>该函数会先使用截止日期计算出过期的时间点，然后根据 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L60" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.pollDesc</code></a> 的状态做出以下不同的处理：</p>
+<ol>
+<li>如果结构体中的计时器没有设置执行的函数时，该函数会设置计时器到期后执行的函数、传入的参数并调用 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L493" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.resettimer</code></a> 重置计时器；</li>
+<li>如果结构体的读截止日期已经被改变，我们会根据新的截止日期做出不同的处理：<ol>
+<li>如果新的截止日期大于 0，调用 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L405" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.modtimer</code></a> 修改计时器；</li>
+<li>如果新的截止日期小于 0，调用 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L303" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deltimer</code></a> 删除计时器；</li>
+</ol>
+</li>
+</ol>
+<p>在 <a href="https://github.com/golang/go/blob/cfe2ab42e764d2eea3a3339aac1eaff97520baa0/src/runtime/netpoll.go#L224" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.poll_runtime_pollSetDeadline</code></a> 函数的最后，会重新检查轮询信息中存储的截止日期：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">	<span class="keyword">var</span> rg *g</span><br><span class="line">	<span class="keyword">if</span> pd.rd &lt; <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> pd.rd &lt; <span class="number">0</span> &#123;</span><br><span class="line">			rg = netpollunblock(pd, <span class="string">'r'</span>, <span class="literal">false</span>)</span><br><span class="line">		&#125;</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> rg != <span class="literal">nil</span> &#123;</span><br><span class="line">		netpollgoready(rg, <span class="number">3</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果截止日期小于 0，上述代码会调用 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L387" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollgoready</code></a> 直接唤醒对应的 Goroutine。</p>
+<p>在 <a href="https://github.com/golang/go/blob/cfe2ab42e764d2eea3a3339aac1eaff97520baa0/src/runtime/netpoll.go#L224" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.poll_runtime_pollSetDeadline</code></a> 函数中直接调用 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L387" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollgoready</code></a> 是相对比较特殊的情况。在正常情况下，运行时都会在计时器到期时调用 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L498" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollDeadline</code></a>、<a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L502" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollReadDeadline</code></a> 和 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L506" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollWriteDeadline</code></a> 三个函数：</p>
+<p><img alt="netpoll-deadline" data-src="https://img.draveness.me/2020-02-09-15812482347868-netpoll-deadline.png"></p>
+<p><strong>图 6-45 截止日期唤醒 Goroutine</strong></p>
+<p>上述三个函数都会通过 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L458" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpolldeadlineimpl</code></a> 调用 <a href="https://github.com/golang/go/blob/a6b03c64b23fc51110aede0a0abf9df86f16ff1f/src/runtime/netpoll.go#L387" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollgoready</code></a> 直接唤醒相应的 Goroutine:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">netpolldeadlineimpl</span><span class="params">(pd *pollDesc, seq <span class="keyword">uintptr</span>, read, write <span class="keyword">bool</span>)</span></span> &#123;</span><br><span class="line">	currentSeq := pd.rseq</span><br><span class="line">	<span class="keyword">if</span> !read &#123;</span><br><span class="line">		currentSeq = pd.wseq</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> seq != currentSeq &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">var</span> rg *g</span><br><span class="line">	<span class="keyword">if</span> read &#123;</span><br><span class="line">		pd.rd = <span class="number">-1</span></span><br><span class="line">		atomic.StorepNoWB(unsafe.Pointer(&amp;pd.rt.f), <span class="literal">nil</span>)</span><br><span class="line">		rg = netpollunblock(pd, <span class="string">'r'</span>, <span class="literal">false</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">if</span> rg != <span class="literal">nil</span> &#123;</span><br><span class="line">		netpollgoready(rg, <span class="number">0</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Goroutine 在被唤醒之后就会意识到当前的 I/O 操作已经超时，可以根据需要选择重试请求或者中止调用。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>网络轮询器并不是由运行时中的某一个线程独立运行的，运行时中的调度和系统调用会通过 <a href="https://github.com/golang/go/blob/cfe2ab42e764d2eea3a3339aac1eaff97520baa0/src/runtime/netpoll_epoll.go#L99" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpoll</code></a> 与网络轮询器交换消息，获取待执行的 Goroutine 列表，并将待执行的 Goroutine 加入运行队列等待处理。</p>
+<p>所有的文件 I/O、网络 I/O 和计时器都是由网络轮询器管理的，它是 Go 语言运行时重要的组成部分。我们在本节中详细介绍了网络轮询器的设计与实现原理，相信各位读者对这个重要组件也有了比较深入的理解。</p>
+<h2 id="延伸阅读"><a href="#延伸阅读" class="headerlink" title="延伸阅读"></a>延伸阅读</h2><ul>
+<li>Brad Fitzpatrick. May, 2016. “net: add mechanism to wait for readability on a TCPConn” <a href="https://github.com/golang/go/issues/15735" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/golang/go/issues/15735</a></li>
+<li>Ian Lance Taylor. Feb 11, 2017. “os: use poller for file I/O” <a href="https://github.com/golang/go/commit/c05b06a12d005f50e4776095a60d6bd9c2c91fac" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/golang/go/commit/c05b06a12d005f50e4776095a60d6bd9c2c91fac</a></li>
+<li>Ian Lance Taylor. Apr 3, 2019. “runtime: change netpoll to take an amount of time to block” <a href="https://github.com/golang/go/commit/831e3cfaa594ceb70c3cbeff2d31fddcd9a25a5e" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/golang/go/commit/831e3cfaa594ceb70c3cbeff2d31fddcd9a25a5e</a></li>
+<li>“The Go netpoller” <a href="https://morsmachine.dk/netpoller" target="_blank" rel="external nofollow noopener noreferrer">https://morsmachine.dk/netpoller</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/e87a4e07/" rel="bookmark">【Go语言设计与实现】String</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/44c65087/" rel="bookmark">【Go语言设计与实现】循环</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/540e2781/" rel="bookmark">【Go语言设计与实现】Defer</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/ecc392db/" rel="bookmark">【Go语言设计与实现】Panic/Recover</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/93e1c454/" rel="bookmark">【Go语言设计与实现】Channel</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/839ed42b/" title="【Go语言设计与实现】Net Poller">http://houmin.cc/posts/839ed42b/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E7%BD%91%E7%BB%9C/" rel="tag"><i class="fa fa-tag"></i> 网络</a>
+              <a href="/tags/Go/" rel="tag"><i class="fa fa-tag"></i> Go</a>
+              <a href="/tags/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码阅读</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/726de05a/" rel="next" title="【Go语言设计与实现】Timer">
+                  <i class="fa fa-chevron-left"></i> 【Go语言设计与实现】Timer
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/ccea8bad/" rel="prev" title="【Go语言设计与实现】System Monitor">
+                  【Go语言设计与实现】System Monitor <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#设计原理"><span class="nav-number">1.</span> <span class="nav-text">设计原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#I-O-模型"><span class="nav-number">1.1.</span> <span class="nav-text">I/O 模型</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#阻塞-I-O"><span class="nav-number">1.1.1.</span> <span class="nav-text">阻塞 I/O</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#非阻塞-I-O"><span class="nav-number">1.1.2.</span> <span class="nav-text">非阻塞 I/O</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#I-O-多路复用"><span class="nav-number">1.1.3.</span> <span class="nav-text">I/O 多路复用</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#多模块"><span class="nav-number">1.2.</span> <span class="nav-text">多模块</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#接口"><span class="nav-number">1.2.1.</span> <span class="nav-text">接口</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据结构"><span class="nav-number">2.</span> <span class="nav-text">数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多路复用"><span class="nav-number">3.</span> <span class="nav-text">多路复用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#初始化"><span class="nav-number">3.1.</span> <span class="nav-text">初始化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#轮询事件"><span class="nav-number">3.2.</span> <span class="nav-text">轮询事件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#事件循环"><span class="nav-number">3.3.</span> <span class="nav-text">事件循环</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#等待事件"><span class="nav-number">3.3.1.</span> <span class="nav-text">等待事件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#轮询等待"><span class="nav-number">3.3.2.</span> <span class="nav-text">轮询等待</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#截止日期"><span class="nav-number">3.4.</span> <span class="nav-text">截止日期</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">4.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#延伸阅读"><span class="nav-number">5.</span> <span class="nav-text">延伸阅读</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">170</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">230</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">2.2m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">65:25</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

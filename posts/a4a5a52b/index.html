@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="超文本传输协议（Hypertext Transfer Protocol、HTTP 协议）是今天使用最广泛的应用层协议，1989 年由 Tim Berners-Lee 在 CERN 起草的协议已经成为了互联网的数据传输的核心1。在过去几年的时间里，HTTP&#x2F;2 和 HTTP&#x2F;3 也对现有的协议进行了更新，提供更加安全和快速的传输功能。多数的编程语言都会在标准库中实现 HTTP&#x2F;1.1 和 HTTP&#x2F;">
+<meta name="keywords" content="Go,http,web">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Go语言设计与实现】HTTP 库">
+<meta property="og:url" content="http://houmin.cc/posts/a4a5a52b/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="超文本传输协议（Hypertext Transfer Protocol、HTTP 协议）是今天使用最广泛的应用层协议，1989 年由 Tim Berners-Lee 在 CERN 起草的协议已经成为了互联网的数据传输的核心1。在过去几年的时间里，HTTP&#x2F;2 和 HTTP&#x2F;3 也对现有的协议进行了更新，提供更加安全和快速的传输功能。多数的编程语言都会在标准库中实现 HTTP&#x2F;1.1 和 HTTP&#x2F;">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://img.draveness.me/2020-05-18-15897352888395-http-and-transport-layer.png">
+<meta property="og:image" content="https://img.draveness.me/2020-05-18-15897352888407-http-request-and-response.png">
+<meta property="og:image" content="https://img.draveness.me/2020-05-18-15897352888414-message-framing.png">
+<meta property="og:image" content="https://img.draveness.me/2020-05-18-15897352888419-golang-roundtripper.png">
+<meta property="og:image" content="https://img.draveness.me/2020-05-18-15897352888425-http-transaction-and-cookie.png">
+<meta property="og:image" content="https://img.draveness.me/2020-05-18-15897352888431-http-client-transport-conns.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_http-server-and-handlers.png">
+<meta property="og:updated_time" content="2021-02-07T11:47:07.083Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img.draveness.me/2020-05-18-15897352888395-http-and-transport-layer.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/a4a5a52b/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Go语言设计与实现】HTTP 库 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/a4a5a52b/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Go语言设计与实现】HTTP 库
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-05-16 14:51:51" itemprop="dateCreated datePublished" datetime="2020-05-16T14:51:51+08:00">2020-05-16</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/a4a5a52b/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/a4a5a52b/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>24k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>44 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>超文本传输协议（Hypertext Transfer Protocol、HTTP 协议）是今天使用最广泛的应用层协议，1989 年由 Tim Berners-Lee 在 CERN 起草的协议已经成为了互联网的数据传输的核心<a href="https://draveness.me/golang/docs/part4-advanced/ch09-stdlib/golang-net-http/#fn:1" target="_blank" rel="external nofollow noopener noreferrer">1</a>。在过去几年的时间里，HTTP/2 和 HTTP/3 也对现有的协议进行了更新，提供更加安全和快速的传输功能。多数的编程语言都会在标准库中实现 HTTP/1.1 和 HTTP/2.0 已满足工程师的日常开发需求，今天要介绍的 Go 语言的网络库也实现了这两个大版本的 HTTP 协议。</p>
+<a id="more"></a>
+<h2 id="设计原理"><a href="#设计原理" class="headerlink" title="设计原理"></a>设计原理</h2><p>HTTP 协议是应用层协议，在通常情况下我们都会使用 TCP 作为底层的传输层协议传输数据包，但是 HTTP/3 在 UDP 协议上实现了新的传输层协议 QUIC 并使用 QUIC 传输数据，这也意味着 HTTP 既可以跑在 TCP 上，也可以跑在 UDP 上。</p>
+<p><img alt="http-and-transport-layer" data-src="https://img.draveness.me/2020-05-18-15897352888395-http-and-transport-layer.png"></p>
+<p><strong>图 9-5 HTTP 与传输层协议</strong></p>
+<p>Go 语言标准库通过 <a href="https://golang.org/pkg/net/http/" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http</code></a> 包提供 HTTP 的客户端和服务端实现，在分析内部的实现原理之前，我们先来了解一下 HTTP 协议相关的一些设计以及标准库内部的层级结构和模块之间的关系。</p>
+<h3 id="请求和响应"><a href="#请求和响应" class="headerlink" title="请求和响应"></a>请求和响应</h3><p>HTTP 协议中最常见的概念是 HTTP 请求与响应，我们可以将它们理解成客户端和服务端之间传递的消息，客户端向服务端发送 HTTP 请求，服务端收到 HTTP 请求后会做出计算后以 HTTP 响应的形式发送给客户端。</p>
+<p><img alt="http-request-and-response" data-src="https://img.draveness.me/2020-05-18-15897352888407-http-request-and-response.png"></p>
+<p><strong>图 9-6 HTTP 请求与响应</strong></p>
+<p>与其他的二进制协议不同，作为文本传输协议，HTTP 协议的协议头都是文本数据，HTTP 请求头的首行会包含请求的方法、路径和协议版本，接下来是多个 HTTP 协议头以及携带的负载。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">GET</span> <span class="string">/</span> HTTP/1.1</span><br><span class="line"><span class="attribute">User-Agent</span>: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)</span><br><span class="line"><span class="attribute">Host</span>: draveness.me</span><br><span class="line"><span class="attribute">Accept-Language</span>: en-us</span><br><span class="line"><span class="attribute">Accept-Encoding</span>: gzip, deflate</span><br><span class="line"><span class="attribute">Content-Length</span>: &lt;length&gt;</span><br><span class="line"><span class="attribute">Connection</span>: Keep-Alive</span><br><span class="line"></span><br><span class="line">&lt;html&gt;</span><br><span class="line">    ...</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure>
+<p>HTTP 响应也有着比较类似的结构，其中也包含响应的协议版本、状态码、响应头以及负载，在这里就不展开介绍了。</p>
+<h3 id="消息边界"><a href="#消息边界" class="headerlink" title="消息边界"></a>消息边界</h3><p>HTTP 协议目前主要还是跑在 TCP 协议上的，TCP 协议是面向连接的、可靠的、基于字节流的传输层通信协议<a href="https://draveness.me/golang/docs/part4-advanced/ch09-stdlib/golang-net-http/#fn:2" target="_blank" rel="external nofollow noopener noreferrer">2</a>，应用层交给 TCP 协议的数据并不会以消息为单位向目的主机传输，这些数据在某些情况下会被组合成一个数据段发送给目标的主机<a href="https://draveness.me/golang/docs/part4-advanced/ch09-stdlib/golang-net-http/#fn:3" target="_blank" rel="external nofollow noopener noreferrer">3</a>。因为 TCP 协议是基于字节流的，所以基于 TCP 协议的应用层协议都需要自己划分消息的边界。</p>
+<p><img alt="message-framing" data-src="https://img.draveness.me/2020-05-18-15897352888414-message-framing.png"></p>
+<p><strong>图 9-7 实现消息边界的方法</strong></p>
+<p>在应用层协议中，最常见的两种解决方案是基于长度或者基于终结符（Delimiter）。HTTP 协议其实同时实现了上述两种方案，在多数情况下 HTTP 协议都会在协议头中加入 <code>Content-Length</code> 表示负载的长度，消息的接收者解析到该协议头之后就可以确定当前 HTTP 请求/响应结束的位置，分离不同的 HTTP 消息，下面就是一个使用 <code>Content-Length</code> 划分消息边界的例子：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Content-Type: text/html; charset=UTF-8</span><br><span class="line">Content-Length: 138</span><br><span class="line">...</span><br><span class="line">Connection: close</span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">title</span>&gt;</span>An Example Page<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">p</span>&gt;</span>Hello World, this is a very simple HTML document.<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>不过 HTTP 协议除了使用基于长度的方式实现边界，也会使用基于终结符的策略，当 HTTP 使用块传输（Chunked Transfer）机制时，HTTP 头中就不再包含 <code>Content-Length</code> 了，它会使用负载大小为 0 的 HTTP 消息作为终结符表示消息的边界。</p>
+<h3 id="层级结构"><a href="#层级结构" class="headerlink" title="层级结构"></a>层级结构</h3><p>Go 语言的 <a href="https://golang.org/pkg/net/http/" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http</code></a> 中同时包好了 HTTP 客户端和服务端的实现，为了支持更好的扩展性，它引入了 <a href="https://draveness.me/golang/tree/net/http.RoundTripper" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.RoundTripper</code></a> 和 <a href="https://draveness.me/golang/tree/net/http.Handler" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Handler</code></a> 两个接口。<a href="https://draveness.me/golang/tree/net/http.RoundTripper" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.RoundTripper</code></a> 是用来表示执行 HTTP 请求的接口，调用方将请求作为参数可以获取请求对应的响应，而 <a href="https://draveness.me/golang/tree/net/http.Handler" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Handler</code></a> 主要用于 HTTP 服务器响应客户端的请求：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> RoundTripper <span class="keyword">interface</span> &#123;</span><br><span class="line">    RoundTrip(*Request) (*Response, error)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>HTTP 请求的接收方可以实现 <a href="https://draveness.me/golang/tree/net/http.Handler" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Handler</code></a> 接口，其中实现了处理 HTTP 请求的逻辑，处理的过程中会调用 <a href="https://draveness.me/golang/tree/net/http.ResponseWriter" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.ResponseWriter</code></a> 接口的方法构造 HTTP 响应，它提供的三个接口 <code>Header</code>、<code>Write</code> 和 <code>WriteHeader</code> 分别会获取 HTTP 响应、将数据写入负载以及写入响应头：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Handler <span class="keyword">interface</span> &#123;</span><br><span class="line">    ServeHTTP(ResponseWriter, *Request)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> ResponseWriter <span class="keyword">interface</span> &#123;</span><br><span class="line">	Header() Header</span><br><span class="line">	Write([]<span class="keyword">byte</span>) (<span class="keyword">int</span>, error)</span><br><span class="line">	WriteHeader(statusCode <span class="keyword">int</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>客户端和服务端面对的都是双向的 HTTP 请求与响应，客户端构建请求并等待响应，服务端处理请求并返回响应。HTTP 请求和响应在标准库中不止有一种实现，它们都包含了层级结构，标准库中的 <a href="https://draveness.me/golang/tree/net/http.RoundTripper" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.RoundTripper</code></a> 包含如下所示的层级结构：</p>
+<p><img alt="golang-roundtripper" data-src="https://img.draveness.me/2020-05-18-15897352888419-golang-roundtripper.png"></p>
+<p><strong>图 9-8 HTTP 标准库的层级结构</strong></p>
+<p>每个 <a href="https://draveness.me/golang/tree/net/http.RoundTripper" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.RoundTripper</code></a> 接口的实现都包含了一种向远程发出请求的过程；标准库中也提供了 <a href="https://draveness.me/golang/tree/net/http.Handler" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Handler</code></a> 的多种实现为客户端的 HTTP 请求提供不同的服务。</p>
+<h2 id="客户端"><a href="#客户端" class="headerlink" title="客户端"></a>客户端</h2><p>客户端可以直接通过 <a href="https://draveness.me/golang/tree/net/http.Get" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Get</code></a> 使用默认的客户端 <a href="https://draveness.me/golang/tree/net/http.DefaultClient" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.DefaultClient</code></a> 发起 HTTP 请求，也可以自己构建新的 <a href="https://draveness.me/golang/tree/net/http.Client" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Client</code></a> 实现自定义的 HTTP 事务，在多数情况下使用默认的客户端都能满足我们的需求，不过需要注意的是使用默认客户端发出的请求没有超时时间，所以在某些场景下会一直等待下去。除了自定义 HTTP 事务之外，我们还可以实现自定义的 <a href="https://draveness.me/golang/tree/net/http.CookieJar" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.CookieJar</code></a> 接口管理和使用 HTTP 请求中的 Cookie：</p>
+<p><img alt="http-transaction-and-cookie" data-src="https://img.draveness.me/2020-05-18-15897352888425-http-transaction-and-cookie.png"></p>
+<p><strong>图 9-9 事务和 Cookie</strong></p>
+<p>事务和 Cookie 是我们在 HTTP 客户端包为我们提供的两个最重要模块，本节将从 HTTP GET 请求开始，按照构建请求、数据传输、获取连接以及等待响应几个模块分析客户端的实现原理。当我们调用 <a href="https://draveness.me/golang/tree/net/http.Client.Get" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Client.Get</code></a> 发出 HTTP 时，会按照如下的步骤执行：</p>
+<ol>
+<li>调用 <a href="https://draveness.me/golang/tree/net/http.NewRequest" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.NewRequest</code></a> 根据方法名、URL 和请求体构建请求；</li>
+<li>调用 <a href="https://draveness.me/golang/tree/net/http.Transport.RoundTrip" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Transport.RoundTrip</code></a> 开启 HTTP 事务、获取连接并发送请求；</li>
+<li>在 HTTP 持久连接的 <a href="https://draveness.me/golang/tree/net/http.persistConn.readLoop" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.persistConn.readLoop</code></a> 方法中等待响应；</li>
+</ol>
+<p><img alt="http-client-transport-conns" data-src="https://img.draveness.me/2020-05-18-15897352888431-http-client-transport-conns.png"></p>
+<p><strong>图 9-10 客户端的几大结构体</strong></p>
+<p>HTTP 的客户端中包含几个比较重要的结构体，它们分别是 <a href="https://draveness.me/golang/tree/net/http.Client" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Client</code></a>、<a href="https://draveness.me/golang/tree/net/http.Transport" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Transport</code></a> 和 <a href="https://draveness.me/golang/tree/net/http.persistConn" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.persistConn</code></a>：</p>
+<ul>
+<li><a href="https://draveness.me/golang/tree/net/http.Client" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Client</code></a> 是 HTTP 客户端，它的默认值是使用 <a href="https://draveness.me/golang/tree/net/http.DefaultTransport" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.DefaultTransport</code></a> 的 HTTP 客户端；</li>
+<li><a href="https://draveness.me/golang/tree/net/http.Transport" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Transport</code></a> 是 <a href="https://draveness.me/golang/tree/net/http.RoundTripper" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.RoundTripper</code></a> 接口的实现，它的主要作用就是支持 HTTP/HTTPS 请求和 HTTP 代理；</li>
+<li><a href="https://draveness.me/golang/tree/net/http.persistConn" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.persistConn</code></a> 封装了一个 TCP 的持久连接，是我们与远程交换消息的句柄（Handle）；</li>
+</ul>
+<p>客户端 <a href="https://draveness.me/golang/tree/net/http.Client" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Client</code></a> 是级别较高的抽象，它提供了 HTTP 的一些细节，包括 Cookies 和重定向；而 <a href="https://draveness.me/golang/tree/net/http.Transport" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Transport</code></a> 会处理 HTTP/HTTPS 协议的底层实现细节，其中会包含连接重用、构建请求以及发送请求等功能。</p>
+<h3 id="构建请求"><a href="#构建请求" class="headerlink" title="构建请求"></a>构建请求</h3><p><a href="https://draveness.me/golang/tree/net/http.Request" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Request</code></a> 表示 HTTP 服务接收到的请求或者 HTTP 客户端发出的请求，其中包含 HTTP 请求的方法、URL、协议版本、协议头以及请求体等字段，除了这些字段之外，它还会持有一个指向 HTTP 响应的引用：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Request <span class="keyword">struct</span> &#123;</span><br><span class="line">	Method <span class="keyword">string</span></span><br><span class="line">	URL *url.URL</span><br><span class="line"></span><br><span class="line">	Proto      <span class="keyword">string</span> <span class="comment">// "HTTP/1.0"</span></span><br><span class="line">	ProtoMajor <span class="keyword">int</span>    <span class="comment">// 1</span></span><br><span class="line">	ProtoMinor <span class="keyword">int</span>    <span class="comment">// 0</span></span><br><span class="line"></span><br><span class="line">	Header Header</span><br><span class="line">	Body io.ReadCloser</span><br><span class="line"></span><br><span class="line">	...</span><br><span class="line">	Response *Response</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://draveness.me/golang/tree/net/http.NewRequest" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.NewRequest</code></a> 是标准库提供的用于创建请求的方法，这个方法会校验 HTTP 请求的字段并根据输入的参数拼装成新的请求结构体。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewRequestWithContext</span><span class="params">(ctx context.Context, method, url <span class="keyword">string</span>, body io.Reader)</span> <span class="params">(*Request, error)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> method == <span class="string">""</span> &#123;</span><br><span class="line">		method = <span class="string">"GET"</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> !validMethod(method) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, fmt.Errorf(<span class="string">"net/http: invalid method %q"</span>, method)</span><br><span class="line">	&#125;</span><br><span class="line">	u, err := urlpkg.Parse(url)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">	rc, ok := body.(io.ReadCloser)</span><br><span class="line">	<span class="keyword">if</span> !ok &amp;&amp; body != <span class="literal">nil</span> &#123;</span><br><span class="line">		rc = ioutil.NopCloser(body)</span><br><span class="line">	&#125;</span><br><span class="line">	u.Host = removeEmptyPort(u.Host)</span><br><span class="line">	req := &amp;Request&#123;</span><br><span class="line">		ctx:        ctx,</span><br><span class="line">		Method:     method,</span><br><span class="line">		URL:        u,</span><br><span class="line">		Proto:      <span class="string">"HTTP/1.1"</span>,</span><br><span class="line">		ProtoMajor: <span class="number">1</span>,</span><br><span class="line">		ProtoMinor: <span class="number">1</span>,</span><br><span class="line">		Header:     <span class="built_in">make</span>(Header),</span><br><span class="line">		Body:       rc,</span><br><span class="line">		Host:       u.Host,</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> body != <span class="literal">nil</span> &#123;</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> req, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>请求拼装的过程比较简单，它会检查并校验输入的方法、URL 以及负载，然而初始化了新的 <a href="https://draveness.me/golang/tree/net/http.Request" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Request</code></a> 结构，处理负载的过程稍微有一些复杂，我们会根据负载的类型不同，使用不同的方法将它们包装成 <code>io.ReadCloser</code> 类型。</p>
+<h3 id="开启事务"><a href="#开启事务" class="headerlink" title="开启事务"></a>开启事务</h3><p>当我们使用标准库构建了 HTTP 请求之后，会开启 HTTP 事务发送 HTTP 请求并等待远程的响应，经过下面一连串的调用，我们最终来到了标准库实现底层 HTTP 协议的结构体 — <a href="https://draveness.me/golang/tree/net/http.Transport" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Transport</code></a>：</p>
+<ol>
+<li><a href="https://draveness.me/golang/tree/net/http.Client.Do" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Client.Do</code></a></li>
+<li><a href="https://draveness.me/golang/tree/net/http.Client.do" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Client.do</code></a></li>
+<li><a href="https://draveness.me/golang/tree/net/http.Client.send" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Client.send</code></a></li>
+<li><a href="https://draveness.me/golang/tree/net/http.send" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.send</code></a></li>
+<li><a href="https://draveness.me/golang/tree/net/http.Transport.RoundTrip" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Transport.RoundTrip</code></a></li>
+</ol>
+<p><a href="https://draveness.me/golang/tree/net/http.Transport" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Transport</code></a> 实现了 <a href="https://draveness.me/golang/tree/net/http.RoundTripper" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.RoundTripper</code></a> 接口，也是整个请求过程中最重要并且最复杂的结构体，该结构体会在 <a href="https://draveness.me/golang/tree/net/http.Transport.roundTrip" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Transport.roundTrip</code></a> 中发送 HTTP 请求并等待响应，我们可以将该函数的执行过程分成两个部分：</p>
+<ul>
+<li>根据 URL 的协议查找并执行自定义的 <a href="https://draveness.me/golang/tree/net/http.RoundTripper" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.RoundTripper</code></a> 实现；</li>
+<li>从连接池中获取或者初始化新的持久连接并调用连接的 <a href="https://draveness.me/golang/tree/net/http.persistConn.roundTrip" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.persistConn.roundTrip</code></a> 发出请求；</li>
+</ul>
+<p>我们可以在标准库的 <a href="https://draveness.me/golang/tree/net/http.Transport" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Transport</code></a> 中调用 <a href="https://draveness.me/golang/tree/net/http.Transport.RegisterProtocol" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Transport.RegisterProtocol</code></a> 为不同的协议注册 <a href="https://draveness.me/golang/tree/net/http.RoundTripper" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.RoundTripper</code></a> 的实现，在下面的这段代码中就会根据 URL 中的协议选择对应的实现来替代默认的逻辑：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *Transport)</span> <span class="title">roundTrip</span><span class="params">(req *Request)</span> <span class="params">(*Response, error)</span></span> &#123;</span><br><span class="line">	ctx := req.Context()</span><br><span class="line">	scheme := req.URL.Scheme</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> altRT := t.alternateRoundTripper(req); altRT != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> resp, err := altRT.RoundTrip(req); err != ErrSkipAltProtocol &#123;</span><br><span class="line">			<span class="keyword">return</span> resp, err</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在默认情况下，我们都会使用 <a href="https://draveness.me/golang/tree/net/http.persistConn" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.persistConn</code></a> 持久连接处理 HTTP 请求，该方法会先获取用于发送请求的连接，随后调用 <a href="https://draveness.me/golang/tree/net/http.persistConn.roundTrip" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.persistConn.roundTrip</code></a>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *Transport)</span> <span class="title">roundTrip</span><span class="params">(req *Request)</span> <span class="params">(*Response, error)</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-ctx.Done():</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">nil</span>, ctx.Err()</span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		treq := &amp;transportRequest&#123;Request: req, trace: trace&#125;</span><br><span class="line">		cm, err := t.connectMethodForRequest(treq)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		pconn, err := t.getConn(treq, cm)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		resp, err := pconn.roundTrip(treq)</span><br><span class="line">		<span class="keyword">if</span> err == <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> resp, <span class="literal">nil</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://draveness.me/golang/tree/net/http.Transport.getConn" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Transport.getConn</code></a> 是获取连接的方法，该方法会通过两种方法获取用于发送请求的连接：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *Transport)</span> <span class="title">getConn</span><span class="params">(treq *transportRequest, cm connectMethod)</span> <span class="params">(pc *persistConn, err error)</span></span> &#123;</span><br><span class="line">	req := treq.Request</span><br><span class="line">	ctx := req.Context()</span><br><span class="line"></span><br><span class="line">	w := &amp;wantConn&#123;</span><br><span class="line">		cm:         cm,</span><br><span class="line">		key:        cm.key(),</span><br><span class="line">		ctx:        ctx,</span><br><span class="line">		ready:      <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;, <span class="number">1</span>),</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> delivered := t.queueForIdleConn(w); delivered &#123;</span><br><span class="line">		<span class="keyword">return</span> w.pc, <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	t.queueForDial(w)</span><br><span class="line">	<span class="keyword">select</span> &#123;</span><br><span class="line">	<span class="keyword">case</span> &lt;-w.ready:</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">return</span> w.pc, w.err</span><br><span class="line">	...</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>调用 <a href="https://draveness.me/golang/tree/net/http.Transport.queueForIdleConn" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Transport.queueForIdleConn</code></a> 在队列中等待闲置的连接；</li>
+<li>调用 <a href="https://draveness.me/golang/tree/net/http.Transport.queueForDial" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Transport.queueForDial</code></a> 在队列中等待建立新的连接；</li>
+</ol>
+<p>连接是一种相对比较昂贵的资源，如果在每次发出 HTTP 请求之前都建立新的连接，可能会消耗比较多的时间，带来较大的额外开销，通过连接池对资源进行分配和复用可以有效地提高 HTTP 请求的整体性能，多数的网络库客户端都会采取类似的策略来复用资源。</p>
+<p>当我们调用 <a href="https://draveness.me/golang/tree/net/http.Transport.queueForDial" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Transport.queueForDial</code></a> 尝试与远程建立连接时，标准库会在内部启动新的 Goroutine 执行 <a href="https://draveness.me/golang/tree/net/http.Transport.dialConnFor" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Transport.dialConnFor</code></a> 用于建连，从最终调用的 <a href="https://draveness.me/golang/tree/net/http.Transport.dialConn" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Transport.dialConn</code></a> 中我们能找到 TCP 连接和 <a href="https://golang.org/pkg/net/" target="_blank" rel="external nofollow noopener noreferrer"><code>net</code></a> 库的身影：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *Transport)</span> <span class="title">dialConn</span><span class="params">(ctx context.Context, cm connectMethod)</span> <span class="params">(pconn *persistConn, err error)</span></span> &#123;</span><br><span class="line">	pconn = &amp;persistConn&#123;</span><br><span class="line">		t:             t,</span><br><span class="line">		cacheKey:      cm.key(),</span><br><span class="line">		reqch:         <span class="built_in">make</span>(<span class="keyword">chan</span> requestAndChan, <span class="number">1</span>),</span><br><span class="line">		writech:       <span class="built_in">make</span>(<span class="keyword">chan</span> writeRequest, <span class="number">1</span>),</span><br><span class="line">		closech:       <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;),</span><br><span class="line">		writeErrCh:    <span class="built_in">make</span>(<span class="keyword">chan</span> error, <span class="number">1</span>),</span><br><span class="line">		writeLoopDone: <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;),</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	conn, err := t.dial(ctx, <span class="string">"tcp"</span>, cm.addr())</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">	pconn.conn = conn</span><br><span class="line"></span><br><span class="line">	pconn.br = bufio.NewReaderSize(pconn, t.readBufferSize())</span><br><span class="line">	pconn.bw = bufio.NewWriterSize(persistConnWriter&#123;pconn&#125;, t.writeBufferSize())</span><br><span class="line"></span><br><span class="line">	<span class="keyword">go</span> pconn.readLoop()</span><br><span class="line">	<span class="keyword">go</span> pconn.writeLoop()</span><br><span class="line">	<span class="keyword">return</span> pconn, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在创建新的 TCP 连接后，我们还会在后台为当前的连接创建两个 Goroutine，分别从 TCP 连接中读取数据或者向 TCP 连接写入数据，从建立连接的过程我们可以发现，如果我们为每一个 HTTP 请求都创建新的连接并启动 Goroutine 处理读写数据，会占用很多的资源。</p>
+<h3 id="等待请求"><a href="#等待请求" class="headerlink" title="等待请求"></a>等待请求</h3><p>持久的 TCP 连接会实现 <a href="https://draveness.me/golang/tree/net/http.persistConn.roundTrip" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.persistConn.roundTrip</code></a> 处理写入 HTTP 请求并在 <code>select</code> 语句中等待响应的返回：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(pc *persistConn)</span> <span class="title">roundTrip</span><span class="params">(req *transportRequest)</span> <span class="params">(resp *Response, err error)</span></span> &#123;</span><br><span class="line">	writeErrCh := <span class="built_in">make</span>(<span class="keyword">chan</span> error, <span class="number">1</span>)</span><br><span class="line">	pc.writech &lt;- writeRequest&#123;req, writeErrCh, continueCh&#125;</span><br><span class="line"></span><br><span class="line">	resc := <span class="built_in">make</span>(<span class="keyword">chan</span> responseAndError)</span><br><span class="line">	pc.reqch &lt;- requestAndChan&#123;</span><br><span class="line">		req:        req.Request,</span><br><span class="line">		ch:         resc,</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> re := &lt;-resc:</span><br><span class="line">			<span class="keyword">if</span> re.err != <span class="literal">nil</span> &#123;</span><br><span class="line">				<span class="keyword">return</span> <span class="literal">nil</span>, pc.mapRoundTripError(req, startBytesWritten, re.err)</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">return</span> re.res, <span class="literal">nil</span></span><br><span class="line">		...</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>每个 HTTP 请求都由另一个 Goroutine 中的 <a href="https://draveness.me/golang/tree/net/http.persistConn.writeLoop" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.persistConn.writeLoop</code></a> 循环写入的，这两个 Goroutine 独立执行并通过 Channel 进行通信。<a href="https://draveness.me/golang/tree/net/http.Request.write" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Request.write</code></a> 会根据 <a href="https://draveness.me/golang/tree/net/http.Request" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Request</code></a> 结构中的字段按照 HTTP 协议组成 TCP 数据段：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(pc *persistConn)</span> <span class="title">writeLoop</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">defer</span> <span class="built_in">close</span>(pc.writeLoopDone)</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> wr := &lt;-pc.writech:</span><br><span class="line">			startBytesWritten := pc.nwrite</span><br><span class="line">			wr.req.Request.write(pc.bw, pc.isProxy, wr.req.extra, pc.waitForContinue(wr.continueCh))</span><br><span class="line">			...</span><br><span class="line">		<span class="keyword">case</span> &lt;-pc.closech:</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当我们调用 <a href="https://draveness.me/golang/tree/net/http.Request.write" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Request.write</code></a> 向请求中写入数据时，实际上直接写入了 <a href="https://draveness.me/golang/tree/net/http.persistConnWriter" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.persistConnWriter</code></a> 中的 TCP 连接中，TCP 协议栈会负责将 HTTP 请求中的内容发送到目标服务器上：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> persistConnWriter <span class="keyword">struct</span> &#123;</span><br><span class="line">	pc *persistConn</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(w persistConnWriter)</span> <span class="title">Write</span><span class="params">(p []<span class="keyword">byte</span>)</span> <span class="params">(n <span class="keyword">int</span>, err error)</span></span> &#123;</span><br><span class="line">	n, err = w.pc.conn.Write(p)</span><br><span class="line">	w.pc.nwrite += <span class="keyword">int64</span>(n)</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>持久连接中的另一个读循环 <a href="https://draveness.me/golang/tree/net/http.persistConn.readLoop" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.persistConn.readLoop</code></a> 会负责从 TCP 连接中读取数据并将数据发送会 HTTP 请求的调用方，真正负责解析 HTTP 协议的还是 <a href="https://draveness.me/golang/tree/net/http.ReadResponse" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.ReadResponse</code></a>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">ReadResponse</span><span class="params">(r *bufio.Reader, req *Request)</span> <span class="params">(*Response, error)</span></span> &#123;</span><br><span class="line">	tp := textproto.NewReader(r)</span><br><span class="line">	resp := &amp;Response&#123;</span><br><span class="line">		Request: req,</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	line, _ := tp.ReadLine()</span><br><span class="line">	<span class="keyword">if</span> i := strings.IndexByte(line, <span class="string">' '</span>); i == <span class="number">-1</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, badStringError(<span class="string">"malformed HTTP response"</span>, line)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		resp.Proto = line[:i]</span><br><span class="line">		resp.Status = strings.TrimLeft(line[i+<span class="number">1</span>:], <span class="string">" "</span>)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	statusCode := resp.Status</span><br><span class="line">	<span class="keyword">if</span> i := strings.IndexByte(resp.Status, <span class="string">' '</span>); i != <span class="number">-1</span> &#123;</span><br><span class="line">		statusCode = resp.Status[:i]</span><br><span class="line">	&#125;</span><br><span class="line">	resp.StatusCode, err = strconv.Atoi(statusCode)</span><br><span class="line"></span><br><span class="line">	resp.ProtoMajor, resp.ProtoMinor, _ = ParseHTTPVersion(resp.Proto)</span><br><span class="line"></span><br><span class="line">	mimeHeader, _ := tp.ReadMIMEHeader()</span><br><span class="line">	resp.Header = Header(mimeHeader)</span><br><span class="line"></span><br><span class="line">	readTransfer(resp, r)</span><br><span class="line">	<span class="keyword">return</span> resp, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们在上述方法中可以看到 HTTP 响应结构的大致框架，其中包含状态码、协议版本、请求头等内容，响应体还是在读取循环 <a href="https://draveness.me/golang/tree/net/http.persistConn.readLoop" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.persistConn.readLoop</code></a> 中根据 HTTP 协议头进行解析的。</p>
+<h2 id="服务器"><a href="#服务器" class="headerlink" title="服务器"></a>服务器</h2><p>Go 语言标准库 <a href="https://golang.org/pkg/net/http/" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http</code></a> 包提供了非常易用的接口，如下所示，我们可以利用标准库提供的功能快速搭建新的 HTTP 服务：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">handler</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">    fmt.Fprintf(w, <span class="string">"Hi there, I love %s!"</span>, r.URL.Path[<span class="number">1</span>:])</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    http.HandleFunc(<span class="string">"/"</span>, handler)</span><br><span class="line">    log.Fatal(http.ListenAndServe(<span class="string">":8080"</span>, <span class="literal">nil</span>))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述的 <code>main</code> 函数只调用了两个标准库提供的函数，它们分别是用于注册处理器的 <a href="https://draveness.me/golang/tree/net/http.HandleFunc" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.HandleFunc</code></a> 函数和用于监听和处理器请求的 <a href="https://draveness.me/golang/tree/net/http.ListenAndServe" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.ListenAndServe</code></a>，多数的服务器框架都会包含这两类接口，分别负责注册处理器和处理外部请求，这一种非常常见的模式，我们在这里也会按照这两个维度介绍标准库如何支持 HTTP 服务器的实现。</p>
+<h3 id="注册处理器"><a href="#注册处理器" class="headerlink" title="注册处理器"></a>注册处理器</h3><p>HTTP 服务是由一组实现了 <a href="https://draveness.me/golang/tree/net/http.Handler" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Handler</code></a> 接口的处理器组成的，处理 HTTP 请求时会根据请求的路由选择合适的处理器：</p>
+<p><img alt="HTTP 服务与处理器" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_http-server-and-handlers.png"></p>
+<p>当我们直接调用 <a href="https://draveness.me/golang/tree/net/http.HandleFunc" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.HandleFunc</code></a> 注册处理器时，标准库会使用默认的 HTTP 服务器 <a href="https://draveness.me/golang/tree/net/http.DefaultServeMux" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.DefaultServeMux</code></a> 处理请求，该方法会直接调用 <a href="https://draveness.me/golang/tree/net/http.ServeMux.HandleFunc" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.ServeMux.HandleFunc</code></a>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(mux *ServeMux)</span> <span class="title">HandleFunc</span><span class="params">(pattern <span class="keyword">string</span>, handler <span class="keyword">func</span>(ResponseWriter, *Request)</span>)</span> &#123;</span><br><span class="line">	mux.Handle(pattern, HandlerFunc(handler))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述方法会将处理器转换成 <a href="https://draveness.me/golang/tree/net/http.Handler" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Handler</code></a> 接口类型调用 <a href="https://draveness.me/golang/tree/net/http.ServeMux.Handle" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.ServeMux.Handle</code></a> 注册处理器：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(mux *ServeMux)</span> <span class="title">Handle</span><span class="params">(pattern <span class="keyword">string</span>, handler Handler)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> _, exist := mux.m[pattern]; exist &#123;</span><br><span class="line">		<span class="built_in">panic</span>(<span class="string">"http: multiple registrations for "</span> + pattern)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	e := muxEntry&#123;h: handler, pattern: pattern&#125;</span><br><span class="line">	mux.m[pattern] = e</span><br><span class="line">	<span class="keyword">if</span> pattern[<span class="built_in">len</span>(pattern)<span class="number">-1</span>] == <span class="string">'/'</span> &#123;</span><br><span class="line">		mux.es = appendSorted(mux.es, e)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> pattern[<span class="number">0</span>] != <span class="string">'/'</span> &#123;</span><br><span class="line">		mux.hosts = <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>路由和对应的处理器会被组成 <a href="https://draveness.me/golang/tree/net/http.DefaultServeMux" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.DefaultServeMux</code></a>，该结构会持有一个 <a href="https://draveness.me/golang/tree/net/http.muxEntry" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.muxEntry</code></a> 哈希，其中存储了从 URL 到处理器的映射关系，HTTP 服务器在处理请求时就会使用该哈希查找处理器。</p>
+<h3 id="处理请求"><a href="#处理请求" class="headerlink" title="处理请求"></a>处理请求</h3><p>标准库提供的 <a href="https://draveness.me/golang/tree/net/http.ListenAndServe" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.ListenAndServe</code></a> 可以用来监听 TCP 连接并处理请求，该函数会使用传入的监听地址和处理器初始化一个 HTTP 服务器 <a href="https://draveness.me/golang/tree/net/http.Server" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Server</code></a>，调用该服务器的 <a href="https://draveness.me/golang/tree/net/http.Server.ListenAndServe" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Server.ListenAndServe</code></a> 方法：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">ListenAndServe</span><span class="params">(addr <span class="keyword">string</span>, handler Handler)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	server := &amp;Server&#123;Addr: addr, Handler: handler&#125;</span><br><span class="line">	<span class="keyword">return</span> server.ListenAndServe()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://draveness.me/golang/tree/net/http.Server.ListenAndServe" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Server.ListenAndServe</code></a> 会使用网络库提供的 <a href="https://draveness.me/golang/tree/net.Listen" target="_blank" rel="external nofollow noopener noreferrer"><code>net.Listen</code></a> 监听对应地址上的 TCP 连接并通过 <a href="https://draveness.me/golang/tree/net/http.Server.Serve" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Server.Serve</code></a> 处理客户端的请求：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(srv *Server)</span> <span class="title">ListenAndServe</span><span class="params">()</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> addr == <span class="string">""</span> &#123;</span><br><span class="line">		addr = <span class="string">":http"</span></span><br><span class="line">	&#125;</span><br><span class="line">	ln, err := net.Listen(<span class="string">"tcp"</span>, addr)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> srv.Serve(ln)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://draveness.me/golang/tree/net/http.Server.Serve" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Server.Serve</code></a> 会在循环中监听外部的 TCP 连接并为每个连接调用 <a href="https://draveness.me/golang/tree/net/http.Server.newConn" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Server.newConn</code></a> 创建新的 <a href="https://draveness.me/golang/tree/net/http.conn" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.conn</code></a>，它是 HTTP 连接的服务端表示：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(srv *Server)</span> <span class="title">Serve</span><span class="params">(l net.Listener)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	l = &amp;onceCloseListener&#123;Listener: l&#125;</span><br><span class="line">	<span class="keyword">defer</span> l.Close()</span><br><span class="line"></span><br><span class="line">	baseCtx := context.Background()</span><br><span class="line">	ctx := context.WithValue(baseCtx, ServerContextKey, srv)</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		rw, err := l.Accept()</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">select</span> &#123;</span><br><span class="line">			<span class="keyword">case</span> &lt;-srv.getDoneChan():</span><br><span class="line">				<span class="keyword">return</span> ErrServerClosed</span><br><span class="line">			<span class="keyword">default</span>:</span><br><span class="line">			&#125;</span><br><span class="line">			...</span><br><span class="line">			<span class="keyword">return</span> err</span><br><span class="line">		&#125;</span><br><span class="line">		connCtx := ctx</span><br><span class="line">		c := srv.newConn(rw)</span><br><span class="line">		c.setState(c.rwc, StateNew) <span class="comment">// before Serve can return</span></span><br><span class="line">		<span class="keyword">go</span> c.serve(connCtx)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>创建了服务端的连接之后，标准库中的实现会为每个 HTTP 请求创建单独的 Goroutine 并在其中调用 <a href="https://draveness.me/golang/tree/net/http.Conn.serve" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Conn.serve</code></a> 方法，如果当前 HTTP 服务接收到了海量的请求，会在内部创建大量的 Goroutine，这可能会使整个服务质量明显降低无法处理请求。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *conn)</span> <span class="title">serve</span><span class="params">(ctx context.Context)</span></span> &#123;</span><br><span class="line">	c.remoteAddr = c.rwc.RemoteAddr().String()</span><br><span class="line"></span><br><span class="line">	ctx = context.WithValue(ctx, LocalAddrContextKey, c.rwc.LocalAddr())</span><br><span class="line">	ctx, cancelCtx := context.WithCancel(ctx)</span><br><span class="line">	c.cancelCtx = cancelCtx</span><br><span class="line">	<span class="keyword">defer</span> cancelCtx()</span><br><span class="line"></span><br><span class="line">	c.r = &amp;connReader&#123;conn: c&#125;</span><br><span class="line">	c.bufr = newBufioReader(c.r)</span><br><span class="line">	c.bufw = newBufioWriterSize(checkConnErrorWriter&#123;c&#125;, <span class="number">4</span>&lt;&lt;<span class="number">10</span>)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		w, _ := c.readRequest(ctx)</span><br><span class="line">		serverHandler&#123;c.server&#125;.ServeHTTP(w, w.req)</span><br><span class="line">		w.finishRequest()</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述代码片段是我们简化后的连接处理过程，其中包含读取 HTTP 请求、调用 Handler 处理 HTTP 请求以及调用完成该请求。读取 HTTP 请求会调用 <a href="https://draveness.me/golang/tree/net/http.Conn.readRequest" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.Conn.readRequest</code></a>，该方法会从连接中获取 HTTP 请求并构建一个实现了 <a href="https://draveness.me/golang/tree/net/http.ResponseWriter" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.ResponseWriter</code></a> 接口的变量 <a href="https://draveness.me/golang/tree/net/http.response" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.response</code></a>，向该结构体写入的数据都会被转发到它持有的缓冲区中：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(w *response)</span> <span class="title">write</span><span class="params">(lenData <span class="keyword">int</span>, dataB []<span class="keyword">byte</span>, dataS <span class="keyword">string</span>)</span> <span class="params">(n <span class="keyword">int</span>, err error)</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	w.written += <span class="keyword">int64</span>(lenData)</span><br><span class="line">	<span class="keyword">if</span> w.contentLength != <span class="number">-1</span> &amp;&amp; w.written &gt; w.contentLength &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>, ErrContentLength</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> dataB != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> w.w.Write(dataB)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> w.w.WriteString(dataS)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>解析了 HTTP 请求并初始化 <a href="https://draveness.me/golang/tree/net/http.ResponseWriter" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.ResponseWriter</code></a> 之后，我们就可以调用 <a href="https://draveness.me/golang/tree/net/http.serverHandler.ServeHTTP" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.serverHandler.ServeHTTP</code></a> 查找处理器来处理 HTTP 请求了：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> serverHandler <span class="keyword">struct</span> &#123;</span><br><span class="line">	srv *Server</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(sh serverHandler)</span> <span class="title">ServeHTTP</span><span class="params">(rw ResponseWriter, req *Request)</span></span> &#123;</span><br><span class="line">	handler := sh.srv.Handler</span><br><span class="line">	<span class="keyword">if</span> handler == <span class="literal">nil</span> &#123;</span><br><span class="line">		handler = DefaultServeMux</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> req.RequestURI == <span class="string">"*"</span> &amp;&amp; req.Method == <span class="string">"OPTIONS"</span> &#123;</span><br><span class="line">		handler = globalOptionsHandler&#123;&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	handler.ServeHTTP(rw, req)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果当前的 HTTP 服务器中不包含任何处理器，我们会使用默认的 <a href="https://draveness.me/golang/tree/net/http.DefaultServeMux" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.DefaultServeMux</code></a> 处理外部的 HTTP 请求。</p>
+<p><a href="https://draveness.me/golang/tree/net/http.ServeMux" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.ServeMux</code></a> 是一个 HTTP 请求的多路复用器，它可以接收外部的 HTTP 请求、根据请求的 URL 匹配并调用最合适的处理器：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(mux *ServeMux)</span> <span class="title">ServeHTTP</span><span class="params">(w ResponseWriter, r *Request)</span></span> &#123;</span><br><span class="line">	h, _ := mux.Handler(r)</span><br><span class="line">	h.ServeHTTP(w, r)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>经过一系列的函数调用，上述过程最终会调用 HTTP 服务器的 <a href="https://draveness.me/golang/tree/net/http.ServerMux.match" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.ServerMux.match</code></a>，该方法会遍历前面注册过的路由表并根据特定规则进行匹配：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(mux *ServeMux)</span> <span class="title">match</span><span class="params">(path <span class="keyword">string</span>)</span> <span class="params">(h Handler, pattern <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">	v, ok := mux.m[path]</span><br><span class="line">	<span class="keyword">if</span> ok &#123;</span><br><span class="line">		<span class="keyword">return</span> v.h, v.pattern</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> _, e := <span class="keyword">range</span> mux.es &#123;</span><br><span class="line">		<span class="keyword">if</span> strings.HasPrefix(path, e.pattern) &#123;</span><br><span class="line">			<span class="keyword">return</span> e.h, e.pattern</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span>, <span class="string">""</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果请求的路径和路由中的表项匹配成功，我们会调用表项中对应的处理器，处理器中包含的业务逻辑会通过 <a href="https://draveness.me/golang/tree/net/http.ResponseWriter" target="_blank" rel="external nofollow noopener noreferrer"><code>net/http.ResponseWriter</code></a> 构建 HTTP 请求对应的响应并通过 TCP 连接发送回客户端。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Go 语言的 HTTP 标准库提供了非常丰富的功能，很多语言的标准库只提供了最基本的功能，实现 HTTP 客户端和服务器往往都需要借助其他开源的框架，但是 Go 语言的很多项目都会直接使用标准库实现 HTTP 服务器，这也从侧面说明了 Go 语言标准库的价值。</p>
+<h2 id="Go-Http客户端"><a href="#Go-Http客户端" class="headerlink" title="Go Http客户端"></a>Go Http客户端</h2><p>get请求可以直接http.Get方法</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"net/http"</span></span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">	<span class="string">"reflect"</span></span><br><span class="line">	<span class="string">"bytes"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line">	resp, err := http.Get(<span class="string">"http://www.baidu.com"</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="comment">// handle error</span></span><br><span class="line">		log.Println(err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">defer</span> resp.Body.Close()</span><br><span class="line"></span><br><span class="line">	headers := resp.Header</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> k, v := <span class="keyword">range</span> headers &#123;</span><br><span class="line">		fmt.Printf(<span class="string">"k=%v, v=%v\n"</span>, k, v)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	fmt.Printf(<span class="string">"resp status %s,statusCode %d\n"</span>, resp.Status, resp.StatusCode)</span><br><span class="line"></span><br><span class="line">	fmt.Printf(<span class="string">"resp Proto %s\n"</span>, resp.Proto)</span><br><span class="line"></span><br><span class="line">	fmt.Printf(<span class="string">"resp content length %d\n"</span>, resp.ContentLength)</span><br><span class="line"></span><br><span class="line">	fmt.Printf(<span class="string">"resp transfer encoding %v\n"</span>, resp.TransferEncoding)</span><br><span class="line"></span><br><span class="line">	fmt.Printf(<span class="string">"resp Uncompressed %t\n"</span>, resp.Uncompressed)</span><br><span class="line"></span><br><span class="line">	fmt.Println(reflect.TypeOf(resp.Body)) <span class="comment">// *http.gzipReader</span></span><br><span class="line"></span><br><span class="line">	buf := bytes.NewBuffer(<span class="built_in">make</span>([]<span class="keyword">byte</span>, <span class="number">0</span>, <span class="number">512</span>))</span><br><span class="line"></span><br><span class="line">	length, _ := buf.ReadFrom(resp.Body)</span><br><span class="line"></span><br><span class="line">	fmt.Println(<span class="built_in">len</span>(buf.Bytes()))</span><br><span class="line">	fmt.Println(length)</span><br><span class="line">	fmt.Println(<span class="keyword">string</span>(buf.Bytes()))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>有时需要在请求的时候设置头参数、cookie之类的数据，就可以使用http.Do方法。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"net/http"</span></span><br><span class="line">	<span class="string">"strings"</span></span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"io/ioutil"</span></span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">	<span class="string">"encoding/json"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	client := &amp;http.Client&#123;&#125;</span><br><span class="line"></span><br><span class="line">	req, err := http.NewRequest(<span class="string">"POST"</span>, <span class="string">"http://www.maimaiche.com/loginRegister/login.do"</span>,</span><br><span class="line">		strings.NewReader(<span class="string">"mobile=xxxxxxxxx&amp;isRemberPwd=1"</span>))</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	req.Header.Set(<span class="string">"Content-Type"</span>, <span class="string">"application/x-www-form-urlencoded; charset=UTF-8"</span>)</span><br><span class="line"></span><br><span class="line">	resp, err := client.Do(req)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">defer</span> resp.Body.Close()</span><br><span class="line"></span><br><span class="line">	body, err := ioutil.ReadAll(resp.Body)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	fmt.Println(resp.Header.Get(<span class="string">"Content-Type"</span>)) <span class="comment">//application/json;charset=UTF-8</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">type</span> Result <span class="keyword">struct</span> &#123;</span><br><span class="line">		Msg    <span class="keyword">string</span></span><br><span class="line">		Status <span class="keyword">string</span></span><br><span class="line">		Obj    <span class="keyword">string</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	result := &amp;Result&#123;&#125;</span><br><span class="line">	json.Unmarshal(body, result) <span class="comment">//解析json字符串</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> result.Status == <span class="string">"1"</span> &#123;</span><br><span class="line">		fmt.Println(result.Msg)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		fmt.Println(<span class="string">"login error"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Println(result)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果使用http POST方法可以直接使用http.Post 或 http.PostForm，</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"net/http"</span></span><br><span class="line">	<span class="string">"strings"</span></span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"io/ioutil"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	resp, err := http.Post(<span class="string">"http://www.maimaiche.com/loginRegister/login.do"</span>,</span><br><span class="line">		<span class="string">"application/x-www-form-urlencoded"</span>,</span><br><span class="line">		strings.NewReader(<span class="string">"mobile=xxxxxxxxxx&amp;isRemberPwd=1"</span>))</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">defer</span> resp.Body.Close()</span><br><span class="line">	body, err := ioutil.ReadAll(resp.Body)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	fmt.Println(<span class="keyword">string</span>(body))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>http.PostForm方法，</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"net/http"</span></span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"io/ioutil"</span></span><br><span class="line">	<span class="string">"net/url"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line">	postParam := url.Values&#123;</span><br><span class="line">		<span class="string">"mobile"</span>:      &#123;<span class="string">"xxxxxx"</span>&#125;,</span><br><span class="line">		<span class="string">"isRemberPwd"</span>: &#123;<span class="string">"1"</span>&#125;,</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	resp, err := http.PostForm(<span class="string">"http://www.maimaiche.com/loginRegister/login.do"</span>, postParam)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">defer</span> resp.Body.Close()</span><br><span class="line">	body, err := ioutil.ReadAll(resp.Body)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	fmt.Println(<span class="keyword">string</span>(body))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Go-Http服务器端"><a href="#Go-Http服务器端" class="headerlink" title="Go Http服务器端"></a>Go Http服务器端</h2><h3 id="一切的基础：ServeMux-和-Handler"><a href="#一切的基础：ServeMux-和-Handler" class="headerlink" title="一切的基础：ServeMux 和 Handler"></a>一切的基础：ServeMux 和 Handler</h3><p>Go 语言中处理 HTTP 请求主要跟两个东西相关：ServeMux 和 Handler。</p>
+<p>ServrMux 本质上是一个 HTTP 请求路由器（或者叫多路复用器，Multiplexor）。它把收到的请求与一组预先定义的 URL 路径列表做对比，然后在匹配到路径的时候调用关联的处理器（Handler）。</p>
+<p>处理器（Handler）负责输出HTTP响应的头和正文。任何满足了http.Handler接口的对象都可作为一个处理器。通俗的说，对象只要有个如下签名的ServeHTTP方法即可：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ServeHTTP(http.ResponseWriter, *http.Request)</span><br></pre></td></tr></table></figure>
+<p>Go 语言的 HTTP 包自带了几个函数用作常用处理器，比如FileServer，NotFoundHandler 和 RedirectHandler。我们从一个简单具体的例子开始：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">	<span class="string">"net/http"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	mux := http.NewServeMux()</span><br><span class="line"></span><br><span class="line">	rh := http.RedirectHandler(<span class="string">"http://www.baidu.com"</span>, <span class="number">307</span>)</span><br><span class="line">	mux.Handle(<span class="string">"/foo"</span>, rh)</span><br><span class="line"></span><br><span class="line">	log.Println(<span class="string">"Listening..."</span>)</span><br><span class="line">	http.ListenAndServe(<span class="string">":3000"</span>, mux)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>快速地过一下代码：</p>
+<ol>
+<li>在 main 函数中我们只用了 http.NewServeMux 函数来创建一个空的 ServeMux。</li>
+<li>然后我们使用 http.RedirectHandler 函数创建了一个新的处理器，这个处理器会对收到的所有请求，都执行307重定向操作到 <a href="http://www.baidu.com。" target="_blank" rel="external nofollow noopener noreferrer">http://www.baidu.com。</a></li>
+<li>接下来我们使用 ServeMux.Handle 函数将处理器注册到新创建的 ServeMux，所以它在 URL 路径/foo 上收到所有的请求都交给这个处理器。</li>
+<li>最后我们创建了一个新的服务器，并通过 http.ListenAndServe 函数监听所有进入的请求，通过传递刚才创建的 ServeMux来为请求去匹配对应处理器。</li>
+</ol>
+<p>然后在浏览器中访问 <a href="http://localhost:3000/foo，你应该能发现请求已经成功的重定向了。" target="_blank" rel="external nofollow noopener noreferrer">http://localhost:3000/foo，你应该能发现请求已经成功的重定向了。</a></p>
+<p>明察秋毫的你应该能注意到一些有意思的事情：ListenAndServer 的函数签名是 ListenAndServe(addr string, handler Handler) ，但是第二个参数我们传递的是个 ServeMux。</p>
+<p>我们之所以能这么做，是因为 ServeMux 也有 ServeHTTP 方法，因此它也是个合法的 Handler。</p>
+<p>对我来说，将 ServerMux 用作一个特殊的Handler是一种简化。它不是自己输出响应而是将请求传递给注册到它的其他 Handler。这乍一听起来不是什么明显的飞跃 - 但在 Go 中将 Handler 链在一起是非常普遍的用法。</p>
+<h3 id="自定义处理器（Custom-Handlers）"><a href="#自定义处理器（Custom-Handlers）" class="headerlink" title="自定义处理器（Custom Handlers）"></a>自定义处理器（Custom Handlers）</h3><p>让我们创建一个自定义的处理器，功能是将以特定格式输出当前的本地时间：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> timeHandler <span class="keyword">struct</span> &#123;</span><br><span class="line">	format <span class="keyword">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(th *timeHandler)</span> <span class="title">ServeHTTP</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">	tm := time.Now().Format(th.format)</span><br><span class="line">	w.Write([]<span class="keyword">byte</span>(<span class="string">"The time is: "</span> + tm))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个例子里代码本身并不是重点。</p>
+<p>真正的重点是我们有一个对象（本例中就是个timerHandler结构体，但是也可以是一个字符串、一个函数或者任意的东西），我们在这个对象上实现了一个 ServeHTTP(http.ResponseWriter, *http.Request) 签名的方法，这就是我们创建一个处理器所需的全部东西。</p>
+<p>我们把这个集成到具体的示例里：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//File: main.go</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">	<span class="string">"net/http"</span></span><br><span class="line">	<span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> timeHandler <span class="keyword">struct</span> &#123;</span><br><span class="line">	format <span class="keyword">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(th *timeHandler)</span> <span class="title">ServeHTTP</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">	tm := time.Now().Format(th.format)</span><br><span class="line">	w.Write([]<span class="keyword">byte</span>(<span class="string">"The time is: "</span> + tm))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	mux := http.NewServeMux()</span><br><span class="line"></span><br><span class="line">	th := &amp;timeHandler&#123;format: time.RFC1123&#125;</span><br><span class="line">	mux.Handle(<span class="string">"/time"</span>, th)</span><br><span class="line"></span><br><span class="line">	log.Println(<span class="string">"Listening..."</span>)</span><br><span class="line">	http.ListenAndServe(<span class="string">":3000"</span>, mux)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>main函数中，我们像初始化一个常规的结构体一样，初始化了timeHandler，用 &amp; 符号获得了其地址。随后，像之前的例子一样，我们使用 mux.Handle 函数来将其注册到 ServerMux。</p>
+<p>现在当我们运行这个应用，ServerMux 将会将任何对 /time的请求直接交给 timeHandler.ServeHTTP 方法处理。</p>
+<p>访问一下这个地址看一下效果：<a href="http://localhost:3000/time" target="_blank" rel="external nofollow noopener noreferrer">http://localhost:3000/time</a> 。</p>
+<p>注意我们可以在多个路由中轻松的复用 timeHandler：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//File: main.go</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">	<span class="string">"net/http"</span></span><br><span class="line">	<span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> timeHandler <span class="keyword">struct</span> &#123;</span><br><span class="line">	format <span class="keyword">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(th *timeHandler)</span> <span class="title">ServeHTTP</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">	tm := time.Now().Format(th.format)</span><br><span class="line">	w.Write([]<span class="keyword">byte</span>(<span class="string">"The time is: "</span> + tm))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	mux := http.NewServeMux()</span><br><span class="line"></span><br><span class="line">	th1123 := &amp;timeHandler&#123;format: time.RFC1123&#125;</span><br><span class="line">	mux.Handle(<span class="string">"/time/rfc1123"</span>, th1123)</span><br><span class="line"></span><br><span class="line">	th3339 := &amp;timeHandler&#123;format: time.RFC3339&#125;</span><br><span class="line">	mux.Handle(<span class="string">"/time/rfc3339"</span>, th3339)</span><br><span class="line"></span><br><span class="line">	log.Println(<span class="string">"Listening..."</span>)</span><br><span class="line">	http.ListenAndServe(<span class="string">":3000"</span>, mux)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="将函数作为处理器"><a href="#将函数作为处理器" class="headerlink" title="将函数作为处理器"></a>将函数作为处理器</h3><p>对于简单的情况（比如上面的例子），定义个新的有 ServerHTTP 方法的自定义类型有些累赘。我们看一下另外一种方式，我们借助 http.HandlerFunc 类型来让一个常规函数满足作为一个 Handler 接口的条件。</p>
+<p><strong><em>任何有 func(http.ResponseWriter, \</em>http.Request) 签名的函数都能转化为一个 HandlerFunc 类型。这很有用，因为 HandlerFunc 对象内置了 ServeHTTP 方法，后者可以聪明又方便的调用我们最初提供的函数内容。*</strong></p>
+<p>让我们使用这个技术重新实现一遍timeHandler应用：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">	<span class="string">"net/http"</span></span><br><span class="line">	<span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">timeHandler</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">	tm := time.Now().Format(time.RFC1123)</span><br><span class="line">	w.Write([]<span class="keyword">byte</span>(<span class="string">"The time is: "</span> + tm))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	mux := http.NewServeMux()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Convert the timeHandler function to a HandlerFunc type</span></span><br><span class="line">	th := http.HandlerFunc(timeHandler)</span><br><span class="line">	<span class="comment">// And add it to the ServeMux</span></span><br><span class="line">	mux.Handle(<span class="string">"/time"</span>, th)</span><br><span class="line"></span><br><span class="line">	log.Println(<span class="string">"Listening..."</span>)</span><br><span class="line">	http.ListenAndServe(<span class="string">":3000"</span>, mux)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>实际上，将一个函数转换成 HandlerFunc 后注册到 ServeMux 是很普遍的用法，所以 Go 语言为此提供了个便捷方式：ServerMux.HandlerFunc 方法。</p>
+<p>我们使用便捷方式重写 main() 函数看起来是这样的：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">	<span class="string">"net/http"</span></span><br><span class="line">	<span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">timeHandler</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">	tm := time.Now().Format(time.RFC1123)</span><br><span class="line">	w.Write([]<span class="keyword">byte</span>(<span class="string">"The time is: "</span> + tm))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	mux := http.NewServeMux()</span><br><span class="line"></span><br><span class="line">	mux.HandleFunc(<span class="string">"/time"</span>, timeHandler)</span><br><span class="line"></span><br><span class="line">	log.Println(<span class="string">"Listening..."</span>)</span><br><span class="line">	http.ListenAndServe(<span class="string">":3000"</span>, mux)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>绝大多数情况下这种用函数当处理器的方式工作的很好。但是当事情开始变得更复杂的时候，就会有些产生一些限制了。</p>
+<p>你可能已经注意到了，跟之前的方式不同，我们不得不将时间格式硬编码到 timeHandler 的方法中。如果我们想从 main() 函数中传递一些信息或者变量给处理器该怎么办？</p>
+<p>一个优雅的方式是将我们处理器放到一个闭包中，将我们要使用的变量带进去：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//File: main.go</span></span><br><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">	<span class="string">"net/http"</span></span><br><span class="line">	<span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">timeHandler</span><span class="params">(format <span class="keyword">string</span>)</span> <span class="title">http</span>.<span class="title">Handler</span></span> &#123;</span><br><span class="line">	fn := <span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">		tm := time.Now().Format(format)</span><br><span class="line">		w.Write([]<span class="keyword">byte</span>(<span class="string">"The time is: "</span> + tm))</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> http.HandlerFunc(fn)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	mux := http.NewServeMux()</span><br><span class="line"></span><br><span class="line">	th := timeHandler(time.RFC1123)</span><br><span class="line">	mux.Handle(<span class="string">"/time"</span>, th)</span><br><span class="line"></span><br><span class="line">	log.Println(<span class="string">"Listening..."</span>)</span><br><span class="line">	http.ListenAndServe(<span class="string">":3000"</span>, mux)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>timeHandler 函数现在有了个更巧妙的身份。除了把一个函数封装成 Handler(像我们之前做到那样)，我们现在使用它来返回一个处理器。这种机制有两个关键点：</p>
+<p><strong><em>首先是创建了一个fn，这是个匿名函数，将 format 变量封装到一个闭包里。闭包的本质让处理器在任何情况下，都可以在本地范围内访问到 format 变量。</em></strong></p>
+<p>其次我们的闭包函数满足 func(http.ResponseWriter, *http.Request) 签名。如果你记得之前我们说的，这意味我们可以将它转换成一个HandlerFunc类型（满足了http.Handler接口）。我们的timeHandler 函数随后转换后的 HandlerFunc 返回。</p>
+<p>在上面的例子中我们已经可以传递一个简单的字符串给处理器。<strong><em>但是在实际的应用中可以使用这种方法传递数据库连接、模板组，或者其他应用级的上下文。使用全局变量也是个不错的选择，还能得到额外的好处就是编写更优雅的自包含的处理器以便测试。</em></strong></p>
+<p>你也可能见过相同的写法，像这样：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">timeHandler</span><span class="params">(format <span class="keyword">string</span>)</span> <span class="title">http</span>.<span class="title">Handler</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> http.HandlerFunc(<span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">		tm := time.Now().Format(format)</span><br><span class="line">		w.Write([]<span class="keyword">byte</span>(<span class="string">"The time is: "</span> + tm))</span><br><span class="line">	&#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>或者在返回时，使用一个到 HandlerFunc 类型的隐式转换：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">timeHandler</span><span class="params">(format <span class="keyword">string</span>)</span> <span class="title">http</span>.<span class="title">HandlerFunc</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">		tm := time.Now().Format(format)</span><br><span class="line">		w.Write([]<span class="keyword">byte</span>(<span class="string">"The time is: "</span> + tm))</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="更便利的-DefaultServeMux"><a href="#更便利的-DefaultServeMux" class="headerlink" title="更便利的 DefaultServeMux"></a>更便利的 DefaultServeMux</h3><p>你可能已经在很多地方看到过 DefaultServeMux, 从最简单的 Hello World 例子，到 go 语言的源代码中。</p>
+<p>我花了很长时间才意识到 DefaultServerMux 并没有什么的特殊的地方。DefaultServerMux 就是我们之前用到的 ServerMux，只是它随着 net/httpp 包初始化的时候被自动初始化了而已。Go 源代码中的相关行如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> DefaultServeMux = NewServeMux()</span><br></pre></td></tr></table></figure>
+<p>net/http 包提供了一组快捷方式来配合 DefaultServeMux：http.Handle 和 http.HandleFunc。这些函数与我们之前看过的类似的名称的函数功能一样，唯一的不同是他们将处理器注册到 DefaultServerMux ，而之前我们是注册到自己创建的 ServeMux。</p>
+<p>此外，ListenAndServe在没有提供其他的处理器的情况下（也就是第二个参数设成了 nil），内部会使用 DefaultServeMux。</p>
+<p>因此，作为最后一个步骤，我们使用 DefaultServeMux 来改写我们的 timeHandler应用：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//File: main.go</span></span><br><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">	<span class="string">"net/http"</span></span><br><span class="line">	<span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">timeHandler</span><span class="params">(format <span class="keyword">string</span>)</span> <span class="title">http</span>.<span class="title">Handler</span></span> &#123;</span><br><span class="line">	fn := <span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">		tm := time.Now().Format(format)</span><br><span class="line">		w.Write([]<span class="keyword">byte</span>(<span class="string">"The time is: "</span> + tm))</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> http.HandlerFunc(fn)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// Note that we skip creating the ServeMux...</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> format <span class="keyword">string</span> = time.RFC1123</span><br><span class="line">	th := timeHandler(format)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// We use http.Handle instead of mux.Handle...</span></span><br><span class="line">	http.Handle(<span class="string">"/time"</span>, th)</span><br><span class="line"></span><br><span class="line">	log.Println(<span class="string">"Listening..."</span>)</span><br><span class="line">	<span class="comment">// And pass nil as the handler to ListenAndServe.</span></span><br><span class="line">	http.ListenAndServe(<span class="string">":3000"</span>, <span class="literal">nil</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://studygolang.com/articles/9467" target="_blank" rel="external nofollow noopener noreferrer">https://studygolang.com/articles/9467</a></li>
+<li><a href="https://learnku.com/docs/build-web-application-with-golang" target="_blank" rel="external nofollow noopener noreferrer">https://learnku.com/docs/build-web-application-with-golang</a></li>
+<li><a href="https://draveness.me/golang/docs/part4-advanced/ch09-stdlib/golang-net-http" target="_blank" rel="external nofollow noopener noreferrer">https://draveness.me/golang/docs/part4-advanced/ch09-stdlib/golang-net-http</a></li>
+<li><a href="https://medium.com/better-programming/overview-of-server-side-http-apis-in-go-44f052737e4b" target="_blank" rel="external nofollow noopener noreferrer">https://medium.com/better-programming/overview-of-server-side-http-apis-in-go-44f052737e4b</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/e87a4e07/" rel="bookmark">【Go语言设计与实现】String</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/4e214fa9/" rel="bookmark">【Go语言设计与实现】Function</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/c31234d9/" rel="bookmark">【Go语言设计与实现】Interface</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/a4a5a52b/" title="【Go语言设计与实现】HTTP 库">http://houmin.cc/posts/a4a5a52b/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Go/" rel="tag"><i class="fa fa-tag"></i> Go</a>
+              <a href="/tags/http/" rel="tag"><i class="fa fa-tag"></i> http</a>
+              <a href="/tags/web/" rel="tag"><i class="fa fa-tag"></i> web</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/7fc46894/" rel="next" title="【Go语言设计与实现】Go Plugin">
+                  <i class="fa fa-chevron-left"></i> 【Go语言设计与实现】Go Plugin
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/be512b16/" rel="prev" title="【Go语言设计与实践】JSON">
+                  【Go语言设计与实践】JSON <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#设计原理"><span class="nav-number">1.</span> <span class="nav-text">设计原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#请求和响应"><span class="nav-number">1.1.</span> <span class="nav-text">请求和响应</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#消息边界"><span class="nav-number">1.2.</span> <span class="nav-text">消息边界</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#层级结构"><span class="nav-number">1.3.</span> <span class="nav-text">层级结构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#客户端"><span class="nav-number">2.</span> <span class="nav-text">客户端</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#构建请求"><span class="nav-number">2.1.</span> <span class="nav-text">构建请求</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#开启事务"><span class="nav-number">2.2.</span> <span class="nav-text">开启事务</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#等待请求"><span class="nav-number">2.3.</span> <span class="nav-text">等待请求</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#服务器"><span class="nav-number">3.</span> <span class="nav-text">服务器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#注册处理器"><span class="nav-number">3.1.</span> <span class="nav-text">注册处理器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#处理请求"><span class="nav-number">3.2.</span> <span class="nav-text">处理请求</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Go-Http客户端"><span class="nav-number">5.</span> <span class="nav-text">Go Http客户端</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Go-Http服务器端"><span class="nav-number">6.</span> <span class="nav-text">Go Http服务器端</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#一切的基础：ServeMux-和-Handler"><span class="nav-number">6.1.</span> <span class="nav-text">一切的基础：ServeMux 和 Handler</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#自定义处理器（Custom-Handlers）"><span class="nav-number">6.2.</span> <span class="nav-text">自定义处理器（Custom Handlers）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#将函数作为处理器"><span class="nav-number">6.3.</span> <span class="nav-text">将函数作为处理器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#更便利的-DefaultServeMux"><span class="nav-number">6.4.</span> <span class="nav-text">更便利的 DefaultServeMux</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">7.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">170</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">230</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">2.2m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">65:25</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

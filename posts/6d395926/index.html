@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="应用程序的内存一般会分成堆区和栈区两个部分，程序在运行期间可以主动从堆区申请内存空间，这些内存由内存分配器分配并由垃圾收集器负责回收，我们在上两节已经详细分析了堆内存的申请和释放过程，本节会介绍 Go 语言栈内存的实现原理。">
+<meta name="keywords" content="Go,源码阅读,内存管理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Go语言设计与实现】栈内存管理">
+<meta property="og:url" content="http://houmin.cc/posts/6d395926/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="应用程序的内存一般会分成堆区和栈区两个部分，程序在运行期间可以主动从堆区申请内存空间，这些内存由内存分配器分配并由垃圾收集器负责回收，我们在上两节已经详细分析了堆内存的申请和释放过程，本节会介绍 Go 语言栈内存的实现原理。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://img.draveness.me/2020-03-23-15849514795843-stack-registers.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-escape-analysis-and-key-invariants.png">
+<meta property="og:image" content="https://img.draveness.me/2020-03-23-15849514795874-segmented-stacks.png">
+<meta property="og:image" content="https://img.draveness.me/2020-03-23-15849514795883-continuous-stacks.png">
+<meta property="og:image" content="https://img.draveness.me/2020-03-23-15849514795892-stack-memory.png">
+<meta property="og:image" content="https://img.draveness.me/2020-03-23-15849514795902-shrink-stacks.png">
+<meta property="og:updated_time" content="2021-02-07T11:43:32.964Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img.draveness.me/2020-03-23-15849514795843-stack-registers.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/6d395926/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Go语言设计与实现】栈内存管理 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/6d395926/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Go语言设计与实现】栈内存管理
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-05-13 12:23:21" itemprop="dateCreated datePublished" datetime="2020-05-13T12:23:21+08:00">2020-05-13</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/6d395926/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/6d395926/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>11k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>20 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>应用程序的内存一般会分成堆区和栈区两个部分，程序在运行期间可以主动从堆区申请内存空间，这些内存由内存分配器分配并由垃圾收集器负责回收，我们在上两节已经详细分析了堆内存的申请和释放过程，本节会介绍 Go 语言栈内存的实现原理。</p>
+<a id="more"></a>
+<h2 id="设计原理"><a href="#设计原理" class="headerlink" title="设计原理"></a>设计原理</h2><p>栈区的内存一般由编译器自动进行分配和释放，其中存储着函数的入参以及局部变量，这些参数会随着函数的创建而创建，函数的返回而消亡，一般不会在程序中长期存在，这种线性的内存分配策略有着极高地效率，但是工程师也往往不能控制栈内存的分配，这部分工作基本都是由编译器自动完成的。</p>
+<h3 id="寄存器"><a href="#寄存器" class="headerlink" title="寄存器"></a>寄存器</h3><p>寄存器<a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-stack-management/#fn:1" target="_blank" rel="external nofollow noopener noreferrer">1</a>是中央处理器（CPU）中的稀缺资源，它的存储能力非常有限，但是能提供最快的读写速度，充分利用寄存器的效率可以构建高性能的应用程序。寄存器在物理机上非常有限，然而栈区的操作就会使用到两个以上的寄存器，这足以说明栈内存在应用程序的重要性。</p>
+<p>栈寄存器在是 CPU 寄存器中的一种，它的主要作用是跟踪函数的调用栈<a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-stack-management/#fn:2" target="_blank" rel="external nofollow noopener noreferrer">2</a>，Go 语言的汇编代码中包含 BP 和 SP 两个栈寄存器，它们分别存储了栈的基址指针和栈顶的地址，栈内存与函数调用的关系非常紧密，我们在函数调用一节中曾经介绍过栈区，BP 和 SP 之间的内存就是当前函数的调用栈。</p>
+<p><img alt="stack-registers" data-src="https://img.draveness.me/2020-03-23-15849514795843-stack-registers.png"></p>
+<p><strong>图 7-43 栈寄存器与内存</strong></p>
+<p>由于历史的设计问题，目前的栈区内存都是从高地址向低地址扩展的，当应用程序申请或者释放栈内存时只需要修改 SP 寄存器的值，这种线性的内存分配方式与堆内存相比更加快速，占用极少的额外开销。</p>
+<h3 id="线程栈"><a href="#线程栈" class="headerlink" title="线程栈"></a>线程栈</h3><p>如果我们在 Linux 操作系统中执行 <code>pthread_create</code> 系统调用，进程会启动一个新的线程，如果用户没有通过软资源限制 <code>RLIMIT_STACK</code> 指定线程栈的大小，那么操作系统会根据架构选择不同的默认栈大小<a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-stack-management/#fn:3" target="_blank" rel="external nofollow noopener noreferrer">3</a>。</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>架构</th>
+<th>默认栈大小</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>i386</td>
+<td>2 MB</td>
+</tr>
+<tr>
+<td>IA-64</td>
+<td>32 MB</td>
+</tr>
+<tr>
+<td>PowerPC</td>
+<td>4 MB</td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>x86_64</td>
+<td>2 MB</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>表 7-3 架构和线程默认栈大小</strong></p>
+<p>多数架构上默认栈大小都在 2 ~ 4 MB 左右，极少数架构会使用 32 MB 作为默认大小，用户程序可以在分配的栈上存储函数参数和局部变量。然而这个固定的栈大小在某些场景下可能不是一个合适的值，如果一个程序需要同时运行几百个甚至上千个线程，那么这些线程中的绝大部分都只会用到很少的栈空间，而如果函数的调用栈非常深，固定的栈大小也无法满足用户程序的需求。</p>
+<p>线程和进程都是代码执行的上下文（Context of Execution）<a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-stack-management/#fn:4" target="_blank" rel="external nofollow noopener noreferrer">4</a>，但是如果一个应用程序中包含成百上千个执行上下文并且每个上下文都是线程，就会占用大量的内存空间并带来其他的额外开销，Go 语言在设计时认为执行上下文应该是轻量级的，所以在它实现了用户级的 Goroutine 作为执行上下文。</p>
+<h3 id="逃逸分析"><a href="#逃逸分析" class="headerlink" title="逃逸分析"></a>逃逸分析</h3><p>在 C 语言和 C++ 这类需要手动管理内存的编程语言中，将对象或者结构体分配到栈上或者堆上是由工程师自主决定的，这也为工程师的工作带来的挑战，如果工程师能够精准地为每一个变量分配最合理的空间，那么整个程序的运行效率和内存使用效率一定是最高的，但是手动分配内存会导致如下的两个问题：</p>
+<ol>
+<li>不需要分配到堆上的对象分配到了堆上 — 浪费内存空间；</li>
+<li>需要分配到堆上的对象分配到了栈上 — 悬挂指针、影响内存安全；</li>
+</ol>
+<p>与悬挂指针相比，浪费的内存空间反而是小问题。在 C 语言中，栈上的变量被函数作为返回值返回给调用方是一个常见的错误，在如下所示的代码中，栈上的变量 <code>i</code> 被错误地返回：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> *<span class="title">dangling_pointer</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i = <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">return</span> &amp;i;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当 <code>dangling_pointer</code> 函数返回后，它的本地变量就会被编译器直接回收，调用方获取的是危险的悬挂指针，我们不确定当前指针指向的值是否合法，这种问题在大型项目中是比较难以发现和定位的。</p>
+<p>在编译器优化中，逃逸分析（Escape analysis）是用来决定指针动态作用域的方法<a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-stack-management/#fn:5" target="_blank" rel="external nofollow noopener noreferrer">5</a>。Go 语言的编译器使用逃逸分析决定哪些变量应该在栈上分配，哪些变量应该在堆上分配，其中包括使用 <code>new</code>、<code>make</code> 和字面量等方法隐式分配的内存，Go 语言的逃逸分析遵循以下两个不变性：</p>
+<ol>
+<li>指向栈对象的指针不能存在于堆中；</li>
+<li>指向栈对象的指针不能在栈对象回收后存活；</li>
+</ol>
+<p><img alt="逃逸分析和不变性" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-escape-analysis-and-key-invariants.png"></p>
+<p>我们通过上图展示两条不变性存在的意义，当我们违反了第一条不变性，堆上的绿色指针指向了栈中的黄色内存，一旦当前函数返回函数栈被回收，该绿色指针指向的值就不再合法；如果我们违反了第二条不变性，因为寄存器 SP 下面的内存由于函数返回已经被释放掉，所以黄色指针指向的内存已经不再合法。</p>
+<p>逃逸分析是静态分析的一种，在编译器解析了 Go 语言源文件后，它可以获得整个程序的抽象语法树（Abstract syntax tree，AST），编译器可以根据抽象语法树分析静态的数据流，我们会通过以下几个步骤实现静态分析的全过程<a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-stack-management/#fn:6" target="_blank" rel="external nofollow noopener noreferrer">6</a>：</p>
+<ol>
+<li>构建带权重的有向图，其中顶点 <a href="https://github.com/golang/go/blob/d467f3bbc9c76805ae16ab1924c28ec3be487875/src/cmd/compile/internal/gc/escape.go#L100" target="_blank" rel="external nofollow noopener noreferrer"><code>cmd/compile/internal/gc.EscLocation</code></a> 表示被分配的变量，边 <a href="https://github.com/golang/go/blob/master/src/cmd/compile/internal/gc/escape.go#L136" target="_blank" rel="external nofollow noopener noreferrer"><code>cmd/compile/internal/gc.EscEdge</code></a> 表示变量之间的分配关系，权重表示寻址和取地址的次数；</li>
+<li>遍历对象分配图并查找违反两条不变性的变量分配关系，如果堆上的变量指向了栈上的变量，那么栈上的变量就需要分配在堆上；</li>
+<li>记录从函数的调用参数到堆以及返回值的数据流，增强函数参数的逃逸分析；</li>
+</ol>
+<p>决定变量是在栈上还是堆上虽然重要，但是这是一个定义相对清晰的问题，我们可以通过编译器在统一作出决策。为了保证内存的绝对安全，编译器可能会将一些变量错误地分配到堆上，但是因为这些对也会被垃圾收集器处理，所以不会造成内存泄露以及悬挂指针等安全问题，解放了工程师的生产力。</p>
+<h3 id="栈内存空间"><a href="#栈内存空间" class="headerlink" title="栈内存空间"></a>栈内存空间</h3><p>Go 语言使用用户态线程 Goroutine 作为执行上下文，它的额外开销和默认栈大小都比线程小很多，然而 Goroutine 的栈内存空间和栈结构也在早期几个版本中发生过一些变化：</p>
+<ol>
+<li>v1.0 ~ v1.1 — 最小栈内存空间为 4KB；</li>
+<li>v1.2 — 将最小栈内存提升到了 8KB<a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-stack-management/#fn:7" target="_blank" rel="external nofollow noopener noreferrer">7</a>；</li>
+<li>v1.3 — 使用<strong>连续栈</strong>替换之前版本的分段栈<a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-stack-management/#fn:8" target="_blank" rel="external nofollow noopener noreferrer">8</a>；</li>
+<li>v1.4 — 将最小栈内存降低到了 2KB<a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-stack-management/#fn:9" target="_blank" rel="external nofollow noopener noreferrer">9</a>；</li>
+</ol>
+<p>Goroutine 的初始栈内存在最初的几个版本中多次修改，从 4KB 提升到 8KB 是临时的解决方案，其目的是为了减轻分段栈的栈分裂问题对程序造成的性能影响；在 v1.3 版本引入连续栈之后，Goroutine 的初始栈大小降低到了 2KB，进一步减少了 Goroutine 占用的内存空间。</p>
+<h4 id="分段栈"><a href="#分段栈" class="headerlink" title="分段栈"></a>分段栈</h4><p>分段栈是 Go 语言在 v1.3 版本之前的实现，所有 Goroutine 在初始化时都会调用 <a href="https://github.com/golang/go/blob/go1.2/src/pkg/runtime/stack.c#L77" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.stackalloc#go1.2</code></a> 分配一块固定大小的内存空间，这块内存的大小由 <a href="https://github.com/golang/go/blob/go1.2/src/pkg/runtime/stack.h#L79" target="_blank" rel="external nofollow noopener noreferrer"><code>StackMin#go1.2</code></a> 表示，在 v1.2 版本中为 8KB：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span>* runtime·stackalloc(uint32 n) &#123;</span><br><span class="line">	uint32 pos;</span><br><span class="line">	<span class="keyword">void</span> *v;</span><br><span class="line">	<span class="keyword">if</span>(n == FixedStack || m-&gt;mallocing || m-&gt;gcing) &#123;</span><br><span class="line">		<span class="keyword">if</span>(m-&gt;stackcachecnt == <span class="number">0</span>)</span><br><span class="line">			stackcacherefill();</span><br><span class="line">		pos = m-&gt;stackcachepos;</span><br><span class="line">		pos = (pos - <span class="number">1</span>) % StackCacheSize;</span><br><span class="line">		v = m-&gt;stackcache[pos];</span><br><span class="line">		m-&gt;stackcachepos = pos;</span><br><span class="line">		m-&gt;stackcachecnt--;</span><br><span class="line">		m-&gt;stackinuse++;</span><br><span class="line">		<span class="keyword">return</span> v;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> runtime·mallocgc(n, <span class="number">0</span>, FlagNoProfiling|FlagNoGC|FlagNoZero|FlagNoInvokeGC);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果通过该方法申请的内存大小为固定的 8KB 或者满足其他的条件，运行时会在全局的栈缓存链表中找到空闲的内存块并作为新 Goroutine 的栈空间返回；在其余情况下，栈内存空间会从堆上申请一块合适的内存。</p>
+<p>当 Goroutine 调用的函数层级或者局部变量需要的越来越多时，运行时会调用 <a href="https://github.com/golang/go/blob/go1.2/src/pkg/runtime/asm_amd64.s#L195" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.morestack#go1.2</code></a> 和 <a href="https://github.com/golang/go/blob/go1.2/src/pkg/runtime/stack.c#L196" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.newstack#go1.2</code></a> 创建一个新的栈空间，这些栈空间虽然不连续，但是当前 Goroutine 的多个栈空间会以链表的形式串联起来，运行时会通过指针找到连续的栈片段：</p>
+<p><img alt="segmented-stacks" data-src="https://img.draveness.me/2020-03-23-15849514795874-segmented-stacks.png"></p>
+<p><strong>图 7-45 分段栈的内存布局</strong></p>
+<p>一旦 Goroutine 申请的栈空间不在被需要，运行时会调用 <a href="https://github.com/golang/go/blob/go1.2/src/pkg/runtime/asm_amd64.s#L370" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.lessstack#go1.2</code></a> 和 <a href="https://github.com/golang/go/blob/go1.2/src/pkg/runtime/stack.c#L132" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.oldstack#go1.2</code></a> 释放不再使用的内存空间。</p>
+<p>分段栈机制虽然能够按需为当前 Goroutine 分配内存并且及时减少内存的占用，但是它也存在两个比较大的问题：</p>
+<ol>
+<li>如果当前 Goroutine 的栈几乎充满，那么任意的函数调用都会触发栈的扩容，当函数返回后又会触发栈的收缩，如果在一个循环中调用函数，栈的分配和释放就会造成巨大的额外开销，这被称为热分裂问题（Hot split）；</li>
+<li>一旦 Goroutine 使用的内存<strong>越过</strong>了分段栈的扩缩容阈值，运行时就会触发栈的扩容和缩容，带来额外的工作量；</li>
+</ol>
+<h4 id="连续栈"><a href="#连续栈" class="headerlink" title="连续栈"></a>连续栈</h4><p>连续栈可以解决分段栈中存在的两个问题，其核心原理就是每当程序的栈空间不足时，初始化一片更大的栈空间并将原栈中的所有值都迁移到新的栈中，新的局部变量或者函数调用就有了充足的内存空间。使用连续栈机制时，栈空间不足导致的扩容会经历以下几个步骤：</p>
+<ol>
+<li>在内存空间中分配更大的栈内存空间；</li>
+<li>将旧栈中的所有内容复制到新的栈中；</li>
+<li><strong>将指向旧栈对应变量的指针重新指向新栈</strong>；</li>
+<li>销毁并回收旧栈的内存空间；</li>
+</ol>
+<p>在扩容的过程中，最重要的是调整指针的第三步，这一步能够保证指向栈的指针的正确性，因为栈中的所有变量内存都会发生变化，所以原本指向栈中变量的指针也需要调整。我们在前面提到过经过逃逸分析的 Go 语言程序的遵循以下不变性 —— <strong>指向栈对象的指针不能存在于堆中</strong>，所以指向栈中变量的指针只能在栈上，我们只需要调整栈中的所有变量就可以保证内存的安全了。</p>
+<p><img alt="continuous-stacks" data-src="https://img.draveness.me/2020-03-23-15849514795883-continuous-stacks.png"></p>
+<p><strong>图 7-46 连续栈的内存布局</strong></p>
+<p>因为需要拷贝变量和调整指针，连续栈增加了栈扩容时的额外开销，但是通过合理栈缩容机制就能避免热分裂带来的性能问题<a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-stack-management/#fn:10" target="_blank" rel="external nofollow noopener noreferrer">10</a>，在 GC 期间如果 Goroutine 使用了栈内存的四分之一，那就将其内存减少一半，这样在栈内存几乎充满时也只会扩容一次，不会因为函数调用频繁扩缩容。</p>
+<h2 id="栈操作"><a href="#栈操作" class="headerlink" title="栈操作"></a>栈操作</h2><p>Go 语言中的执行栈由 <a href="https://github.com/golang/go/blob/a38a917aee626a9b9d5ce2b93964f586bf759ea0/src/runtime/runtime2.go#L382" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.stack</code></a> 结构体表示，该结构体中只包含两个字段，分别表示栈的顶部和栈的底部，每个栈结构体都表示范围 <code>[lo, hi)</code> 的内存空间：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> stack <span class="keyword">struct</span> &#123;</span><br><span class="line">	lo <span class="keyword">uintptr</span></span><br><span class="line">	hi <span class="keyword">uintptr</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>栈的结构虽然非常简单，但是想要理解 Goroutine 栈的实现原理，还是需要我们从编译期间和运行时两个阶段入手：</p>
+<ol>
+<li>编译器会在编译阶段会通过 <a href="https://github.com/golang/go/blob/a38a917aee626a9b9d5ce2b93964f586bf759ea0/src/cmd/internal/obj/x86/obj6.go#L1037" target="_blank" rel="external nofollow noopener noreferrer"><code>cmd/internal/obj/x86.stacksplit</code></a> 在调用函数前插入 <a href="https://github.com/golang/go/blob/be72e3c3ff21a22bf8162965533672994e670985/src/runtime/asm_amd64.s#L407" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.morestack</code></a> 或者 <a href="https://github.com/golang/go/blob/be72e3c3ff21a22bf8162965533672994e670985/src/runtime/asm_amd64.s#L454" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.morestack_noctxt</code></a> 函数；</li>
+<li>运行时在创建新的 Goroutine 时会在 <a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/proc.go#L3353" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.malg</code></a> 函数中调用 <a href="https://github.com/golang/go/blob/a38a917aee626a9b9d5ce2b93964f586bf759ea0/src/runtime/stack.go#L324" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.stackalloc</code></a> 申请新的栈内存，并在编译器插入的 <a href="https://github.com/golang/go/blob/be72e3c3ff21a22bf8162965533672994e670985/src/runtime/asm_amd64.s#L407" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.morestack</code></a> 中检查栈空间是否充足；</li>
+</ol>
+<p>需要注意的是，Go 语言的编译器不会为所有的函数插入 <a href="https://github.com/golang/go/blob/be72e3c3ff21a22bf8162965533672994e670985/src/runtime/asm_amd64.s#L407" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.morestack</code></a>，它只会在必要时插入指令以减少运行时的额外开销，编译指令 <code>nosplit</code> 可以跳过栈溢出的检查，虽然这能降低一些开销，不过固定大小的栈也存在溢出的风险。本节将分别分析栈的初始化、创建 Goroutine 时栈的分配、编译器和运行时协作完成的栈扩容以及当栈空间利用率不足时的缩容过程。</p>
+<h3 id="栈初始化"><a href="#栈初始化" class="headerlink" title="栈初始化"></a>栈初始化</h3><p>栈空间在运行时中包含两个重要的全局变量，分别是 <a href="https://github.com/golang/go/blob/ab2cc45cc9a094bb29d7adc3191dd6ee2080af83/src/runtime/stack.go#L141" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.stackpool</code></a> 和 <a href="https://github.com/golang/go/blob/a38a917aee626a9b9d5ce2b93964f586bf759ea0/src/runtime/stack.go#L153" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.stackLarge</code></a>，这两个变量分别表示全局的栈缓存和大栈缓存，前者可以分配小于 32KB 的内存，后者用来分配大于 32KB 的栈空间：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> stackpool [_NumStackOrders]<span class="keyword">struct</span> &#123;</span><br><span class="line">	item stackpoolItem</span><br><span class="line">	_    [cpu.CacheLinePadSize - unsafe.Sizeof(stackpoolItem&#123;&#125;)%cpu.CacheLinePadSize]<span class="keyword">byte</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> stackpoolItem <span class="keyword">struct</span> &#123;</span><br><span class="line">	mu   mutex</span><br><span class="line">	span mSpanList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> stackLarge <span class="keyword">struct</span> &#123;</span><br><span class="line">	lock mutex</span><br><span class="line">	free [heapAddrBits - pageShift]mSpanList</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这两个用于分配空间的全局变量都与内存管理单元 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 有关，我们可以认为 Go 语言的栈内存都是分配在堆上的，运行时初始化时调用的 <a href="https://github.com/golang/go/blob/ab2cc45cc9a094bb29d7adc3191dd6ee2080af83/src/runtime/stack.go#L158" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.stackinit</code></a> 函数会在初始化这些全局变量：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">stackinit</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="keyword">range</span> stackpool &#123;</span><br><span class="line">		stackpool[i].item.span.init()</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="keyword">range</span> stackLarge.free &#123;</span><br><span class="line">		stackLarge.free[i].init()</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从调度器和内存分配的经验来看，如果运行时只使用全局变量来分配内存的话，势必会造成线程之间的锁竞争进而影响程序的执行效率，栈内存由于与线程关系比较密切，所以我们在每一个线程缓存 <a href="https://github.com/golang/go/blob/01d137262a713b308c4308ed5b26636895e68d89/src/runtime/mcache.go#L19" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcache</code></a> 中都加入了栈缓存减少锁竞争影响。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> mcache <span class="keyword">struct</span> &#123;</span><br><span class="line">	stackcache [_NumStackOrders]stackfreelist</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> stackfreelist <span class="keyword">struct</span> &#123;</span><br><span class="line">	list gclinkptr</span><br><span class="line">	size <span class="keyword">uintptr</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img alt="stack-memory" data-src="https://img.draveness.me/2020-03-23-15849514795892-stack-memory.png"></p>
+<p><strong>图 7-47 线程栈缓存和全局栈缓存</strong></p>
+<p>运行时使用全局的 <a href="https://github.com/golang/go/blob/ab2cc45cc9a094bb29d7adc3191dd6ee2080af83/src/runtime/stack.go#L141" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.stackpool</code></a> 和线程缓存中的空闲链表分配 32KB 以下的栈内存，使用全局的 <a href="https://github.com/golang/go/blob/a38a917aee626a9b9d5ce2b93964f586bf759ea0/src/runtime/stack.go#L153" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.stackLarge</code></a> 和堆内存分配 32KB 以上的栈内存，提高本地分配栈内存的性能。</p>
+<h3 id="栈分配"><a href="#栈分配" class="headerlink" title="栈分配"></a>栈分配</h3><p>运行时会在 Goroutine 的初始化函数 <a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/proc.go#L3353" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.malg</code></a> 中调用 <a href="https://github.com/golang/go/blob/a38a917aee626a9b9d5ce2b93964f586bf759ea0/src/runtime/stack.go#L324" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.stackalloc</code></a> 分配一个大小足够栈内存空间，根据线程缓存和申请栈的大小，该函数会通过三种不同的方法分配栈空间：</p>
+<ol>
+<li>如果栈空间较小，使用全局栈缓存或者线程缓存上固定大小的空闲链表分配内存；</li>
+<li>如果栈空间较大，从全局的大栈缓存 <a href="https://github.com/golang/go/blob/a38a917aee626a9b9d5ce2b93964f586bf759ea0/src/runtime/stack.go#L153" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.stackLarge</code></a> 中获取内存空间；</li>
+<li>如果栈空间较大并且 <a href="https://github.com/golang/go/blob/a38a917aee626a9b9d5ce2b93964f586bf759ea0/src/runtime/stack.go#L153" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.stackLarge</code></a> 空间不足，在堆上申请一片大小足够内存空间；</li>
+</ol>
+<p>我们在这里会按照栈的大小分两部分介绍运行时对栈空间的分配。在 Linux 上，<code>_FixedStack = 2048</code>、<code>_NumStackOrders = 4</code>、<code>_StackCacheSize = 32768</code>，也就是如果申请的栈空间小于 32KB 时，我们会在全局栈缓存池或者线程的栈缓存中初始化内存：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">stackalloc</span><span class="params">(n <span class="keyword">uint32</span>)</span> <span class="title">stack</span></span> &#123;</span><br><span class="line">	thisg := getg()</span><br><span class="line">	<span class="keyword">var</span> v unsafe.Pointer</span><br><span class="line">	<span class="keyword">if</span> n &lt; _FixedStack&lt;&lt;_NumStackOrders &amp;&amp; n &lt; _StackCacheSize &#123;</span><br><span class="line">		order := <span class="keyword">uint8</span>(<span class="number">0</span>)</span><br><span class="line">		n2 := n</span><br><span class="line">		<span class="keyword">for</span> n2 &gt; _FixedStack &#123;</span><br><span class="line">			order++</span><br><span class="line">			n2 &gt;&gt;= <span class="number">1</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">var</span> x gclinkptr</span><br><span class="line">		c := thisg.m.mcache</span><br><span class="line">		<span class="keyword">if</span> stackNoCache != <span class="number">0</span> || c == <span class="literal">nil</span> || thisg.m.preemptoff != <span class="string">""</span> &#123;</span><br><span class="line">			x = stackpoolalloc(order)</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			x = c.stackcache[order].list</span><br><span class="line">			<span class="keyword">if</span> x.ptr() == <span class="literal">nil</span> &#123;</span><br><span class="line">				stackcacherefill(c, order)</span><br><span class="line">				x = c.stackcache[order].list</span><br><span class="line">			&#125;</span><br><span class="line">			c.stackcache[order].list = x.ptr().next</span><br><span class="line">			c.stackcache[order].size -= <span class="keyword">uintptr</span>(n)</span><br><span class="line">		&#125;</span><br><span class="line">		v = unsafe.Pointer(x)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/golang/go/blob/ab2cc45cc9a094bb29d7adc3191dd6ee2080af83/src/runtime/stack.go#L182" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.stackpoolalloc</code></a> 函数会在全局的栈缓存池 <a href="https://github.com/golang/go/blob/ab2cc45cc9a094bb29d7adc3191dd6ee2080af83/src/runtime/stack.go#L141" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.stackpool</code></a> 中获取新的内存，如果栈缓存池中不包含剩余的内存，运行时会从堆上申请一片内存空间；如果线程缓存中包含足够的空间，我们可以从线程本地的缓存中获取内存，一旦发现空间不足就会调用 <a href="https://github.com/golang/go/blob/ab2cc45cc9a094bb29d7adc3191dd6ee2080af83/src/runtime/stack.go#L259" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.stackcacherefill</code></a> 从堆上获取新的内存。</p>
+<p>如果 Goroutine 申请的内存空间过大，运行时会查看 <a href="https://github.com/golang/go/blob/a38a917aee626a9b9d5ce2b93964f586bf759ea0/src/runtime/stack.go#L153" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.stackLarge</code></a> 中是否有剩余的空间，如果不存在剩余空间，它也会从堆上申请新的内存：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">stackalloc</span><span class="params">(n <span class="keyword">uint32</span>)</span> <span class="title">stack</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">if</span> n &lt; _FixedStack&lt;&lt;_NumStackOrders &amp;&amp; n &lt; _StackCacheSize &#123;</span><br><span class="line">		...</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">var</span> s *mspan</span><br><span class="line">		npage := <span class="keyword">uintptr</span>(n) &gt;&gt; _PageShift</span><br><span class="line">		log2npage := stacklog2(npage)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> !stackLarge.free[log2npage].isEmpty() &#123;</span><br><span class="line">			s = stackLarge.free[log2npage].first</span><br><span class="line">			stackLarge.free[log2npage].remove(s)</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> s == <span class="literal">nil</span> &#123;</span><br><span class="line">			s = mheap_.allocManual(npage, &amp;memstats.stacks_inuse)</span><br><span class="line">			osStackAlloc(s)</span><br><span class="line">			s.elemsize = <span class="keyword">uintptr</span>(n)</span><br><span class="line">		&#125;</span><br><span class="line">		v = unsafe.Pointer(s.base())</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> stack&#123;<span class="keyword">uintptr</span>(v), <span class="keyword">uintptr</span>(v) + <span class="keyword">uintptr</span>(n)&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>需要注意的是，因为 OpenBSD 6.4+ 对栈内存有特殊的需求，所以只要我们从堆上申请栈内存，就需要调用 <a href="https://github.com/golang/go/blob/904e1136c226b2b6ca31969acbf90ae44ecf8dc0/src/runtime/os_openbsd.go#L313" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.osStackAlloc</code></a> 函数做一些额外的处理，然而其他的操作系统就没有这种限制了。</p>
+<h3 id="栈扩容"><a href="#栈扩容" class="headerlink" title="栈扩容"></a>栈扩容</h3><p>编译器会在 <a href="https://github.com/golang/go/blob/a38a917aee626a9b9d5ce2b93964f586bf759ea0/src/cmd/internal/obj/x86/obj6.go#L1037" target="_blank" rel="external nofollow noopener noreferrer"><code>cmd/internal/obj/x86.stacksplit</code></a> 函数中为函数调用插入 <a href="https://github.com/golang/go/blob/be72e3c3ff21a22bf8162965533672994e670985/src/runtime/asm_amd64.s#L407" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.morestack</code></a> 运行时检查，它会在几乎所有的函数调用之前检查当前 Goroutine 的栈内存是否充足，如果当前栈需要扩容，我们会保存一些栈的相关信息并调用 <a href="https://github.com/golang/go/blob/0f251028585e052a3d34dcce83b05d8aa9ba170e/src/runtime/stack.go#L918" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.newstack</code></a> 创建新的栈：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newstack</span><span class="params">()</span></span> &#123;</span><br><span class="line">	thisg := getg()</span><br><span class="line">	gp := thisg.m.curg</span><br><span class="line">	...</span><br><span class="line">	preempt := atomic.Loaduintptr(&amp;gp.stackguard0) == stackPreempt</span><br><span class="line">	<span class="keyword">if</span> preempt &#123;</span><br><span class="line">		<span class="keyword">if</span> !canPreemptM(thisg.m) &#123;</span><br><span class="line">			gp.stackguard0 = gp.stack.lo + _StackGuard</span><br><span class="line">			gogo(&amp;gp.sched)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	sp := gp.sched.sp</span><br><span class="line">	<span class="keyword">if</span> preempt &#123;</span><br><span class="line">		<span class="keyword">if</span> gp.preemptShrink &#123;</span><br><span class="line">			gp.preemptShrink = <span class="literal">false</span></span><br><span class="line">			shrinkstack(gp)</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> gp.preemptStop &#123;</span><br><span class="line">			preemptPark(gp)</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		gopreempt_m(gp)</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/golang/go/blob/0f251028585e052a3d34dcce83b05d8aa9ba170e/src/runtime/stack.go#L918" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.newstack</code></a> 会先做一些准备工作并检查当前 Goroutine 是否发出了抢占请求，如果发出了抢占请求：</p>
+<ol>
+<li>当前线程可以被抢占时，直接调用 <a href="https://github.com/golang/go/blob/a38a917aee626a9b9d5ce2b93964f586bf759ea0/src/runtime/asm_386.s#L301" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.gogo</code></a> 触发调度器的调度；</li>
+<li>如果当前 Goroutine 在垃圾回收被 <a href="https://github.com/golang/go/blob/d965bb613086cd780cf73418bcdeaef50a9afc55/src/runtime/mgcmark.go#L685" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.scanstack</code></a> 函数标记成了需要收缩栈，调用 <a href="https://github.com/golang/go/blob/0f251028585e052a3d34dcce83b05d8aa9ba170e/src/runtime/stack.go#L1087" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.shrinkstack</code></a>；</li>
+<li>如果当前 Goroutine 被 <a href="https://github.com/golang/go/blob/dcdee153cd61de47d0cabd6729a17673536b0418/src/runtime/preempt.go#L105" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.suspendG</code></a> 函数挂起，调用 <a href="https://github.com/golang/go/blob/64c22b70bf00e15615bb17c29f808b55bc339682/src/runtime/proc.go#L2739" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.preemptPark</code></a> 被动让出当前处理器的控制权并将 Goroutine 的状态修改至 <code>_Gpreempted</code>；</li>
+<li>调用 <a href="https://github.com/golang/go/blob/f1f947af28d1de655fe7eb845a053753d10845aa/src/runtime/proc.go#L2806" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.gopreempt_m</code></a> 主动让出当前处理器的控制权；</li>
+</ol>
+<p>如果当前 Goroutine 不需要被抢占，也就意味着我们需要新的栈空间来支持函数调用和本地变量的初始化，运行时会先检查目标大小的栈是否会溢出：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newstack</span><span class="params">()</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	oldsize := gp.stack.hi - gp.stack.lo</span><br><span class="line">	newsize := oldsize * <span class="number">2</span></span><br><span class="line">	<span class="keyword">if</span> newsize &gt; maxstacksize &#123;</span><br><span class="line">		<span class="built_in">print</span>(<span class="string">"runtime: goroutine stack exceeds "</span>, maxstacksize, <span class="string">"-byte limit\n"</span>)</span><br><span class="line">		<span class="built_in">print</span>(<span class="string">"runtime: sp="</span>, hex(sp), <span class="string">" stack=["</span>, hex(gp.stack.lo), <span class="string">", "</span>, hex(gp.stack.hi), <span class="string">"]\n"</span>)</span><br><span class="line">		throw(<span class="string">"stack overflow"</span>)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	casgstatus(gp, _Grunning, _Gcopystack)</span><br><span class="line">	copystack(gp, newsize)</span><br><span class="line">	casgstatus(gp, _Gcopystack, _Grunning)</span><br><span class="line">	gogo(&amp;gp.sched)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果目标栈的大小没有超出程序的限制，我们会将 Goroutine 切换至 <code>_Gcopystack</code> 状态并调用 <a href="https://github.com/golang/go/blob/0f251028585e052a3d34dcce83b05d8aa9ba170e/src/runtime/stack.go#L825" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.copystack</code></a> 开始栈的拷贝，在拷贝栈的内存之前，运行时会通过 <a href="https://github.com/golang/go/blob/a38a917aee626a9b9d5ce2b93964f586bf759ea0/src/runtime/stack.go#L324" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.stackalloc</code></a> 函数分配新的栈空间：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">copystack</span><span class="params">(gp *g, newsize <span class="keyword">uintptr</span>)</span></span> &#123;</span><br><span class="line">	old := gp.stack</span><br><span class="line">	used := old.hi - gp.sched.sp</span><br><span class="line"></span><br><span class="line">	<span class="built_in">new</span> := stackalloc(<span class="keyword">uint32</span>(newsize))</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>新栈的初始化和数据的复制是一个比较简单的过程，不过这不是整个过程中最复杂的地方，我们还需要将指向源栈中内存指向新的栈，在这期间我们需要分别调整以下的指针：</p>
+<ol>
+<li>调用 <a href="https://github.com/golang/go/blob/0f251028585e052a3d34dcce83b05d8aa9ba170e/src/runtime/stack.go#L755" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.adjustsudogs</code></a> 或者 <a href="https://github.com/golang/go/blob/0f251028585e052a3d34dcce83b05d8aa9ba170e/src/runtime/stack.go#L783" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.syncadjustsudogs</code></a> 调整 <a href="https://github.com/golang/go/blob/895b7c85addfffe19b66d8ca71c31799d6e55990/src/runtime/runtime2.go#L342" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.sudog</code></a> 结构体的指针；</li>
+<li>调用 <a href="https://github.com/golang/go/blob/9b5bd30716914a86619c050f0d75c0da4133b257/src/runtime/memmove_386.s#L34" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.memmove</code></a> 将源栈中的整片内存拷贝到新的栈中；</li>
+<li>调用 <a href="https://github.com/golang/go/blob/0f251028585e052a3d34dcce83b05d8aa9ba170e/src/runtime/stack.go#L713" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.adjustctxt</code></a>、<a href="https://github.com/golang/go/blob/0f251028585e052a3d34dcce83b05d8aa9ba170e/src/runtime/stack.go#L729" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.adjustdefers</code></a> 和 <a href="https://github.com/golang/go/blob/0f251028585e052a3d34dcce83b05d8aa9ba170e/src/runtime/stack.go#L749" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.adjustpanics</code></a> 调整剩余 Goroutine 相关数据结构的指针；</li>
+</ol>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">copystack</span><span class="params">(gp *g, newsize <span class="keyword">uintptr</span>)</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">var</span> adjinfo adjustinfo</span><br><span class="line">	adjinfo.old = old</span><br><span class="line">	adjinfo.delta = <span class="built_in">new</span>.hi - old.hi <span class="comment">// 计算新栈和旧栈之间内存地址差</span></span><br><span class="line"></span><br><span class="line">	ncopy := used</span><br><span class="line">	<span class="keyword">if</span> !gp.activeStackChans &#123;</span><br><span class="line">		adjustsudogs(gp, &amp;adjinfo)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		adjinfo.sghi = findsghi(gp, old)</span><br><span class="line">		ncopy -= syncadjustsudogs(gp, used, &amp;adjinfo)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	memmove(unsafe.Pointer(<span class="built_in">new</span>.hi-ncopy), unsafe.Pointer(old.hi-ncopy), ncopy)</span><br><span class="line"></span><br><span class="line">	adjustctxt(gp, &amp;adjinfo)</span><br><span class="line">	adjustdefers(gp, &amp;adjinfo)</span><br><span class="line">	adjustpanics(gp, &amp;adjinfo)</span><br><span class="line"></span><br><span class="line">	gp.stack = <span class="built_in">new</span></span><br><span class="line">	gp.stackguard0 = <span class="built_in">new</span>.lo + _StackGuard</span><br><span class="line">	gp.sched.sp = <span class="built_in">new</span>.hi - used</span><br><span class="line">	gp.stktopsp += adjinfo.delta</span><br><span class="line">	...</span><br><span class="line">	stackfree(old)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>调整指向栈内存的指针都会调用 <a href="https://github.com/golang/go/blob/0f251028585e052a3d34dcce83b05d8aa9ba170e/src/runtime/stack.go#L539" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.adjustpointer</code></a>，该函数会利用 <a href="https://github.com/golang/go/blob/0f251028585e052a3d34dcce83b05d8aa9ba170e/src/runtime/stack.go#L528" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.adjustinfo</code></a> 计算的新栈和旧栈之间的内存地址差来调整指针。所有的指针都被调整后，我们就可以更新 Goroutine 的几个变量并通过 <a href="https://github.com/golang/go/blob/a38a917aee626a9b9d5ce2b93964f586bf759ea0/src/runtime/stack.go#L422" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.stackfree</code></a> 释放原始栈的内存空间了。</p>
+<h3 id="栈缩容"><a href="#栈缩容" class="headerlink" title="栈缩容"></a>栈缩容</h3><p><a href="https://github.com/golang/go/blob/0f251028585e052a3d34dcce83b05d8aa9ba170e/src/runtime/stack.go#L1087" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.shrinkstack</code></a> 是用于栈缩容的函数，该函数的实现原理非常简单，其中大部分都是检查是否满足缩容前置条件的代码，核心逻辑只有以下这几行：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">shrinkstack</span><span class="params">(gp *g)</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	oldsize := gp.stack.hi - gp.stack.lo</span><br><span class="line">	newsize := oldsize / <span class="number">2</span></span><br><span class="line">	<span class="keyword">if</span> newsize &lt; _FixedStack &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	avail := gp.stack.hi - gp.stack.lo</span><br><span class="line">	<span class="keyword">if</span> used := gp.stack.hi - gp.sched.sp + _StackLimit; used &gt;= avail/<span class="number">4</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	copystack(gp, newsize)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果要触发栈的缩容，新栈的大小会是原始栈的一半，不过如果新栈的大小低于程序的最低限制 2KB，那么缩容的过程就会停止。</p>
+<p><img alt="shrink-stacks" data-src="https://img.draveness.me/2020-03-23-15849514795902-shrink-stacks.png"></p>
+<p><strong>图 7-48 栈的缩容操作</strong></p>
+<p>运行时只会在栈内存使用不足 1/4 时进行缩容，缩容也会调用扩容时使用的 <a href="https://github.com/golang/go/blob/0f251028585e052a3d34dcce83b05d8aa9ba170e/src/runtime/stack.go#L825" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.copystack</code></a> 函数开辟新的栈空间。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>栈内存是应用程序中重要的内存空间，它能够支持本地的局部变量和函数调用，栈空间中的变量会与栈一同创建和销毁，这部分内存空间不需要工程师过多的干预和管理，现代的编程语言通过逃逸分析减少了我们的工作量，理解栈空间的分配对于理解 Go 语言的运行时有很大的帮助。</p>
+<h2 id="延伸阅读"><a href="#延伸阅读" class="headerlink" title="延伸阅读"></a>延伸阅读</h2><ul>
+<li><a href="https://dave.cheney.net/2014/09/01/gos-runtime-c-to-go-rewrite-by-the-numbers" target="_blank" rel="external nofollow noopener noreferrer">Go’s runtime C to Go rewrite, by the numbers</a></li>
+<li><a href="http://lkml.iu.edu/hypermail/linux/kernel/9608/0191.html" target="_blank" rel="external nofollow noopener noreferrer">Re: proc fs and shared pids</a></li>
+<li><a href="https://docs.google.com/document/d/1lyPIbmsYbXnpNj57a261hgOYVpNRcgydurVQIyZOz_o/pub" target="_blank" rel="external nofollow noopener noreferrer">Go 1.2 Runtime Symbol Information</a></li>
+<li><a href="https://docs.google.com/document/d/13v_u3UrN2pgUtPnH4y-qfmlXwEEryikFu0SQiwk35SA/pub" target="_blank" rel="external nofollow noopener noreferrer">Precise Stack Roots</a></li>
+<li><a href="https://docs.google.com/document/d/1un-Jn47yByHL7I0aVIP_uVCMxjdM5mpelJhiKlIqxkE/edit#heading=h.bvezjdnoi4no" target="_blank" rel="external nofollow noopener noreferrer">GC scanning of stacks</a></li>
+<li><a href="https://medium.com/a-journey-with-go/go-how-does-the-goroutine-stack-size-evolve-447fc02085e5" target="_blank" rel="external nofollow noopener noreferrer">Go: How Does the Goroutine Stack Size Evolve?</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/e87a4e07/" rel="bookmark">【Go语言设计与实现】String</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/44c65087/" rel="bookmark">【Go语言设计与实现】循环</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/540e2781/" rel="bookmark">【Go语言设计与实现】Defer</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/ecc392db/" rel="bookmark">【Go语言设计与实现】Panic/Recover</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/93e1c454/" rel="bookmark">【Go语言设计与实现】Channel</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/6d395926/" title="【Go语言设计与实现】栈内存管理">http://houmin.cc/posts/6d395926/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Go/" rel="tag"><i class="fa fa-tag"></i> Go</a>
+              <a href="/tags/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码阅读</a>
+              <a href="/tags/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" rel="tag"><i class="fa fa-tag"></i> 内存管理</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/8816dd3d/" rel="next" title="【Go语言设计与实现】垃圾收集器">
+                  <i class="fa fa-chevron-left"></i> 【Go语言设计与实现】垃圾收集器
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/7fc46894/" rel="prev" title="【Go语言设计与实现】Go Plugin">
+                  【Go语言设计与实现】Go Plugin <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#设计原理"><span class="nav-number">1.</span> <span class="nav-text">设计原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#寄存器"><span class="nav-number">1.1.</span> <span class="nav-text">寄存器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#线程栈"><span class="nav-number">1.2.</span> <span class="nav-text">线程栈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#逃逸分析"><span class="nav-number">1.3.</span> <span class="nav-text">逃逸分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#栈内存空间"><span class="nav-number">1.4.</span> <span class="nav-text">栈内存空间</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#分段栈"><span class="nav-number">1.4.1.</span> <span class="nav-text">分段栈</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#连续栈"><span class="nav-number">1.4.2.</span> <span class="nav-text">连续栈</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#栈操作"><span class="nav-number">2.</span> <span class="nav-text">栈操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#栈初始化"><span class="nav-number">2.1.</span> <span class="nav-text">栈初始化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#栈分配"><span class="nav-number">2.2.</span> <span class="nav-text">栈分配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#栈扩容"><span class="nav-number">2.3.</span> <span class="nav-text">栈扩容</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#栈缩容"><span class="nav-number">2.4.</span> <span class="nav-text">栈缩容</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">3.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#延伸阅读"><span class="nav-number">4.</span> <span class="nav-text">延伸阅读</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">170</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">230</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">2.2m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">65:25</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

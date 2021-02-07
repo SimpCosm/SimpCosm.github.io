@@ -328,7 +328,7 @@
       
         <p>像燃烧的火球在天边下坠，这是今天旁晚的晚霞，从没拍到过这样的烟云。这里是「朝花夕拾」第二十七期 <code>远离他们</code>，原谅我的起名无能，我只是觉得这首歌很好听。最近开始捡起了阅读，不再是刷着手机睡觉，而是看着Kindle入眠。相比之前，感觉自己的状态好了很多，也越来越觉得以前从信息流中漫无目的滑过的浅薄。远离他们，远离浮躁、远离喧嚣、远离无用的信息流，沉淀下来，做些有意义的事情（强行点题，手工狗头） </p>
 
-    <div id="aplayer-mfLJIlBH" class="aplayer aplayer-tag-marker meting-tag-marker" data-id="1447573210" data-server="netease" data-type="song" data-mode="circulation" data-autoplay="false" data-mutex="true" data-listmaxheight="340px" data-preload="auto" data-theme="#555"></div>
+    <div id="aplayer-DpfFUHZl" class="aplayer aplayer-tag-marker meting-tag-marker" data-id="1447573210" data-server="netease" data-type="song" data-mode="circulation" data-autoplay="false" data-mutex="true" data-listmaxheight="340px" data-preload="auto" data-theme="#555"></div>
 <a id="more"></a>
 <h2 id="记录"><a href="#记录" class="headerlink" title="记录"></a>记录</h2><p><img alt="坠落烟云" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2020-12-05_drop.png"></p>
 <p>例行数据回顾，首先是 <code>RescueTime</code>：</p>
@@ -340,12 +340,12 @@
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/env python3</span><br><span class="line"># -*- coding: UTF<span class="number">-8</span> -*-</span><br><span class="line"><span class="keyword">import</span> csv</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> datetime</span><br><span class="line"></span><br><span class="line">datafile = <span class="string">"sleep.csv"</span></span><br><span class="line"></span><br><span class="line">def get_time_value(timeArray):</span><br><span class="line">    <span class="keyword">return</span> timeArray.tm_hour + round(float(timeArray.tm_min) / float(<span class="number">60</span>), <span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">def get_time(timestamp):</span><br><span class="line">    timeStamp = float(timestamp)</span><br><span class="line">    timeArray = time.localtime(timeStamp)</span><br><span class="line">    <span class="keyword">return</span> timeArray</span><br><span class="line"></span><br><span class="line">def parse_csv(datafile):</span><br><span class="line">    dateTime = []</span><br><span class="line">    sleepTime = []</span><br><span class="line">    awakeTime = []</span><br><span class="line">    with open(datafile, <span class="string">"r"</span>) as f:</span><br><span class="line">        r = csv.DictReader(f)</span><br><span class="line">        <span class="keyword">for</span> line in r:</span><br><span class="line">            start, stop = line[<span class="string">"start"</span>], line[<span class="string">"stop"</span>]</span><br><span class="line">            pStart = get_time(start)</span><br><span class="line">            pStop = get_time(stop)</span><br><span class="line">            pDate = time.strftime(<span class="string">"%Y-%m-%d"</span>, pStop)</span><br><span class="line">            dateTime.<span class="built_in">append</span>(pDate)</span><br><span class="line"></span><br><span class="line">            sleepTimeValue = get_time_value(pStart)</span><br><span class="line">            awakeTimeValue = get_time_value(pStop)</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> sleepTimeValue &gt; <span class="number">20</span>:</span><br><span class="line">                sleepTimeValue = round(sleepTimeValue - <span class="number">24.0</span>, <span class="number">2</span>)</span><br><span class="line">            sleepTime.<span class="built_in">append</span>(sleepTimeValue)</span><br><span class="line">            awakeTime.<span class="built_in">append</span>(awakeTimeValue)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> dateTime, sleepTime, awakeTime</span><br></pre></td></tr></table></figure>
 <p>数据涵盖了 <code>2020-10-19</code> 到 <code>2020-12-06</code> 的数据，可以看到我的睡眠分布非常不均衡，不仅仅是入睡时间的不均衡，起床时间的不均衡，还包括睡眠时长的不均衡。另外，大多数的入睡时间都在12点以后，很少在12点前就睡了的，这个一方面是之前作息极度不规律，另一方面现在有时候看书容易看晚了。</p>
 <p>所以12月的一个任务是，将整个图形向下拉一个小时，以11点为起点，7点为终点的睡眠时间，而且两条曲线应该日渐平缓，方差不要过大，让自己的睡眠真正的规律起来。</p>
-<div id="echarts9089" style="width: 100%;height: 600px;margin: 0 auto"></div>
+<div id="echarts9928" style="width: 100%;height: 600px;margin: 0 auto"></div>
 <script type="text/javascript" src="https://cdn.bootcss.com/echarts/4.2.0-rc.2/echarts.min.js"></script>
 <script type="text/javascript" src="http://gallery.echartsjs.com/dep/echarts/map/js/china.js"></script>
 <script type="text/javascript">
   // 基于准备好的dom，初始化echarts实例
-  var myChart = echarts.init(document.getElementById('echarts9089'));
+  var myChart = echarts.init(document.getElementById('echarts9928'));
   // 指定图表的配置项和数据
   
 var dateTime = ['2020-10-19', '2020-10-20', '2020-10-21', '2020-10-22', '2020-10-23', '2020-10-24', '2020-10-25', '2020-10-26', '2020-10-27', '2020-10-28', '2020-10-29', '2020-10-30', '2020-10-31', '2020-11-01', '2020-11-01', '2020-11-03', '2020-11-17', '2020-11-19', '2020-11-20', '2020-11-21', '2020-11-22', '2020-11-23', '2020-11-24', '2020-11-25', '2020-11-26', '2020-11-27', '2020-11-28', '2020-11-29', '2020-11-30', '2020-12-01', '2020-12-02', '2020-12-03', '2020-12-04', '2020-12-05', '2020-12-06'];
@@ -608,7 +608,7 @@ option = {
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">159</span>
+          <span class="site-state-item-count">170</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -620,7 +620,7 @@ option = {
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">223</span>
+        <span class="site-state-item-count">230</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -688,13 +688,13 @@ option = {
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">2m</span>
+    <span title="站点总字数">2.2m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">59:37</span>
+    <span title="站点阅读时长">65:25</span>
 </div>
 
         

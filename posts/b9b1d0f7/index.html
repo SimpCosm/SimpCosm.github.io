@@ -56,17 +56,15 @@
 </script>
 
   <meta name="description" content="在计算机科学中，数组是一种最早期和最重要的数据结构，是由相同类型的元素（Element）的集合所组成的数据结构。计算机会为数组分配一块连续的内存来保存其中的元素，我们可以利用元素的索引（Index）计算出该元素对应的存储地址，从而快速的访问该元素。最简单的数据结构类型是一维数组，多维数组对应于数学中的矩阵概念，在数值计算和图形学等领域应用比较常见。 在Go语言中内置了数组这种内置数据结构，本文将首">
-<meta name="keywords" content="Go,Array,数据结构,源码阅读">
+<meta name="keywords" content="Go,Array,数据结构">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Go语言设计与实现】Array">
 <meta property="og:url" content="http://houmin.cc/posts/b9b1d0f7/index.html">
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="在计算机科学中，数组是一种最早期和最重要的数据结构，是由相同类型的元素（Element）的集合所组成的数据结构。计算机会为数组分配一块连续的内存来保存其中的元素，我们可以利用元素的索引（Index）计算出该元素对应的存储地址，从而快速的访问该元素。最简单的数据结构类型是一维数组，多维数组对应于数学中的矩阵概念，在数值计算和图形学等领域应用比较常见。 在Go语言中内置了数组这种内置数据结构，本文将首">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://img.draveness.me/2019-12-27-15773821941323-golang-array-memory.png">
-<meta property="og:updated_time" content="2020-08-14T12:56:43.731Z">
+<meta property="og:updated_time" content="2021-02-07T11:14:10.675Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://img.draveness.me/2019-12-27-15773821941323-golang-array-memory.png">
 
 <link rel="canonical" href="http://houmin.cc/posts/b9b1d0f7/">
 
@@ -260,7 +258,7 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2020-07-23 12:10:18" itemprop="dateCreated datePublished" datetime="2020-07-23T12:10:18+08:00">2020-07-23</time>
+              <time title="创建时间：2020-04-23 12:10:18" itemprop="dateCreated datePublished" datetime="2020-04-23T12:10:18+08:00">2020-04-23</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -301,7 +299,7 @@
                 <i class="fa fa-file-word-o"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>8.9k</span>
+              <span>9k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
@@ -333,12 +331,12 @@
 <p>与很多语言不同，Go 语言中数组在初始化之后大小就无法改变，存储元素类型相同、但是大小不同的数组类型在 Go 语言看来也是完全不同的，只有两个条件都相同才是同一个类型。在Go语言编译器中，数组的实现表示为：</p>
 <figure class="highlight go"><figcaption><span>cmd/compile/internal/types.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Array contains Type fields specific to array types.</span></span><br><span class="line"><span class="keyword">type</span> Array <span class="keyword">struct</span> &#123;</span><br><span class="line">	Elem  *Type <span class="comment">// element type</span></span><br><span class="line">	Bound <span class="keyword">int64</span> <span class="comment">// number of elements; &lt;0 if unknown yet</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>下面是 Go 语言中使用数组的简单示例，其中数组的默认值都是0，我们可以通过索引来访问和修改数组中的值，利用内置的 <code>len</code> 方法可以获取数组的长度。另外，我们可以展示了使用多维数组的方法。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> a [<span class="number">5</span>]<span class="keyword">int</span></span><br><span class="line">    fmt.Println(<span class="string">"emp:"</span>, a)</span><br><span class="line"></span><br><span class="line">    a[<span class="number">4</span>] = <span class="number">100</span></span><br><span class="line">    fmt.Println(<span class="string">"set:"</span>, a)</span><br><span class="line">    fmt.Println(<span class="string">"get:"</span>, a[<span class="number">4</span>])</span><br><span class="line"></span><br><span class="line">    fmt.Println(<span class="string">"len:"</span>, <span class="built_in">len</span>(a))</span><br><span class="line"></span><br><span class="line">    b := [<span class="number">5</span>]<span class="keyword">int</span>&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>&#125;</span><br><span class="line">    fmt.Println(<span class="string">"dcl:"</span>, b)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> twoD [<span class="number">2</span>][<span class="number">3</span>]<span class="keyword">int</span></span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">2</span>; i++ &#123;</span><br><span class="line">        <span class="keyword">for</span> j := <span class="number">0</span>; j &lt; <span class="number">3</span>; j++ &#123;</span><br><span class="line">            twoD[i][j] = i + j</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Println(<span class="string">"2d: "</span>, twoD)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> a [<span class="number">5</span>]<span class="keyword">int</span></span><br><span class="line">    fmt.Println(<span class="string">"emp:"</span>, a)</span><br><span class="line"></span><br><span class="line">    a[<span class="number">4</span>] = <span class="number">100</span></span><br><span class="line">    fmt.Println(<span class="string">"set:"</span>, a)</span><br><span class="line">    fmt.Println(<span class="string">"get:"</span>, a[<span class="number">4</span>])</span><br><span class="line">    fmt.Println(<span class="string">"len:"</span>, <span class="built_in">len</span>(a))</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 注意 range 遍历这里的 v 是值拷贝</span></span><br><span class="line">    <span class="keyword">for</span> i, v := <span class="keyword">range</span> a &#123;</span><br><span class="line">        fmt.Printf(<span class="string">"index %d, value %d\n"</span>, i, v)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    b := [<span class="number">5</span>]<span class="keyword">int</span>&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>&#125;</span><br><span class="line">    fmt.Println(<span class="string">"dcl:"</span>, b)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> twoD [<span class="number">2</span>][<span class="number">3</span>]<span class="keyword">int</span></span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">2</span>; i++ &#123;</span><br><span class="line">        <span class="keyword">for</span> j := <span class="number">0</span>; j &lt; <span class="number">3</span>; j++ &#123;</span><br><span class="line">            twoD[i][j] = i + j</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Println(<span class="string">"2d: "</span>, twoD)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>编译运行：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ go run arrays.go</span><br><span class="line">emp: [0 0 0 0 0]</span><br><span class="line"><span class="built_in">set</span>: [0 0 0 0 100]</span><br><span class="line">get: 100</span><br><span class="line">len: 5</span><br><span class="line">dcl: [1 2 3 4 5]</span><br><span class="line">2d:  [[0 1 2] [1 2 3]]</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$ go run arrays.go</span><br><span class="line">emp: [0 0 0 0 0]</span><br><span class="line"><span class="built_in">set</span>: [0 0 0 0 100]</span><br><span class="line">get: 100</span><br><span class="line">len: 5</span><br><span class="line">index 0, value 0</span><br><span class="line">index 1, value 0</span><br><span class="line">index 2, value 0</span><br><span class="line">index 3, value 0</span><br><span class="line">index 4, value 100</span><br><span class="line">dcl: [1 2 3 4 5]</span><br><span class="line">2d:  [[0 1 2] [1 2 3]]</span><br></pre></td></tr></table></figure>
 <h2 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h2><p>Go 语言中的数组有两种不同的创建方式，一种是显式的指定数组的大小，另一种是使用 <code>[...]T</code> 声明数组，Go 语言会在编译期间通过源代码对数组的大小进行推断：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">arr1 := [<span class="number">3</span>]<span class="keyword">int</span>&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>&#125;</span><br><span class="line">arr2 := [...]<span class="keyword">int</span>&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>&#125;</span><br></pre></td></tr></table></figure>
-<p>上述两种声明方式在运行期间得到的结果是完全相同的，后一种声明方式在编译期间就会被『转换』成为前一种，这也就是编译器对数组大小的推导，下面将介绍编译器的推导过程。在编译期间，通过 <code>NewArray</code> 函数生成 Array 数据结构类型。如上所说，类型 <code>Array</code> 包含两个字段，一个是元素类型 <code>Elem</code>，另一个是数组的大小 <code>Bound</code>，这两个字段共同构成了数组类型。而当前数组是否应该在堆栈中初始化也在编译期就确定了：对于Array，设定了其不在Heap中。</p>
+<p>上述两种声明方式在运行期间得到的结果是完全相同的，后一种声明方式在编译期间就会被「转换」成为前一种，这也就是编译器对数组大小的推导，下面将介绍编译器的推导过程。在编译期间，通过 <code>NewArray</code> 函数生成 Array 数据结构类型。如上所说，类型 <code>Array</code> 包含两个字段，一个是元素类型 <code>Elem</code>，另一个是数组的大小 <code>Bound</code>，这两个字段共同构成了数组类型。而当前数组是否应该在堆栈中初始化也在编译期就确定了：对于Array，设定了其不在Heap中。</p>
 <figure class="highlight go"><figcaption><span>cmd/compile/internal/types.go</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// NewArray returns a new fixed-length array Type.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewArray</span><span class="params">(elem *Type, bound <span class="keyword">int64</span>)</span> *<span class="title">Type</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> bound &lt; <span class="number">0</span> &#123;</span><br><span class="line">		Fatalf(<span class="string">"NewArray: invalid bound %v"</span>, bound)</span><br><span class="line">	&#125;</span><br><span class="line">	t := New(TARRAY)</span><br><span class="line">	t.Extra = &amp;Array&#123;Elem: elem, Bound: bound&#125;</span><br><span class="line">	t.SetNotInHeap(elem.NotInHeap())</span><br><span class="line">	<span class="keyword">return</span> t</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>这里的 <code>Type</code> 是Go语言中通用的类型定义，其中的Extra字段包含了对于特定类型相关的字段。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// A Type represents a Go type.</span></span><br><span class="line"><span class="keyword">type</span> Type <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// Extra contains extra etype-specific fields.</span></span><br><span class="line">	<span class="comment">// As an optimization, those etype-specific structs which contain exactly</span></span><br><span class="line">	<span class="comment">// one pointer-shaped field are stored as values rather than pointers when possible.</span></span><br><span class="line">	<span class="comment">//</span></span><br><span class="line">	<span class="comment">// TMAP: *Map</span></span><br><span class="line">	<span class="comment">// TFORW: *Forward</span></span><br><span class="line">	<span class="comment">// TFUNC: *Func</span></span><br><span class="line">	<span class="comment">// TSTRUCT: *Struct</span></span><br><span class="line">	<span class="comment">// TINTER: *Interface</span></span><br><span class="line">	<span class="comment">// TFUNCARGS: FuncArgs</span></span><br><span class="line">	<span class="comment">// TCHANARGS: ChanArgs</span></span><br><span class="line">	<span class="comment">// TCHAN: *Chan</span></span><br><span class="line">	<span class="comment">// TPTR: Ptr</span></span><br><span class="line">	<span class="comment">// TARRAY: *Array</span></span><br><span class="line">	<span class="comment">// TSLICE: Slice</span></span><br><span class="line">	Extra <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Width is the width of this Type in bytes.</span></span><br><span class="line">	Width <span class="keyword">int64</span> <span class="comment">// valid if Align &gt; 0</span></span><br><span class="line"></span><br><span class="line">	methods    Fields</span><br><span class="line">	allMethods Fields</span><br><span class="line"></span><br><span class="line">	Nod  *Node <span class="comment">// canonical OTYPE node</span></span><br><span class="line">	Orig *Type <span class="comment">// original type (type literal or predefined type)</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// Cache of composite types, with this type being the element type.</span></span><br><span class="line">	Cache <span class="keyword">struct</span> &#123;</span><br><span class="line">		ptr   *Type <span class="comment">// *T, or nil</span></span><br><span class="line">		slice *Type <span class="comment">// []T, or nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	Sym    *Sym  <span class="comment">// symbol containing name, for named types</span></span><br><span class="line">	Vargen <span class="keyword">int32</span> <span class="comment">// unique name for OTYPE/ONAME</span></span><br><span class="line"></span><br><span class="line">	Etype EType <span class="comment">// kind of type</span></span><br><span class="line">	Align <span class="keyword">uint8</span> <span class="comment">// the required alignment of this type, in bytes (0 means Width and Align have not yet been computed)</span></span><br><span class="line"></span><br><span class="line">	flags bitset8</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -362,8 +360,7 @@
 <p>假设我们在代码中初始化 <code>[5]int{1, 2, 3, 4, 5}</code> 数组，那么我们可以将上述过程理解成以下的伪代码：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> arr [<span class="number">5</span>]<span class="keyword">int</span></span><br><span class="line">statictmp_0[<span class="number">0</span>] = <span class="number">1</span></span><br><span class="line">statictmp_0[<span class="number">1</span>] = <span class="number">2</span></span><br><span class="line">statictmp_0[<span class="number">2</span>] = <span class="number">3</span></span><br><span class="line">statictmp_0[<span class="number">3</span>] = <span class="number">4</span></span><br><span class="line">statictmp_0[<span class="number">4</span>] = <span class="number">5</span></span><br><span class="line">arr = statictmp_0</span><br></pre></td></tr></table></figure>
 <p>总结起来，如果数组中元素的个数小于或者等于 4 个，那么所有的变量会直接在栈上初始化，如果数组元素大于 4 个，变量就会在静态存储区初始化然后拷贝到栈上，这些转换后的代码才会继续进入<a href="https://draveness.me/golang/docs/part1-prerequisite/ch02-compile/golang-ir-ssa/" target="_blank" rel="external nofollow noopener noreferrer">中间代码生成</a>和<a href="https://draveness.me/golang/docs/part1-prerequisite/ch02-compile/golang-machinecode/" target="_blank" rel="external nofollow noopener noreferrer">机器码生成</a>两个阶段，最后生成可以执行的二进制文件。</p>
-<h2 id="访问和赋值"><a href="#访问和赋值" class="headerlink" title="访问和赋值"></a>访问和赋值</h2><p>无论是在栈上还是静态存储区，数组在内存中其实就是一连串的内存空间，表示数组的方法就是一个指向数组开头的指针、数组中元素的数量以及数组中元素类型占的空间大小，如果我们不知道数组中元素的数量，访问时就可能发生越界，而如果不知道数组中元素类型的大小，就没有办法知道应该一次取出多少字节的数据，如果没有这些信息，我们就无法知道这片连续的内存空间到底存储了什么数据：</p>
-<p><img alt="golang-array-memory" data-src="https://img.draveness.me/2019-12-27-15773821941323-golang-array-memory.png"></p>
+<h2 id="访问和赋值"><a href="#访问和赋值" class="headerlink" title="访问和赋值"></a>访问和赋值</h2><p>无论是在栈上还是静态存储区，数组在内存中其实就是一连串的内存空间，表示数组的方法就是一个指向数组开头的指针、数组中元素的数量以及数组中元素类型占的空间大小，如果我们不知道数组中元素的数量，访问时就可能发生越界，而如果不知道数组中元素类型的大小，就没有办法知道应该一次取出多少字节的数据，如果没有这些信息，我们就无法知道这片连续的内存空间到底存储了什么数据。</p>
 <p>数组访问越界是非常严重的错误，Go 语言中对越界的判断是可以在编译期间由静态类型检查完成的，<a href="https://github.com/golang/go/blob/b7d097a4cf6b8a9125e4770b54d33826fa803023/src/cmd/compile/internal/gc/typecheck.go#L327-L2081" target="_blank" rel="external nofollow noopener noreferrer"><code>cmd/compile/internal/gc.typecheck1</code></a> 函数会对访问数组的索引进行验证：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">typecheck1</span><span class="params">(n *Node, top <span class="keyword">int</span>)</span> <span class="params">(res *Node)</span></span> &#123;</span><br><span class="line">	<span class="keyword">switch</span> n.Op &#123;</span><br><span class="line">	<span class="keyword">case</span> OINDEX:</span><br><span class="line">		ok |= ctxExpr</span><br><span class="line">		l := n.Left  <span class="comment">// array</span></span><br><span class="line">		r := n.Right <span class="comment">// index</span></span><br><span class="line">		<span class="keyword">switch</span> n.Left.Type.Etype &#123;</span><br><span class="line">		<span class="keyword">case</span> TSTRING, TARRAY, TSLICE:</span><br><span class="line">			...</span><br><span class="line">			<span class="keyword">if</span> n.Right.Type != <span class="literal">nil</span> &amp;&amp; !n.Right.Type.IsInteger() &#123;</span><br><span class="line">				yyerror(<span class="string">"non-integer array index %v"</span>, n.Right)</span><br><span class="line">				<span class="keyword">break</span></span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> !n.Bounded() &amp;&amp; Isconst(n.Right, CTINT) &#123;</span><br><span class="line">				x := n.Right.Int64()</span><br><span class="line">				<span class="keyword">if</span> x &lt; <span class="number">0</span> &#123;</span><br><span class="line">					yyerror(<span class="string">"invalid array index %v (index must be non-negative)"</span>, n.Right)</span><br><span class="line">				&#125; <span class="keyword">else</span> <span class="keyword">if</span> n.Left.Type.IsArray() &amp;&amp; x &gt;= n.Left.Type.NumElem() &#123;</span><br><span class="line">					yyerror(<span class="string">"invalid array index %v (out of bounds for %d-element array)"</span>, n.Right, n.Left.Type.NumElem())</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	...</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <ol>
@@ -387,7 +384,7 @@
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">b1:</span><br><span class="line">    ...</span><br><span class="line">    v21 (<span class="number">5</span>) = LocalAddr &lt;*[<span class="number">3</span>]<span class="keyword">int</span>&gt; &#123;arr&#125; v2 v19</span><br><span class="line">    v22 (<span class="number">5</span>) = PtrIndex &lt;*<span class="keyword">int</span>&gt; v21 v13</span><br><span class="line">    v23 (<span class="number">5</span>) = Store &lt;mem&gt; &#123;<span class="keyword">int</span>&#125; v22 v20 v19</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
 <p>赋值的过程中会先确定目标数组的地址，再通过 <code>PtrIndex</code> 获取目标元素的地址，最后使用 <code>Store</code> 指令将数据存入地址中，从上面的这些 SSA 代码中我们可以看出无论是数组的寻址还是赋值都是在编译阶段完成的，没有运行时的参与。</p>
 <h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>数组是 Go 语言中重要的数据结构，了解它的实现能够帮助我们更好地理解这门语言，通过对其实现的分析，我们知道了对数组的访问和赋值需要同时依赖编译器和运行时，它的大多数操作在<a href="https://draveness.me/golang/docs/part1-prerequisite/ch02-compile/golang-compile-intro/" target="_blank" rel="external nofollow noopener noreferrer">编译期间</a>都会转换成对内存的直接读写，在中间代码生成期间，编译器还会插入运行时方法 <code>panicIndex</code> 调用防止发生越界错误。</p>
-
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2>
     </div>
 
     
@@ -400,16 +397,16 @@
       <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/c3c43baa/" rel="bookmark">【Go语言设计与实现】Hash Table</a></div>
-    </li>
-    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/e87a4e07/" rel="bookmark">【Go语言设计与实现】String</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/c31234d9/" rel="bookmark">【Go语言设计与实现】Interface</a></div>
+      <div class="popular-posts-title"><a href="/posts/c3c43baa/" rel="bookmark">【Go语言设计与实现】Hash Table</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/4e214fa9/" rel="bookmark">【Go语言设计与实现】Function</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/c31234d9/" rel="bookmark">【Go语言设计与实现】Interface</a></div>
     </li>
   </ul>
 
@@ -458,23 +455,22 @@
               <a href="/tags/Go/" rel="tag"><i class="fa fa-tag"></i> Go</a>
               <a href="/tags/Array/" rel="tag"><i class="fa fa-tag"></i> Array</a>
               <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag"><i class="fa fa-tag"></i> 数据结构</a>
-              <a href="/tags/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" rel="tag"><i class="fa fa-tag"></i> 源码阅读</a>
           </div>
 
         
 
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
-                <a href="/posts/7f85cd98/" rel="next" title="【系统监控】Linux常见监控指标">
-                  <i class="fa fa-chevron-left"></i> 【系统监控】Linux常见监控指标
+                <a href="/posts/d7e805bd/" rel="next" title="【备忘录】播客录">
+                  <i class="fa fa-chevron-left"></i> 【备忘录】播客录
                 </a>
             </div>
 
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
-                <a href="/posts/d345cf6d/" rel="prev" title="【Go语言设计与实现】Context">
-                  【Go语言设计与实现】Context <i class="fa fa-chevron-right"></i>
+                <a href="/posts/251346e5/" rel="prev" title="【Go语言设计与实现】Slice">
+                  【Go语言设计与实现】Slice <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>
@@ -515,7 +511,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用入门"><span class="nav-number">1.</span> <span class="nav-text">使用入门</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#初始化"><span class="nav-number">2.</span> <span class="nav-text">初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#上限推导"><span class="nav-number">2.1.</span> <span class="nav-text">上限推导</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#语句转换"><span class="nav-number">2.2.</span> <span class="nav-text">语句转换</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#访问和赋值"><span class="nav-number">3.</span> <span class="nav-text">访问和赋值</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">4.</span> <span class="nav-text">小结</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用入门"><span class="nav-number">1.</span> <span class="nav-text">使用入门</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#初始化"><span class="nav-number">2.</span> <span class="nav-text">初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#上限推导"><span class="nav-number">2.1.</span> <span class="nav-text">上限推导</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#语句转换"><span class="nav-number">2.2.</span> <span class="nav-text">语句转换</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#访问和赋值"><span class="nav-number">3.</span> <span class="nav-text">访问和赋值</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">4.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">5.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -530,7 +526,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">159</span>
+          <span class="site-state-item-count">170</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -542,7 +538,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">223</span>
+        <span class="site-state-item-count">230</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -610,13 +606,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">2m</span>
+    <span title="站点总字数">2.2m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">59:37</span>
+    <span title="站点阅读时长">65:25</span>
 </div>
 
         

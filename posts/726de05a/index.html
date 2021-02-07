@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="准确的时间对于任何一个正在运行的应用非常重要，但是在一个分布式系统中我们很难保证各个节点上绝对时间的一致，哪怕通过 NTP 这种标准的对时协议也只能把各个节点上时间的误差控制在毫秒级，所以准确的相对时间在分布式系统中显得更为重要，本节会分析用于获取相对时间的计时器（Timer）的设计与实现原理。">
+<meta name="keywords" content="Go,timer">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Go语言设计与实现】Timer">
+<meta property="og:url" content="http://houmin.cc/posts/726de05a/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="准确的时间对于任何一个正在运行的应用非常重要，但是在一个分布式系统中我们很难保证各个节点上绝对时间的一致，哪怕通过 NTP 这种标准的对时协议也只能把各个节点上时间的误差控制在毫秒级，所以准确的相对时间在分布式系统中显得更为重要，本节会分析用于获取相对时间的计时器（Timer）的设计与实现原理。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://img.draveness.me/2020-01-25-15799218054781-golang-timer-quadtree.png">
+<meta property="og:image" content="https://img.draveness.me/2020-01-25-15799218054791-golang-timer-bucket.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-p-and-timers.png">
+<meta property="og:updated_time" content="2021-02-07T11:35:17.998Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img.draveness.me/2020-01-25-15799218054781-golang-timer-quadtree.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/726de05a/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Go语言设计与实现】Timer | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/726de05a/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Go语言设计与实现】Timer
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-05-08 12:19:03" itemprop="dateCreated datePublished" datetime="2020-05-08T12:19:03+08:00">2020-05-08</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/726de05a/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/726de05a/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>13k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>24 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>准确的时间对于任何一个正在运行的应用非常重要，但是在一个分布式系统中我们很难保证各个节点上绝对时间的一致，哪怕通过 NTP 这种标准的对时协议也只能把各个节点上时间的误差控制在毫秒级，所以准确的相对时间在分布式系统中显得更为重要，本节会分析用于获取相对时间的计时器（Timer）的设计与实现原理。</p>
+<a id="more"></a>
+<h2 id="设计原理"><a href="#设计原理" class="headerlink" title="设计原理"></a>设计原理</h2><p>Go 语言从实现计时器到现在经历过很多个版本的迭代，到最新的 1.14 版本为止，计时器的实现分别经历了以下几个过程：</p>
+<ol>
+<li>Go 1.9 版本之前，所有的计时器由全局唯一的四叉堆维护<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-timer/#fn:1" target="_blank" rel="external nofollow noopener noreferrer">1</a>；</li>
+<li>Go 1.10 ~ 1.13，全局使用 64 个四叉堆维护全部的计时器，每个处理器（P）创建的计时器会由对应的四叉堆维护<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-timer/#fn:2" target="_blank" rel="external nofollow noopener noreferrer">2</a>；</li>
+<li>Go 1.14 版本之后，每个处理器单独管理计时器并通过网络轮询器触发<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-timer/#fn:3" target="_blank" rel="external nofollow noopener noreferrer">3</a>；</li>
+</ol>
+<p>我们在这一节会分别介绍计时器在不同版本的不同设计，梳理计时器实现的演进过程。</p>
+<h3 id="全局四叉堆"><a href="#全局四叉堆" class="headerlink" title="全局四叉堆"></a>全局四叉堆</h3><p>Go 1.10 之前的计时器都使用最小四叉堆实现，所有的计时器都会存储在如下所示的结构体 <a href="https://github.com/golang/go/blob/093adeef4004fd029de1a8fd138802607265dc73/src/runtime/time.go#L28-L37" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.timers#093ade</code></a> 中：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> timers <span class="keyword">struct</span> &#123;</span><br><span class="line">	lock         mutex</span><br><span class="line">	gp           *g</span><br><span class="line">	created      <span class="keyword">bool</span></span><br><span class="line">	sleeping     <span class="keyword">bool</span></span><br><span class="line">	rescheduling <span class="keyword">bool</span></span><br><span class="line">	sleepUntil   <span class="keyword">int64</span></span><br><span class="line">	waitnote     note</span><br><span class="line">	t            []*timer</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个结构体中的字段 <code>t</code> 就是最小四叉堆，创建的所有计时器都会加入到四叉堆中。<a href="https://github.com/golang/go/blob/093adeef4004fd029de1a8fd138802607265dc73/src/runtime/time.go#L160-L218" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.timerproc#093ade</code></a> Goroutine 会运行时间驱动的事件，它会在发生以下事件时会被唤醒：</p>
+<ul>
+<li>四叉堆中的计时器到期；</li>
+<li>四叉堆中加入了触发时间更早的新计时器；</li>
+</ul>
+<p><img alt="golang-timer-quadtree" data-src="https://img.draveness.me/2020-01-25-15799218054781-golang-timer-quadtree.png"></p>
+<p><strong>图 6-14 计时器四叉堆</strong></p>
+<p>然而全局四叉堆共用的互斥锁对计时器的影响非常大，计时器的各种操作都需要获取全局唯一的互斥锁，这会严重影响计时器的性能<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-timer/#fn:4" target="_blank" rel="external nofollow noopener noreferrer">4</a>。</p>
+<h3 id="分片四叉堆"><a href="#分片四叉堆" class="headerlink" title="分片四叉堆"></a>分片四叉堆</h3><p>Go 1.10 将全局的四叉堆分割成了 64 个更小的四叉堆<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-timer/#fn:5" target="_blank" rel="external nofollow noopener noreferrer">5</a>。在理想情况下，四叉堆的数量应该等于处理器的数量，但是这需要实现动态的分配过程，所以经过权衡最终选择初始化 64 个四叉堆，以牺牲内存占用的代价换取性能的提升。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> timersLen = <span class="number">64</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> timers [timersLen]<span class="keyword">struct</span> &#123;</span><br><span class="line">	timersBucket</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> timersBucket <span class="keyword">struct</span> &#123;</span><br><span class="line">	lock         mutex</span><br><span class="line">	gp           *g</span><br><span class="line">	created      <span class="keyword">bool</span></span><br><span class="line">	sleeping     <span class="keyword">bool</span></span><br><span class="line">	rescheduling <span class="keyword">bool</span></span><br><span class="line">	sleepUntil   <span class="keyword">int64</span></span><br><span class="line">	waitnote     note</span><br><span class="line">	t            []*timer</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果当前机器上的处理器 P 的个数超过了 64，多个处理器上的计时器就可能存储在同一个桶中。每一个计时器桶都由一个运行 <a href="https://github.com/golang/go/blob/76f4fd8a5251b4f63ea14a3c1e2fe2e78eb74f81/src/runtime/time.go#L195-L253" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.timerproc#76f4fd8</code></a> 函数的 Goroutine 处理。</p>
+<p><img alt="golang-timer-bucket" data-src="https://img.draveness.me/2020-01-25-15799218054791-golang-timer-bucket.png"></p>
+<p><strong>图 6-15 分片计时器桶</strong></p>
+<p>将全局计时器分片的方式，虽然能够降低锁的粒度，提高计时器的性能，但是 <a href="https://github.com/golang/go/blob/76f4fd8a5251b4f63ea14a3c1e2fe2e78eb74f81/src/runtime/time.go#L195-L253" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.timerproc#76f4fd8</code></a> 造成的处理器和线程之间频繁的上下文切换却成为了影响计时器性能的首要因素<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-timer/#fn:6" target="_blank" rel="external nofollow noopener noreferrer">6</a>。</p>
+<h3 id="网络轮询器"><a href="#网络轮询器" class="headerlink" title="网络轮询器"></a>网络轮询器</h3><p>在最新版本的实现中，计时器桶已经被移除<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-timer/#fn:7" target="_blank" rel="external nofollow noopener noreferrer">7</a>，所有的计时器都以最小四叉堆的形式存储在处理器 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/runtime2.go#L548" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.p</code></a> 中。</p>
+<p><img alt="处理器中的最小四叉堆" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-p-and-timers.png"></p>
+<p>处理器 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/runtime2.go#L548" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.p</code></a> 中与计时器相关的有以下字段：</p>
+<ul>
+<li><code>timersLock</code> — 用于保护计时器的互斥锁；</li>
+<li><code>timers</code> — 存储计时器的最小四叉堆；</li>
+<li><code>numTimers</code> — 处理器中的计时器数量；</li>
+<li><code>adjustTimers</code> — 处理器中处于 <code>timerModifiedEarlier</code> 状态的计时器数量；</li>
+<li><code>deletedTimers</code> — 处理器中处于 <code>timerDeleted</code> 状态的计时器数量；</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> p <span class="keyword">struct</span> &#123;</span><br><span class="line">	...</span><br><span class="line">	timersLock mutex</span><br><span class="line">	timers []*timer</span><br><span class="line"></span><br><span class="line">	numTimers     <span class="keyword">uint32</span></span><br><span class="line">	adjustTimers  <span class="keyword">uint32</span></span><br><span class="line">	deletedTimers <span class="keyword">uint32</span></span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>原本用于管理计时器的 <a href="https://github.com/golang/go/blob/76f4fd8a5251b4f63ea14a3c1e2fe2e78eb74f81/src/runtime/time.go#L195-L253" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.timerproc#76f4fd8</code></a> 函数也已经被移除，目前计时器都交由处理器的网络轮询器和调度器触发，这种方式能够充分利用本地性、减少线上上下文的切换开销，也是目前性能最好的实现方式。</p>
+<h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><p><a href="https://github.com/golang/go/blob/895b7c85addfffe19b66d8ca71c31799d6e55990/src/runtime/time.go#L17" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.timer</code></a> 是 Go 语言计时器的内部表示，每一个计时器都存储在对应处理器的最小四叉堆中，下面是运行时计时器对应的结构体：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> timer <span class="keyword">struct</span> &#123;</span><br><span class="line">	pp puintptr</span><br><span class="line"></span><br><span class="line">	when     <span class="keyword">int64</span></span><br><span class="line">	period   <span class="keyword">int64</span></span><br><span class="line">	f        <span class="function"><span class="keyword">func</span><span class="params">(<span class="keyword">interface</span>&#123;&#125;, <span class="keyword">uintptr</span>)</span></span></span><br><span class="line">	arg      <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">	seq      <span class="keyword">uintptr</span></span><br><span class="line">	nextwhen <span class="keyword">int64</span></span><br><span class="line">	status   <span class="keyword">uint32</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>when</code> — 当前计时器被唤醒的时间；</li>
+<li><code>period</code> — 两次被唤醒的间隔；</li>
+<li><code>f</code> — 每当计时器被唤醒时都会调用的函数；</li>
+<li><code>arg</code> — 计时器被唤醒时调用 <code>f</code> 传入的参数；</li>
+<li><code>nextWhen</code> — 计时器处于 <code>timerModifiedXX</code> 状态时，用于设置 <code>when</code> 字段；</li>
+<li><code>status</code> — 计时器的状态；</li>
+</ul>
+<p>然而这里的 <a href="https://github.com/golang/go/blob/895b7c85addfffe19b66d8ca71c31799d6e55990/src/runtime/time.go#L17" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.timer</code></a> 只是私有的计时器运行时表示，而对外暴露的计时器使用 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/time/sleep.go#L47" target="_blank" rel="external nofollow noopener noreferrer"><code>time.Timer</code></a> 结构体：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Timer <span class="keyword">struct</span> &#123;</span><br><span class="line">	C &lt;-<span class="keyword">chan</span> Time</span><br><span class="line">	r runtimeTimer</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/time/sleep.go#L47" target="_blank" rel="external nofollow noopener noreferrer"><code>time.Timer</code></a> 计时器必须通过 <a href="https://github.com/golang/go/blob/master/src/time/sleep.go#L83" target="_blank" rel="external nofollow noopener noreferrer"><code>time.NewTimer</code></a>、<a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/time/sleep.go#L155" target="_blank" rel="external nofollow noopener noreferrer"><code>time.AfterFunc</code></a> 或者 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/time/sleep.go#L148" target="_blank" rel="external nofollow noopener noreferrer"><code>time.After</code></a> 函数创建。 当计时器失效时，失效的时间就会被发送给计时器持有的 Channel，订阅 Channel 的 Goroutine 会收到计时器失效的时间。</p>
+<h2 id="状态机"><a href="#状态机" class="headerlink" title="状态机"></a>状态机</h2><p>运行时使用状态机的方式处理全部的计时器，其中包括 10 种状态和 7 种操作。由于 Go 语言的计时器需要同时支持增加、删除、修改和重置等操作，所以它的状态非常复杂，目前会包含以下 10 种可能：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>状态</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>timerNoStatus</td>
+<td>还没有设置状态</td>
+</tr>
+<tr>
+<td>timerWaiting</td>
+<td>等待触发</td>
+</tr>
+<tr>
+<td>timerRunning</td>
+<td>运行计时器函数</td>
+</tr>
+<tr>
+<td>timerDeleted</td>
+<td>被删除</td>
+</tr>
+<tr>
+<td>timerRemoving</td>
+<td>正在被删除</td>
+</tr>
+<tr>
+<td>timerRemoved</td>
+<td>已经被停止并从堆中删除</td>
+</tr>
+<tr>
+<td>timerModifying</td>
+<td>正在被修改</td>
+</tr>
+<tr>
+<td>timerModifiedEarlier</td>
+<td>被修改到了更早的时间</td>
+</tr>
+<tr>
+<td>timerModifiedLater</td>
+<td>被修改到了更晚的时间</td>
+</tr>
+<tr>
+<td>timerMoving</td>
+<td>已经被修改正在被移动</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>上述表格已经展示了不同状态的含义，但是我们还需要展示一些重要的信息，例如状态的存在时间、计时器是否在堆上等：</p>
+<ul>
+<li><code>timerRunning</code>、<code>timerRemoving</code>、<code>timerModifying</code> 和 <code>timerMoving</code> — 停留的时间都比较短；</li>
+<li><code>timerWaiting</code>、<code>timerRunning</code>、<code>timerDeleted</code>、<code>timerRemoving</code>、<code>timerModifying</code>、<code>timerModifiedEarlier</code>、<code>timerModifiedLater</code> 和 <code>timerMoving</code> — 计时器在处理器的堆上；</li>
+<li><code>timerNoStatus</code> 和 <code>timerRemoved</code> — 计时器不在堆上；</li>
+<li><code>timerModifiedEarlier</code> 和 <code>timerModifiedLater</code> — 计时器虽然在堆上，但是可能位于错误的位置上，需要重新排序；</li>
+</ul>
+<p>当我们对计时器执行增删改查等不同操作时，运行时会根据状态的不同而做出不同的反应，所以我们在分析计时器时会从状态的维度去分析其实现原理。</p>
+<p>计时器的状态机中包含如下所示的 7 种不同操作，这些操作分别由不同的提交引入运行时负责不同的工作：</p>
+<ul>
+<li><a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L246" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.addtimer</code></a> — 向当前处理器增加新的计时器<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-timer/#fn:8" target="_blank" rel="external nofollow noopener noreferrer">8</a>；</li>
+<li><a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L303" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deltimer</code></a> — 将计时器标记成 <code>timerDeleted</code> 删除处理器中的计时器<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-timer/#fn:9" target="_blank" rel="external nofollow noopener noreferrer">9</a>；</li>
+<li><a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L405" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.modtimer</code></a> — 网络轮询器会调用该函数修改计时器<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-timer/#fn:10" target="_blank" rel="external nofollow noopener noreferrer">10</a>；</li>
+<li><a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L493" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.resettimer</code></a> — 修改已经失效的计时器的到期时间，将其变成活跃的计时器<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-timer/#fn:11" target="_blank" rel="external nofollow noopener noreferrer">11</a>；</li>
+<li><a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L546" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.cleantimers</code></a> — 清除队列头中的计时器，能够提升程序创建和删除计时器的性能<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-timer/#fn:12" target="_blank" rel="external nofollow noopener noreferrer">12</a>；</li>
+<li><a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L650" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.adjusttimers</code></a> — 调整处理器持有的计时器堆，包括移动会稍后触发的计时器、删除标记为 <code>timerDeleted</code> 的计时器<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-timer/#fn:13" target="_blank" rel="external nofollow noopener noreferrer">13</a>；</li>
+<li><a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L757" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.runtimer</code></a> — 检查队列头中的计时器，在其准备就绪时运行该计时器<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-timer/#fn:14" target="_blank" rel="external nofollow noopener noreferrer">14</a>；</li>
+</ul>
+<p>我们在这里会依次分析计时器的上述 7 个不同操作。</p>
+<h3 id="增加计时器"><a href="#增加计时器" class="headerlink" title="增加计时器"></a>增加计时器</h3><p>当我们调用 <a href="https://github.com/golang/go/blob/master/src/time/sleep.go#L83" target="_blank" rel="external nofollow noopener noreferrer"><code>time.NewTimer</code></a> 增加新的计时器时，会执行程序中的 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L246" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.addtimer</code></a> 函数根据以下的规则处理计时器：</p>
+<ul>
+<li><code>timerNoStatus</code> -&gt; <code>timerWaiting</code></li>
+<li>其他状态 -&gt; 崩溃：不合法的状态</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">addtimer</span><span class="params">(t *timer)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> t.status != timerNoStatus &#123;</span><br><span class="line">		badTimer()</span><br><span class="line">	&#125;</span><br><span class="line">	t.status = timerWaiting</span><br><span class="line">	addInitializedTimer(t)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">addInitializedTimer</span><span class="params">(t *timer)</span></span> &#123;</span><br><span class="line">	when := t.when</span><br><span class="line">	pp := getg().m.p.ptr()</span><br><span class="line">	ok := cleantimers(pp) &amp;&amp; doaddtimer(pp, t)</span><br><span class="line">	<span class="keyword">if</span> !ok &#123;</span><br><span class="line">		badTimer()</span><br><span class="line">	&#125;</span><br><span class="line">	wakeNetPoller(when)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>调用 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L261" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.addInitializedTimer</code></a> 将当前计时器加入处理器的 <code>timers</code> 四叉堆中；</li>
+<li>调用 <a href="https://github.com/golang/go/blob/04e80fb2c9e502c011d367ad36307290df07cb41/src/runtime/netpoll.go#L108" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollGenericInit</code></a> 函数惰性初始化网络轮询器；</li>
+<li>调用 <a href="https://github.com/golang/go/blob/895b7c85addfffe19b66d8ca71c31799d6e55990/src/runtime/proc.go#L2424" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.wakeNetPoller</code></a> 唤醒网络轮询器中休眠的线程；</li>
+<li>调用 <a href="https://github.com/golang/go/blob/50f4896b72d16b6538178c8ca851b20655075b7f/src/runtime/netpoll_epoll.go#L76" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollBreak</code></a> 函数中断正在阻塞的网络轮询<a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-timer/#fn:15" target="_blank" rel="external nofollow noopener noreferrer">15</a>；</li>
+</ol>
+<p>每次增加新的计时器都会中断正在阻塞的轮询，触发调度器检查是否有计时器到期，我们会在本节的后面详细介绍计时器的触发过程。</p>
+<h3 id="删除计时器"><a href="#删除计时器" class="headerlink" title="删除计时器"></a>删除计时器</h3><p><a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L303" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deltimer</code></a> 函数会标记需要删除的计时器，它会根据以下的规则处理计时器：</p>
+<ul>
+<li><code>timerNoStatus</code> -&gt; 状态保持不变</li>
+<li><code>timerModifiedEarlier</code> -&gt; <code>timerModifying</code> -&gt; <code>timerDeleted</code></li>
+<li><code>timerModifiedLater</code> -&gt; <code>timerDeleted</code></li>
+<li><code>timerWaiting</code> -&gt; <code>timerDeleted</code></li>
+<li><code>timerRunning</code>、<code>timerMoving</code> -&gt; 等待状态改变</li>
+<li><code>timerModifying</code> -&gt; 崩溃：并发删除或者修改计时器</li>
+</ul>
+<h3 id="修改计时器"><a href="#修改计时器" class="headerlink" title="修改计时器"></a>修改计时器</h3><p><a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L405" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.modtimer</code></a> 会修改已经存在的计时器，它会根据以下的规则处理计时器：</p>
+<ul>
+<li><code>timerWaiting</code> -&gt; <code>timerModifying</code> -&gt; <code>timerModifiedXX</code></li>
+<li><code>timerModifiedXX</code> -&gt; <code>timerModifying</code> -&gt; <code>timerModifiedYY</code></li>
+<li><code>timerNoStatus</code> -&gt; <code>timerWaiting</code></li>
+<li><code>timerRemoved</code> -&gt; <code>timerWaiting</code></li>
+<li><code>timerRunning</code>、<code>timerMoving</code>、<code>timerRemoving</code> -&gt; 等待状态改变</li>
+<li><code>timerDeleted</code>、<code>timerModifying</code> -&gt; 崩溃：并发删除或者修改计时器</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">modtimer</span><span class="params">(t *timer, when, period <span class="keyword">int64</span>, f <span class="keyword">func</span>(<span class="keyword">interface</span>&#123;&#125;, <span class="keyword">uintptr</span>)</span>, <span class="title">arg</span> <span class="title">interface</span></span>&#123;&#125;, seq <span class="keyword">uintptr</span>) &#123;</span><br><span class="line">	status := <span class="keyword">uint32</span>(timerNoStatus)</span><br><span class="line">	wasRemoved := <span class="literal">false</span></span><br><span class="line">loop:</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">switch</span> status = atomic.Load(&amp;t.status); status &#123;</span><br><span class="line">			...</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	t.period = period</span><br><span class="line">	t.f = f</span><br><span class="line">	t.arg = arg</span><br><span class="line">	t.seq = seq</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> wasRemoved &#123;</span><br><span class="line">		t.when = when</span><br><span class="line">		addInitializedTimer(t)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		t.nextwhen = when</span><br><span class="line">		newStatus := <span class="keyword">uint32</span>(timerModifiedLater)</span><br><span class="line">		<span class="keyword">if</span> when &lt; t.when &#123;</span><br><span class="line">			newStatus = timerModifiedEarlier</span><br><span class="line">		&#125;</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">if</span> newStatus == timerModifiedEarlier &#123;</span><br><span class="line">			wakeNetPoller(when)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果待修改的计时器已经被删除，那么该函数就会调用<a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L261" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.addInitializedTimer</code></a> 创建新的计时器。在正常情况下会根据修改后的时间进行不同的处理：</p>
+<ul>
+<li>如果修改后的时间大于或者等于修改前时间，设置计时器的状态为 <code>timerModifiedLater</code>；</li>
+<li>如果修改后的时间小于修改前时间，设置计时器的状态为 <code>timerModifiedEarlier</code> 并调用 <a href="https://github.com/golang/go/blob/50f4896b72d16b6538178c8ca851b20655075b7f/src/runtime/netpoll_epoll.go#L76" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpollBreak</code></a> 触发调度器的重新调度；</li>
+</ul>
+<p>因为修改后的时间会影响计时器的处理，所以用于修改计时器的 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L405" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.modtimer</code></a> 也是状态机中最复杂的函数了。</p>
+<h3 id="重置计时器"><a href="#重置计时器" class="headerlink" title="重置计时器"></a>重置计时器</h3><p><a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L493" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.resettimer</code></a> 会使用新的时间重置一个已经不活跃的计时器，该函数会遵循以下的规则修改计时器的触发时间：</p>
+<ul>
+<li><code>timerNoStatus</code> -&gt; <code>timerWaiting</code></li>
+<li><code>timerRemoved</code> -&gt; <code>timerWaiting</code></li>
+<li><code>timerDeleted</code> -&gt; <code>timerModifying</code> -&gt; <code>timerModifiedXX</code></li>
+<li><code>timerRemoving</code>、<code>timerRunning</code> -&gt; 等待状态改变</li>
+<li><code>timerWaiting</code>、<code>timerMoving</code>、<code>timerModifiedXX</code>、<code>timerModifying</code> -&gt; 崩溃：在活跃的计时器上调用重置</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">resettimer</span><span class="params">(t *timer, when <span class="keyword">int64</span>)</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">switch</span> s := atomic.Load(&amp;t.status); s &#123;</span><br><span class="line">		<span class="keyword">case</span> timerNoStatus, timerRemoved:</span><br><span class="line">			...</span><br><span class="line">		<span class="keyword">case</span> timerDeleted:</span><br><span class="line">			tpp := t.pp.ptr()</span><br><span class="line">			<span class="keyword">if</span> atomic.Cas(&amp;t.status, s, timerModifying) &#123;</span><br><span class="line">				t.nextwhen = when</span><br><span class="line">				newStatus := <span class="keyword">uint32</span>(timerModifiedLater)</span><br><span class="line">				<span class="keyword">if</span> when &lt; t.when &#123;</span><br><span class="line">					newStatus = timerModifiedEarlier</span><br><span class="line">				&#125;</span><br><span class="line">				atomic.Cas(&amp;t.status, timerModifying, newStatus)</span><br><span class="line">				<span class="keyword">if</span> newStatus == timerModifiedEarlier &#123;</span><br><span class="line">					wakeNetPoller(when)</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">return</span></span><br><span class="line">			&#125;</span><br><span class="line">		<span class="keyword">case</span> timerRemoving, timerRunning:</span><br><span class="line">			osyield()</span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			badTimer()</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>如果当前计时器还没有加入四叉堆（</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">timerNoStatus</span></span><br></pre></td></tr></table></figure>
+<p>）或者已经被移除（</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">timerRemoved</span></span><br></pre></td></tr></table></figure>
+<p>）；</p>
+<ul>
+<li>修改计时器的状态和触发时间；</li>
+<li>调用 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L261" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.addInitializedTimer</code></a> 函数将其重新加入四叉堆中；</li>
+</ul>
+</li>
+<li><p>如果当前计时器刚刚被标记为删除（</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">timerDeleted</span></span><br></pre></td></tr></table></figure>
+<p>）；</p>
+<ul>
+<li>修改计时器下次触发的时间 <code>nextWhen</code>；</li>
+<li>根据新的触发时间修改状态至 <code>timerModifiedEarlier</code> 和 <code>timerModifiedLater</code>；</li>
+<li>如果新的触发时间早于当前状态，调用 <a href="https://github.com/golang/go/blob/895b7c85addfffe19b66d8ca71c31799d6e55990/src/runtime/proc.go#L2424" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.wakeNetPoller</code></a> 函数触发调度器的调度；</li>
+</ul>
+</li>
+</ul>
+<p>重置计时器的过程与修改计时器的过程有些相似，因为它们修改了计时器的到期时间，所以都需要与 <code>timerModifiedXX</code> 状态和网络轮询器打交道。</p>
+<h3 id="清除计时器"><a href="#清除计时器" class="headerlink" title="清除计时器"></a>清除计时器</h3><p><a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L546" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.cleantimers</code></a> 函数会根据状态清理处理器队列头中的计时器，该函数会遵循以下的规则修改计时器的触发时间：</p>
+<ul>
+<li><code>timerDeleted</code> -&gt; <code>timerRemoving</code> -&gt; <code>timerRemoved</code></li>
+<li><code>timerModifiedXX</code> -&gt; <code>timerMoving</code> -&gt; <code>timerWaiting</code></li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">cleantimers</span><span class="params">(pp *p)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> <span class="built_in">len</span>(pp.timers) == <span class="number">0</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">		&#125;</span><br><span class="line">		t := pp.timers[<span class="number">0</span>]</span><br><span class="line">		<span class="keyword">switch</span> s := atomic.Load(&amp;t.status); s &#123;</span><br><span class="line">		<span class="keyword">case</span> timerDeleted:</span><br><span class="line">			atomic.Cas(&amp;t.status, s, timerRemoving)</span><br><span class="line">			dodeltimer0(pp)</span><br><span class="line">			atomic.Cas(&amp;t.status, timerRemoving, timerRemoved)</span><br><span class="line">		<span class="keyword">case</span> timerModifiedEarlier, timerModifiedLater:</span><br><span class="line">			atomic.Cas(&amp;t.status, s, timerMoving)</span><br><span class="line"></span><br><span class="line">			t.when = t.nextwhen</span><br><span class="line"></span><br><span class="line">			dodeltimer0(pp)</span><br><span class="line">			doaddtimer(pp, t)</span><br><span class="line">			atomic.Cas(&amp;t.status, timerMoving, timerWaiting)</span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L546" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.cleantimers</code></a> 函数只会处理计时器状态为 <code>timerDeleted</code>、<code>timerModifiedEarlier</code> 和 <code>timerModifiedLater</code> 的情况：</p>
+<ul>
+<li>如果计时器的状态为</li>
+</ul>
+  <figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">timerDeleted</span></span><br></pre></td></tr></table></figure>
+<p>  ；</p>
+<ul>
+<li>将计时器的状态修改成 <code>timerRemoving</code>；</li>
+<li>调用 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L382" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.dodeltimer0</code></a> 删除四叉堆顶上的计时器；</li>
+<li>将计时器的状态修改成 <code>timerRemoved</code>；</li>
+</ul>
+<ul>
+<li>如果计时器的状态为</li>
+</ul>
+  <figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">timerModifiedEarlier</span></span><br></pre></td></tr></table></figure>
+<p>  或者</p>
+  <figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">timerModifiedLater</span></span><br></pre></td></tr></table></figure>
+<p>  ；</p>
+<ul>
+<li>将计时器的状态修改成 <code>timerMoving</code>；</li>
+<li>使用计时器下次触发的时间 <code>nextWhen</code> 覆盖 <code>when</code>；</li>
+<li>调用 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L382" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.dodeltimer0</code></a> 删除四叉堆顶上的计时器；</li>
+<li>调用 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L278" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.doaddtimer</code></a> 将计时器加入四叉堆中；</li>
+<li>将计时器的状态修改成 <code>timerWaiting</code>；</li>
+</ul>
+<p><a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L546" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.cleantimers</code></a> 函数会删除已经标记的计时器，修改状态为 <code>timerModifiedXX</code> 的计时器。</p>
+<h3 id="调整计时器"><a href="#调整计时器" class="headerlink" title="调整计时器"></a>调整计时器</h3><p><a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L650" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.adjusttimers</code></a> 与 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L546" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.cleantimers</code></a> 函数的作用比较相似，它们都会删除堆中的计时器并修改状态为 <code>timerModifiedEarlier</code> 和 <code>timerModifiedLater</code> 的计时器的时间，它们也会遵循相同的规则处理计时器状态：</p>
+<ul>
+<li><code>timerDeleted</code> -&gt; <code>timerRemoving</code> -&gt; <code>timerRemoved</code></li>
+<li><code>timerModifiedXX</code> -&gt; <code>timerMoving</code> -&gt; <code>timerWaiting</code></li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">adjusttimers</span><span class="params">(pp *p)</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> moved []*timer</span><br><span class="line">loop:</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(pp.timers); i++ &#123;</span><br><span class="line">		t := pp.timers[i]</span><br><span class="line">		<span class="keyword">switch</span> s := atomic.Load(&amp;t.status); s &#123;</span><br><span class="line">		<span class="keyword">case</span> timerDeleted:</span><br><span class="line">			<span class="comment">// 删除堆中的计时器</span></span><br><span class="line">		<span class="keyword">case</span> timerModifiedEarlier, timerModifiedLater:</span><br><span class="line">			<span class="comment">// 修改计时器的时间</span></span><br><span class="line">		<span class="keyword">case</span> ...</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(moved) &gt; <span class="number">0</span> &#123;</span><br><span class="line">		addAdjustedTimers(pp, moved)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>与 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L546" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.cleantimers</code></a> 不同的是，上述函数可能会遍历处理器堆中的全部计时器（包含退出条件），而不是只修改四叉堆顶部。</p>
+<h3 id="运行计时器"><a href="#运行计时器" class="headerlink" title="运行计时器"></a>运行计时器</h3><p><a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L757" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.runtimer</code></a> 函数会检查处理器四叉堆上最顶上的计时器，该函数也会处理计时器的删除以及计时器时间的更新，它会遵循以下的规则处理计时器：</p>
+<ul>
+<li><p><code>timerNoStatus</code> -&gt; 崩溃：未初始化的计时器</p>
+</li>
+<li><p>```<br>timerWaiting</p>
+<figure class="highlight autohotkey"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">  - -&gt; `timerWaiting`</span><br><span class="line">  - -&gt; `timerRunning` -&gt; `timerNoStatus`</span><br><span class="line">  - -&gt; `timerRunning` -&gt; `timerWaiting`</span><br><span class="line"></span><br><span class="line">- `timerModifying` -&gt; 等待状态改变</span><br><span class="line"></span><br><span class="line">- `timerModifiedXX` -&gt; `timerMoving` -&gt; `timerWaiting`</span><br><span class="line"></span><br><span class="line">- `timerDeleted` -&gt; `timerRemoving` -&gt; timerRemoved</span><br><span class="line"></span><br><span class="line">- `timerRunning` -&gt; 崩溃：并发调用该函数</span><br><span class="line"></span><br><span class="line">- `timerRemoved`、`timerRemoving`、`timerMoving` -&gt; 崩溃：计时器堆不一致</span><br><span class="line"></span><br><span class="line">```go</span><br><span class="line">func runtimer(pp *p, now int64) int64 &#123;</span><br><span class="line">	for &#123;</span><br><span class="line">		t := pp.timers[<span class="number">0</span>]</span><br><span class="line">		switch s := atomic.Load(&amp;t.status)<span class="comment">; s &#123;</span></span><br><span class="line"><span class="title">		case timerWaiting:</span></span><br><span class="line">			if t.when &gt; now &#123;</span><br><span class="line">				<span class="keyword">return</span> t.when</span><br><span class="line">			&#125;</span><br><span class="line">			atomic.Cas(&amp;t.status, s, timerRunning)</span><br><span class="line">			runOneTimer(pp, t, now)</span><br><span class="line">			<span class="keyword">return</span> <span class="number">0</span></span><br><span class="line"><span class="title">		case timerDeleted:</span></span><br><span class="line">			// 删除计时器</span><br><span class="line"><span class="title">		case timerModifiedEarlier, timerModifiedLater:</span></span><br><span class="line">			// 修改计时器的时间</span><br><span class="line">		case ...</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>如果处理器四叉堆顶部的计时器没有到触发时间会直接返回，否则调用 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L832" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.runOneTimer</code></a> 运行堆顶的计时器：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">runOneTimer</span><span class="params">(pp *p, t *timer, now <span class="keyword">int64</span>)</span></span> &#123;</span><br><span class="line">	f := t.f</span><br><span class="line">	arg := t.arg</span><br><span class="line">	seq := t.seq</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> t.period &gt; <span class="number">0</span> &#123;</span><br><span class="line">		delta := t.when - now</span><br><span class="line">		t.when += t.period * (<span class="number">1</span> + -delta/t.period)</span><br><span class="line">		siftdownTimer(pp.timers, <span class="number">0</span>)</span><br><span class="line">		atomic.Cas(&amp;t.status, timerRunning, timerWaiting)</span><br><span class="line">		updateTimer0When(pp)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		dodeltimer0(pp)</span><br><span class="line">		atomic.Cas(&amp;t.status, timerRunning, timerNoStatus)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	unlock(&amp;pp.timersLock)</span><br><span class="line">	f(arg, seq)</span><br><span class="line">	lock(&amp;pp.timersLock)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>根据计时器的 <code>period</code> 字段，上述函数会做出不同的处理：</p>
+<ul>
+<li>如果</li>
+</ul>
+  <figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">period</span></span><br></pre></td></tr></table></figure>
+<p>  字段大于 0；</p>
+<ul>
+<li>修改计时器下一次触发的时间并更新其在堆中的位置；</li>
+<li>将计时器的状态更新至 <code>timerWaiting</code>；</li>
+<li>调用 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L998" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.updateTimer0When</code></a> 函数设置处理器的 <code>timer0When</code> 字段；</li>
+</ul>
+<ul>
+<li>如果</li>
+</ul>
+  <figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">period</span></span><br></pre></td></tr></table></figure>
+<p>  字段小于或者等于 0；</p>
+<ul>
+<li>调用 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L382" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.dodeltimer0</code></a> 函数删除计时器；</li>
+<li>将计时器的状态更新至 <code>timerNoStatus</code>；</li>
+</ul>
+<p>更新计时器之后，上述函数会运行计时器中存储的函数并传入触发时间等参数。</p>
+<h2 id="触发计时器"><a href="#触发计时器" class="headerlink" title="触发计时器"></a>触发计时器</h2><p>我们在上一小节已经分析了计时器状态机中的 10 种状态以及 7 种操作。这里将分析器的触发过程，Go 语言会在两个模块触发计时器，运行计时器中保存的函数：</p>
+<ul>
+<li>调度器调度时会检查处理器中的计时器是否准备就绪；</li>
+<li>系统监控会检查是否有未执行的到期计时器；</li>
+</ul>
+<p>我们将依次分析上述这两个触发过程。</p>
+<h3 id="调度器"><a href="#调度器" class="headerlink" title="调度器"></a>调度器</h3><p><a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/proc.go#L2623" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.checkTimers</code></a> 是调度器用来运行处理器中计时器的函数，它会在发生以下情况时被调用：</p>
+<ul>
+<li>调度器调用 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/proc.go#L2482" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.schedule</code></a> 执行调度时；</li>
+<li>调度器调用 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/proc.go#L2111" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.findrunnable</code></a> 获取可执行的 Goroutine 时；</li>
+<li>调度器调用 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/proc.go#L2111" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.findrunnable</code></a> 从其他处理器窃取计时器时；</li>
+</ul>
+<p>这里就不展开介绍 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/proc.go#L2482" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.schedule</code></a> 和 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/proc.go#L2111" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.findrunnable</code></a> 的实现，重点分析用于执行计时器的<a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/proc.go#L2623" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.checkTimers</code></a> 函数，我们将该函数的实现分成调整计时器、运行计时器和删除计时器三个部分。首先是调整堆中计时器的过程：</p>
+<ul>
+<li>如果处理器中不存在需要调整的计时器；<ul>
+<li>当没有需要执行的计时器时，直接返回；</li>
+<li>当下一个计时器没有到期并且需要删除的计时器较少时都会直接返回；</li>
+</ul>
+</li>
+<li>如果处理器中存在需要调整的计时器，会调用 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L650" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.adjusttimers</code></a> 函数；</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">checkTimers</span><span class="params">(pp *p, now <span class="keyword">int64</span>)</span> <span class="params">(rnow, pollUntil <span class="keyword">int64</span>, ran <span class="keyword">bool</span>)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> atomic.Load(&amp;pp.adjustTimers) == <span class="number">0</span> &#123;</span><br><span class="line">		next := <span class="keyword">int64</span>(atomic.Load64(&amp;pp.timer0When))</span><br><span class="line">		<span class="keyword">if</span> next == <span class="number">0</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> now, <span class="number">0</span>, <span class="literal">false</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> now == <span class="number">0</span> &#123;</span><br><span class="line">			now = nanotime()</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> now &lt; next &#123;</span><br><span class="line">			<span class="keyword">if</span> pp != getg().m.p.ptr() || <span class="keyword">int</span>(atomic.Load(&amp;pp.deletedTimers)) &lt;= <span class="keyword">int</span>(atomic.Load(&amp;pp.numTimers)/<span class="number">4</span>) &#123;</span><br><span class="line">				<span class="keyword">return</span> now, next, <span class="literal">false</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	lock(&amp;pp.timersLock)</span><br><span class="line">	adjusttimers(pp)</span><br></pre></td></tr></table></figure>
+<p>调整了堆中的计时器之后，会通过 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/time.go#L757" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.runtimer</code></a> 函数依次查找堆中是否存在需要执行的计时器：</p>
+<ul>
+<li>如果存在，直接运行计时器；</li>
+<li>如果不存在，获取最新计时器的触发时间；</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">rnow = now</span><br><span class="line"><span class="keyword">if</span> <span class="built_in">len</span>(pp.timers) &gt; <span class="number">0</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> rnow == <span class="number">0</span> &#123;</span><br><span class="line">		rnow = nanotime()</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> <span class="built_in">len</span>(pp.timers) &gt; <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> tw := runtimer(pp, rnow); tw != <span class="number">0</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> tw &gt; <span class="number">0</span> &#123;</span><br><span class="line">				pollUntil = tw</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">		ran = <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/proc.go#L2623" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.checkTimers</code></a> 函数的最后，如果当前 Goroutine 的处理器和传入的处理器相同，并且处理器中删除的计时器是堆中计时器的 1/4 以上，就会调用 <a href="https://github.com/golang/go/blob/67539f6c532414bff9eca1a1d56f5e0192dd6fca/src/runtime/time.go#L897" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.clearDeletedTimers</code></a> 删除处理器全部被标记为 <code>timerDeleted</code> 的计时器，保证堆中靠后的计时器被删除。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">	<span class="keyword">if</span> pp == getg().m.p.ptr() &amp;&amp; <span class="keyword">int</span>(atomic.Load(&amp;pp.deletedTimers)) &gt; <span class="built_in">len</span>(pp.timers)/<span class="number">4</span> &#123;</span><br><span class="line">		clearDeletedTimers(pp)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	unlock(&amp;pp.timersLock)</span><br><span class="line">	<span class="keyword">return</span> rnow, pollUntil, ran</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/golang/go/blob/67539f6c532414bff9eca1a1d56f5e0192dd6fca/src/runtime/time.go#L897" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.clearDeletedTimers</code></a> 能够避免堆中出现大量长时间运行的计时器，该函数和 <a href="https://github.com/golang/go/blob/67539f6c532414bff9eca1a1d56f5e0192dd6fca/src/runtime/time.go#L598" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.moveTimers</code></a> 也是唯二会遍历计时器堆的函数。</p>
+<h3 id="系统监控"><a href="#系统监控" class="headerlink" title="系统监控"></a>系统监控</h3><p>系统监控函数 <a href="https://github.com/golang/go/blob/8d7be1e3c9a98191f8c900087025c5e78b73d962/src/runtime/proc.go#L4491" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.sysmon</code></a> 也可能会触发函数的计时器，下面的代码片段中省略了大量与计时器无关的代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">sysmon</span><span class="params">()</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		...</span><br><span class="line">		now := nanotime()</span><br><span class="line">		next, _ := timeSleepUntil()</span><br><span class="line">		...</span><br><span class="line">		lastpoll := <span class="keyword">int64</span>(atomic.Load64(&amp;sched.lastpoll))</span><br><span class="line">		<span class="keyword">if</span> netpollinited() &amp;&amp; lastpoll != <span class="number">0</span> &amp;&amp; lastpoll+<span class="number">10</span>*<span class="number">1000</span>*<span class="number">1000</span> &lt; now &#123;</span><br><span class="line">			atomic.Cas64(&amp;sched.lastpoll, <span class="keyword">uint64</span>(lastpoll), <span class="keyword">uint64</span>(now))</span><br><span class="line">			list := netpoll(<span class="number">0</span>)</span><br><span class="line">			<span class="keyword">if</span> !list.empty() &#123;</span><br><span class="line">				incidlelocked(<span class="number">-1</span>)</span><br><span class="line">				injectglist(&amp;list)</span><br><span class="line">				incidlelocked(<span class="number">1</span>)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> next &lt; now &#123;</span><br><span class="line">			startm(<span class="literal">nil</span>, <span class="literal">false</span>)</span><br><span class="line">		&#125;</span><br><span class="line">		...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>调用 <a href="https://github.com/golang/go/blob/67539f6c532414bff9eca1a1d56f5e0192dd6fca/src/runtime/time.go#L1010" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.timeSleepUntil</code></a> 函数获取计时器的到期时间以及持有该计时器的堆；</li>
+<li>如果超过 10ms 的时间没有轮询，调用 <a href="https://github.com/golang/go/blob/50f4896b72d16b6538178c8ca851b20655075b7f/src/runtime/netpoll_epoll.go#L99" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.netpoll</code></a> 轮询网络；</li>
+<li>如果当前有应该运行的计时器没有执行，可能因为存在无法被抢占的处理器，这时我们应该系统新的线程计时器；</li>
+</ol>
+<p>在上述过程中 <a href="https://github.com/golang/go/blob/67539f6c532414bff9eca1a1d56f5e0192dd6fca/src/runtime/time.go#L1010" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.timeSleepUntil</code></a> 函数会遍历 <code>allp</code> 中的全部处理器并查找下一个需要执行的计时器。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>Go 语言的计时器在并发编程起到了非常重要的作用，它能够为我们提供比较准确的相对时间，基于它的功能，标准库中还提供了定时器、休眠等接口能够我们在 Go 语言程序中更好地处理过期和超时等问题。</p>
+<p>标准库中的计时器在大多数情况下是能够正常工作并且高效完成任务的，但是在遇到极端情况或者性能敏感场景时，它可能没有办法胜任，而在 10ms 的这个粒度下，作者在社区中也没有找到能够使用的计时器实现，一些使用时间轮算法的开源库也不能很好地完成这个任务。</p>
+<h2 id="延伸阅读"><a href="#延伸阅读" class="headerlink" title="延伸阅读"></a>延伸阅读</h2><ul>
+<li>“runtime: switch to using new timer code” <a href="https://github.com/golang/go/commit/6becb033341602f2df9d7c55cc23e64b925bbee2" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/golang/go/commit/6becb033341602f2df9d7c55cc23e64b925bbee2</a></li>
+<li>jaypei/use_c_sleep.go · Gist <a href="https://gist.github.com/jaypei/5334115" target="_blank" rel="external nofollow noopener noreferrer">https://gist.github.com/jaypei/5334115</a></li>
+<li>Alexander Morozov Vyacheslav Bakhmutov. Dec 4, 2016. “How Do They Do It: Timers in Go” <a href="https://blog.gopheracademy.com/advent-2016/go-timers/" target="_blank" rel="external nofollow noopener noreferrer">https://blog.gopheracademy.com/advent-2016/go-timers/</a></li>
+<li>Russ Cox. January 26, 2017. “Proposal: Monotonic Elapsed Time Measurements in Go” <a href="https://go.googlesource.com/proposal/+/master/design/12914-monotonic.md" target="_blank" rel="external nofollow noopener noreferrer">https://go.googlesource.com/proposal/+/master/design/12914-monotonic.md</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/e87a4e07/" rel="bookmark">【Go语言设计与实现】String</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/4e214fa9/" rel="bookmark">【Go语言设计与实现】Function</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/c31234d9/" rel="bookmark">【Go语言设计与实现】Interface</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/726de05a/" title="【Go语言设计与实现】Timer">http://houmin.cc/posts/726de05a/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Go/" rel="tag"><i class="fa fa-tag"></i> Go</a>
+              <a href="/tags/timer/" rel="tag"><i class="fa fa-tag"></i> timer</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/55d129f1/" rel="next" title="【Go语言设计与实现】Go Module">
+                  <i class="fa fa-chevron-left"></i> 【Go语言设计与实现】Go Module
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/839ed42b/" rel="prev" title="【Go语言设计与实现】Net Poller">
+                  【Go语言设计与实现】Net Poller <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#设计原理"><span class="nav-number">1.</span> <span class="nav-text">设计原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#全局四叉堆"><span class="nav-number">1.1.</span> <span class="nav-text">全局四叉堆</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分片四叉堆"><span class="nav-number">1.2.</span> <span class="nav-text">分片四叉堆</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#网络轮询器"><span class="nav-number">1.3.</span> <span class="nav-text">网络轮询器</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据结构"><span class="nav-number">2.</span> <span class="nav-text">数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#状态机"><span class="nav-number">3.</span> <span class="nav-text">状态机</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#增加计时器"><span class="nav-number">3.1.</span> <span class="nav-text">增加计时器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#删除计时器"><span class="nav-number">3.2.</span> <span class="nav-text">删除计时器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#修改计时器"><span class="nav-number">3.3.</span> <span class="nav-text">修改计时器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#重置计时器"><span class="nav-number">3.4.</span> <span class="nav-text">重置计时器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#清除计时器"><span class="nav-number">3.5.</span> <span class="nav-text">清除计时器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#调整计时器"><span class="nav-number">3.6.</span> <span class="nav-text">调整计时器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#运行计时器"><span class="nav-number">3.7.</span> <span class="nav-text">运行计时器</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#触发计时器"><span class="nav-number">4.</span> <span class="nav-text">触发计时器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#调度器"><span class="nav-number">4.1.</span> <span class="nav-text">调度器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#系统监控"><span class="nav-number">4.2.</span> <span class="nav-text">系统监控</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">5.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#延伸阅读"><span class="nav-number">6.</span> <span class="nav-text">延伸阅读</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">170</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">230</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">2.2m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">65:25</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

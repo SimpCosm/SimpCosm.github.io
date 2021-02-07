@@ -55,20 +55,21 @@
   };
 </script>
 
-  <meta name="description" content="所谓容器网络需要结局的两大核心问题是： 容器IP地址的管理 容器之间的相互通信 其中，容器IP地址的管理包括容器IP地址的分配与回收，而容器之间的相互通信包括同一主机容器之间和跨主机容器之间通信两种场景。这两个问题也不能完全分开来看，因为不同的解决方案往往要同时考虑以上两点。容器网络的发展已经相对成熟，这篇笔记先对主流容器网络模型做一些概述，然后将进一步对典型的容器网络模型展开实践。">
+  <meta name="description" content="容器网络模型需要解决容器 IP 地址的管理和容器之间的互相通信。其中容器IP地址的管理包括容器IP地址的分配与回收，容器之间的相互通信包括同一主机容器之间和跨主机容器之间通信两种场景。本文将基于 Docker 容器网络模型，介绍主流容器网络模型的原理与实现。">
 <meta name="keywords" content="container,docker,网络">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Docker 容器网络模型">
 <meta property="og:url" content="http://houmin.cc/posts/9ca050a2/index.html">
 <meta property="og:site_name" content="Houmin">
-<meta property="og:description" content="所谓容器网络需要结局的两大核心问题是： 容器IP地址的管理 容器之间的相互通信 其中，容器IP地址的管理包括容器IP地址的分配与回收，而容器之间的相互通信包括同一主机容器之间和跨主机容器之间通信两种场景。这两个问题也不能完全分开来看，因为不同的解决方案往往要同时考虑以上两点。容器网络的发展已经相对成熟，这篇笔记先对主流容器网络模型做一些概述，然后将进一步对典型的容器网络模型展开实践。">
+<meta property="og:description" content="容器网络模型需要解决容器 IP 地址的管理和容器之间的互相通信。其中容器IP地址的管理包括容器IP地址的分配与回收，容器之间的相互通信包括同一主机容器之间和跨主机容器之间通信两种场景。本文将基于 Docker 容器网络模型，介绍主流容器网络模型的原理与实现。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://i.loli.net/2020/01/31/lWUKNw5Tbp3cArC.jpg">
-<meta property="og:image" content="https://i.loli.net/2020/01/30/RjzDdbcK7uJ546Q.jpg">
-<meta property="og:image" content="https://i.loli.net/2020/01/30/ighFPJUxGuNRTZE.jpg">
-<meta property="og:image" content="https://i.loli.net/2020/01/31/47Z5U3BQlN1AotR.jpg">
-<meta property="og:image" content="https://i.loli.net/2020/01/31/Ykjeivl2GS5WrCF.jpg">
-<meta property="og:updated_time" content="2021-01-27T11:44:47.514Z">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_docker-bridge-network.jpg">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_docker-bridge-network2.jpg">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/32ab62e6be9d4b4dbe9280ca3b9206f9~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/905bc296603243ad8ee09e13b651e5ba~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_docker-overlay.jpg">
+<meta property="og:updated_time" content="2021-02-07T07:06:36.373Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://i.loli.net/2020/01/31/lWUKNw5Tbp3cArC.jpg">
 
@@ -324,13 +325,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <a id="more"></a><p>所谓容器网络需要结局的两大核心问题是：</p><ol>
-<li>容器IP地址的管理</li>
-<li>容器之间的相互通信</li>
-</ol><p>其中，容器IP地址的管理包括容器IP地址的分配与回收，而容器之间的相互通信包括同一主机容器之间和跨主机容器之间通信两种场景。这两个问题也不能完全分开来看，因为不同的解决方案往往要同时考虑以上两点。容器网络的发展已经相对成熟，这篇笔记先对主流容器网络模型做一些概述，然后将进一步对典型的容器网络模型展开实践。</p><a id="more"></a>
-
-
-
+        <p>容器网络模型需要解决容器 IP 地址的管理和容器之间的互相通信。其中容器IP地址的管理包括容器IP地址的分配与回收，容器之间的相互通信包括同一主机容器之间和跨主机容器之间通信两种场景。本文将基于 Docker 容器网络模型，介绍主流容器网络模型的原理与实现。</p>
+<a id="more"></a>
 <h2 id="CNM-vs-CNI"><a href="#CNM-vs-CNI" class="headerlink" title="CNM vs CNI"></a>CNM vs CNI</h2><p>关于容器网络，Docker与Kubernetes分别提出了不同的规范标准：</p>
 <ul>
 <li>Docker采用的 <a href="https://github.com/docker/libnetwork/blob/master/docs/design.md" target="_blank" rel="external nofollow noopener noreferrer">CNM</a>(Container Network Model)</li>
@@ -346,14 +342,40 @@
 </ul>
 <p>可以看到，底层实现原理还是我们之前介绍过的Linux虚拟网络设备，网络命名空间等。CNM规范的典型场景是这样的：用户可以创建一个或多个Network，一个容器Sandbox可以通过Endpoint加入到一个或多个Network，同一个Network中容器Sanbox可以通信，不同Network中的容器Sandbox隔离。这样就可以实现从容器与网络的解耦，也就是锁，在创建容器之前，可以先创建网络，然后决定让容器加入哪个网络。</p>
 <p>但是，为什么Kubernetes没有采用 CNM 规范标准，而是选择CNI，感兴趣的话可以去看看Kubernetes的官方博客文章<a href="https://kubernetes.io/blog/2016/01/why-kubernetes-doesnt-use-libnetwork/" target="_blank" rel="external nofollow noopener noreferrer">Why Kubernetes doesn’t use libnetwork</a>，总的来说，不使用CNM最关键的一点是，是因为Kubernetes考虑到CNM在一定程度上和container runtime耦合度太高，因此以Kubernetes为领导的其他一些组织开始制定新的CNI规范。CNI并不是 Docker 原生支持的，它是为容器技术设计的通用型网络接口，因此CNI接口可以很容易地从高层向底层调用，但从底层到高层却不是很方便，所以一些常见的CNI插件很难在Docker层面激活。但是这两个模型全都支持插件化，也就是说我们每个人都可以按照这两套网络规范来编写自己的具体网络实现。</p>
-<p>docker通过libnetwork原生支持的网络模式可以通过<code>docker network ls</code>来看：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># docker network ls</span></span><br><span class="line">NETWORK ID          NAME                DRIVER              SCOPE</span><br><span class="line">f559b082c95f        bridge              bridge              <span class="built_in">local</span></span><br><span class="line">5f11ccbbf488        host                host                <span class="built_in">local</span></span><br><span class="line">97aedfe8792d        none                null                <span class="built_in">local</span></span><br></pre></td></tr></table></figure>
-<p>可以看到三种网络模型，在创建容器的时候可以通过<code>--network</code>来指定要使用的模型。其中bridge是默认的网络模型，我们接下来将会介绍并模拟实现bridge模型；none不创建任何网络，host网络模型即使用主机网络，它不会创建新的netns网络命名空间。</p>
-<blockquote>
-<p>Note: 如果<a href="https://docs.docker.com/network/overlay/" target="_blank" rel="external nofollow noopener noreferrer">enable了docker swarm</a>，那么你还会看到<code>overlay</code>网络模型，后面我们会详细介绍docker原生overlay网络模型的实现原理。</p>
-</blockquote>
-<h2 id="bridge网络"><a href="#bridge网络" class="headerlink" title="bridge网络"></a>bridge网络</h2><p>bridge桥接网络是docker默认的网络模型，如果我们在创建容器的时候不指定网络模型，则默认使用<code>bridge</code>。bridge网络模型可以解决单宿主机上的容器之间的通信以及容器服务对外的暴露，实现原理也很简单：</p>
-<p><img alt="network-docker-bridge-1.jpg" data-src="https://i.loli.net/2020/01/30/RjzDdbcK7uJ546Q.jpg"></p>
+<h2 id="Docker-网络模式"><a href="#Docker-网络模式" class="headerlink" title="Docker 网络模式"></a>Docker 网络模式</h2><p>docker run创建Docker容器时，可以用—net选项指定容器的网络模式，Docker有以下5种网络模式：∂</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>网络模式</th>
+<th>简介</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>bridge</td>
+<td>为每一个容器分配、设置 IP 等，并将容器连接到一个 <code>docker0</code> 虚拟网桥，默认为该模式。</td>
+</tr>
+<tr>
+<td>host</td>
+<td>容器将不会虚拟出自己的网卡，配置自己的 IP 等，而是使用宿主机的 IP 和端口。</td>
+</tr>
+<tr>
+<td>none</td>
+<td>容器有独立的 Network namespace，但并没有对其进行任何网络设置，如分配 veth pair 和网桥连接，IP 等。</td>
+</tr>
+<tr>
+<td>container</td>
+<td>新创建的容器不会创建自己的网卡和配置自己的 IP，而是和一个指定的容器共享 IP、端口范围等。</td>
+</tr>
+<tr>
+<td>overlay</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="bridge-network"><a href="#bridge-network" class="headerlink" title="bridge network"></a>bridge network</h3><p>bridge桥接网络是docker默认的网络模型，如果我们在创建容器的时候不指定网络模型，则默认使用<code>bridge</code>。bridge网络模型可以解决单宿主机上的容器之间的通信以及容器服务对外的暴露，实现原理也很简单：</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_docker-bridge-network.jpg"></p>
 <p>可以看到，bridge网络模型主要依赖于大名鼎鼎的docker0网桥以及veth虚拟网络设备对实现，通过之前笔记对于linux虚拟网络设备的了解，我们知道veth设备对对于从一个设备发出的数据包，会直接出现在另一个网络设备上，即使不在一个netns网络命名空间中，所以将veth设备对实际上是连接不同netns网络命名空间的”网线”，docker0网桥设备充当不同容器网络的网关。事实上，我们一旦而当以bridge网络模式创建容器时，会自动创建相应的veth设备对，其中一端连接到docker0网桥，另外一端连接到容器网络的eth0虚拟网卡。</p>
 <p>首先我们在安装了docker的宿主机上查看网桥设备docker0和路由规则：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip link show docker0</span></span><br><span class="line">4: docker0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP mode DEFAULT group default</span><br><span class="line">    link/ether 02:42:59:c8:67:c0 brd ff:ff:ff:ff:ff:ff</span><br><span class="line"><span class="comment"># ip route ls</span></span><br><span class="line">...</span><br><span class="line">172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1</span><br></pre></td></tr></table></figure>
@@ -366,8 +388,8 @@
 <p>Note: 如果我们创建了映射到<code>/var/run/docker/netns/</code>的符号链接<code>/var/run/netns</code>，就不用使用<code>nsenter</code>命令或者进入容器内部查看veth设备对的另外一端，直接使用如下<code>iproute2</code>工具包</p>
 </blockquote>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip netns show</span></span><br><span class="line">62fd67d9ef3e (id: 0)</span><br><span class="line">default</span><br><span class="line"><span class="comment"># ip netns exec 62fd67d9ef3e ip link show type veth</span></span><br><span class="line">10: eth0@if11: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP mode DEFAULT group default</span><br><span class="line">    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0</span><br><span class="line"><span class="comment"># ip netns exec 62fd67d9ef3e ip addr show type veth</span></span><br><span class="line">10: eth0@if11: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP group default</span><br><span class="line">    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0</span><br><span class="line">    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br></pre></td></tr></table></figure>
-<h2 id="bridge网络模拟"><a href="#bridge网络模拟" class="headerlink" title="bridge网络模拟"></a>bridge网络模拟</h2><p>我们加下来就模拟一下bridge网络模型的实现，基本的网络拓扑图如下所示：</p>
-<p><img alt="network-docker-bridge-2.jpg" data-src="https://i.loli.net/2020/01/30/ighFPJUxGuNRTZE.jpg"></p>
+<p>模拟一下bridge网络模型的实现，基本的网络拓扑图如下所示：</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_docker-bridge-network2.jpg"></p>
 <ol>
 <li><p>首先创建两个netns网络命名空间：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip netns add netns_A</span></span><br><span class="line"><span class="comment"># ip netns add netns_B</span></span><br><span class="line"><span class="comment"># ip netns</span></span><br><span class="line">netns_B</span><br><span class="line">netns_A</span><br><span class="line">default</span><br></pre></td></tr></table></figure>
@@ -408,8 +430,30 @@
 <p>实际上，此时两个netns网络命名空间处于同一个子网中，所以网桥设备<code>mybr0</code>还是在二层（数据链路层）起到的作用，只需要对方的MAC地址就可以访问。</p>
 <p>但是如果需要从两个netns网络命名空间访问其他网段的地址，这个时候就需要设置默认网桥设备<code>mybr0</code>充当的默认网关地址就发挥作用了：来自于两个netns网络命名空间的数据包发现目标IP地址并不是本子网地址，于是发给网关<code>mybr0</code>，此时网桥设备<code>mybr0</code>其实工作在三层（IP网络层），它收到数据包之后，查看本地路由与目标IP地址，寻找下一跳的地址。</p>
 <p>当然，如果需要从两个netns网络命名空间访问其他公网地址.eg. <code>google.com</code>，需要这是iptables来做源地址转换，这里就不细细展开来说。</p>
-<hr>
-<p>上一篇我们介绍的bridge网络模型主要用于解决同一主机间的容器相互访问以及容器对外暴露服务的问题，并没有涉及到怎么解决跨主机容器之间互相访问的问题。</p>
+<h3 id="host-network"><a href="#host-network" class="headerlink" title="host network"></a>host network</h3><ul>
+<li>host 网络模式需要在创建容器时通过参数 <code>--net host</code> 或者 <code>--network host</code> 指定；</li>
+<li>采用 host 网络模式的 Docker Container，可以直接使用宿主机的 IP 地址与外界进行通信，若宿主机的 eth0 是一个公有 IP，那么容器也拥有这个公有 IP。同时容器内服务的端口也可以使用宿主机的端口，无需额外进行 NAT 转换；</li>
+<li>host 网络模式可以让容器共享宿主机网络栈，这样的好处是外部主机与容器直接通信，但是容器的网络缺少隔离性。</li>
+</ul>
+<p><img alt data-src="https:////p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/32ab62e6be9d4b4dbe9280ca3b9206f9~tplv-k3u1fbpfcp-zoom-1.image"></p>
+<p>该模式将禁用Docker容器的网络隔离。因为容器共享了宿主机的网络命名空间，直接暴露在公共网络中。因此，你需要通过端口映射（port mapping）来进行协调。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">$ docker run -it --name box2 --net host busybox</span><br><span class="line">/ <span class="comment"># ip addr</span></span><br><span class="line">1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue</span><br><span class="line">    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00</span><br><span class="line">    inet 127.0.0.1/8 scope host lo</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">2: eth1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc mq qlen 1000</span><br><span class="line">    link/ether 52:54:00:be:23:7a brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 9.134.218.214/22 brd 9.134.219.255 scope global eth1</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">3: docker0: &lt;NO-CARRIER,BROADCAST,MULTICAST,UP&gt; mtu 1500 qdisc noqueue</span><br><span class="line">    link/ether 02:42:23:66:94:56 brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 192.168.10.1/24 brd 192.168.10.255 scope global docker0</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">$ ip addr</span><br><span class="line">1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue</span><br><span class="line">    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00</span><br><span class="line">    inet 127.0.0.1/8 scope host lo</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">2: eth1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc mq qlen 1000</span><br><span class="line">    link/ether 52:54:00:be:23:7a brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 9.134.218.214/22 brd 9.134.219.255 scope global eth1</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">3: docker0: &lt;NO-CARRIER,BROADCAST,MULTICAST,UP&gt; mtu 1500 qdisc noqueue</span><br><span class="line">    link/ether 02:42:23:66:94:56 brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 192.168.10.1/24 brd 192.168.10.255 scope global docker0</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br></pre></td></tr></table></figure>
+<p> 我们可以从上例中看到：容器和宿主机具有相同的IP地址<code>9.134.218.214</code>。  在下图中，我们可以看到：当使用host模式网络时，容器实际上继承了宿主机的IP地址。该模式比bridge模式更快（因为没有路由开销），但是它将容器直接暴露在公共网络中，是有安全隐患的。</p>
+<h3 id="none-network"><a href="#none-network" class="headerlink" title="none network"></a>none network</h3><ul>
+<li>none 网络模式是指禁用网络功能，只有 lo 接口 local 的简写，代表 127.0.0.1，即 localhost 本地环回接口。在创建容器时通过参数 <code>--net none</code> 或者 <code>--network none</code> 指定；</li>
+<li>none 网络模式即不为 Docker Container 创建任何的网络环境，容器内部就只能使用 loopback 网络设备，不会再有其他的网络资源。可以说 none 模式为 Docke Container 做了极少的网络设定，但是俗话说得好“少即是多”，在没有网络配置的情况下，作为 Docker 开发者，才能在这基础做其他无限多可能的网络定制开发。这也恰巧体现了 Docker 设计理念的开放。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ docker run -it --name box5 --net none busybox</span><br><span class="line">/ <span class="comment"># ip addr</span></span><br><span class="line">1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue</span><br><span class="line">    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00</span><br><span class="line">    inet 127.0.0.1/8 scope host lo</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br></pre></td></tr></table></figure>
+<h3 id="container-network"><a href="#container-network" class="headerlink" title="container network"></a>container network</h3><ul>
+<li>Container 网络模式是 Docker 中一种较为特别的网络的模式。在创建容器时通过参数 <code>--net container:已运行的容器名称|ID</code> 或者 <code>--network container:已运行的容器名称|ID</code> 指定；</li>
+<li>处于这个模式下的 Docker 容器会共享一个网络栈，这样两个容器之间可以使用 localhost 高效快速通信。</li>
+</ul>
+<p><img alt=" " data-src="https:////p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/905bc296603243ad8ee09e13b651e5ba~tplv-k3u1fbpfcp-zoom-1.image"></p>
+<p><strong>Container 网络模式即新创建的容器不会创建自己的网卡，配置自己的 IP，而是和一个指定的容器共享 IP、端口范围等</strong>。同样两个容器除了网络方面相同之外，其他的如文件系统、进程列表等还是隔离的。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">$ docker run -d -P --name nginx19 --net=bridge nginx:1.9.1</span><br><span class="line">$ docker run -it --name box4 --net container:nginx19 busybox</span><br><span class="line">/ <span class="comment"># ip addr</span></span><br><span class="line">1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue</span><br><span class="line">    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00</span><br><span class="line">    inet 127.0.0.1/8 scope host lo</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">26: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue</span><br><span class="line">    link/ether 02:42:c0:a8:0a:02 brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 192.168.10.2/24 brd 192.168.10.255 scope global eth0</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">$ docker <span class="built_in">exec</span> -it nginx19 ip addr</span><br><span class="line">1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default</span><br><span class="line">    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00</span><br><span class="line">    inet 127.0.0.1/8 scope host lo</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">26: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP group default</span><br><span class="line">    link/ether 02:42:c0:a8:0a:02 brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 192.168.10.2/24 brd 192.168.10.255 scope global eth0</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br></pre></td></tr></table></figure>
+<p>通过以上测试可以发现，Docker 守护进程只创建了一对对等虚拟设备接口用于连接 nginx19 容器和宿主机，而 box04 容器则直接使用了 nginx19 容器的网卡信息。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip addr</span></span><br><span class="line">1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue</span><br><span class="line">    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00</span><br><span class="line">    inet 127.0.0.1/8 scope host lo</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br></pre></td></tr></table></figure>
+<h3 id="macvlan-network"><a href="#macvlan-network" class="headerlink" title="macvlan network"></a>macvlan network</h3><h3 id="overlay-network"><a href="#overlay-network" class="headerlink" title="overlay network"></a>overlay network</h3><p>上一篇我们介绍的bridge网络模型主要用于解决同一主机间的容器相互访问以及容器对外暴露服务的问题，并没有涉及到怎么解决跨主机容器之间互相访问的问题。</p>
 <p>对于跨主机的容器间的相互访问问题，我们能想到的最直观的解决方案就是直接使用宿主机host网络，这时，容器完全复用复用宿主机的网络设备以及协议栈，容器的IP就是主机的IP，这样，只要宿主机主机能通信，容器也就自然能通信。但是这样，为了暴露容器服务，每个容器需要占用宿主机上的一个端口，通过这个端口和外界通信。所以，就需要手动维护端口的分配，不要使不同的容器服务运行在一个端口上，正因为如此，这种容器网络模型很难被推广到生产环境。</p>
 <p>因此解决跨主机通信的可行方案主要是让容器配置与宿主机不一样的IP地址，往往是在现有二层或三层网络之上再构建起来一个独立的overlay网络，这个网络通常会有自己独立的IP地址空间、交换或者路由的实现。但是由于容器有自己独立配置的IP地址，underlay平面的底层网络设备如交换机、路由器等完全不感知这些IP的存在，也就导致容器的IP不能直接路由出去实现跨主机通信。</p>
 <p>为了解决容器独立IP地址间的访问问题，主要有以下两个思路：</p>
@@ -421,7 +465,7 @@
 </ul>
 </li>
 </ol>
-<h2 id="技术术语"><a href="#技术术语" class="headerlink" title="技术术语"></a>技术术语</h2><p>在开始之前，我们总结一些在容器网络的介绍文章里面看到各种技术术语：</p>
+<p>在开始之前，我们总结一些在容器网络的介绍文章里面看到各种技术术语：</p>
 <ul>
 <li>IPAM: IP Address Management，即IP地址管理。IPAM并不是容器时代特有的词汇，传统的标准网络协议比如DHCP其实也是一种IPAM，负责从MAC地址分发IP地址；但是到了容器时代我们提到IPAM，我们特指为每一个容器实例分配和回收IP地址，保证一个集群里面的所有容器都分配全局唯一的IP地址；主流的做法包括：基于CIDR的IP地址段分配地或精确为每一个容器分配IP。</li>
 <li>Overlay：在容器时代，就是在主机现有二层（数据链路层）或三层（IP网络层）基础之上再构建起来一个独立的网络，这个overlay网络通常会有自己独立的IP地址空间、交换或者路由的实现。</li>
@@ -431,14 +475,14 @@
 <li>BGP: 主干网自治网络的路由协议，当代的互联网由很多小的AS自治网络(Autonomous system)构成，自治网络之间的三层路由是由BGP实现的，简单来说，通过BGP协议AS告诉其他AS自己子网里都包括哪些IP地址段，自己的AS编号以及一些其他的信息。</li>
 <li>SDN: Software-Defined Networking，一种广义的概念，通过软件方式快速配置网络，往往包括一个中央控制层来集中配置底层基础网络设施。</li>
 </ul>
-<h2 id="Docker原生overlay"><a href="#Docker原生overlay" class="headerlink" title="Docker原生overlay"></a>Docker原生overlay</h2><p>Docker原生支持overlay网络来解决容器间的跨主机通信问题，事实上，对于Docker原生支持的overlay网络，Laurent Bernaille在DockerCon 2017上详细剖析了它的实现原理，甚至还有从头开始一步步实现Docker的overlay网络的实践教程，这三篇文章为：</p>
+<p>Docker原生支持overlay网络来解决容器间的跨主机通信问题，事实上，对于Docker原生支持的overlay网络，Laurent Bernaille在DockerCon 2017上详细剖析了它的实现原理，甚至还有从头开始一步步实现Docker的overlay网络的实践教程，这三篇文章为：</p>
 <ul>
 <li><a href="https://blog.d2si.io/2017/04/25/deep-dive-into-docker-overlay-networks-part-1/" target="_blank" rel="external nofollow noopener noreferrer">Deep dive into docker overlay networks part 1</a></li>
 <li><a href="https://blog.d2si.io/2017/05/09/deep-dive-into-docker-overlay-networks-part-2/" target="_blank" rel="external nofollow noopener noreferrer">Deep dive into docker overlay networks part 2</a></li>
 <li><a href="https://blog.d2si.io/2017/08/20/deep-dive-3-into-docker-overlay-networks-part-3/" target="_blank" rel="external nofollow noopener noreferrer">Deep dive into docker overlay networks part 3</a></li>
 </ul>
 <p>所以在这里我就只是大致介绍一下Docker原生支持的overlay网络模型的大致原理：</p>
-<p><img alt="docker-overlay.jpg" data-src="https://i.loli.net/2020/01/31/47Z5U3BQlN1AotR.jpg"></p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_docker-overlay.jpg"></p>
 <p>从上面的网络模型图可以看出，对于docker原生的overlay网络来说，处理容器对外访问的南北流量个容器之间相互访问的东西流量分别使用不同的Linux网络设备：</p>
 <ul>
 <li>南北流量：类似于bridge网络模型，通过主机的网桥设备充当网关，然后使用veth设备对分别连接主机网桥和容器内网卡设备，最后通过主机网卡发送接收对外的数据包，需要注意的是，对外数据包需要做地址转化nat</li>
@@ -451,81 +495,6 @@
 <p>另外，容器之间的数据包最终还是通过VXLAN隧道传输的，因此需要知道数据包的目标容器在哪个Node节点。当Node数量达到一定数量级之后，如果采用和ARP一样的广播洪泛的方式学习，那么显然同样存在性能问题，实际上也很少使用这种方案，在硬件SDN中通常使用BGP EVPN技术实现VXLAN的控制平面，而Docker解决的办法和ARP类似，通过静态配置的方式填充VTEP（VXLAN Tunnel Endpoint）表，我们可以查看容器网络namespace的转发表（Forward database，简称fdb）：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># bridge fdb</span></span><br><span class="line">...</span><br><span class="line">82:fa:1d:48:14:04 dev vxlan0 dst 10.0.0.10 link-netnsid 0 self permanent</span><br><span class="line">82:fa:1d:48:14:05 dev vxlan0 dst 10.0.0.11 link-netnsid 0 self permanent</span><br></pre></td></tr></table></figure>
 <p>上面的转发表信息表示MAC地址<code>82:fa:1d:48:14:04</code>的对端VTEP地址为<code>10.0.0.10</code>，而<code>82:fa:1d:48:14:04</code>的对端VTEP地址为<code>10.0.0.10</code>,permanent说明这两条转发表记录都是静态配置的，而这些数据来源依然是KV数据库etcd，这些VTEP地址为容器所在的主机的IP地址。</p>
-<h2 id="Flannel"><a href="#Flannel" class="headerlink" title="Flannel"></a>Flannel</h2><p>Flannel网络是目前最主流的容器网络之一，同时支持overlay和修改主机路由两种模式。 Flannel和Docker原生Overlay网络不同的是，后者的所有Node节点共享一个子网，而Flannel初始化时通常指定一个16位的网络，然后每个Node单独分配一个独立的24位子网。由于Node都在不同的子网，跨节点通信本质为三层通信，也就不存在二层的ARP广播问题了。</p>
-<p>另外，Flannel之所以被认为非常简单优雅的是，不像Docker原生overlay网络需要在容器内部再增加一个网桥设备专门用于overlay网络的通信，Flannel只需要使用Docker最原生的docker0网络，除了需要为每个Node配置subnet外，几乎不改变原有的Docker网络模型。</p>
-<p><img alt="docker-flannel.jpg" data-src="https://i.loli.net/2020/01/31/Ykjeivl2GS5WrCF.jpg"></p>
-<p>正如上面这张图看到的那样，Flannel在Docker最原生的docker0网桥设备和veth设备对的基础上，为了每个node单独分配了一个子网：</p>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th>Node Name</th>
-<th>Node IP</th>
-<th>Node Subnet</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Node 1</td>
-<td>192.168.1.101</td>
-<td>10.0.1.0/24</td>
-</tr>
-<tr>
-<td>Node 2</td>
-<td>192.168.1.102</td>
-<td>10.0.2.0/24</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>我们也可以看到，容器对外流量的访问以及统一主机上的容器之前的访问完全与docker原生的bridge模式相同。那么，怎么实现跨主机间的容器相互访问呢？</p>
-<p>前面说过，Flannel同时提供了overlay和修改主机路由两种方式，其中overlay方式主要通过vxlan隧道，而修改主机路由则是通过配置主机静态路由的方式。</p>
-<h3 id="vxlan隧道"><a href="#vxlan隧道" class="headerlink" title="vxlan隧道"></a>vxlan隧道</h3><p>查看主机node1的本地静态路由：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># node1</span></span><br><span class="line"><span class="comment"># ip route show</span></span><br><span class="line">...</span><br><span class="line">10.0.1.0/24 dev docker0 proto kernel scope link src 10.0.1.1</span><br><span class="line">10.0.2.0/24 via 10.0.2.0 dev flannel.1 onlink</span><br><span class="line"><span class="comment"># node2</span></span><br><span class="line"><span class="comment"># ip route show</span></span><br><span class="line">...</span><br><span class="line">10.0.2.0/24 dev docker0 proto kernel scope link src 10.0.2.1</span><br><span class="line">10.0.1.0/24 via 10.0.1.0 dev flannel.1 onlink</span><br></pre></td></tr></table></figure>
-<p>可以看到，对于每个主机，当前子网都可以直接通过docker0网桥直接访问，而其他的子网则需要特殊的网络设备<code>flannel.1</code>来访问，它是一个Linux的vxlan网络设备，其中<code>.1</code>为VNI值，默认值为1。</p>
-<p>因为同一主机的容器处于同一子网，因此直接通过ARP学习即可，而不同主机上的容器处于不同的子网，所以不涉及ARP广播泛洪的问题。但是，vxlan网络设备<code>flannel.1</code>如何知道对端VTEP地址呢？我们来看一下转发表fdb：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># bridge fdb | grep flannel</span></span><br><span class="line">82:fa:1d:48:14:00 dev flannel.1 dst 192.168.1.102 self permanent</span><br></pre></td></tr></table></figure>
-<p>其中<code>192.168.1.102</code>是另外一个Node的IP地址，即VTEP地址，而<code>82:fa:1d:48:14:00</code>是对端网络设备<code>flannel.1</code>的MAC地址，从permanent可以看出转发表是由Flannel静态添加的，这些信息可以保存在etcd中。</p>
-<p>相对于docker原生的overlay来说，除了增加或者减少Node，需要Flannel配合配置静态路由以及fdb表，容器的创建与删除完全不需要Flannel干预，事实上Flannel也不需要知道有没有新的容器创建或者删除。</p>
-<h3 id="host-gw路由"><a href="#host-gw路由" class="headerlink" title="host-gw路由"></a>host-gw路由</h3><p>上面我们介绍了Flannel通过vxlan隧道搭建overlay实现容器间的跨主机通信，其实Flannel支持通过host-gw，也就是修改主机路由的方式实现容器间的跨主机通信，此时每个Node都相当于一个路由器，作为容器的网关，负责容器的路由转发。</p>
-<p>对于Flannel的host-gw修改主机路由的方式，我们后面有机会在详细去剖析。需要说明的是host-gw的方式相对overlay由于少了vxlan的封包拆包过程，直接路由数据包到目的地址，因此性能相对要好。不过正是由于它是通过添加静态路由的方式实现，每个宿主机相当于是容器的网关，因此每个宿主机必须在同一个子网内，否则跨子网由于链路层不通导致无法实现路由。</p>
-<h2 id="Calico"><a href="#Calico" class="headerlink" title="Calico"></a>Calico</h2><p>Calico采用和Flannel host-gw类似的方式，即通过修改主机路由的方式实现容器间的跨主机通信，不同的地方在于Flannel通过flanneld进程逐一添加主机静态路由实现，而Calico则是通过BGP协议实现节点间路由规则的相互学习广播。</p>
-<p>Calico也会像Flannel一样会为每个主机节点分配一个子网，只不过Calico默认分配的是26位子网，不同于Flannel默认分配的24位子网：</p>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th>Node Name</th>
-<th>Node IP</th>
-<th>Node Subnet</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Node 1</td>
-<td>172.16.31.155</td>
-<td>10.1.83.192⁄26</td>
-</tr>
-<tr>
-<td>Node 2</td>
-<td>172.16.32.117</td>
-<td>10.1.32.192⁄26</td>
-</tr>
-<tr>
-<td>Node 2</td>
-<td>172.16.32.120</td>
-<td>10.1.147.128⁄26</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>Calico通过BGP协议动态调价路由，那么我们就来看看主机的路由规则：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># node1</span></span><br><span class="line"><span class="comment"># ip route show</span></span><br><span class="line">...</span><br><span class="line">blackhole 10.1.83.192/26  proto bird</span><br><span class="line">10.1.83.193 dev cali8632426305e  scope link</span><br><span class="line">10.1.83.194 dev cali87c063cc2db  scope link</span><br><span class="line">10.1.32.192/26 via 172.16.32.117 dev tunl0  proto bird onlink</span><br><span class="line">10.1.147.128/26 via 172.16.32.120 dev tunl0  proto bird onlink</span><br></pre></td></tr></table></figure>
-<p>可以看到，Calico修改主机路由来实现容器间的跨主机通信方式和Flannel host-gw一样，下一跳直接指向对应主机的IP，把主机当作容器的网关。但Calico会增加一条blackhole的规则，将非法的容器IP直接丢弃；另外一个不一样的地方是数据包到达宿主机后，Flannel会通过路由转发流量到bridge网络设备中，再由bridge设备转发给容器，而Calico则为每个容器IP生成一条路由规则，直接指向容器的网卡对端。当容器数量达到一定规模之后，主机路由规则数量也会越来越多，性能会是个问题。Calico给出的解决方案是<a href="https://docs.projectcalico.org/v3.5/usage/routereflector" target="_blank" rel="external nofollow noopener noreferrer">路由反射器(route reflector)</a>。</p>
-<p>此外，需要注意的是，我们知道Flannel host-gw的方式只支持每个宿主机在同一个子网内，才可以添加静态路由规则，不能支持跨网段的主机node，那么Calico支持吗？</p>
-<p>答案是肯定的，Calico在安装的时候可以指定是否打开ipip模式，也就是ipip隧道。在我的实验环境中，ipip模式已经打开，如果你观察得够仔细的话，你会发现主机路由中发往其他主机上的容器的路由要经过<code>tunl0</code>网络设备，我们来看一下<code>tunl0</code>网络设备的类型：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip link show tunl0</span></span><br><span class="line">5: tunl0@NONE: &lt;NOARP,UP,LOWER_UP&gt; mtu 1430 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1</span><br><span class="line">    link/ipip 0.0.0.0 brd 0.0.0.0</span><br></pre></td></tr></table></figure>
-<p>可以看到，<code>tunl0</code>其实是Linux的TUN网络设备，它会在不同主机节点间开启IPIP隧道，也就是说，即使主机节点处于三层（IP）网络中，数据包还是可以通过隧道发送到目标主机，在由目标主机转发给对应的容器。这时Calico其实采用的是overlay的方式。</p>
 <h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
 <li><a href="https://kubernetes.io/blog/2016/01/why-kubernetes-doesnt-use-libnetwork/" target="_blank" rel="external nofollow noopener noreferrer">Why Kubernetes doesn’t use libnetwork</a></li>
 <li><a href="https://blog.d2si.io/2017/04/25/deep-dive-into-docker-overlay-networks-part-1/" target="_blank" rel="external nofollow noopener noreferrer">Deep dive into docker overlay networks part 1</a></li>
@@ -659,7 +628,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#CNM-vs-CNI"><span class="nav-number">1.</span> <span class="nav-text">CNM vs CNI</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#bridge网络"><span class="nav-number">2.</span> <span class="nav-text">bridge网络</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#bridge网络模拟"><span class="nav-number">3.</span> <span class="nav-text">bridge网络模拟</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#技术术语"><span class="nav-number">4.</span> <span class="nav-text">技术术语</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Docker原生overlay"><span class="nav-number">5.</span> <span class="nav-text">Docker原生overlay</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Flannel"><span class="nav-number">6.</span> <span class="nav-text">Flannel</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#vxlan隧道"><span class="nav-number">6.1.</span> <span class="nav-text">vxlan隧道</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#host-gw路由"><span class="nav-number">6.2.</span> <span class="nav-text">host-gw路由</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Calico"><span class="nav-number">7.</span> <span class="nav-text">Calico</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">8.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#CNM-vs-CNI"><span class="nav-number">1.</span> <span class="nav-text">CNM vs CNI</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Docker-网络模式"><span class="nav-number">2.</span> <span class="nav-text">Docker 网络模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#bridge-network"><span class="nav-number">2.1.</span> <span class="nav-text">bridge network</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#host-network"><span class="nav-number">2.2.</span> <span class="nav-text">host network</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#none-network"><span class="nav-number">2.3.</span> <span class="nav-text">none network</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#container-network"><span class="nav-number">2.4.</span> <span class="nav-text">container network</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#macvlan-network"><span class="nav-number">2.5.</span> <span class="nav-text">macvlan network</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#overlay-network"><span class="nav-number">2.6.</span> <span class="nav-text">overlay network</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">3.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -674,7 +643,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">159</span>
+          <span class="site-state-item-count">170</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -686,7 +655,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">223</span>
+        <span class="site-state-item-count">230</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -754,13 +723,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">2m</span>
+    <span title="站点总字数">2.2m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">59:37</span>
+    <span title="站点阅读时长">65:25</span>
 </div>
 
         

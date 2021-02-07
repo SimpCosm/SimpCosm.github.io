@@ -63,11 +63,11 @@
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="当我们想要在 Go 语言中初始化一个结构时，可能会用到两个不同的关键字 — make 和 new。因为它们的功能相似，所以初学者可能会对这两个关键字的作用感到困惑1，但是它们两者能够初始化的却有较大的不同。  make 的作用是初始化内置的数据结构，也就是我们在前面提到的切片、哈希表和 Channel2； new 的作用是根据传入的类型分配一片内存空间并返回指向这片内存空间的指针3；">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://img.draveness.me/golang-make-and-new.png">
-<meta property="og:image" content="https://img.draveness.me/golang-make-typecheck.png">
-<meta property="og:updated_time" content="2020-08-21T08:11:30.127Z">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-make-and-new.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-make-typecheck.png">
+<meta property="og:updated_time" content="2021-02-07T11:15:32.331Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://img.draveness.me/golang-make-and-new.png">
+<meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-make-and-new.png">
 
 <link rel="canonical" href="http://houmin.cc/posts/9e0b725c/">
 
@@ -261,7 +261,7 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2020-08-03 12:16:08" itemprop="dateCreated datePublished" datetime="2020-08-03T12:16:08+08:00">2020-08-03</time>
+              <time title="创建时间：2020-05-03 12:16:08" itemprop="dateCreated datePublished" datetime="2020-05-03T12:16:08+08:00">2020-05-03</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -337,10 +337,10 @@
 <p>相比与复杂的 <code>make</code> 关键字，<code>new</code> 的功能就很简单了，它只能接收一个类型作为参数然后返回一个指向该类型的指针：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">i := <span class="built_in">new</span>(<span class="keyword">int</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> v <span class="keyword">int</span></span><br><span class="line">i := &amp;v</span><br></pre></td></tr></table></figure>
 <p>上述代码片段中的两种不同初始化方法是等价的，它们都会创建一个指向 <code>int</code> 零值的指针。</p>
-<p><img alt="golang-make-and-ne" data-src="https://img.draveness.me/golang-make-and-new.png"></p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-make-and-new.png"></p>
 <p>接下来我们将分别介绍 <code>make</code> 和 <code>new</code> 在初始化不同数据结构时的过程，我们会从编译期间和运行时两个不同阶段理解这两个关键字的原理，不过由于前面的章节已经详细地分析过 <code>make</code> 的原理，所以这里会将重点放在另一个关键字 <code>new</code> 上。</p>
 <h2 id="make"><a href="#make" class="headerlink" title="make"></a>make</h2><p>在前面的章节中我们已经谈到过 <code>make</code> 在创建切片、哈希表和 Channel 的具体过程，所以在这一小节，我们只是会简单提及 <code>make</code> 相关的数据结构的初始化原理。</p>
-<p><img alt="golang-make-typecheck" data-src="https://img.draveness.me/golang-make-typecheck.png"></p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-make-typecheck.png"></p>
 <p>在编译期间的<a href="https://draveness.me/golang/docs/part1-prerequisite/ch02-compile/golang-typecheck/" target="_blank" rel="external nofollow noopener noreferrer">类型检查</a>阶段，Go 语言就将代表 <code>make</code> 关键字的 <code>OMAKE</code> 节点根据参数类型的不同转换成了 <code>OMAKESLICE</code>、<code>OMAKEMAP</code> 和 <code>OMAKECHAN</code> 三种不同类型的节点，这些节点会调用不同的运行时函数来初始化相应的数据结构。</p>
 <h2 id="new"><a href="#new" class="headerlink" title="new"></a>new</h2><p>编译器会在<a href="https://draveness.me/golang/docs/part1-prerequisite/ch02-compile/golang-ir-ssa/" target="_blank" rel="external nofollow noopener noreferrer">中间代码生成</a>阶段通过以下两个函数处理该关键字：</p>
 <ol>
@@ -372,19 +372,19 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/c3c43baa/" rel="bookmark">【Go语言设计与实现】Hash Table</a></div>
-    </li>
-    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/e87a4e07/" rel="bookmark">【Go语言设计与实现】String</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/c31234d9/" rel="bookmark">【Go语言设计与实现】Interface</a></div>
+      <div class="popular-posts-title"><a href="/posts/44c65087/" rel="bookmark">【Go语言设计与实现】循环</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/540e2781/" rel="bookmark">【Go语言设计与实现】Defer</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/ecc392db/" rel="bookmark">【Go语言设计与实现】Panic/Recover</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/93e1c454/" rel="bookmark">【Go语言设计与实现】Channel</a></div>
     </li>
   </ul>
 
@@ -448,8 +448,8 @@
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
-                <a href="/posts/77ffac6b/" rel="prev" title="【Go语言设计与实现】同步原语">
-                  【Go语言设计与实现】同步原语 <i class="fa fa-chevron-right"></i>
+                <a href="/posts/d345cf6d/" rel="prev" title="【Go语言设计与实现】Context">
+                  【Go语言设计与实现】Context <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>
@@ -505,7 +505,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">159</span>
+          <span class="site-state-item-count">170</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -517,7 +517,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">223</span>
+        <span class="site-state-item-count">230</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -585,13 +585,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">2m</span>
+    <span title="站点总字数">2.2m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">59:37</span>
+    <span title="站点阅读时长">65:25</span>
 </div>
 
         

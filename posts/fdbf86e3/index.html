@@ -55,20 +55,21 @@
   };
 </script>
 
-  <meta name="description" content="通过前面的一些列笔记，我们对各种容器网络模型的实现原理已经有了基本的认识，然而真正将容器技术发扬光大的是Kubernetes容器编排平台。Kubernetes通过整合规模庞大的容器实例形成集群，这些容器实例可能运行在异构的底层网络环境中，如何保证这些容器间的互通是实际生产环境中首要考虑的问题之一。">
+  <meta name="description" content="在 Docker 容器网络模型中，我介绍了各种容器网络的实现原理，然而真正将容器技术发扬光大的是Kubernetes容器编排平台。Kubernetes通过整合规模庞大的容器实例形成集群，这些容器实例可能运行在异构的底层网络环境中，如何保证这些容器间的互通是实际生产环境中首要考虑的问题之一。本文将介绍在 k8s 环境下，网络模型的基本原理和主流 k8s 容器网络方案。">
 <meta name="keywords" content="docker,网络,k8s,pod">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【Kubernetes】网络模型">
 <meta property="og:url" content="http://houmin.cc/posts/fdbf86e3/index.html">
 <meta property="og:site_name" content="Houmin">
-<meta property="og:description" content="通过前面的一些列笔记，我们对各种容器网络模型的实现原理已经有了基本的认识，然而真正将容器技术发扬光大的是Kubernetes容器编排平台。Kubernetes通过整合规模庞大的容器实例形成集群，这些容器实例可能运行在异构的底层网络环境中，如何保证这些容器间的互通是实际生产环境中首要考虑的问题之一。">
+<meta property="og:description" content="在 Docker 容器网络模型中，我介绍了各种容器网络的实现原理，然而真正将容器技术发扬光大的是Kubernetes容器编排平台。Kubernetes通过整合规模庞大的容器实例形成集群，这些容器实例可能运行在异构的底层网络环境中，如何保证这些容器间的互通是实际生产环境中首要考虑的问题之一。本文将介绍在 k8s 环境下，网络模型的基本原理和主流 k8s 容器网络方案。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-27_k8s-pod-netns.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-27_k8s-pod-network.jpg">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-27_k8s-pod-single-node.gif">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-27_k8s-vxlan.gif">
-<meta property="og:image" content="https://i.loli.net/2020/02/06/tl49uMmabT2fXpd.gif">
-<meta property="og:updated_time" content="2021-01-28T02:29:21.753Z">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_k8s-networking-route.gif">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_flannel-network.jpg">
+<meta property="og:updated_time" content="2021-02-07T07:14:56.193Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-27_k8s-pod-netns.png">
 
@@ -305,14 +306,14 @@
                 <i class="fa fa-file-word-o"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>4.5k</span>
+              <span>7.3k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>8 分钟</span>
+              <span>13 分钟</span>
             </span>
 
         </div>
@@ -324,52 +325,46 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>通过前面的一些列笔记，我们对各种容器网络模型的实现原理已经有了基本的认识，然而真正将容器技术发扬光大的是Kubernetes容器编排平台。Kubernetes通过整合规模庞大的容器实例形成集群，这些容器实例可能运行在异构的底层网络环境中，如何保证这些容器间的互通是实际生产环境中首要考虑的问题之一。</p>
+        <p>在 <a href="https://houmin.cc/posts/9ca050a2/">Docker 容器网络模型</a>中，我介绍了各种容器网络的实现原理，然而真正将容器技术发扬光大的是Kubernetes容器编排平台。Kubernetes通过整合规模庞大的容器实例形成集群，这些容器实例可能运行在异构的底层网络环境中，如何保证这些容器间的互通是实际生产环境中首要考虑的问题之一。本文将介绍在 k8s 环境下，网络模型的基本原理和主流 k8s 容器网络方案。</p>
 <a id="more"></a>
-<h2 id="Kubernetes网络基本要求"><a href="#Kubernetes网络基本要求" class="headerlink" title="Kubernetes网络基本要求"></a>Kubernetes网络基本要求</h2><p>Kubernetes对容器技术做了更多的抽象，其中最重要的一点是提出pod的概念，pod是Kubernetes资源调度的基本单元，我们可以简单地认为 <a href="https://morven.life/notes/from-container-to-pod/" target="_blank" rel="external nofollow noopener noreferrer">pod是容器的一种延伸扩展</a>，从网络的角度来看，pod必须满足以下条件：</p>
+<h2 id="K8s-网络要求"><a href="#K8s-网络要求" class="headerlink" title="K8s 网络要求"></a>K8s 网络要求</h2><p>Kubernetes对容器技术做了更多的抽象，其中最重要的一点是提出Pod的概念，Pod是Kubernetes资源调度的基本单元，我们可以简单地认为Pod是容器的一种延伸扩展，从网络的角度来看，Pod必须满足以下条件：</p>
 <ul>
-<li>每一个Pod都有一个独特的IP地址，所有pod都在一个可以直接连通的、扁平的网络空间中</li>
-<li>同一个pod内的所有容器共享同一个netns网络命名空间</li>
+<li>每一个Pod都有一个独特的IP地址，所有Pod都在一个可以直接连通的、扁平的网络空间中</li>
+<li>同一个Pod内的所有容器共享同一个netns网络命名空间</li>
 </ul>
 <p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-27_k8s-pod-netns.png"></p>
 <p>基于这样的基本要求，我们可以知道：</p>
 <ul>
-<li>同一个pod内的所有容器之间共享端口，可直接通过<code>localhost</code>+<code>端口</code>来访问</li>
-<li>由于每个pod有单独的IP，所以不需要考虑容器端口与主机端口映射以及端口冲突问题</li>
+<li>同一个Pod内的所有容器之间共享端口，可直接通过<code>localhost</code>+<code>端口</code>来访问</li>
+<li>由于每个Pod有单独的IP，所以不需要考虑容器端口与主机端口映射以及端口冲突问题</li>
 </ul>
 <p>事实上，Kubernetes进一步确定了对一个合格集群网络的基本要求：</p>
 <ul>
-<li>任意两个pod之间其实是可以直接通信的，无需显式地使用NAT进行地址的转换；</li>
-<li>任意集群节点node与任意pod之间是可以直接通信的，无需使用明显的地址转换，反之亦然；</li>
-<li>任意pod看到自己的IP跟别人看见它所用的IP是一样的，中间不能经过地址转换；</li>
+<li>任意两个Pod之间其实是可以直接通信的，无需显式地使用NAT进行地址的转换</li>
+<li>任意集群节点node与任意Pod之间是可以直接通信的，无需使用明显的地址转换，反之亦然</li>
+<li>任意Pod看到自己的IP跟别人看见它所用的IP是一样的，中间不能经过地址转换</li>
 </ul>
-<p>也就是说，必须同时满足以上三点的网络模型才能适用于kubernetes，事实上，在早期的Kubernetes中，并没有什么网络标准，只是提出了以上基本要求，只有满足这些要求的网络才可以部署Kubernetes，基于这样的底层网络假设，Kubernetes设计了<code>pod-deployment-service</code>的经典三层服务访问机制。直到1.1发布，Kubernetes才开始采用全新的 <a href="https://github.com/containernetworking/cni" target="_blank" rel="external nofollow noopener noreferrer">CNI</a> 网络标准。</p>
-<h2 id="pod网络模型"><a href="#pod网络模型" class="headerlink" title="pod网络模型"></a>pod网络模型</h2><p>要了解kubernetes网络模型的实现原理，我们就要从单个pod入手，事实上，一旦熟悉了单个pod的网络模型，就会发现kubernetes网络模型基本遵循和容器网络模型一样的原理。</p>
-<p>通过前面的笔记 <a href="https://morven.life/notes/from-container-to-pod/" target="_blank" rel="external nofollow noopener noreferrer">从docker容器到pod</a>，我们知道pod启动的时候先创建<code>pause</code>容器生成对应的netns网络命名空间，然后其他容器共享<code>pause</code>容器创建的网络命名空间。而对于单个容器的网络模型我们之前也介绍过，主要就是通过<code>docker0</code>网桥设备与veth设备对连接不同的容器网络命名空间，由此，我们可以得到如下图所示的单个pod网络模型的创建过程：</p>
+<p>也就是说，必须同时满足以上三点的网络模型才能适用于kubernetes，事实上，在早期的Kubernetes中，并没有什么网络标准，只是提出了以上基本要求，只有满足这些要求的网络才可以部署Kubernetes，基于这样的底层网络假设，Kubernetes设计了<code>Pod-Deployment-Service</code>的经典三层服务访问机制。直到1.1发布，Kubernetes才开始采用全新的 <a href="https://github.com/containernetworking/cni" target="_blank" rel="external nofollow noopener noreferrer">CNI</a> 网络标准。</p>
+<h2 id="Pod-网络模型"><a href="#Pod-网络模型" class="headerlink" title="Pod 网络模型"></a>Pod 网络模型</h2><p>要了解kubernetes网络模型的实现原理，我们就要从单个Pod入手，事实上，一旦熟悉了单个Pod的网络模型，就会发现kubernetes网络模型基本遵循和容器网络模型一样的原理。</p>
+<p>Pod 启动的时候先创建<code>pause</code>容器生成对应的netns网络命名空间，然后其他容器共享<code>pause</code>容器创建的网络命名空间。而对于单个容器的网络模型我们之前也介绍过，主要就是通过<code>docker0</code>网桥设备与veth设备对连接不同的容器网络命名空间，由此，我们可以得到如下图所示的单个Pod网络模型的创建过程：</p>
 <p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-27_k8s-pod-network.jpg"></p>
-<p>可以看到，同一个pod里面的其他容器共享<code>pause</code>容器创建的网络命名空间，也就是说，所有的容器共享相同的网络设备，路由表设置，服务端口等信息，仿佛是在同一台机器上运行的不同进程，所以这些容器之间可以直接通过<code>localhost</code>与对应的端口通信；对于集群外部的请求，则通过<code>docker0</code>网桥设备充当的网关，同时通过iptables做地址转换。我们会发现，这其实就是对当个容器的bridge网络模型的扩展。</p>
-<h2 id="主流kubernetes网络方案"><a href="#主流kubernetes网络方案" class="headerlink" title="主流kubernetes网络方案"></a>主流kubernetes网络方案</h2><p>上一小节我们知道单个pod的网络模型是容器网络模型的扩展，但是pod与pod之间的是怎么相互通信的呢？这其实与容器之间相互通信非常类似，也分为同一个主机上的pod之间与跨主机的pod之间两种。</p>
-<p>如容器网络模型一样，对于统一主机上的pod之间，通过<code>docker0</code>网桥设备直接二层（数据链路层）网络上通过MAC地址直接通信：</p>
+<p>可以看到，同一个Pod里面的其他容器共享<code>pause</code>容器创建的网络命名空间，也就是说，所有的容器共享相同的网络设备，路由表设置，服务端口等信息，仿佛是在同一台机器上运行的不同进程，所以这些容器之间可以直接通过<code>localhost</code>与对应的端口通信；对于集群外部的请求，则通过<code>docker0</code>网桥设备充当的网关，同时通过iptables做地址转换。我们会发现，这其实就是对当个容器的bridge网络模型的扩展。</p>
+<h2 id="主流网络方案"><a href="#主流网络方案" class="headerlink" title="主流网络方案"></a>主流网络方案</h2><p>上一小节我们知道单个Pod的网络模型是容器网络模型的扩展，但是Pod与Pod之间的是怎么相互通信的呢？这其实与容器之间相互通信非常类似，也分为同一个主机上的Pod之间与跨主机的Pod之间两种。</p>
+<p>如容器网络模型一样，对于统一主机上的Pod之间，通过<code>docker0</code>网桥设备直接二层（数据链路层）网络上通过MAC地址直接通信：</p>
 <p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-27_k8s-pod-single-node.gif"></p>
-<p>而跨主机的pod之间的相互通信也主要有以下两个思路：</p>
+<p>而跨主机的Pod之间的相互通信也主要有以下两个思路：</p>
 <ol>
 <li>修改底层网络设备配置，加入容器网络IP地址的管理，修改路由器网关等，该方式主要和SDN(Software define networking)结合。</li>
-<li>完全不修改底层网络设备配置，复用原有的underlay平面网络，解决容器跨主机通信，主要有如下两种方式:<ul>
+<li>完全不修改底层网络设备配置，复用原有的underlay平面网络，解决容器跨主机通信，主要有如下两种方式:</li>
+</ol>
+<ul>
 <li>隧道传输(Overlay)： 将容器的数据包封装到原主机网络的三层或者四层数据包中，然后使用主机网络的IP或者TCP/UDP传输到目标主机，目标主机拆包后再转发给目标容器。Overlay隧道传输常见方案包括Vxlan、ipip等，目前使用Overlay隧道传输技术的主流容器网络有Flannel等；</li>
 </ul>
-</li>
-</ol>
 <p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-01-27_k8s-vxlan.gif"></p>
 <ul>
 <li>修改主机路由：把容器网络加到主机路由表中，把主机网络设备当作容器网关，通过路由规则转发到指定的主机，实现容器的三层互通。目前通过路由技术实现容器跨主机通信的网络如Flannel host-gw、Calico等；</li>
 </ul>
-<p><img alt="networking-k8s-route.gif" data-src="https://i.loli.net/2020/02/06/tl49uMmabT2fXpd.gif"></p>
-<p>下面简单介绍几种主流的方案：</p>
-<ul>
-<li><strong>Flannel</strong>是目前使用最为普遍的方案，提供了多种网络backend，它支持多种数据路径，也适合于overlay/underlay等多种场景。对于overlay的数据包封装，可以使用用户态的UDP，内核态的Vxlan(性能相对较好)，甚至在集群规模不大，且处于同一个二层域时可以采用host-gw的方式修改主机路由表；</li>
-<li><strong>Weave</strong>工作模式与Flannel很相似的，它最早只提供了UDP（称为sleeve模式）的网络方式，后来又加上了fastpass方式（基于VxLAN），不过Weave消除了Flannel中用来存储网络地址的额外组件，自己集成了高可用的数据存储功能；</li>
-<li><strong>Calico</strong>主要是采用了修改主机路由，节点之间采用BGP的协议去进行路由的同步。但是现实中的网络并不总是支持BGP路由的，因此Calico也支持内核中的IPIP模式，使用overlay的方式来传输数据；</li>
-</ul>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_k8s-networking-route.gif"></p>
 <p>下表是几种主流Kubernetes网络方案的对比：</p>
 <div class="table-container">
 <table>
@@ -407,13 +402,92 @@
 </tbody>
 </table>
 </div>
-<h2 id="CNI-插件"><a href="#CNI-插件" class="headerlink" title="CNI 插件"></a>CNI 插件</h2><h3 id="Flannel"><a href="#Flannel" class="headerlink" title="Flannel"></a>Flannel</h3><p><a href="https://github.com/coreos/flannel" target="_blank" rel="external nofollow noopener noreferrer">Flannel</a> 通过给每台宿主机分配一个子网的方式为容器提供虚拟网络，它基于Linux TUN/TAP，使用UDP封装IP包来创建overlay网络，并借助etcd维护网络的分配情况。</p>
+<h3 id="Flannel"><a href="#Flannel" class="headerlink" title="Flannel"></a>Flannel</h3><p><a href="https://github.com/coreos/flannel" target="_blank" rel="external nofollow noopener noreferrer">Flannel</a> 通过给每台宿主机分配一个子网的方式为容器提供虚拟网络，它基于Linux TUN/TAP，使用UDP封装IP包来创建overlay网络，并借助etcd维护网络的分配情况。</p>
+<p>Flannel 网络是目前最主流的容器网络之一，同时支持overlay和修改主机路由两种模式。 Flannel和Docker原生Overlay网络不同的是，后者的所有Node节点共享一个子网，而Flannel初始化时通常指定一个16位的网络，然后每个Node单独分配一个独立的24位子网。由于Node都在不同的子网，跨节点通信本质为三层通信，也就不存在二层的ARP广播问题了。对于overlay的数据包封装，可以使用用户态的UDP，内核态的Vxlan(性能相对较好)，甚至在集群规模不大，且处于同一个二层域时可以采用host-gw的方式修改主机路由表</p>
+<p>另外，Flannel之所以被认为非常简单优雅的是，不像Docker原生overlay网络需要在容器内部再增加一个网桥设备专门用于overlay网络的通信，Flannel只需要使用Docker最原生的docker0网络，除了需要为每个Node配置subnet外，几乎不改变原有的Docker网络模型。</p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_flannel-network.jpg"></p>
+<p>正如上面这张图看到的那样，Flannel在Docker最原生的docker0网桥设备和veth设备对的基础上，为了每个node单独分配了一个子网：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Node Name</th>
+<th>Node IP</th>
+<th>Node Subnet</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Node 1</td>
+<td>192.168.1.101</td>
+<td>10.0.1.0/24</td>
+</tr>
+<tr>
+<td>Node 2</td>
+<td>192.168.1.102</td>
+<td>10.0.2.0/24</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>我们也可以看到，容器对外流量的访问以及统一主机上的容器之前的访问完全与docker原生的bridge模式相同。那么，怎么实现跨主机间的容器相互访问呢？</p>
+<p>前面说过，Flannel同时提供了overlay和修改主机路由两种方式，其中overlay方式主要通过vxlan隧道，而修改主机路由则是通过配置主机静态路由的方式。</p>
+<h4 id="vxlan-隧道"><a href="#vxlan-隧道" class="headerlink" title="vxlan 隧道"></a>vxlan 隧道</h4><p>查看主机node1的本地静态路由：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># node1</span></span><br><span class="line"><span class="comment"># ip route show</span></span><br><span class="line">...</span><br><span class="line">10.0.1.0/24 dev docker0 proto kernel scope link src 10.0.1.1</span><br><span class="line">10.0.2.0/24 via 10.0.2.0 dev flannel.1 onlink</span><br><span class="line"><span class="comment"># node2</span></span><br><span class="line"><span class="comment"># ip route show</span></span><br><span class="line">...</span><br><span class="line">10.0.2.0/24 dev docker0 proto kernel scope link src 10.0.2.1</span><br><span class="line">10.0.1.0/24 via 10.0.1.0 dev flannel.1 onlink</span><br></pre></td></tr></table></figure>
+<p>可以看到，对于每个主机，当前子网都可以直接通过docker0网桥直接访问，而其他的子网则需要特殊的网络设备<code>flannel.1</code>来访问，它是一个Linux的vxlan网络设备，其中<code>.1</code>为VNI值，默认值为1。</p>
+<p>因为同一主机的容器处于同一子网，因此直接通过ARP学习即可，而不同主机上的容器处于不同的子网，所以不涉及ARP广播泛洪的问题。但是，vxlan网络设备<code>flannel.1</code>如何知道对端VTEP地址呢？我们来看一下转发表fdb：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># bridge fdb | grep flannel</span></span><br><span class="line">82:fa:1d:48:14:00 dev flannel.1 dst 192.168.1.102 self permanent</span><br></pre></td></tr></table></figure>
+<p>其中<code>192.168.1.102</code>是另外一个Node的IP地址，即VTEP地址，而<code>82:fa:1d:48:14:00</code>是对端网络设备<code>flannel.1</code>的MAC地址，从permanent可以看出转发表是由Flannel静态添加的，这些信息可以保存在etcd中。</p>
+<p>相对于docker原生的overlay来说，除了增加或者减少Node，需要Flannel配合配置静态路由以及fdb表，容器的创建与删除完全不需要Flannel干预，事实上Flannel也不需要知道有没有新的容器创建或者删除。</p>
+<h4 id="host-gw-路由"><a href="#host-gw-路由" class="headerlink" title="host-gw 路由"></a>host-gw 路由</h4><p>上面我们介绍了Flannel通过vxlan隧道搭建overlay实现容器间的跨主机通信，其实Flannel支持通过host-gw，也就是修改主机路由的方式实现容器间的跨主机通信，此时每个Node都相当于一个路由器，作为容器的网关，负责容器的路由转发。</p>
+<p>对于Flannel的host-gw修改主机路由的方式，我们后面有机会在详细去剖析。需要说明的是host-gw的方式相对overlay由于少了vxlan的封包拆包过程，直接路由数据包到目的地址，因此性能相对要好。不过正是由于它是通过添加静态路由的方式实现，每个宿主机相当于是容器的网关，因此每个宿主机必须在同一个子网内，否则跨子网由于链路层不通导致无法实现路由。</p>
 <h3 id="Weave-Net"><a href="#Weave-Net" class="headerlink" title="Weave Net"></a>Weave Net</h3><p>Weave Net 是一个多主机容器网络方案，支持去中心化的控制平面，各个host上的wRouter间通过建立Full Mesh的TCP链接，并通过Gossip来同步控制信息。这种方式省去了集中式的K/V Store，能够在一定程度上减低部署的复杂性，Weave将其称为“data centric”，而非RAFT或者Paxos的“algorithm centric”。</p>
-<p>数据平面上，Weave通过UDP封装实现L2 Overlay，封装支持两种模式，一种是运行在user space的sleeve mode，另一种是运行在kernal space的 fastpath mode。Sleeve mode通过pcap设备在Linux bridge上截获数据包并由wRouter完成UDP封装，支持对L2 traffic进行加密，还支持Partial Connection，但是性能损失明显。Fastpath mode即通过OVS的odp封装VxLAN并完成转发，wRouter不直接参与转发，而是通过下发odp 流表的方式控制转发，这种方式可以明显地提升吞吐量，但是不支持加密等高级功能。</p>
+<p>数据平面上，Weave通过UDP封装实现L2 Overlay，封装支持两种模式：</p>
+<ul>
+<li>一种是运行在user space的sleeve mode。Sleeve mode通过pcap设备在Linux bridge上截获数据包并由wRouter完成UDP封装，支持对L2 traffic进行加密，还支持Partial Connection，但是性能损失明显。</li>
+<li>另一种是运行在kernal space的 fastpath mode。Fastpath mode即通过OVS的odp封装VxLAN并完成转发，wRouter不直接参与转发，而是通过下发odp 流表的方式控制转发，这种方式可以明显地提升吞吐量，但是不支持加密等高级功能。</li>
+</ul>
 <h3 id="Contiv"><a href="#Contiv" class="headerlink" title="Contiv"></a>Contiv</h3><p><a href="http://contiv.github.io/" target="_blank" rel="external nofollow noopener noreferrer">Contiv</a> 是思科开源的容器网络方案，主要提供基于Policy的网络管理，并与主流容器编排系统集成。Contiv最主要的优势是直接提供了多租户网络，并支持L2(VLAN), L3(BGP), Overlay (VXLAN)以及思科自家的ACI。</p>
 <h3 id="Calico"><a href="#Calico" class="headerlink" title="Calico"></a>Calico</h3><p><a href="https://www.projectcalico.org/" target="_blank" rel="external nofollow noopener noreferrer">Calico</a> 是一个基于BGP的纯三层的数据中心网络方案（不需要Overlay），并且与OpenStack、Kubernetes、AWS、GCE等IaaS和容器平台都有良好的集成。</p>
 <p>Calico在每一个计算节点利用Linux Kernel实现了一个高效的vRouter来负责数据转发，而每个vRouter通过BGP协议负责把自己上运行的workload的路由信息像整个Calico网络内传播——小规模部署可以直接互联，大规模下可通过指定的BGP route reflector来完成。 这样保证最终所有的workload之间的数据流量都是通过IP路由的方式完成互联的。Calico节点组网可以直接利用数据中心的网络结构（无论是L2或者L3），不需要额外的NAT，隧道或者Overlay Network。</p>
 <p>此外，Calico基于iptables还提供了丰富而灵活的网络Policy，保证通过各个节点上的ACLs来提供Workload的多租户隔离、安全组以及其他可达性限制等功能。</p>
+<p>Calico采用和Flannel host-gw类似的方式，即通过修改主机路由的方式实现容器间的跨主机通信，不同的地方在于Flannel通过flanneld进程逐一添加主机静态路由实现，而 Calico 则是通过 <code>BGP</code> 协议实现节点间路由规则的相互学习广播。</p>
+<p>Calico也会像Flannel一样会为每个主机节点分配一个子网，只不过Calico默认分配的是26位子网，不同于Flannel默认分配的24位子网：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Node Name</th>
+<th>Node IP</th>
+<th>Node Subnet</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Node 1</td>
+<td>172.16.31.155</td>
+<td>10.1.83.192 ⁄ 26</td>
+</tr>
+<tr>
+<td>Node 2</td>
+<td>172.16.32.117</td>
+<td>10.1.32.192 ⁄ 26</td>
+</tr>
+<tr>
+<td>Node 2</td>
+<td>172.16.32.120</td>
+<td>10.1.147.128 ⁄ 26</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Calico通过BGP协议动态调价路由，那么我们就来看看主机的路由规则：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># node1</span></span><br><span class="line"><span class="comment"># ip route show</span></span><br><span class="line">...</span><br><span class="line">blackhole 10.1.83.192/26  proto bird</span><br><span class="line">10.1.83.193 dev cali8632426305e  scope link</span><br><span class="line">10.1.83.194 dev cali87c063cc2db  scope link</span><br><span class="line">10.1.32.192/26 via 172.16.32.117 dev tunl0  proto bird onlink</span><br><span class="line">10.1.147.128/26 via 172.16.32.120 dev tunl0  proto bird onlink</span><br></pre></td></tr></table></figure>
+<p>可以看到，Calico修改主机路由来实现容器间的跨主机通信方式和Flannel host-gw一样，下一跳直接指向对应主机的IP，把主机当作容器的网关。但Calico会增加一条blackhole的规则，将非法的容器IP直接丢弃；另外一个不一样的地方是数据包到达宿主机后，Flannel会通过路由转发流量到bridge网络设备中，再由bridge设备转发给容器，而Calico则为每个容器IP生成一条路由规则，直接指向容器的网卡对端。当容器数量达到一定规模之后，主机路由规则数量也会越来越多，性能会是个问题。Calico给出的解决方案是<a href="https://docs.projectcalico.org/v3.5/usage/routereflector" target="_blank" rel="external nofollow noopener noreferrer">路由反射器(route reflector)</a>。</p>
+<p>此外，需要注意的是，我们知道Flannel host-gw的方式只支持每个宿主机在同一个子网内，才可以添加静态路由规则，不能支持跨网段的主机node，那么Calico支持吗？</p>
+<p>答案是肯定的，Calico在安装的时候可以指定是否打开ipip模式，也就是ipip隧道。在我的实验环境中，ipip模式已经打开，如果你观察得够仔细的话，你会发现主机路由中发往其他主机上的容器的路由要经过<code>tunl0</code>网络设备，我们来看一下<code>tunl0</code>网络设备的类型：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ip link show tunl0</span></span><br><span class="line">5: tunl0@NONE: &lt;NOARP,UP,LOWER_UP&gt; mtu 1430 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1</span><br><span class="line">    link/ipip 0.0.0.0 brd 0.0.0.0</span><br></pre></td></tr></table></figure>
+<p>可以看到，<code>tunl0</code>其实是Linux的TUN网络设备，它会在不同主机节点间开启IPIP隧道，也就是说，即使主机节点处于三层（IP）网络中，数据包还是可以通过隧道发送到目标主机，在由目标主机转发给对应的容器。这时Calico其实采用的是overlay的方式。</p>
 <h3 id="OVN"><a href="#OVN" class="headerlink" title="OVN"></a>OVN</h3><p><a href="http://openvswitch.org/support/dist-docs/ovn-architecture.7.html" target="_blank" rel="external nofollow noopener noreferrer">OVN (Open Virtual Network)</a> 是OVS提供的原生虚拟化网络方案，旨在解决传统SDN架构（比如Neutron DVR）的性能问题。</p>
 <p>OVN为Kubernetes提供了两种网络方案：</p>
 <ul>
@@ -461,7 +535,7 @@
       <div class="popular-posts-title"><a href="/posts/c425bfaf/" rel="bookmark">【Kubernetes】Network Policy</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/8dfd4de5/" rel="bookmark">【Kubernetes】Ingress</a></div>
+      <div class="popular-posts-title"><a href="/posts/cfed77f0/" rel="bookmark">【Kubernetes】Service</a></div>
     </li>
   </ul>
 
@@ -567,7 +641,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Kubernetes网络基本要求"><span class="nav-number">1.</span> <span class="nav-text">Kubernetes网络基本要求</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#pod网络模型"><span class="nav-number">2.</span> <span class="nav-text">pod网络模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#主流kubernetes网络方案"><span class="nav-number">3.</span> <span class="nav-text">主流kubernetes网络方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CNI-插件"><span class="nav-number">4.</span> <span class="nav-text">CNI 插件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Flannel"><span class="nav-number">4.1.</span> <span class="nav-text">Flannel</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Weave-Net"><span class="nav-number">4.2.</span> <span class="nav-text">Weave Net</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Contiv"><span class="nav-number">4.3.</span> <span class="nav-text">Contiv</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Calico"><span class="nav-number">4.4.</span> <span class="nav-text">Calico</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#OVN"><span class="nav-number">4.5.</span> <span class="nav-text">OVN</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SR-IOV"><span class="nav-number">4.6.</span> <span class="nav-text">SR-IOV</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Romana"><span class="nav-number">4.7.</span> <span class="nav-text">Romana</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#OpenContrail"><span class="nav-number">4.8.</span> <span class="nav-text">OpenContrail</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Canal"><span class="nav-number">4.9.</span> <span class="nav-text">Canal</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#kuryr-kubernetes"><span class="nav-number">4.10.</span> <span class="nav-text">kuryr-kubernetes</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Cilium"><span class="nav-number">4.11.</span> <span class="nav-text">Cilium</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CNI-Genie"><span class="nav-number">4.12.</span> <span class="nav-text">CNI-Genie</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">5.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#K8s-网络要求"><span class="nav-number">1.</span> <span class="nav-text">K8s 网络要求</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Pod-网络模型"><span class="nav-number">2.</span> <span class="nav-text">Pod 网络模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#主流网络方案"><span class="nav-number">3.</span> <span class="nav-text">主流网络方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Flannel"><span class="nav-number">3.1.</span> <span class="nav-text">Flannel</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#vxlan-隧道"><span class="nav-number">3.1.1.</span> <span class="nav-text">vxlan 隧道</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#host-gw-路由"><span class="nav-number">3.1.2.</span> <span class="nav-text">host-gw 路由</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Weave-Net"><span class="nav-number">3.2.</span> <span class="nav-text">Weave Net</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Contiv"><span class="nav-number">3.3.</span> <span class="nav-text">Contiv</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Calico"><span class="nav-number">3.4.</span> <span class="nav-text">Calico</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#OVN"><span class="nav-number">3.5.</span> <span class="nav-text">OVN</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SR-IOV"><span class="nav-number">3.6.</span> <span class="nav-text">SR-IOV</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Romana"><span class="nav-number">3.7.</span> <span class="nav-text">Romana</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#OpenContrail"><span class="nav-number">3.8.</span> <span class="nav-text">OpenContrail</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Canal"><span class="nav-number">3.9.</span> <span class="nav-text">Canal</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#kuryr-kubernetes"><span class="nav-number">3.10.</span> <span class="nav-text">kuryr-kubernetes</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Cilium"><span class="nav-number">3.11.</span> <span class="nav-text">Cilium</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CNI-Genie"><span class="nav-number">3.12.</span> <span class="nav-text">CNI-Genie</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">4.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -582,7 +656,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">159</span>
+          <span class="site-state-item-count">170</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -594,7 +668,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">223</span>
+        <span class="site-state-item-count">230</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -662,13 +736,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">2m</span>
+    <span title="站点总字数">2.2m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">59:37</span>
+    <span title="站点阅读时长">65:25</span>
 </div>
 
         

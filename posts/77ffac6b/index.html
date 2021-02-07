@@ -63,7 +63,7 @@
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="Go 语言作为一个原生支持用户态进程（Goroutine）的语言，当提到并发编程、多线程编程时，往往都离不开锁这一概念。锁是一种并发编程中的同步原语（Synchronization Primitives），它能保证多个 Goroutine 在访问同一片内存时不会出现竞争条件（Race condition）等问题。 本节会介绍 Go 语言中常见的同步原语 sync.Mutex、sync.RWMute">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://img.draveness.me/2020-01-23-15797104327981-golang-basic-sync-primitives.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/20201-02-07_go-basic-sync-primitives.png">
 <meta property="og:image" content="https://img.draveness.me/2020-01-23-15797104328010-golang-mutex-state.png">
 <meta property="og:image" content="https://img.draveness.me/2020-01-23-15797104328020-golang-mutex-mode.png">
 <meta property="og:image" content="https://img.draveness.me/2020-01-23-15797104328028-golang-syncgroup.png">
@@ -74,9 +74,9 @@
 <meta property="og:image" content="https://img.draveness.me/2020-01-23-15797104328063-golang-semaphore.png">
 <meta property="og:image" content="https://img.draveness.me/2020-01-23-15797104328070-golang-query-without-single-flight.png">
 <meta property="og:image" content="https://img.draveness.me/2020-01-23-15797104328078-golang-extension-single-flight.png">
-<meta property="og:updated_time" content="2020-08-22T08:35:03.922Z">
+<meta property="og:updated_time" content="2021-02-07T11:15:46.120Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://img.draveness.me/2020-01-23-15797104327981-golang-basic-sync-primitives.png">
+<meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/20201-02-07_go-basic-sync-primitives.png">
 
 <link rel="canonical" href="http://houmin.cc/posts/77ffac6b/">
 
@@ -270,7 +270,7 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2020-08-05 12:18:30" itemprop="dateCreated datePublished" datetime="2020-08-05T12:18:30+08:00">2020-08-05</time>
+              <time title="创建时间：2020-05-05 12:18:30" itemprop="dateCreated datePublished" datetime="2020-05-05T12:18:30+08:00">2020-05-05</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -334,7 +334,7 @@
 <p>本节会介绍 Go 语言中常见的同步原语 <a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/mutex.go#L25-L28" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.Mutex</code></a>、<a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/rwmutex.go#L28-L34" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.RWMutex</code></a>、<a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/waitgroup.go#L20-L29" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.WaitGroup</code></a>、<a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/once.go#L12-L20" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.Once</code></a> 和 <a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/cond.go#L21-L29" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.Cond</code></a> 以及扩展原语 <a href="https://github.com/golang/sync/blob/cd5d95a43a6e21273425c7ae415d3df9ea832eeb/errgroup/errgroup.go#L18-L25" target="_blank" rel="external nofollow noopener noreferrer"><code>errgroup.Group</code></a>、<a href="https://github.com/golang/sync/blob/cd5d95a43a6e21273425c7ae415d3df9ea832eeb/semaphore/semaphore.go#L28-L33" target="_blank" rel="external nofollow noopener noreferrer"><code>semaphore.Weighted</code></a> 和 <a href="https://github.com/golang/sync/blob/cd5d95a43a6e21273425c7ae415d3df9ea832eeb/singleflight/singleflight.go#L33-L36" target="_blank" rel="external nofollow noopener noreferrer"><code>singleflight.Group</code></a> 的实现原理，同时也会涉及互斥锁、信号量等并发编程中的常见概念。</p>
 <a id="more"></a>
 <h2 id="基本原语"><a href="#基本原语" class="headerlink" title="基本原语"></a>基本原语</h2><p>Go 语言在 <a href="https://golang.org/pkg/sync/" target="_blank" rel="external nofollow noopener noreferrer"><code>sync</code></a> 包中提供了用于同步的一些基本原语，包括常见的 <a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/mutex.go#L25-L28" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.Mutex</code></a>、<a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/rwmutex.go#L28-L34" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.RWMutex</code></a>、<a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/waitgroup.go#L20-L29" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.WaitGroup</code></a>、<a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/once.go#L12-L20" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.Once</code></a> 和 <a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/cond.go#L21-L29" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.Cond</code></a>：</p>
-<p><img alt="golang-basic-sync-primitives" data-src="https://img.draveness.me/2020-01-23-15797104327981-golang-basic-sync-primitives.png"></p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/20201-02-07_go-basic-sync-primitives.png"></p>
 <p>这些基本原语提高了较为基础的同步功能，但是它们是一种相对原始的同步机制，在多数情况下，我们都应该使用抽象层级的更高的 Channel 实现同步。</p>
 <h3 id="Mutex"><a href="#Mutex" class="headerlink" title="Mutex"></a>Mutex</h3><p>Go 语言的 <a href="https://github.com/golang/go/blob/71239b4f491698397149868c88d2c851de2cd49b/src/sync/mutex.go#L25-L28" target="_blank" rel="external nofollow noopener noreferrer"><code>sync.Mutex</code></a> 由两个字段 <code>state</code> 和 <code>sema</code> 组成。其中 <code>state</code> 表示当前互斥锁的状态，而 <code>sema</code> 是用于控制锁状态的信号量。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Mutex <span class="keyword">struct</span> &#123;</span><br><span class="line">	state <span class="keyword">int32</span></span><br><span class="line">	sema  <span class="keyword">uint32</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -765,19 +765,19 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/d345cf6d/" rel="bookmark">【Go语言设计与实现】Context</a></div>
+      <div class="popular-posts-title"><a href="/posts/93e1c454/" rel="bookmark">【Go语言设计与实现】Channel</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/c3c43baa/" rel="bookmark">【Go语言设计与实现】Hash Table</a></div>
+      <div class="popular-posts-title"><a href="/posts/8e2bf8a2/" rel="bookmark">【Go语言设计与实现】Go Scheduler</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/e87a4e07/" rel="bookmark">【Go语言设计与实现】String</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/44c65087/" rel="bookmark">【Go语言设计与实现】循环</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/540e2781/" rel="bookmark">【Go语言设计与实现】Defer</a></div>
     </li>
   </ul>
 
@@ -832,16 +832,16 @@
 
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
-                <a href="/posts/9e0b725c/" rel="next" title="【Go语言设计与实现】Make 与 New">
-                  <i class="fa fa-chevron-left"></i> 【Go语言设计与实现】Make 与 New
+                <a href="/posts/d345cf6d/" rel="next" title="【Go语言设计与实现】Context">
+                  <i class="fa fa-chevron-left"></i> 【Go语言设计与实现】Context
                 </a>
             </div>
 
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
-                <a href="/posts/55d129f1/" rel="prev" title="【Go语言设计与实现】Go Module">
-                  【Go语言设计与实现】Go Module <i class="fa fa-chevron-right"></i>
+                <a href="/posts/93e1c454/" rel="prev" title="【Go语言设计与实现】Channel">
+                  【Go语言设计与实现】Channel <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>
@@ -897,7 +897,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">159</span>
+          <span class="site-state-item-count">170</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -909,7 +909,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">223</span>
+        <span class="site-state-item-count">230</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -977,13 +977,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">2m</span>
+    <span title="站点总字数">2.2m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">59:37</span>
+    <span title="站点阅读时长">65:25</span>
 </div>
 
         

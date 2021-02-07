@@ -56,14 +56,14 @@
 </script>
 
   <meta name="description" content="软件工程中有一句话叫做 代码即文档，就是说理想条件下我们通过阅读代码就能够比较好的理解软件的设计思路以及功能。为了更好的维护软件和文档，通常采用的方式是将文档和软件结合在一起，这样文档方便书写，同时也利于维护。 类似于Python中的docstring 和Java里面的Javadoc，Go也提供了文档化工具godoc。">
-<meta name="keywords" content="Go,godoc">
+<meta name="keywords" content="Go">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【Go语言设计与实现】代码即文档">
+<meta property="og:title" content="【Go语言设计与实践】代码即文档">
 <meta property="og:url" content="http://houmin.cc/posts/cb5a5d4d/index.html">
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="软件工程中有一句话叫做 代码即文档，就是说理想条件下我们通过阅读代码就能够比较好的理解软件的设计思路以及功能。为了更好的维护软件和文档，通常采用的方式是将文档和软件结合在一起，这样文档方便书写，同时也利于维护。 类似于Python中的docstring 和Java里面的Javadoc，Go也提供了文档化工具godoc。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-07-23T04:06:07.611Z">
+<meta property="og:updated_time" content="2021-02-07T11:19:48.114Z">
 <meta name="twitter:card" content="summary">
 
 <link rel="canonical" href="http://houmin.cc/posts/cb5a5d4d/">
@@ -80,7 +80,7 @@
   };
 </script>
 
-  <title>【Go语言设计与实现】代码即文档 | Houmin</title>
+  <title>【Go语言设计与实践】代码即文档 | Houmin</title>
   
 
 
@@ -248,7 +248,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          【Go语言设计与实现】代码即文档
+          【Go语言设计与实践】代码即文档
         </h2>
 
         <div class="post-meta">
@@ -258,7 +258,7 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2018-09-17 23:06:31" itemprop="dateCreated datePublished" datetime="2018-09-17T23:06:31+08:00">2018-09-17</time>
+              <time title="创建时间：2020-05-21 15:00:12" itemprop="dateCreated datePublished" datetime="2020-05-21T15:00:12+08:00">2020-05-21</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -384,19 +384,19 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/4dea1165/" rel="bookmark">【Go语言设计与实现】Test</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/171a4821/" rel="bookmark">【Awesome Go】Cobra</a></div>
-    </li>
-    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/e3978252/" rel="bookmark">【Awesome Go】Go RESTful</a></div>
+      <div class="popular-posts-title"><a href="/posts/e87a4e07/" rel="bookmark">【Go语言设计与实现】String</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/4e214fa9/" rel="bookmark">【Go语言设计与实现】Function</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/c31234d9/" rel="bookmark">【Go语言设计与实现】Interface</a></div>
     </li>
   </ul>
 
@@ -430,7 +430,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://houmin.cc/posts/cb5a5d4d/" title="【Go语言设计与实现】代码即文档">http://houmin.cc/posts/cb5a5d4d/</a>
+    <a href="http://houmin.cc/posts/cb5a5d4d/" title="【Go语言设计与实践】代码即文档">http://houmin.cc/posts/cb5a5d4d/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -443,23 +443,22 @@
           
           <div class="post-tags">
               <a href="/tags/Go/" rel="tag"><i class="fa fa-tag"></i> Go</a>
-              <a href="/tags/godoc/" rel="tag"><i class="fa fa-tag"></i> godoc</a>
           </div>
 
         
 
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
-                <a href="/posts/4dea1165/" rel="next" title="【Go语言设计与实现】Test">
-                  <i class="fa fa-chevron-left"></i> 【Go语言设计与实现】Test
+                <a href="/posts/4dea1165/" rel="next" title="【Go语言设计与实践】Go Testing">
+                  <i class="fa fa-chevron-left"></i> 【Go语言设计与实践】Go Testing
                 </a>
             </div>
 
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
-                <a href="/posts/fa1a82ad/" rel="prev" title="25：我在未来等你">
-                  25：我在未来等你 <i class="fa fa-chevron-right"></i>
+                <a href="/posts/ab5f63d0/" rel="prev" title="【普鲁斯特问卷】2020">
+                  【普鲁斯特问卷】2020 <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>
@@ -515,7 +514,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">159</span>
+          <span class="site-state-item-count">170</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -527,7 +526,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">223</span>
+        <span class="site-state-item-count">230</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -595,13 +594,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">2m</span>
+    <span title="站点总字数">2.2m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">59:37</span>
+    <span title="站点阅读时长">65:25</span>
 </div>
 
         

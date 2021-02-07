@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="程序中的数据和变量都会被分配到程序所在的虚拟内存中，内存空间包含两个重要区域 — 栈区（Stack）和堆区（Heap）。函数调用的参数、返回值以及局部变量大都会被分配到栈上，这部分内存会由编译器进行管理；不同编程语言使用不同的方法管理堆区的内存，C++ 等编程语言会由工程师主动申请和释放内存，Go 以及 Java 等编程语言会由工程师和编译器共同管理，堆中的对象由内存分配器分配并由垃圾收集器回收。">
+<meta name="keywords" content="Go,memory">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Go语言设计与实现】内存分配器">
+<meta property="og:url" content="http://houmin.cc/posts/6494d4e0/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="程序中的数据和变量都会被分配到程序所在的虚拟内存中，内存空间包含两个重要区域 — 栈区（Stack）和堆区（Heap）。函数调用的参数、返回值以及局部变量大都会被分配到栈上，这部分内存会由编译器进行管理；不同编程语言使用不同的方法管理堆区的内存，C++ 等编程语言会由工程师主动申请和释放内存，Go 以及 Java 等编程语言会由工程师和编译器共同管理，堆中的对象由内存分配器分配并由垃圾收集器回收。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://img.draveness.me/2020-02-29-15829868066411-mutator-allocator-collector.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-29-15829868066435-bump-allocator.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-29-15829868066441-bump-allocator-reclaim-memory.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-29-15829868066446-free-list-allocator.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-29-15829868066452-segregated-list.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-multi-level-cache.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-29-15829868066463-heap-before-go-1-11.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-29-15829868066468-heap-after-go-1-11.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-29-15829868066474-memory-regions-states-and-transitions.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-29-15829868066479-go-memory-layout.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-29-15829868066485-mspan-and-linked-list.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-29-15829868066492-mspan-and-pages.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-29-15829868066499-mspan-and-objects.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-29-15829868066504-mspan-max-waste-memory.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-29-15829868066512-mcache-and-mspans.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-29-15829868066519-mcentral-and-mspans.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-29-15829868066525-mheap-and-mcentrals.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-29-15829868066531-mheap-and-memories.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-29-15829868066537-allocator-and-memory-size.png">
+<meta property="og:image" content="https://img.draveness.me/2020-02-29-15829868066543-tiny-allocator.png">
+<meta property="og:updated_time" content="2021-02-07T11:40:32.696Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img.draveness.me/2020-02-29-15829868066411-mutator-allocator-collector.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/6494d4e0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Go语言设计与实现】内存分配器 | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/6494d4e0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Go语言设计与实现】内存分配器
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-05-11 12:22:20" itemprop="dateCreated datePublished" datetime="2020-05-11T12:22:20+08:00">2020-05-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/6494d4e0/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/6494d4e0/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>23k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>43 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>程序中的数据和变量都会被分配到程序所在的虚拟内存中，内存空间包含两个重要区域 — 栈区（Stack）和堆区（Heap）。函数调用的参数、返回值以及局部变量大都会被分配到栈上，这部分内存会由编译器进行管理；不同编程语言使用不同的方法管理堆区的内存，C++ 等编程语言会由工程师主动申请和释放内存，Go 以及 Java 等编程语言会由工程师和编译器共同管理，堆中的对象由内存分配器分配并由垃圾收集器回收。</p>
+<p>不同的编程语言会选择不同的方式管理内存，本节会介绍 Go 语言内存分配器，详细分析内存分配的过程以及其背后的设计与实现原理。</p>
+<a id="more"></a>
+<h2 id="设计原理"><a href="#设计原理" class="headerlink" title="设计原理"></a>设计原理</h2><p>内存管理一般包含三个不同的组件，分别是用户程序（Mutator）、分配器（Allocator）和收集器（Collector）<a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-memory-allocator/#fn:1" target="_blank" rel="external nofollow noopener noreferrer">1</a>，当用户程序申请内存时，它会通过内存分配器申请新的内存，而分配器会负责从堆中初始化相应的内存区域。</p>
+<p><img alt="mutator-allocator-collector" data-src="https://img.draveness.me/2020-02-29-15829868066411-mutator-allocator-collector.png"></p>
+<p><strong>图 7-1 内存管理的组件</strong></p>
+<p>Go 语言的内存分配器实现非常复杂，在分析内存分配器的实现之前，我们需要了解内存分配的设计原理，帮助我们更快掌握内存的分配过程。这里将要详细介内存分配器的分配方法以及 Go 语言内存分配器的分级分配方法、虚拟内存布局和地址空间。</p>
+<h3 id="分配方法"><a href="#分配方法" class="headerlink" title="分配方法"></a>分配方法</h3><p>编程语言的内存分配器一般包含两种分配方法，一种是线性分配器（Sequential Allocator，Bump Allocator），另一种是空闲链表分配器（Free-List Allocator），这两种分配方法有着不同的实现机制和特性，本节会依次介绍它们的分配过程。</p>
+<h4 id="线性分配器"><a href="#线性分配器" class="headerlink" title="线性分配器"></a>线性分配器</h4><p>线性分配（Bump Allocator）是一种高效的内存分配方法，但是有较大的局限性。当我们在编程语言中使用线性分配器，我们只需要在内存中维护一个指向内存特定位置的指针，当用户程序申请内存时，分配器只需要检查剩余的空闲内存、返回分配的内存区域并修改指针在内存中的位置，即移动下图中的指针：</p>
+<p><img alt="bump-allocator" data-src="https://img.draveness.me/2020-02-29-15829868066435-bump-allocator.png"></p>
+<p><strong>图 7-2 线性分配器</strong></p>
+<p>根据线性分配器的原理，我们可以推测它有较快的执行速度，以及较低的实现复杂度；但是线性分配器无法在内存被释放时重用内存。如下图所示，如果已经分配的内存被回收，线性分配器是无法重新利用红色的这部分内存的：</p>
+<p><img alt="bump-allocator-reclaim-memory" data-src="https://img.draveness.me/2020-02-29-15829868066441-bump-allocator-reclaim-memory.png"></p>
+<p><strong>图 7-3 线性分配器回收内存</strong></p>
+<p>正是因为线性分配器的这种特性，我们需要合适的垃圾回收算法配合使用。标记压缩（Mark-Compact）、复制回收（Copying GC）和分代回收（Generational GC）等算法可以通过拷贝的方式整理存活对象的碎片，将空闲内存定期合并，这样就能利用线性分配器的效率提升内存分配器的性能了。</p>
+<p>因为线性分配器的使用需要配合具有拷贝特性的垃圾回收算法，所以 C 和 C++ 等需要直接对外暴露指针的语言就无法使用该策略，我们会在下一节详细介绍常见垃圾回收算法的设计原理。</p>
+<h4 id="空闲链表分配器"><a href="#空闲链表分配器" class="headerlink" title="空闲链表分配器"></a>空闲链表分配器</h4><p>空闲链表分配器（Free-List Allocator）可以重用已经被释放的内存，它在内部会维护一个类似链表的数据结构。当用户程序申请内存时，空闲链表分配器会依次遍历空闲的内存块，找到足够大的内存，然后申请新的资源并修改链表：</p>
+<p><img alt="free-list-allocator" data-src="https://img.draveness.me/2020-02-29-15829868066446-free-list-allocator.png"></p>
+<p><strong>图 7-4 空闲链表分配器</strong></p>
+<p>因为不同的内存块以链表的方式连接，所以使用这种方式分配内存的分配器可以重新利用回收的资源，但是因为分配内存时需要遍历链表，所以它的时间复杂度就是 𝑂(𝑛)O(n)。空闲链表分配器可以选择不同的策略在链表中的内存块中进行选择，最常见的就是以下四种方式：</p>
+<ul>
+<li>首次适应（First-Fit）— 从链表头开始遍历，选择第一个大小大于申请内存的内存块；</li>
+<li>循环首次适应（Next-Fit）— 从上次遍历的结束位置开始遍历，选择第一个大小大于申请内存的内存块；</li>
+<li>最优适应（Best-Fit）— 从链表头遍历整个链表，选择最合适的内存块；</li>
+<li>隔离适应（Segregated-Fit）— 将内存分割成多个链表，每个链表中的内存块大小相同，申请内存时先找到满足条件的链表，再从链表中选择合适的内存块；</li>
+</ul>
+<p>上述四种策略的前三种就不过多介绍了，Go 语言使用的内存分配策略与第四种策略有些相似，我们通过下图了解一下该策略的原理：</p>
+<p><img alt="segregated-list" data-src="https://img.draveness.me/2020-02-29-15829868066452-segregated-list.png"></p>
+<p><strong>图 7-5 隔离适应策略</strong></p>
+<p>如上图所示，该策略会将内存分割成由 4、8、16、32 字节的内存块组成的链表，当我们向内存分配器申请 8 字节的内存时，我们会在上图中的第二个链表找到空闲的内存块并返回。隔离适应的分配策略减少了需要遍历的内存块数量，提高了内存分配的效率。</p>
+<h3 id="分级分配"><a href="#分级分配" class="headerlink" title="分级分配"></a>分级分配</h3><p>线程缓存分配（Thread-Caching Malloc，TCMalloc）是用于分配内存的的机制，它比 glibc 中的 <code>malloc</code> 函数还要快很多<a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-memory-allocator/#fn:2" target="_blank" rel="external nofollow noopener noreferrer">2</a>。Go 语言的内存分配器就借鉴了 TCMalloc 的设计实现高速的内存分配，它的核心理念是使用多级缓存根据将对象根据大小分类，并按照类别实施不同的分配策略。</p>
+<h4 id="对象大小"><a href="#对象大小" class="headerlink" title="对象大小"></a>对象大小</h4><p>Go 语言的内存分配器会根据申请分配的内存大小选择不同的处理逻辑，运行时根据对象的大小将对象分成微对象、小对象和大对象三种：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>大小</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>微对象</td>
+<td><code>(0, 16B)</code></td>
+</tr>
+<tr>
+<td>小对象</td>
+<td><code>[16B, 32KB]</code></td>
+</tr>
+<tr>
+<td>大对象</td>
+<td><code>(32KB, +∞)</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>表 7-1 对象的类别和大小</strong></p>
+<p>因为程序中的绝大多数对象的大小都在 32KB 以下，而申请的内存大小影响 Go 语言运行时分配内存的过程和开销，所以分别处理大对象和小对象有利于提高内存分配器的性能。</p>
+<h4 id="多级缓存"><a href="#多级缓存" class="headerlink" title="多级缓存"></a>多级缓存</h4><p>内存分配器不仅会区别对待大小不同的对象，还会将内存分成不同的级别分别管理，TCMalloc 和 Go 运行时分配器都会引入线程缓存（Thread Cache）、中心缓存（Central Cache）和页堆（Page Heap）三个组件分级管理内存：</p>
+<p><img alt="多级缓存内存分配" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-multi-level-cache.png"></p>
+<p>线程缓存属于每一个独立的线程，它能够满足线程上绝大多数的内存分配需求，因为不涉及多线程，所以也不需要使用互斥锁来保护内存，这能够减少锁竞争带来的性能损耗。当线程缓存不能满足需求时，就会使用中心缓存作为补充解决小对象的内存分配问题；在遇到 32KB 以上的对象时，内存分配器就会选择页堆直接分配大量的内存。</p>
+<p>这种多层级的内存分配设计与计算机操作系统中的多级缓存也有些类似，因为多数的对象都是小对象，我们可以通过线程缓存和中心缓存提供足够的内存空间，发现资源不足时就从上一级组件中获取更多的内存资源。</p>
+<h3 id="虚拟内存布局"><a href="#虚拟内存布局" class="headerlink" title="虚拟内存布局"></a>虚拟内存布局</h3><p>这里会介绍 Go 语言堆区内存地址空间的设计以及演进过程，在 Go 语言 1.10 以前的版本，堆区的内存空间都是连续的；但是在 1.11 版本，Go 团队使用稀疏的堆内存空间替代了连续的内存，解决了连续内存带来的限制以及在特殊场景下可能出现的问题。</p>
+<h4 id="线性内存"><a href="#线性内存" class="headerlink" title="线性内存"></a>线性内存</h4><p>Go 语言程序的 1.10 版本在启动时会初始化整片虚拟内存区域，如下所示的三个区域 <code>spans</code>、<code>bitmap</code> 和 <code>arena</code> 分别预留了 512MB、16GB 以及 512GB 的内存空间，这些内存并不是真正存在的物理内存，而是虚拟内存：</p>
+<p><img alt="heap-before-go-1-11" data-src="https://img.draveness.me/2020-02-29-15829868066463-heap-before-go-1-11.png"></p>
+<p><strong>图 7-7 堆区的线性内存</strong></p>
+<ul>
+<li><code>spans</code> 区域存储了指向内存管理单元 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 的指针，每个内存单元会管理几页的内存空间，每页大小为 8KB；</li>
+<li><code>bitmap</code> 用于标识 <code>arena</code> 区域中的那些地址保存了对象，位图中的每个字节都会表示堆区中的 32 字节是否包含空闲；</li>
+<li><code>arena</code> 区域是真正的堆区，运行时会将 8KB 看做一页，这些内存页中存储了所有在堆上初始化的对象；</li>
+</ul>
+<p>对于任意一个地址，我们都可以根据 <code>arena</code> 的基地址计算该地址所在的页数并通过 <code>spans</code> 数组获得管理该片内存的管理单元 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a>，<code>spans</code> 数组中多个连续的位置可能对应同一个 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a>。</p>
+<p>Go 语言在垃圾回收时会根据指针的地址判断对象是否在堆中，并通过上一段中介绍的过程找到管理该对象的 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a>。这些都建立在<strong>堆区的内存是连续的</strong>这一假设上。这种设计虽然简单并且方便，但是在 C 和 Go 混合使用时会导致程序崩溃：</p>
+<ol>
+<li>分配的内存地址会发生冲突，导致堆的初始化和扩容失败<a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-memory-allocator/#fn:3" target="_blank" rel="external nofollow noopener noreferrer">3</a>；</li>
+<li>没有被预留的大块内存可能会被分配给 C 语言的二进制，导致扩容后的堆不连续<a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-memory-allocator/#fn:4" target="_blank" rel="external nofollow noopener noreferrer">4</a>；</li>
+</ol>
+<p>线性的堆内存需要预留大块的内存空间，但是申请大块的内存空间而不使用是不切实际的，不预留内存空间却会在特殊场景下造成程序崩溃。虽然连续内存的实现比较简单，但是这些问题我们也没有办法忽略。</p>
+<h4 id="稀疏内存"><a href="#稀疏内存" class="headerlink" title="稀疏内存"></a>稀疏内存</h4><p>稀疏内存是 Go 语言在 1.11 中提出的方案，使用稀疏的内存布局不仅能移除堆大小的上限<a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-memory-allocator/#fn:5" target="_blank" rel="external nofollow noopener noreferrer">5</a>，还能解决 C 和 Go 混合使用时的地址空间冲突问题<a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-memory-allocator/#fn:6" target="_blank" rel="external nofollow noopener noreferrer">6</a>。不过因为基于稀疏内存的内存管理失去了内存的连续性这一假设，这也使内存管理变得更加复杂：</p>
+<p><img alt="heap-after-go-1-11" data-src="https://img.draveness.me/2020-02-29-15829868066468-heap-after-go-1-11.png"></p>
+<p><strong>图 7-8 二维稀疏内存</strong></p>
+<p>如上图所示，运行时使用二维的 <a href="https://github.com/golang/go/blob/e7f9e17b7927cad7a93c5785e864799e8d9b4381/src/runtime/mheap.go#L217" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.heapArena</code></a> 数组管理所有的内存，每个单元都会管理 64MB 的内存空间：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> heapArena <span class="keyword">struct</span> &#123;</span><br><span class="line">	bitmap [heapArenaBitmapBytes]<span class="keyword">byte</span></span><br><span class="line">	spans [pagesPerArena]*mspan</span><br><span class="line">	pageInUse [pagesPerArena / <span class="number">8</span>]<span class="keyword">uint8</span></span><br><span class="line">	pageMarks [pagesPerArena / <span class="number">8</span>]<span class="keyword">uint8</span></span><br><span class="line">	zeroedBase <span class="keyword">uintptr</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>该结构体中的 <code>bitmap</code> 和 <code>spans</code> 与线性内存中的 <code>bitmap</code> 和 <code>spans</code> 区域一一对应，<code>zeroedBase</code> 字段指向了该结构体管理的内存的基地址。这种设计将原有的连续大内存切分成稀疏的小内存，而用于管理这些内存的元信息也被切分成了小块。</p>
+<p>不同平台和架构的二维数组大小可能完全不同，如果我们的 Go 语言服务在 Linux 的 x86-64 架构上运行，二维数组的一维大小会是 1，而二维大小是 4,194,304，因为每一个指针占用 8 字节的内存空间，所以元信息的总大小为 32MB。由于每个 <a href="https://github.com/golang/go/blob/e7f9e17b7927cad7a93c5785e864799e8d9b4381/src/runtime/mheap.go#L217" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.heapArena</code></a> 都会管理 64MB 的内存，整个堆区最多可以管理 256TB 的内存，这比之前的 512GB 多好几个数量级。</p>
+<p>Go 语言团队在 1.11 版本中通过以下几个提交将线性内存变成稀疏内存，移除了 512GB 的内存上限以及堆区内存连续性的假设：</p>
+<ul>
+<li><a href="https://github.com/golang/go/commit/2b415549b813ba36caafa34fc34d72e47ee8335c" target="_blank" rel="external nofollow noopener noreferrer">runtime: use sparse mappings for the heap</a></li>
+<li><a href="https://github.com/golang/go/commit/f61057c497e9ccb88dae093778d97aeee941af13" target="_blank" rel="external nofollow noopener noreferrer">runtime: fix various contiguous bitmap assumptions</a></li>
+<li><a href="https://github.com/golang/go/commit/c0392d2e7fbdcd38aafb959e94daf6bbafe2e4e9" target="_blank" rel="external nofollow noopener noreferrer">runtime: make the heap bitmap sparse</a></li>
+<li><a href="https://github.com/golang/go/commit/0de5324d61ba6d4c362f9fa76b6522e28155c83d" target="_blank" rel="external nofollow noopener noreferrer">runtime: abstract remaining mheap.spans access</a></li>
+<li><a href="https://github.com/golang/go/commit/d6e821858157b7cb4ece22fcc1a5c8604478ebaa" target="_blank" rel="external nofollow noopener noreferrer">runtime: make span map sparse</a></li>
+<li><a href="https://github.com/golang/go/commit/45ffeab549fa4b03b231a0872025364e13c7f7f0" target="_blank" rel="external nofollow noopener noreferrer">runtime: eliminate most uses of mheap<em>.arena</em>*</a></li>
+<li><a href="https://github.com/golang/go/commit/51ae88ee2f9a1063c272a497527751d786291c89" target="_blank" rel="external nofollow noopener noreferrer">runtime: remove non-reserved heap logic</a></li>
+<li><a href="https://github.com/golang/go/commit/90666b8a3d5545f4295d9c2517ad607ce5d45e52" target="_blank" rel="external nofollow noopener noreferrer">runtime: move comment about address space sizes to malloc.go</a></li>
+</ul>
+<p>由于内存的管理变得更加复杂，上述改动对垃圾回收稍有影响，大约会增加 1% 的垃圾回收开销，不过这也是我们为了解决已有问题必须付出的成本<a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-memory-allocator/#fn:7" target="_blank" rel="external nofollow noopener noreferrer">7</a>。</p>
+<h3 id="地址空间"><a href="#地址空间" class="headerlink" title="地址空间"></a>地址空间</h3><p>因为所有的内存最终都是要从操作系统中申请的，所以 Go 语言的运行时构建了操作系统的内存管理抽象层，该抽象层将运行时管理的地址空间分成以下的四种状态<a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-memory-allocator/#fn:8" target="_blank" rel="external nofollow noopener noreferrer">8</a>：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>状态</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>None</code></td>
+<td>内存没有被保留或者映射，是地址空间的默认状态</td>
+</tr>
+<tr>
+<td><code>Reserved</code></td>
+<td>运行时持有该地址空间，但是访问该内存会导致错误</td>
+</tr>
+<tr>
+<td><code>Prepared</code></td>
+<td>内存被保留，一般没有对应的物理内存访问该片内存的行为是未定义的可以快速转换到 <code>Ready</code> 状态</td>
+</tr>
+<tr>
+<td><code>Ready</code></td>
+<td>可以被安全访问</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>表 7-2 地址空间的状态</strong></p>
+<p>每一个不同的操作系统都会包含一组特定的方法，这些方法可以让内存地址空间在不同的状态之间做出转换，我们可以通过下图了解不同状态之间的转换过程：</p>
+<p><img alt="memory-regions-states-and-transitions" data-src="https://img.draveness.me/2020-02-29-15829868066474-memory-regions-states-and-transitions.png"></p>
+<p><strong>图 7-9 地址空间的状态转换</strong></p>
+<p>运行时中包含多个操作系统对状态转换方法的实现，所有的实现都包含在以 <code>mem_</code> 开头的文件中，本节将介绍 Linux 操作系统对上图中方法的实现：</p>
+<ul>
+<li><a href="https://github.com/golang/go/blob/383b447e0da5bd1fcdc2439230b5a1d3e3402117/src/runtime/mem_linux.go#L20" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.sysAlloc</code></a> 会从操作系统中获取一大块可用的内存空间，可能为几百 KB 或者几 MB；</li>
+<li><a href="https://github.com/golang/go/blob/383b447e0da5bd1fcdc2439230b5a1d3e3402117/src/runtime/mem_linux.go#L147" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.sysFree</code></a> 会在程序发生内存不足（Out-of Memory，OOM）时调用并无条件地返回内存；</li>
+<li><a href="https://github.com/golang/go/blob/383b447e0da5bd1fcdc2439230b5a1d3e3402117/src/runtime/mem_linux.go#L156" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.sysReserve</code></a> 会保留操作系统中的一片内存区域，对这片内存的访问会触发异常；</li>
+<li><a href="https://github.com/golang/go/blob/383b447e0da5bd1fcdc2439230b5a1d3e3402117/src/runtime/mem_linux.go#L164" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.sysMap</code></a> 保证内存区域可以快速转换至准备就绪；</li>
+<li><a href="https://github.com/golang/go/blob/383b447e0da5bd1fcdc2439230b5a1d3e3402117/src/runtime/mem_linux.go#L119" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.sysUsed</code></a> 通知操作系统应用程序需要使用该内存区域，需要保证内存区域可以安全访问；</li>
+<li><a href="https://github.com/golang/go/blob/383b447e0da5bd1fcdc2439230b5a1d3e3402117/src/runtime/mem_linux.go#L39" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.sysUnused</code></a> 通知操作系统虚拟内存对应的物理内存已经不再需要了，它可以重用物理内存；</li>
+<li><a href="https://github.com/golang/go/blob/383b447e0da5bd1fcdc2439230b5a1d3e3402117/src/runtime/mem_linux.go#L152" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.sysFault</code></a> 将内存区域转换成保留状态，主要用于运行时的调试；</li>
+</ul>
+<p>运行时使用 Linux 提供的 <code>mmap</code>、<code>munmap</code> 和 <code>madvise</code> 等系统调用实现了操作系统的内存管理抽象层，抹平了不同操作系统的差异，为运行时提供了更加方便的接口，除了 Linux 之外，运行时还实现了 BSD、Darwin、Plan9 以及 Windows 等平台上抽象层。</p>
+<h2 id="内存管理组件"><a href="#内存管理组件" class="headerlink" title="内存管理组件"></a>内存管理组件</h2><p>Go 语言的内存分配器包含内存管理单元、线程缓存、中心缓存和页堆几个重要组件，本节将介绍这几种最重要组件对应的数据结构 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a>、<a href="https://github.com/golang/go/blob/01d137262a713b308c4308ed5b26636895e68d89/src/runtime/mcache.go#L19" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcache</code></a>、<a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/mcentral.go#L20" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcentral</code></a> 和 <a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/mheap.go#L40" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mheap</code></a>，我们会详细介绍它们在内存分配器中的作用以及实现。</p>
+<p><img alt="go-memory-layout" data-src="https://img.draveness.me/2020-02-29-15829868066479-go-memory-layout.png"></p>
+<p><strong>图 7-10 Go 程序的内存布局</strong></p>
+<p>所有的 Go 语言程序都会在启动时初始化如上图所示的内存布局，每一个处理器都会被分配一个线程缓存 <a href="https://github.com/golang/go/blob/01d137262a713b308c4308ed5b26636895e68d89/src/runtime/mcache.go#L19" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcache</code></a> 用于处理微对象和小对象的分配，它们会持有内存管理单元 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a>。</p>
+<p>每个类型的内存管理单元都会管理特定大小的对象，当内存管理单元中不存在空闲对象时，它们会从 <a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/mheap.go#L40" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mheap</code></a> 持有的 134 个中心缓存 <a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/mcentral.go#L20" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcentral</code></a> 中获取新的内存单元，中心缓存属于全局的堆结构体 <a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/mheap.go#L40" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mheap</code></a>，它会从操作系统中申请内存。</p>
+<p>在 amd64 的 Linux 操作系统上，<a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/mheap.go#L40" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mheap</code></a> 会持有 4,194,304 <a href="https://github.com/golang/go/blob/e7f9e17b7927cad7a93c5785e864799e8d9b4381/src/runtime/mheap.go#L217" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.heapArena</code></a>，每一个 <a href="https://github.com/golang/go/blob/e7f9e17b7927cad7a93c5785e864799e8d9b4381/src/runtime/mheap.go#L217" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.heapArena</code></a> 都会管理 64MB 的内存，单个 Go 语言程序的内存上限也就是 256TB。</p>
+<h3 id="内存管理单元"><a href="#内存管理单元" class="headerlink" title="内存管理单元"></a>内存管理单元</h3><p><a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 是 Go 语言内存管理的基本单元，该结构体中包含 <code>next</code> 和 <code>prev</code> 两个字段，它们分别指向了前一个和后一个 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> mspan <span class="keyword">struct</span> &#123;</span><br><span class="line">	next *mspan</span><br><span class="line">	prev *mspan</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>串联后的上述结构体会构成如下双向链表，运行时会使用 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L352" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mSpanList</code></a> 存储双向链表的头结点和尾节点并在线程缓存以及中心缓存中使用。</p>
+<p><img alt="mspan-and-linked-list" data-src="https://img.draveness.me/2020-02-29-15829868066485-mspan-and-linked-list.png"></p>
+<p><strong>图 7-11 内存管理单元与双向链表</strong></p>
+<p>因为相邻的管理单元会互相引用，所以我们可以从任意一个结构体访问双向链表中的其他节点。</p>
+<h4 id="页和内存"><a href="#页和内存" class="headerlink" title="页和内存"></a>页和内存</h4><p>每个 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 都管理 <code>npages</code> 个大小为 8KB 的页，这里的页不是操作系统中的内存页，它们是操作系统内存页的整数倍，该结构体会使用下面的这些字段来管理内存页的分配和回收：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> mspan <span class="keyword">struct</span> &#123;</span><br><span class="line">	startAddr <span class="keyword">uintptr</span> <span class="comment">// 起始地址</span></span><br><span class="line">	npages    <span class="keyword">uintptr</span> <span class="comment">// 页数</span></span><br><span class="line">	freeindex <span class="keyword">uintptr</span></span><br><span class="line"></span><br><span class="line">	allocBits  *gcBits</span><br><span class="line">	gcmarkBits *gcBits</span><br><span class="line">	allocCache <span class="keyword">uint64</span></span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>startAddr</code> 和 <code>npages</code> — 确定该结构体管理的多个页所在的内存，每个页的大小都是 8KB；</li>
+<li><code>freeindex</code> — 扫描页中空闲对象的初始索引；</li>
+<li><code>allocBits</code> 和 <code>gcmarkBits</code> — 分别用于标记内存的占用和回收情况；</li>
+<li><code>allocCache</code> — <code>allocBits</code> 的补码，可以用于快速查找内存中未被使用的内存；</li>
+</ul>
+<p><a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 会以两种不同的视角看待管理的内存，当结构体管理的内存不足时，运行时会以页为单位向堆申请内存：</p>
+<p><img alt="mspan-and-pages" data-src="https://img.draveness.me/2020-02-29-15829868066492-mspan-and-pages.png"></p>
+<p><strong>图 7-12 内存管理单元与页</strong></p>
+<p>当用户程序或者线程向 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 申请内存时，该结构会使用 <code>allocCache</code> 字段以对象为单位在管理的内存中快速查找待分配的空间：</p>
+<p><img alt="mspan-and-objects" data-src="https://img.draveness.me/2020-02-29-15829868066499-mspan-and-objects.png"></p>
+<p><strong>图 7-13 内存管理单元与对象</strong></p>
+<p>如果我们能在内存中找到空闲的内存单元，就会直接返回，当内存中不包含空闲的内存时，上一级的组件 <a href="https://github.com/golang/go/blob/01d137262a713b308c4308ed5b26636895e68d89/src/runtime/mcache.go#L19" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcache</code></a> 会为调用 <a href="https://github.com/golang/go/blob/01d137262a713b308c4308ed5b26636895e68d89/src/runtime/mcache.go#L122" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcache.refill</code></a> 更新内存管理单元以满足为更多对象分配内存的需求。</p>
+<h4 id="状态"><a href="#状态" class="headerlink" title="状态"></a>状态</h4><p>运行时会使用 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L337" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mSpanStateBox</code></a> 结构体存储内存管理单元的状态 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L317" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mSpanState</code></a>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> mspan <span class="keyword">struct</span> &#123;</span><br><span class="line">	...</span><br><span class="line">	state       mSpanStateBox</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>该状态可能处于 <code>mSpanDead</code>、<code>mSpanInUse</code>、<code>mSpanManual</code> 和 <code>mSpanFree</code> 四种情况。当 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 在空闲堆中，它会处于 <code>mSpanFree</code> 状态；当 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 已经被分配时，它会处于 <code>mSpanInUse</code>、<code>mSpanManual</code> 状态，这些状态会在遵循以下规则发生转换：</p>
+<ul>
+<li>在垃圾回收的任意阶段，可能从 <code>mSpanFree</code> 转换到 <code>mSpanInUse</code> 和 <code>mSpanManual</code>；</li>
+<li>在垃圾回收的清除阶段，可能从 <code>mSpanInUse</code> 和 <code>mSpanManual</code> 转换到 <code>mSpanFree</code>；</li>
+<li>在垃圾回收的标记阶段，不能从 <code>mSpanInUse</code> 和 <code>mSpanManual</code> 转换到 <code>mSpanFree</code>；</li>
+</ul>
+<p>设置 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 结构体状态的读写操作必须是原子性的避免垃圾回收造成的线程竞争问题。</p>
+<h4 id="跨度类"><a href="#跨度类" class="headerlink" title="跨度类"></a>跨度类</h4><p><a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L503" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.spanClass</code></a> 是 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 结构体的跨度类，它决定了内存管理单元中存储的对象大小和个数：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> mspan <span class="keyword">struct</span> &#123;</span><br><span class="line">	...</span><br><span class="line">	spanclass   spanClass</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Go 语言的内存管理模块中一共包含 67 种跨度类，每一个跨度类都会存储特定大小的对象并且包含特定数量的页数以及对象，所有的数据都会被预选计算好并存储在 <a href="https://github.com/golang/go/blob/151ccd4bdb06d77e89f00b8172b70cfb2f49ca2b/src/runtime/sizeclasses.go#L83" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.class_to_size</code></a> 和 <a href="https://github.com/golang/go/blob/151ccd4bdb06d77e89f00b8172b70cfb2f49ca2b/src/runtime/sizeclasses.go#L84" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.class_to_allocnpages</code></a> 等变量中：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>class</th>
+<th>bytes/obj</th>
+<th>bytes/span</th>
+<th>objects</th>
+<th>tail waste</th>
+<th>max waste</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>8</td>
+<td>8192</td>
+<td>1024</td>
+<td>0</td>
+<td>87.50%</td>
+</tr>
+<tr>
+<td>2</td>
+<td>16</td>
+<td>8192</td>
+<td>512</td>
+<td>0</td>
+<td>43.75%</td>
+</tr>
+<tr>
+<td>3</td>
+<td>32</td>
+<td>8192</td>
+<td>256</td>
+<td>0</td>
+<td>46.88%</td>
+</tr>
+<tr>
+<td>4</td>
+<td>48</td>
+<td>8192</td>
+<td>170</td>
+<td>32</td>
+<td>31.52%</td>
+</tr>
+<tr>
+<td>5</td>
+<td>64</td>
+<td>8192</td>
+<td>128</td>
+<td>0</td>
+<td>23.44%</td>
+</tr>
+<tr>
+<td>6</td>
+<td>80</td>
+<td>8192</td>
+<td>102</td>
+<td>32</td>
+<td>19.07%</td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>66</td>
+<td>32768</td>
+<td>32768</td>
+<td>1</td>
+<td>0</td>
+<td>12.50%</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>表 7-3 跨度类的数据</strong></p>
+<p>上表展示了对象大小从 8B 到 32KB，总共 66 种跨度类的大小、存储的对象数以及浪费的内存空间，以表中的第四个跨度类为例，跨度类为 4 的 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 中对象的大小上限为 48 字节、管理 1 个页、最多可以存储 170 个对象。因为内存需要按照页进行管理，所以在尾部会浪费 32 字节的内存，当页中存储的对象都是 33 字节时，最多会浪费 31.52% 的资源：</p>
+<p>(48−33)∗170+328192=0.31518(48−33)∗170+328192=0.31518</p>
+<p><img alt="mspan-max-waste-memory" data-src="https://img.draveness.me/2020-02-29-15829868066504-mspan-max-waste-memory.png"></p>
+<p><strong>图 7-14 跨度类浪费的内存</strong></p>
+<p>除了上述 66 个跨度类之外，运行时中还包含 ID 为 0 的特殊跨度类，它能够管理大于 32KB 的特殊对象，我们会在后面详细介绍大对象的分配过程，在这里就不展开说明了。</p>
+<p>跨度类中除了存储类别的 ID 之外，它还会存储一个 <code>noscan</code> 标记位，该标记位表示对象是否包含指针，垃圾回收会对包含指针的 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 结构体进行扫描。我们可以通过下面的几个函数和方法了解 ID 和标记位的底层存储方式：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">makeSpanClass</span><span class="params">(sizeclass <span class="keyword">uint8</span>, noscan <span class="keyword">bool</span>)</span> <span class="title">spanClass</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> spanClass(sizeclass&lt;&lt;<span class="number">1</span>) | spanClass(bool2int(noscan))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(sc spanClass)</span> <span class="title">sizeclass</span><span class="params">()</span> <span class="title">int8</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">int8</span>(sc &gt;&gt; <span class="number">1</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(sc spanClass)</span> <span class="title">noscan</span><span class="params">()</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> sc&amp;<span class="number">1</span> != <span class="number">0</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L503" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.spanClass</code></a> 是一个 <code>uint8</code> 类型的整数，它的前 7 位存储着跨度类的 ID，最后一位表示是否包含指针，该类型提供的两个方法能够帮我们快速获取对应的字段。</p>
+<h3 id="线程缓存"><a href="#线程缓存" class="headerlink" title="线程缓存"></a>线程缓存</h3><p><a href="https://github.com/golang/go/blob/01d137262a713b308c4308ed5b26636895e68d89/src/runtime/mcache.go#L19" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcache</code></a> 是 Go 语言中的线程缓存，它会与线程上的处理器一一绑定，主要用来缓存用户程序申请的微小对象。每一个线程缓存都持有 67 * 2 个 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a>，这些内存管理单元都存储在结构体的 <code>alloc</code> 字段中：</p>
+<p><img alt="mcache-and-mspans" data-src="https://img.draveness.me/2020-02-29-15829868066512-mcache-and-mspans.png"></p>
+<p><strong>图 7-15 线程缓存与内存管理单元</strong></p>
+<p>线程缓存在刚刚被初始化时是不包含 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 的，只有当用户程序申请内存时才会从上一级组件获取新的 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 满足内存分配的需求。</p>
+<h4 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h4><p>运行时在初始化处理器时会调用 <a href="https://github.com/golang/go/blob/01d137262a713b308c4308ed5b26636895e68d89/src/runtime/mcache.go#L85" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.allocmcache</code></a> 初始化线程缓存，该函数会在系统栈中使用 <a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/mheap.go#L40" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mheap</code></a> 中的线程缓存分配器初始化新的 <a href="https://github.com/golang/go/blob/01d137262a713b308c4308ed5b26636895e68d89/src/runtime/mcache.go#L19" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcache</code></a> 结构体：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">allocmcache</span><span class="params">()</span> *<span class="title">mcache</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> c *mcache</span><br><span class="line">	systemstack(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		lock(&amp;mheap_.lock)</span><br><span class="line">		c = (*mcache)(mheap_.cachealloc.alloc())</span><br><span class="line">		c.flushGen = mheap_.sweepgen</span><br><span class="line">		unlock(&amp;mheap_.lock)</span><br><span class="line">	&#125;)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="keyword">range</span> c.alloc &#123;</span><br><span class="line">		c.alloc[i] = &amp;emptymspan</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> c</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>就像我们在上面提到的，初始化后的 <a href="https://github.com/golang/go/blob/01d137262a713b308c4308ed5b26636895e68d89/src/runtime/mcache.go#L19" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcache</code></a> 中的所有 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 都是空的占位符 <code>emptymspan</code>。</p>
+<h4 id="替换"><a href="#替换" class="headerlink" title="替换"></a>替换</h4><p><a href="https://github.com/golang/go/blob/01d137262a713b308c4308ed5b26636895e68d89/src/runtime/mcache.go#L122" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcache.refill</code></a> 方法会为线程缓存获取一个指定跨度类的内存管理单元，被替换的单元不能包含空闲的内存空间，而获取的单元中需要至少包含一个空闲对象用于分配内存：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *mcache)</span> <span class="title">refill</span><span class="params">(spc spanClass)</span></span> &#123;</span><br><span class="line">	s := c.alloc[spc]</span><br><span class="line">	s = mheap_.central[spc].mcentral.cacheSpan()</span><br><span class="line">	c.alloc[spc] = s</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如上述代码所示，该函数会从中心缓存中申请新的 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 存储到线程缓存中，这也是向线程缓存中插入内存管理单元的唯一方法。</p>
+<h4 id="微分配器"><a href="#微分配器" class="headerlink" title="微分配器"></a>微分配器</h4><p>线程缓存中还包含几个用于分配微对象的字段，下面的这三个字段组成了微对象分配器，专门为 16 字节以下的对象申请和管理内存：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> mcache <span class="keyword">struct</span> &#123;</span><br><span class="line">	tiny             <span class="keyword">uintptr</span></span><br><span class="line">	tinyoffset       <span class="keyword">uintptr</span></span><br><span class="line">	local_tinyallocs <span class="keyword">uintptr</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>微分配器只会用于分配非指针类型的内存，上述三个字段中 <code>tiny</code> 会指向堆中的一篇内存，<code>tinyOffset</code> 是下一个空闲内存所在的偏移量，最后的 <code>local_tinyallocs</code> 会记录内存分配器中分配的对象个数。</p>
+<h3 id="中心缓存"><a href="#中心缓存" class="headerlink" title="中心缓存"></a>中心缓存</h3><p><a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/mcentral.go#L20" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcentral</code></a> 是内存分配器的中心缓存，与线程缓存不同，访问中心缓存中的内存管理单元需要使用互斥锁：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> mcentral <span class="keyword">struct</span> &#123;</span><br><span class="line">	lock      mutex</span><br><span class="line">	spanclass spanClass</span><br><span class="line">	nonempty  mSpanList</span><br><span class="line">	empty     mSpanList</span><br><span class="line">	nmalloc <span class="keyword">uint64</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>每一个中心缓存都会管理某个跨度类的内存管理单元，它会同时持有两个 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L352" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mSpanList</code></a>，分别存储包含空闲对象的列表和不包含空闲对象的链表：</p>
+<p><img alt="mcentral-and-mspans" data-src="https://img.draveness.me/2020-02-29-15829868066519-mcentral-and-mspans.png"></p>
+<p><strong>图 7-16 中心缓存和内存管理单元</strong></p>
+<p>该结构体在初始化时，两个链表都不包含任何内存，程序运行时会扩容结构体持有的两个链表，<code>nmalloc</code> 字段也记录了该结构体中分配的对象个数。</p>
+<h4 id="内存管理单元-1"><a href="#内存管理单元-1" class="headerlink" title="内存管理单元"></a>内存管理单元</h4><p>线程缓存会通过中心缓存的 <a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/mcentral.go#L40" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcentral.cacheSpan</code></a> 方法获取新的内存管理单元，该方法的实现比较复杂，我们可以将其分成以下几个部分：</p>
+<ol>
+<li>从有空闲对象的 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 链表中查找可以使用的内存管理单元；</li>
+<li>从没有空闲对象的 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 链表中查找可以使用的内存管理单元；</li>
+<li>调用 <a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/mcentral.go#L251" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcentral.grow</code></a> 从堆中申请新的内存管理单元；</li>
+<li>更新内存管理单元的 <code>allocCache</code> 等字段帮助快速分配内存；</li>
+</ol>
+<p>首先我们会在中心缓存的非空链表中查找可用的 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a>，根据 <code>sweepgen</code> 字段分别进行不同的处理：</p>
+<ol>
+<li>当内存单元等待回收时，将其插入 <code>empty</code> 链表、调用 <a href="https://github.com/golang/go/blob/531b6d3126bb810dcdfcce14983cea32236c322d/src/runtime/mgcsweep.go#L206" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan.sweep</code></a> 清理该单元并返回；</li>
+<li>当内存单元正在被后台回收时，跳过该内存单元；</li>
+<li>当内存单元已经被回收时，将内存单元插入 <code>empty</code> 链表并返回；</li>
+</ol>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *mcentral)</span> <span class="title">cacheSpan</span><span class="params">()</span> *<span class="title">mspan</span></span> &#123;</span><br><span class="line">	sg := mheap_.sweepgen</span><br><span class="line">retry:</span><br><span class="line">	<span class="keyword">var</span> s *mspan</span><br><span class="line">	<span class="keyword">for</span> s = c.nonempty.first; s != <span class="literal">nil</span>; s = s.next &#123;</span><br><span class="line">		<span class="keyword">if</span> s.sweepgen == sg<span class="number">-2</span> &amp;&amp; atomic.Cas(&amp;s.sweepgen, sg<span class="number">-2</span>, sg<span class="number">-1</span>) &#123; <span class="comment">// 等待回收</span></span><br><span class="line">			c.nonempty.remove(s)</span><br><span class="line">			c.empty.insertBack(s)</span><br><span class="line">			s.sweep(<span class="literal">true</span>)</span><br><span class="line">			<span class="keyword">goto</span> havespan</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> s.sweepgen == sg<span class="number">-1</span> &#123; <span class="comment">// 正在回收</span></span><br><span class="line">			<span class="keyword">continue</span></span><br><span class="line">		&#125;</span><br><span class="line">		c.nonempty.remove(s) <span class="comment">// 已经回收</span></span><br><span class="line">		c.empty.insertBack(s)</span><br><span class="line">		<span class="keyword">goto</span> havespan</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果中心缓存没有在 <code>nonempty</code> 中找到可用的内存管理单元，就会继续遍历其持有的 <code>empty</code> 链表，我们在这里的处理与包含空闲对象的链表几乎完全相同。当找到需要回收的内存单元时，我们也会触发 <a href="https://github.com/golang/go/blob/531b6d3126bb810dcdfcce14983cea32236c322d/src/runtime/mgcsweep.go#L206" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan.sweep</code></a> 进行清理，如果清理后的内存单元仍然不包含空闲对象，就会重新执行相应的代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *mcentral)</span> <span class="title">cacheSpan</span><span class="params">()</span> *<span class="title">mspan</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">for</span> s = c.empty.first; s != <span class="literal">nil</span>; s = s.next &#123;</span><br><span class="line">		<span class="keyword">if</span> s.sweepgen == sg<span class="number">-2</span> &amp;&amp; atomic.Cas(&amp;s.sweepgen, sg<span class="number">-2</span>, sg<span class="number">-1</span>) &#123;</span><br><span class="line">			c.empty.remove(s)</span><br><span class="line">			s.sweep(<span class="literal">true</span>)</span><br><span class="line">			freeIndex := s.nextFreeIndex()</span><br><span class="line">			<span class="keyword">if</span> freeIndex != s.nelems &#123;</span><br><span class="line">				s.freeindex = freeIndex</span><br><span class="line">				<span class="keyword">goto</span> havespan</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">goto</span> retry <span class="comment">// 不包含空闲对象</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> s.sweepgen == sg<span class="number">-1</span> &#123;</span><br><span class="line">			<span class="keyword">continue</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">break</span></span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果 <a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/mcentral.go#L20" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcentral</code></a> 在两个链表中都没有找到可用的内存单元，它会调用 <a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/mcentral.go#L251" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcentral.grow</code></a> 触发扩容操作从堆中申请新的内存：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *mcentral)</span> <span class="title">cacheSpan</span><span class="params">()</span> *<span class="title">mspan</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	s = c.grow()</span><br><span class="line">	<span class="keyword">if</span> s == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line">	c.empty.insertBack(s)</span><br><span class="line"></span><br><span class="line">havespan:</span><br><span class="line">	n := <span class="keyword">int</span>(s.nelems) - <span class="keyword">int</span>(s.allocCount)</span><br><span class="line">	atomic.Xadd64(&amp;c.nmalloc, <span class="keyword">int64</span>(n))</span><br><span class="line">	<span class="keyword">if</span> gcBlackenEnabled != <span class="number">0</span> &#123;</span><br><span class="line">		gcController.revise()</span><br><span class="line">	&#125;</span><br><span class="line">	freeByteBase := s.freeindex &amp;^ (<span class="number">64</span> - <span class="number">1</span>)</span><br><span class="line">	whichByte := freeByteBase / <span class="number">8</span></span><br><span class="line">	s.refillAllocCache(whichByte)</span><br><span class="line">	s.allocCache &gt;&gt;= s.freeindex % <span class="number">64</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> s</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>无论通过哪种方法获取到了内存单元，该方法的最后都会对内存单元的 <code>allocBits</code> 和 <code>allocCache</code> 等字段进行更新，让运行时在分配内存时能够快速找到空闲的对象。</p>
+<h4 id="扩容"><a href="#扩容" class="headerlink" title="扩容"></a>扩容</h4><p>中心缓存的扩容方法 <a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/mcentral.go#L251" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcentral.grow</code></a> 会根据预先计算的 <code>class_to_allocnpages</code> 和 <code>class_to_size</code> 获取待分配的页数以及跨度类并调用 <a href="https://github.com/golang/go/blob/6dd11bcb35cba37f5994c1b9aaaf7d2dc13fd7cf/src/runtime/mheap.go#L860" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mheap.alloc</code></a> 获取新的 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 结构：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *mcentral)</span> <span class="title">grow</span><span class="params">()</span> *<span class="title">mspan</span></span> &#123;</span><br><span class="line">	npages := <span class="keyword">uintptr</span>(class_to_allocnpages[c.spanclass.sizeclass()])</span><br><span class="line">	size := <span class="keyword">uintptr</span>(class_to_size[c.spanclass.sizeclass()])</span><br><span class="line"></span><br><span class="line">	s := mheap_.alloc(npages, c.spanclass, <span class="literal">true</span>)</span><br><span class="line">	<span class="keyword">if</span> s == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	n := (npages &lt;&lt; _PageShift) &gt;&gt; s.divShift * <span class="keyword">uintptr</span>(s.divMul) &gt;&gt; s.divShift2</span><br><span class="line">	s.limit = s.base() + size*n</span><br><span class="line">	heapBitsForAddr(s.base()).initSpan(s)</span><br><span class="line">	<span class="keyword">return</span> s</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>获取了 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 之后，我们会在上述方法中初始化 <code>limit</code> 字段并清除该结构在堆上对应的位图。</p>
+<h3 id="页堆"><a href="#页堆" class="headerlink" title="页堆"></a>页堆</h3><p><a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/mheap.go#L40" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mheap</code></a> 是内存分配的核心结构体，Go 语言程序只会存在一个全局的结构，而堆上初始化的所有对象都由该结构体统一管理，该结构体中包含两组非常重要的字段，其中一个是全局的中心缓存列表 <code>central</code>，另一个是管理堆区内存区域的 <code>arenas</code> 以及相关字段。</p>
+<p>页堆中包含一个长度为 134 的 <a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/mcentral.go#L20" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcentral</code></a> 数组，其中 67 个为跨度类需要 <code>scan</code> 的中心缓存，另外的 67 个是 <code>noscan</code> 的中心缓存：</p>
+<p><img alt="mheap-and-mcentrals" data-src="https://img.draveness.me/2020-02-29-15829868066525-mheap-and-mcentrals.png"></p>
+<p><strong>图 7-17 页堆与中心缓存列表</strong></p>
+<p>我们在设计原理一节中已经介绍过 Go 语言所有的内存空间都由如下所示的二维矩阵 <a href="https://github.com/golang/go/blob/e7f9e17b7927cad7a93c5785e864799e8d9b4381/src/runtime/mheap.go#L217" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.heapArena</code></a> 管理的，这个二维矩阵管理的内存可以是不连续的：</p>
+<p><img alt="mheap-and-memories" data-src="https://img.draveness.me/2020-02-29-15829868066531-mheap-and-memories.png"></p>
+<p><strong>图 7-18 页堆管理的内存区域</strong></p>
+<p>在除了 Windows 以外的 64 位操作系统中，每一个 <a href="https://github.com/golang/go/blob/e7f9e17b7927cad7a93c5785e864799e8d9b4381/src/runtime/mheap.go#L217" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.heapArena</code></a> 都会管理 64MB 的内存空间，如下所示的表格展示了不同平台上 Go 语言程序管理的堆区大小以及 <a href="https://github.com/golang/go/blob/e7f9e17b7927cad7a93c5785e864799e8d9b4381/src/runtime/mheap.go#L217" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.heapArena</code></a> 占用的内存空间：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>平台</th>
+<th>地址位数</th>
+<th>Arena 大小</th>
+<th>一维大小</th>
+<th>二维大小</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>*/64-bit</td>
+<td>48</td>
+<td>64MB</td>
+<td>1</td>
+<td>4M (32MB)</td>
+</tr>
+<tr>
+<td>windows/64-bit</td>
+<td>48</td>
+<td>4MB</td>
+<td>64</td>
+<td>1M (8MB)</td>
+</tr>
+<tr>
+<td>*/32-bit</td>
+<td>32</td>
+<td>4MB</td>
+<td>1</td>
+<td>1024 (4KB)</td>
+</tr>
+<tr>
+<td>*/mips(le)</td>
+<td>31</td>
+<td>4MB</td>
+<td>1</td>
+<td>512 (2KB)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>表 7-3 平台与页堆大小的关系</strong></p>
+<p>本节将介绍页堆的初始化、内存分配以及内存管理单元分配的过程，这些过程能够帮助我们理解全局变量页堆与其他组件的关系以及它管理内存的方式。</p>
+<h4 id="初始化-1"><a href="#初始化-1" class="headerlink" title="初始化"></a>初始化</h4><p>堆区的初始化会使用 <a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/mheap.go#L672" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mheap.init</code></a> 方法，我们能看到该方法初始化了非常多的结构体和字段，不过其中初始化的两类变量比较重要：</p>
+<ol>
+<li><code>spanalloc</code>、<code>cachealloc</code> 以及 <code>arenaHintAlloc</code> 等 <a href="https://github.com/golang/go/blob/44dcb5cb61aee5435e0b3c78544a1d3352a4cc98/src/runtime/mfixalloc.go#L27" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.fixalloc</code></a> 类型的空闲链表分配器；</li>
+<li><code>central</code> 切片中 <a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/mcentral.go#L20" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcentral</code></a> 类型的中心缓存；</li>
+</ol>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h *mheap)</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">	h.spanalloc.init(unsafe.Sizeof(mspan&#123;&#125;), recordspan, unsafe.Pointer(h), &amp;memstats.mspan_sys)</span><br><span class="line">	h.cachealloc.init(unsafe.Sizeof(mcache&#123;&#125;), <span class="literal">nil</span>, <span class="literal">nil</span>, &amp;memstats.mcache_sys)</span><br><span class="line">	h.specialfinalizeralloc.init(unsafe.Sizeof(specialfinalizer&#123;&#125;), <span class="literal">nil</span>, <span class="literal">nil</span>, &amp;memstats.other_sys)</span><br><span class="line">	h.specialprofilealloc.init(unsafe.Sizeof(specialprofile&#123;&#125;), <span class="literal">nil</span>, <span class="literal">nil</span>, &amp;memstats.other_sys)</span><br><span class="line">	h.arenaHintAlloc.init(unsafe.Sizeof(arenaHint&#123;&#125;), <span class="literal">nil</span>, <span class="literal">nil</span>, &amp;memstats.other_sys)</span><br><span class="line"></span><br><span class="line">	h.spanalloc.zero = <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> i := <span class="keyword">range</span> h.central &#123;</span><br><span class="line">		h.central[i].mcentral.init(spanClass(i))</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	h.pages.init(&amp;h.lock, &amp;memstats.gc_sys)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>堆中初始化的多个空闲链表分配器与我们在设计原理一节中提到的分配器没有太多区别，当我们调用 <a href="https://github.com/golang/go/blob/44dcb5cb61aee5435e0b3c78544a1d3352a4cc98/src/runtime/mfixalloc.go#L52" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.fixalloc.init</code></a> 初始化分配器时，需要传入待初始化的结构体大小等信息，这会帮助分配器分割待分配的内存，该分配器提供了以下两个用于分配和释放内存的方法：</p>
+<ol>
+<li><a href="https://github.com/golang/go/blob/44dcb5cb61aee5435e0b3c78544a1d3352a4cc98/src/runtime/mfixalloc.go#L64" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.fixalloc.alloc</code></a> — 获取下一个空闲的内存空间；</li>
+<li><a href="https://github.com/golang/go/blob/44dcb5cb61aee5435e0b3c78544a1d3352a4cc98/src/runtime/mfixalloc.go#L94" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.fixalloc.free</code></a> — 释放指针指向的内存空间；</li>
+</ol>
+<p>除了这些空闲链表分配器之外，我们还会在该方法中初始化所有的中心缓存，这些中心缓存会维护全局的内存管理单元，各个线程会通过中心缓存获取新的内存单元。</p>
+<h4 id="内存管理单元-2"><a href="#内存管理单元-2" class="headerlink" title="内存管理单元"></a>内存管理单元</h4><p><a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/mheap.go#L40" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mheap</code></a> 是内存分配器中的核心组件，运行时会通过它的 <a href="https://github.com/golang/go/blob/6dd11bcb35cba37f5994c1b9aaaf7d2dc13fd7cf/src/runtime/mheap.go#L860" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mheap.alloc</code></a> 方法在系统栈中获取新的 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h *mheap)</span> <span class="title">alloc</span><span class="params">(npages <span class="keyword">uintptr</span>, spanclass spanClass, needzero <span class="keyword">bool</span>)</span> *<span class="title">mspan</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> s *mspan</span><br><span class="line">	systemstack(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">if</span> h.sweepdone == <span class="number">0</span> &#123;</span><br><span class="line">			h.reclaim(npages)</span><br><span class="line">		&#125;</span><br><span class="line">		s = h.allocSpan(npages, <span class="literal">false</span>, spanclass, &amp;memstats.heap_inuse)</span><br><span class="line">	&#125;)</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">return</span> s</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>为了阻止内存的大量占用和堆的增长，我们在分配对应页数的内存前需要先调用 <a href="https://github.com/golang/go/blob/6dd11bcb35cba37f5994c1b9aaaf7d2dc13fd7cf/src/runtime/mheap.go#L703" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mheap.reclaim</code></a> 方法回收一部分内存，接下来我们将通过 <a href="https://github.com/golang/go/blob/6dd11bcb35cba37f5994c1b9aaaf7d2dc13fd7cf/src/runtime/mheap.go#L1075" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mheap.allocSpan</code></a> 分配新的内存管理单元，我们会将该方法的执行过程拆分成两个部分：</p>
+<ol>
+<li>从堆上分配新的内存页和内存管理单元 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a>；</li>
+<li>初始化内存管理单元并将其加入 <a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/mheap.go#L40" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mheap</code></a> 持有内存单元列表；</li>
+</ol>
+<p>首先我们需要在堆上申请 <code>npages</code> 数量的内存页并初始化 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h *mheap)</span> <span class="title">allocSpan</span><span class="params">(npages <span class="keyword">uintptr</span>, manual <span class="keyword">bool</span>, spanclass spanClass, sysStat *<span class="keyword">uint64</span>)</span> <span class="params">(s *mspan)</span></span> &#123;</span><br><span class="line">	gp := getg()</span><br><span class="line">	base, scav := <span class="keyword">uintptr</span>(<span class="number">0</span>), <span class="keyword">uintptr</span>(<span class="number">0</span>)</span><br><span class="line">	pp := gp.m.p.ptr()</span><br><span class="line">	<span class="keyword">if</span> pp != <span class="literal">nil</span> &amp;&amp; npages &lt; pageCachePages/<span class="number">4</span> &#123;</span><br><span class="line">		c := &amp;pp.pcache</span><br><span class="line">		base, scav = c.alloc(npages)</span><br><span class="line">		<span class="keyword">if</span> base != <span class="number">0</span> &#123;</span><br><span class="line">			s = h.tryAllocMSpan()</span><br><span class="line">			<span class="keyword">if</span> s != <span class="literal">nil</span> &amp;&amp; gcBlackenEnabled == <span class="number">0</span> &amp;&amp; (manual || spanclass.sizeclass() != <span class="number">0</span>) &#123;</span><br><span class="line">				<span class="keyword">goto</span> HaveSpan</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> base == <span class="number">0</span> &#123;</span><br><span class="line">		base, scav = h.pages.alloc(npages)</span><br><span class="line">		<span class="keyword">if</span> base == <span class="number">0</span> &#123;</span><br><span class="line">			h.grow(npages)</span><br><span class="line">            base, scav = h.pages.alloc(npages)</span><br><span class="line">			<span class="keyword">if</span> base == <span class="number">0</span> &#123;</span><br><span class="line">				throw(<span class="string">"grew heap, but no adequate free space found"</span>)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> s == <span class="literal">nil</span> &#123;</span><br><span class="line">		s = h.allocMSpanLocked()</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述方法会通过处理器的页缓存 <a href="https://github.com/golang/go/blob/ebe49b2c2999a7d4128c44aed9602a69fdc53d16/src/runtime/mpagecache.go#L18" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.pageCache</code></a> 或者全局的页分配器 <a href="https://github.com/golang/go/blob/98858c438016bbafd161b502a148558987aa44d5/src/runtime/mpagealloc.go#L169" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.pageAlloc</code></a> 两种途径从堆中申请内存：</p>
+<ol>
+<li><p>如果申请的内存比较小，获取申请内存的处理器并尝试调用 <a href="https://github.com/golang/go/blob/ebe49b2c2999a7d4128c44aed9602a69fdc53d16/src/runtime/mpagecache.go#L38" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.pageCache.alloc</code></a> 获取内存区域的基地址和大小；</p>
+</li>
+<li><p>如果申请的内存比较大或者线程的页缓存中内存不足，会通过 <a href="https://github.com/golang/go/blob/98858c438016bbafd161b502a148558987aa44d5/src/runtime/mpagealloc.go#L754" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.pageAlloc.alloc</code></a> 在页堆上申请内存；</p>
+</li>
+<li><p>如果发现页堆上的内存不足，会尝试通过</p>
+</li>
+</ol>
+<p>   <code>runtime.mheap.grow</code></p>
+<p>   进行扩容并重新调用</p>
+<p>   <code>runtime.pageAlloc.alloc</code></p>
+<p>   申请内存；</p>
+<ol>
+<li>如果申请到内存，意味着扩容成功；</li>
+<li>如果没有申请到内存，意味着扩容失败，宿主机可能不存在空闲内存，运行时会直接中止当前程序；</li>
+</ol>
+<p>无论通过哪种方式获得内存页，我们都会在该函数中分配新的 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 结构体；该方法的剩余部分会通过页数、内存空间以及跨度类等参数初始化它的多个字段：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h *mheap)</span> <span class="title">alloc</span><span class="params">(npages <span class="keyword">uintptr</span>, spanclass spanClass, needzero <span class="keyword">bool</span>)</span> *<span class="title">mspan</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">HaveSpan:</span><br><span class="line">	s.init(base, npages)</span><br><span class="line"></span><br><span class="line">	...</span><br><span class="line"></span><br><span class="line">	s.freeindex = <span class="number">0</span></span><br><span class="line">	s.allocCache = ^<span class="keyword">uint64</span>(<span class="number">0</span>)</span><br><span class="line">	s.gcmarkBits = newMarkBits(s.nelems)</span><br><span class="line">	s.allocBits = newAllocBits(s.nelems)</span><br><span class="line">	h.setSpans(s.base(), npages, s)</span><br><span class="line">	<span class="keyword">return</span> s</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在上述代码中，我们通过调用 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L1449" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan.init</code></a> 方法以及设置参数初始化刚刚分配的 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a> 结构并通过 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L903" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mheaps.setSpans</code></a> 方法建立页堆与内存单元的联系。</p>
+<h4 id="扩容-1"><a href="#扩容-1" class="headerlink" title="扩容"></a>扩容</h4><p><a href="https://github.com/golang/go/blob/6dd11bcb35cba37f5994c1b9aaaf7d2dc13fd7cf/src/runtime/mheap.go#L1276" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mheap.grow</code></a> 方法会向操作系统申请更多的内存空间，传入的页数经过对齐可以得到期望的内存大小，我们可以将该方法的执行过程分成以下几个部分：</p>
+<ol>
+<li>通过传入的页数获取期望分配的内存空间大小以及内存的基地址；</li>
+<li>如果 <code>arena</code> 区域没有足够的空间，调用 <a href="https://github.com/golang/go/blob/6dd11bcb35cba37f5994c1b9aaaf7d2dc13fd7cf/src/runtime/malloc.go#L617" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mheap.sysAlloc</code></a> 从操作系统中申请更多的内存；</li>
+<li>扩容 <a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/mheap.go#L40" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mheap</code></a> 持有的 <code>arena</code> 区域并更新页分配器的元信息；</li>
+<li>在某些场景下，调用 <a href="https://github.com/golang/go/blob/e48a83f077e47bd015d4b57e63e9b6fb5e77dc8b/src/runtime/mgcscavenge.go#L349" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.pageAlloc.scavenge</code></a> 回收不再使用的空闲内存页；</li>
+</ol>
+<p>在页堆扩容的过程中，<a href="https://github.com/golang/go/blob/6dd11bcb35cba37f5994c1b9aaaf7d2dc13fd7cf/src/runtime/malloc.go#L617" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mheap.sysAlloc</code></a> 是页堆用来申请虚拟内存的方法，我们会分几部分介绍该方法的实现。首先，该方法会尝试在预保留的区域申请内存：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h *mheap)</span> <span class="title">sysAlloc</span><span class="params">(n <span class="keyword">uintptr</span>)</span> <span class="params">(v unsafe.Pointer, size <span class="keyword">uintptr</span>)</span></span> &#123;</span><br><span class="line">	n = alignUp(n, heapArenaBytes)</span><br><span class="line"></span><br><span class="line">	v = h.arena.alloc(n, heapArenaBytes, &amp;memstats.heap_sys)</span><br><span class="line">	<span class="keyword">if</span> v != <span class="literal">nil</span> &#123;</span><br><span class="line">		size = n</span><br><span class="line">		<span class="keyword">goto</span> mapped</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述代码会调用线性分配器的 <a href="https://github.com/golang/go/blob/ebe49b2c2999a7d4128c44aed9602a69fdc53d16/src/runtime/malloc.go#L1393" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.linearAlloc.alloc</code></a> 方法在预先保留的内存中申请一块可以使用的空间。如果没有可用的空间，我们会根据页堆的 <code>arenaHints</code> 在目标地址上尝试扩容：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h *mheap)</span> <span class="title">sysAlloc</span><span class="params">(n <span class="keyword">uintptr</span>)</span> <span class="params">(v unsafe.Pointer, size <span class="keyword">uintptr</span>)</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">for</span> h.arenaHints != <span class="literal">nil</span> &#123;</span><br><span class="line">		hint := h.arenaHints</span><br><span class="line">		p := hint.addr</span><br><span class="line">		v = sysReserve(unsafe.Pointer(p), n)</span><br><span class="line">		<span class="keyword">if</span> p == <span class="keyword">uintptr</span>(v) &#123;</span><br><span class="line">			hint.addr = p</span><br><span class="line">			size = n</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">		h.arenaHints = hint.next</span><br><span class="line">		h.arenaHintAlloc.free(unsafe.Pointer(hint))</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">	sysMap(v, size, &amp;memstats.heap_sys)</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/golang/go/blob/383b447e0da5bd1fcdc2439230b5a1d3e3402117/src/runtime/mem_linux.go#L156" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.sysReserve</code></a> 和 <a href="https://github.com/golang/go/blob/383b447e0da5bd1fcdc2439230b5a1d3e3402117/src/runtime/mem_linux.go#L164" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.sysMap</code></a> 是上述代码的核心部分，它们会从操作系统中申请内存并将内存转换至 <code>Prepared</code> 状态。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h *mheap)</span> <span class="title">sysAlloc</span><span class="params">(n <span class="keyword">uintptr</span>)</span> <span class="params">(v unsafe.Pointer, size <span class="keyword">uintptr</span>)</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">mapped:</span><br><span class="line">	<span class="keyword">for</span> ri := arenaIndex(<span class="keyword">uintptr</span>(v)); ri &lt;= arenaIndex(<span class="keyword">uintptr</span>(v)+size<span class="number">-1</span>); ri++ &#123;</span><br><span class="line">		l2 := h.arenas[ri.l1()]</span><br><span class="line">		r := (*heapArena)(h.heapArenaAlloc.alloc(unsafe.Sizeof(*r), sys.PtrSize, &amp;memstats.gc_sys))</span><br><span class="line">		...</span><br><span class="line">		h.allArenas = h.allArenas[:<span class="built_in">len</span>(h.allArenas)+<span class="number">1</span>]</span><br><span class="line">		h.allArenas[<span class="built_in">len</span>(h.allArenas)<span class="number">-1</span>] = ri</span><br><span class="line">		atomic.StorepNoWB(unsafe.Pointer(&amp;l2[ri.l2()]), unsafe.Pointer(r))</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/golang/go/blob/6dd11bcb35cba37f5994c1b9aaaf7d2dc13fd7cf/src/runtime/malloc.go#L617" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mheap.sysAlloc</code></a> 方法在最后会初始化一个新的 <a href="https://github.com/golang/go/blob/e7f9e17b7927cad7a93c5785e864799e8d9b4381/src/runtime/mheap.go#L217" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.heapArena</code></a> 结构体来管理刚刚申请的内存空间，该结构体会被加入页堆的二维矩阵中。</p>
+<h2 id="内存分配"><a href="#内存分配" class="headerlink" title="内存分配"></a>内存分配</h2><p>堆上所有的对象都会通过调用 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/malloc.go#L1164" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.newobject</code></a> 函数分配内存，该函数会调用 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/malloc.go#L891" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mallocgc</code></a> 分配指定大小的内存空间，这也是用户程序向堆上申请内存空间的必经函数：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mallocgc</span><span class="params">(size <span class="keyword">uintptr</span>, typ *_type, needzero <span class="keyword">bool</span>)</span> <span class="title">unsafe</span>.<span class="title">Pointer</span></span> &#123;</span><br><span class="line">	mp := acquirem()</span><br><span class="line">	mp.mallocing = <span class="number">1</span></span><br><span class="line"></span><br><span class="line">	c := gomcache()</span><br><span class="line">	<span class="keyword">var</span> x unsafe.Pointer</span><br><span class="line">	noscan := typ == <span class="literal">nil</span> || typ.ptrdata == <span class="number">0</span></span><br><span class="line">	<span class="keyword">if</span> size &lt;= maxSmallSize &#123;</span><br><span class="line">		<span class="keyword">if</span> noscan &amp;&amp; size &lt; maxTinySize &#123;</span><br><span class="line">			<span class="comment">// 微对象分配</span></span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="comment">// 小对象分配</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="comment">// 大对象分配</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	publicationBarrier()</span><br><span class="line">	mp.mallocing = <span class="number">0</span></span><br><span class="line">	releasem(mp)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> x</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述代码使用 <a href="https://github.com/golang/go/blob/8ac98e7b3fcadc497c4ca7d8637ba9578e8159be/src/runtime/runtime1.go#L463" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.gomcache</code></a> 获取了线程缓存并通过类型判断类型是否为指针类型。我们从这个代码片段可以看出 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/malloc.go#L891" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mallocgc</code></a> 会根据对象的大小执行不同的分配逻辑，在前面的章节也曾经介绍过运行时根据对象大小将它们分成微对象、小对象和大对象，这里会根据大小选择不同的分配逻辑：</p>
+<p><img alt="allocator-and-memory-size" data-src="https://img.draveness.me/2020-02-29-15829868066537-allocator-and-memory-size.png"></p>
+<p><strong>图 7-19 三种对象</strong></p>
+<ul>
+<li>微对象 <code>(0, 16B)</code> — 先使用微型分配器，再依次尝试线程缓存、中心缓存和堆分配内存；</li>
+<li>小对象 <code>[16B, 32KB]</code> — 依次尝试使用线程缓存、中心缓存和堆分配内存；</li>
+<li>大对象 <code>(32KB, +∞)</code> — 直接在堆上分配内存；</li>
+</ul>
+<p>我们会依次介绍运行时分配微对象、小对象和大对象的过程，梳理内存分配的核心执行流程。</p>
+<h3 id="微对象"><a href="#微对象" class="headerlink" title="微对象"></a>微对象</h3><p>Go 语言运行时将小于 16 字节的对象划分为微对象，它会使用线程缓存上的微分配器提高微对象分配的性能，我们主要使用它来分配较小的字符串以及逃逸的临时变量。微分配器可以将多个较小的内存分配请求合入同一个内存块中，只有当内存块中的所有对象都需要被回收时，整片内存才可能被回收。</p>
+<p>微分配器管理的对象不可以是指针类型，管理多个对象的内存块大小 <code>maxTinySize</code> 是可以调整的，在默认情况下，内存块的大小为 16 字节。<code>maxTinySize</code> 的值越大，组合多个对象的可能性就越高，内存浪费也就越严重；<code>maxTinySize</code> 越小，内存浪费就会越少，不过无论如何调整，8 的倍数都是一个很好的选择。</p>
+<p><img alt="tiny-allocator" data-src="https://img.draveness.me/2020-02-29-15829868066543-tiny-allocator.png"></p>
+<p><strong>图 7-20 微分配器的工作原理</strong></p>
+<p>如上图所示，微分配器已经在 16 字节的内存块中分配了 12 字节的对象，如果下一个待分配的对象小于 4 字节，它就会直接使用上述内存块的剩余部分，减少内存碎片，不过该内存块只有在 3 个对象都被标记为垃圾时才会被回收。</p>
+<p>线程缓存 <a href="https://github.com/golang/go/blob/01d137262a713b308c4308ed5b26636895e68d89/src/runtime/mcache.go#L19" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcache</code></a> 中的 <code>tiny</code> 字段指向了 <code>maxTinySize</code> 大小的块，如果当前块中还包含大小合适的空闲内存，运行时会通过基地址和偏移量获取并返回这块内存：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mallocgc</span><span class="params">(size <span class="keyword">uintptr</span>, typ *_type, needzero <span class="keyword">bool</span>)</span> <span class="title">unsafe</span>.<span class="title">Pointer</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">if</span> size &lt;= maxSmallSize &#123;</span><br><span class="line">		<span class="keyword">if</span> noscan &amp;&amp; size &lt; maxTinySize &#123;</span><br><span class="line">			off := c.tinyoffset</span><br><span class="line">			<span class="keyword">if</span> off+size &lt;= maxTinySize &amp;&amp; c.tiny != <span class="number">0</span> &#123;</span><br><span class="line">				x = unsafe.Pointer(c.tiny + off)</span><br><span class="line">				c.tinyoffset = off + size</span><br><span class="line">				c.local_tinyallocs++</span><br><span class="line">				releasem(mp)</span><br><span class="line">				<span class="keyword">return</span> x</span><br><span class="line">			&#125;</span><br><span class="line">			...</span><br><span class="line">		&#125;</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当内存块中不包含空闲的内存时，下面的这段代码会从先线程缓存找到跨度类对应的内存管理单元 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L358" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan</code></a>，调用 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/malloc.go#L831" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.nextFreeFast</code></a> 获取空闲的内存；当不存在空闲内存时，我们会调用 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/malloc.go#L858" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcache.nextFree</code></a> 从中心缓存或者页堆中获取可分配的内存块：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mallocgc</span><span class="params">(size <span class="keyword">uintptr</span>, typ *_type, needzero <span class="keyword">bool</span>)</span> <span class="title">unsafe</span>.<span class="title">Pointer</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">if</span> size &lt;= maxSmallSize &#123;</span><br><span class="line">		<span class="keyword">if</span> noscan &amp;&amp; size &lt; maxTinySize &#123;</span><br><span class="line">			...</span><br><span class="line">			span := c.alloc[tinySpanClass]</span><br><span class="line">			v := nextFreeFast(span)</span><br><span class="line">			<span class="keyword">if</span> v == <span class="number">0</span> &#123;</span><br><span class="line">				v, _, _ = c.nextFree(tinySpanClass)</span><br><span class="line">			&#125;</span><br><span class="line">			x = unsafe.Pointer(v)</span><br><span class="line">			(*[<span class="number">2</span>]<span class="keyword">uint64</span>)(x)[<span class="number">0</span>] = <span class="number">0</span></span><br><span class="line">			(*[<span class="number">2</span>]<span class="keyword">uint64</span>)(x)[<span class="number">1</span>] = <span class="number">0</span></span><br><span class="line">			<span class="keyword">if</span> size &lt; c.tinyoffset || c.tiny == <span class="number">0</span> &#123;</span><br><span class="line">				c.tiny = <span class="keyword">uintptr</span>(x)</span><br><span class="line">				c.tinyoffset = size</span><br><span class="line">			&#125;</span><br><span class="line">			size = maxTinySize</span><br><span class="line">		&#125;</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">return</span> x</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>获取新的空闲内存块之后，上述代码会清空空闲内存中的数据、更新构成微对象分配器的几个字段 <code>tiny</code> 和 <code>tinyoffset</code> 并返回新的空闲内存。</p>
+<h3 id="小对象"><a href="#小对象" class="headerlink" title="小对象"></a>小对象</h3><p>小对象是指大小为 16 字节到 32,768 字节的对象以及所有小于 16 字节的指针类型的对象，小对象的分配可以被分成以下的三个步骤：</p>
+<ol>
+<li>确定分配对象的大小以及跨度类 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L503" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.spanClass</code></a>；</li>
+<li>从线程缓存、中心缓存或者堆中获取内存管理单元并从内存管理单元找到空闲的内存空间；</li>
+<li>调用 <a href="https://github.com/golang/go/blob/05c02444eb2d8b8d3ecd949c4308d8e2323ae087/src/runtime/memclr_386.s#L13" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.memclrNoHeapPointers</code></a> 清空空闲内存中的所有数据；</li>
+</ol>
+<p>确定待分配的对象大小以及跨度类需要使用预先计算好的 <code>size_to_class8</code>、<code>size_to_class128</code> 以及 <code>class_to_size</code> 字典，这些字典能够帮助我们快速获取对应的值并构建 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L503" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.spanClass</code></a>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mallocgc</span><span class="params">(size <span class="keyword">uintptr</span>, typ *_type, needzero <span class="keyword">bool</span>)</span> <span class="title">unsafe</span>.<span class="title">Pointer</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">if</span> size &lt;= maxSmallSize &#123;</span><br><span class="line">		...</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="keyword">var</span> sizeclass <span class="keyword">uint8</span></span><br><span class="line">			<span class="keyword">if</span> size &lt;= smallSizeMax<span class="number">-8</span> &#123;</span><br><span class="line">				sizeclass = size_to_class8[(size+smallSizeDiv<span class="number">-1</span>)/smallSizeDiv]</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				sizeclass = size_to_class128[(size-smallSizeMax+largeSizeDiv<span class="number">-1</span>)/largeSizeDiv]</span><br><span class="line">			&#125;</span><br><span class="line">			size = <span class="keyword">uintptr</span>(class_to_size[sizeclass])</span><br><span class="line">			spc := makeSpanClass(sizeclass, noscan)</span><br><span class="line">			span := c.alloc[spc]</span><br><span class="line">			v := nextFreeFast(span)</span><br><span class="line">			<span class="keyword">if</span> v == <span class="number">0</span> &#123;</span><br><span class="line">				v, span, _ = c.nextFree(spc)</span><br><span class="line">			&#125;</span><br><span class="line">			x = unsafe.Pointer(v)</span><br><span class="line">			<span class="keyword">if</span> needzero &amp;&amp; span.needzero != <span class="number">0</span> &#123;</span><br><span class="line">				memclrNoHeapPointers(unsafe.Pointer(v), size)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">return</span> x</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在上述代码片段中，我们会重点分析两个函数和方法的实现原理，它们分别是 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/malloc.go#L831" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.nextFreeFast</code></a> 和 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/malloc.go#L858" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcache.nextFree</code></a>，这两个函数会帮助我们获取空闲的内存空间。<a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/malloc.go#L831" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.nextFreeFast</code></a> 会利用内存管理单元中的 <code>allocCache</code> 字段，快速找到该字段中位 1 的位数，我们在上面介绍过 1 表示该位对应的内存空间是空闲的：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">nextFreeFast</span><span class="params">(s *mspan)</span> <span class="title">gclinkptr</span></span> &#123;</span><br><span class="line">	theBit := sys.Ctz64(s.allocCache)</span><br><span class="line">	<span class="keyword">if</span> theBit &lt; <span class="number">64</span> &#123;</span><br><span class="line">		result := s.freeindex + <span class="keyword">uintptr</span>(theBit)</span><br><span class="line">		<span class="keyword">if</span> result &lt; s.nelems &#123;</span><br><span class="line">			freeidx := result + <span class="number">1</span></span><br><span class="line">			<span class="keyword">if</span> freeidx%<span class="number">64</span> == <span class="number">0</span> &amp;&amp; freeidx != s.nelems &#123;</span><br><span class="line">				<span class="keyword">return</span> <span class="number">0</span></span><br><span class="line">			&#125;</span><br><span class="line">			s.allocCache &gt;&gt;= <span class="keyword">uint</span>(theBit + <span class="number">1</span>)</span><br><span class="line">			s.freeindex = freeidx</span><br><span class="line">			s.allocCount++</span><br><span class="line">			<span class="keyword">return</span> gclinkptr(result*s.elemsize + s.base())</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>找到了空闲的对象后，我们就可以更新内存管理单元的 <code>allocCache</code>、<code>freeindex</code> 等字段并返回该片内存了；如果我们没有找到空闲的内存，运行时会通过 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/malloc.go#L858" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcache.nextFree</code></a> 找到新的内存管理单元：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *mcache)</span> <span class="title">nextFree</span><span class="params">(spc spanClass)</span> <span class="params">(v gclinkptr, s *mspan, shouldhelpgc <span class="keyword">bool</span>)</span></span> &#123;</span><br><span class="line">	s = c.alloc[spc]</span><br><span class="line">	freeIndex := s.nextFreeIndex()</span><br><span class="line">	<span class="keyword">if</span> freeIndex == s.nelems &#123;</span><br><span class="line">		c.refill(spc)</span><br><span class="line">		s = c.alloc[spc]</span><br><span class="line">		freeIndex = s.nextFreeIndex()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	v = gclinkptr(freeIndex*s.elemsize + s.base())</span><br><span class="line">	s.allocCount++</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在上述方法中，如果我们在线程缓存中没有找到可用的内存管理单元，会通过前面介绍的 <a href="https://github.com/golang/go/blob/01d137262a713b308c4308ed5b26636895e68d89/src/runtime/mcache.go#L122" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mcache.refill</code></a> 使用中心缓存中的内存管理单元替换已经不存在可用对象的结构体，该方法会调用新结构体的 <a href="https://github.com/golang/go/blob/ebe49b2c2999a7d4128c44aed9602a69fdc53d16/src/runtime/mbitmap.go#L195" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mspan.nextFreeIndex</code></a> 获取空闲的内存并返回。</p>
+<h3 id="大对象"><a href="#大对象" class="headerlink" title="大对象"></a>大对象</h3><p>运行时对于大于 32KB 的大对象会单独处理，我们不会从线程缓存或者中心缓存中获取内存管理单元，而是直接在系统的栈中调用 <a href="https://github.com/golang/go/blob/6dd11bcb35cba37f5994c1b9aaaf7d2dc13fd7cf/src/runtime/malloc.go#L1136" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.largeAlloc</code></a> 函数分配大片的内存：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mallocgc</span><span class="params">(size <span class="keyword">uintptr</span>, typ *_type, needzero <span class="keyword">bool</span>)</span> <span class="title">unsafe</span>.<span class="title">Pointer</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">if</span> size &lt;= maxSmallSize &#123;</span><br><span class="line">		...</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">var</span> s *mspan</span><br><span class="line">		systemstack(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			s = largeAlloc(size, needzero, noscan)</span><br><span class="line">		&#125;)</span><br><span class="line">		s.freeindex = <span class="number">1</span></span><br><span class="line">		s.allocCount = <span class="number">1</span></span><br><span class="line">		x = unsafe.Pointer(s.base())</span><br><span class="line">		size = s.elemsize</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	publicationBarrier()</span><br><span class="line">	mp.mallocing = <span class="number">0</span></span><br><span class="line">	releasem(mp)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> x</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/golang/go/blob/6dd11bcb35cba37f5994c1b9aaaf7d2dc13fd7cf/src/runtime/malloc.go#L1136" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.largeAlloc</code></a> 函数会计算分配该对象所需要的页数，它会按照 8KB 的倍数为对象在堆上申请内存：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">largeAlloc</span><span class="params">(size <span class="keyword">uintptr</span>, needzero <span class="keyword">bool</span>, noscan <span class="keyword">bool</span>)</span> *<span class="title">mspan</span></span> &#123;</span><br><span class="line">	npages := size &gt;&gt; _PageShift</span><br><span class="line">	<span class="keyword">if</span> size&amp;_PageMask != <span class="number">0</span> &#123;</span><br><span class="line">		npages++</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">	s := mheap_.alloc(npages, makeSpanClass(<span class="number">0</span>, noscan), needzero)</span><br><span class="line">	s.limit = s.base() + size</span><br><span class="line">	heapBitsForAddr(s.base()).initSpan(s)</span><br><span class="line">	<span class="keyword">return</span> s</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>申请内存时会创建一个跨度类为 0 的 <a href="https://github.com/golang/go/blob/921ceadd2997f2c0267455e13f909df044234805/src/runtime/mheap.go#L503" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.spanClass</code></a> 并调用 <a href="https://github.com/golang/go/blob/6dd11bcb35cba37f5994c1b9aaaf7d2dc13fd7cf/src/runtime/mheap.go#L860" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.mheap.alloc</code></a> 分配一个管理对应内存的管理单元。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>内存分配是 Go 语言运行时内存管理的核心逻辑，运行时的内存分配器使用类似 TCMalloc 的分配策略将对象根据大小分类，并设计多层级的组件提高内存分配器的性能。本节不仅介绍了 Go 语言内存分配器的设计与实现原理，同时也介绍了内存分配器的常见设计，帮助我们理解不同编程语言在设计内存分配器时做出的不同选择。</p>
+<p>内存分配器虽然非常重要，但是它只解决了如何分配内存的问题，我们在本节中省略了很多与垃圾回收相关的代码，没有分析运行时垃圾回收的实现原理，在下一节中我们将详细分析 Go 语言垃圾回收的设计与实现原理。</p>
+<h2 id="延伸阅读"><a href="#延伸阅读" class="headerlink" title="延伸阅读"></a>延伸阅读</h2><ul>
+<li><a href="https://golang.org/ref/mem" target="_blank" rel="external nofollow noopener noreferrer">The Go Memory Model</a></li>
+<li><a href="https://blog.learngoprogramming.com/a-visual-guide-to-golang-memory-allocator-from-ground-up-e132258453ed" target="_blank" rel="external nofollow noopener noreferrer">A visual guide to Go Memory Allocator from scratch (Golang)</a></li>
+<li><a href="http://goog-perftools.sourceforge.net/doc/tcmalloc.html" target="_blank" rel="external nofollow noopener noreferrer">TCMalloc : Thread-Caching Malloc</a></li>
+<li><a href="https://blog.golang.org/ismmkeynote" target="_blank" rel="external nofollow noopener noreferrer">Getting to Go: The Journey of Go’s Garbage Collecton</a></li>
+<li><a href="https://medium.com/a-journey-with-go/go-memory-management-and-allocation-a7396d430f44" target="_blank" rel="external nofollow noopener noreferrer">Go: Memory Management and Allocation</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/e87a4e07/" rel="bookmark">【Go语言设计与实现】String</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/4e214fa9/" rel="bookmark">【Go语言设计与实现】Function</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/c31234d9/" rel="bookmark">【Go语言设计与实现】Interface</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/6494d4e0/" title="【Go语言设计与实现】内存分配器">http://houmin.cc/posts/6494d4e0/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Go/" rel="tag"><i class="fa fa-tag"></i> Go</a>
+              <a href="/tags/memory/" rel="tag"><i class="fa fa-tag"></i> memory</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/ccea8bad/" rel="next" title="【Go语言设计与实现】System Monitor">
+                  <i class="fa fa-chevron-left"></i> 【Go语言设计与实现】System Monitor
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/8816dd3d/" rel="prev" title="【Go语言设计与实现】垃圾收集器">
+                  【Go语言设计与实现】垃圾收集器 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#设计原理"><span class="nav-number">1.</span> <span class="nav-text">设计原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#分配方法"><span class="nav-number">1.1.</span> <span class="nav-text">分配方法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#线性分配器"><span class="nav-number">1.1.1.</span> <span class="nav-text">线性分配器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#空闲链表分配器"><span class="nav-number">1.1.2.</span> <span class="nav-text">空闲链表分配器</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分级分配"><span class="nav-number">1.2.</span> <span class="nav-text">分级分配</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#对象大小"><span class="nav-number">1.2.1.</span> <span class="nav-text">对象大小</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#多级缓存"><span class="nav-number">1.2.2.</span> <span class="nav-text">多级缓存</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟内存布局"><span class="nav-number">1.3.</span> <span class="nav-text">虚拟内存布局</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#线性内存"><span class="nav-number">1.3.1.</span> <span class="nav-text">线性内存</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#稀疏内存"><span class="nav-number">1.3.2.</span> <span class="nav-text">稀疏内存</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#地址空间"><span class="nav-number">1.4.</span> <span class="nav-text">地址空间</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内存管理组件"><span class="nav-number">2.</span> <span class="nav-text">内存管理组件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#内存管理单元"><span class="nav-number">2.1.</span> <span class="nav-text">内存管理单元</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#页和内存"><span class="nav-number">2.1.1.</span> <span class="nav-text">页和内存</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#状态"><span class="nav-number">2.1.2.</span> <span class="nav-text">状态</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#跨度类"><span class="nav-number">2.1.3.</span> <span class="nav-text">跨度类</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#线程缓存"><span class="nav-number">2.2.</span> <span class="nav-text">线程缓存</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#初始化"><span class="nav-number">2.2.1.</span> <span class="nav-text">初始化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#替换"><span class="nav-number">2.2.2.</span> <span class="nav-text">替换</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#微分配器"><span class="nav-number">2.2.3.</span> <span class="nav-text">微分配器</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#中心缓存"><span class="nav-number">2.3.</span> <span class="nav-text">中心缓存</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#内存管理单元-1"><span class="nav-number">2.3.1.</span> <span class="nav-text">内存管理单元</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#扩容"><span class="nav-number">2.3.2.</span> <span class="nav-text">扩容</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#页堆"><span class="nav-number">2.4.</span> <span class="nav-text">页堆</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#初始化-1"><span class="nav-number">2.4.1.</span> <span class="nav-text">初始化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#内存管理单元-2"><span class="nav-number">2.4.2.</span> <span class="nav-text">内存管理单元</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#扩容-1"><span class="nav-number">2.4.3.</span> <span class="nav-text">扩容</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内存分配"><span class="nav-number">3.</span> <span class="nav-text">内存分配</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#微对象"><span class="nav-number">3.1.</span> <span class="nav-text">微对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#小对象"><span class="nav-number">3.2.</span> <span class="nav-text">小对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#大对象"><span class="nav-number">3.3.</span> <span class="nav-text">大对象</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">4.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#延伸阅读"><span class="nav-number">5.</span> <span class="nav-text">延伸阅读</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">170</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">230</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">2.2m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">65:25</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

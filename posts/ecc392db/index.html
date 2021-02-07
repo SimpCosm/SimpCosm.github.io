@@ -63,11 +63,11 @@
 <meta property="og:site_name" content="Houmin">
 <meta property="og:description" content="本节将分析两个经常成对出现的关键字 panic 和 recover。这两个关键字都与 defer 有千丝万缕的联系，也都是 Go 语言中的内置函数，但是提供的功能却是互补的：  panic 能够改变程序的控制流，函数调用panic 时会立刻停止执行函数的其他代码，并在执行结束后在当前 Goroutine 中递归执行调用方的延迟函数调用 defer； recover 可以中止 panic 造成的程序">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://img.draveness.me/2020-01-19-15794253208982-golang-panic.png">
-<meta property="og:image" content="https://img.draveness.me/2020-01-19-15794253176199-golang-panic-and-defers.png">
-<meta property="og:updated_time" content="2020-08-19T12:13:20.948Z">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-panic.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-panic-and-defers.png">
+<meta property="og:updated_time" content="2021-02-07T11:15:26.947Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://img.draveness.me/2020-01-19-15794253208982-golang-panic.png">
+<meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-panic.png">
 
 <link rel="canonical" href="http://houmin.cc/posts/ecc392db/">
 
@@ -261,7 +261,7 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2020-08-02 12:15:58" itemprop="dateCreated datePublished" datetime="2020-08-02T12:15:58+08:00">2020-08-02</time>
+              <time title="创建时间：2020-05-02 12:15:58" itemprop="dateCreated datePublished" datetime="2020-05-02T12:15:58+08:00">2020-05-02</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -327,7 +327,7 @@
 <li><code>recover</code> 可以中止 <code>panic</code> 造成的程序崩溃。它是一个只能在 <code>defer</code> 中发挥作用的函数，在其他作用域中调用不会发挥任何作用；</li>
 </ul>
 <a id="more"></a>
-<p><img alt="golang-panic" data-src="https://img.draveness.me/2020-01-19-15794253208982-golang-panic.png"></p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-panic.png"></p>
 <p>Andrew Gerrand 写过的一篇名为 <a href="https://blog.golang.org/defer-panic-and-recover" target="_blank" rel="external nofollow noopener noreferrer">Defer, Panic, and Recover</a> 的博客很好地介绍了这三个关键字的不同作用以及它们的关系<a href="https://draveness.me/golang/docs/part2-foundation/ch05-keyword/golang-panic-recover/#fn:1" target="_blank" rel="external nofollow noopener noreferrer">1</a>。</p>
 <h2 id="现象"><a href="#现象" class="headerlink" title="现象"></a>现象</h2><p>我们先通过几个例子了解一下使用 <code>panic</code> 和 <code>recover</code> 关键字时遇到的一些现象，部分现象也与上一节分析的 <code>defer</code> 关键字有关：</p>
 <ul>
@@ -339,7 +339,7 @@
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">defer</span> <span class="built_in">println</span>(<span class="string">"in main"</span>)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">defer</span> <span class="built_in">println</span>(<span class="string">"in goroutine"</span>)</span><br><span class="line">		<span class="built_in">panic</span>(<span class="string">""</span>)</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	time.Sleep(<span class="number">1</span> * time.Second)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">$ <span class="keyword">go</span> run main.<span class="keyword">go</span></span><br><span class="line">in goroutine</span><br><span class="line"><span class="built_in">panic</span>:</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
 <p>当我们运行这段代码时会发现 <code>main</code> 函数中的 <code>defer</code> 语句并没有执行，执行的只有当前 Goroutine 中的 <code>defer</code>。</p>
 <p>上一节我们曾经介绍过 <code>defer</code> 关键字对应的 <a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L218-L258" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.deferproc</code></a> 会将延迟调用函数与调用方所在 Goroutine 进行关联。所以当程序发生崩溃时只会调用当前 Goroutine 的延迟调用函数也是非常合理的。</p>
-<p><img alt="golang-panic-and-defers" data-src="https://img.draveness.me/2020-01-19-15794253176199-golang-panic-and-defers.png"></p>
+<p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-panic-and-defers.png"></p>
 <p>如上图所示，多个 Goroutine 之间没有太多的关联，一个 Goroutine 在 <code>panic</code> 时也不应该执行其他 Goroutine 的延迟函数。</p>
 <h3 id="失效的崩溃恢复"><a href="#失效的崩溃恢复" class="headerlink" title="失效的崩溃恢复"></a>失效的崩溃恢复</h3><p>初学 Go 语言的读者可能会写出下面的代码，在主程序中调用 <code>recover</code> 试图中止程序的崩溃，但是从运行的结果中我们也能看出，如下所示的程序依然没有正常退出。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">defer</span> fmt.Println(<span class="string">"in main"</span>)</span><br><span class="line">	<span class="keyword">if</span> err := <span class="built_in">recover</span>(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(err)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">panic</span>(<span class="string">"unknown err"</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">$ <span class="keyword">go</span> run main.<span class="keyword">go</span></span><br><span class="line">in main</span><br><span class="line"><span class="built_in">panic</span>: unknown err</span><br><span class="line"></span><br><span class="line">goroutine <span class="number">1</span> [running]:</span><br><span class="line">main.main()</span><br><span class="line">	...</span><br><span class="line">exit status <span class="number">2</span></span><br></pre></td></tr></table></figure>
@@ -369,24 +369,17 @@
 <ol>
 <li><p>恢复程序的 <code>recover</code> 分支中的代码；</p>
 </li>
-<li><p>通过内联优化</p>
-</li>
-</ol>
-   <figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">defer</span></span><br></pre></td></tr></table></figure>
-<p>   调用性能的代码</p>
-<p>   <a href="https://draveness.me/golang/docs/part2-foundation/ch05-keyword/golang-panic-recover/#fn:4" target="_blank" rel="external nofollow noopener noreferrer">4</a></p>
-<p>   ；</p>
+<li><p>通过内联优化 <code>defer</code> 调用性能的代码<a href="https://draveness.me/golang/docs/part2-foundation/ch05-keyword/golang-panic-recover/#fn:4" target="_blank" rel="external nofollow noopener noreferrer">4</a>；</p>
 <ul>
 <li><a href="https://github.com/golang/go/commit/be64a19d99918c843f8555aad580221207ea35bc" target="_blank" rel="external nofollow noopener noreferrer">runtime: make defers low-cost through inline code and extra funcdata</a></li>
 </ul>
-<ol>
-<li>修复</li>
-</ol>
-<p>   <code>runtime.Goexit</code></p>
-<p>   异常情况的代码；</p>
+</li>
+<li><p>修复 <code>runtime.Goexit</code> 异常情况的代码；</p>
 <ul>
 <li><a href="https://github.com/golang/go/commit/7dcd343ed641d3b70c09153d3b041ca3fe83b25e" target="_blank" rel="external nofollow noopener noreferrer">runtime: ensure that Goexit cannot be aborted by a recursive panic/recover</a></li>
 </ul>
+</li>
+</ol>
 <p><a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L1185-L1220" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.fatalpanic</code></a> 实现了无法被恢复的程序崩溃，它在中止程序之前会通过 <a href="https://github.com/golang/go/blob/22d28a24c8b0d99f2ad6da5fe680fa3cfa216651/src/runtime/panic.go#L679-L695" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.printpanics</code></a> 打印出全部的 <code>panic</code> 消息以及调用时传入的参数：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">fatalpanic</span><span class="params">(msgs *_panic)</span></span> &#123;</span><br><span class="line">	pc := getcallerpc()</span><br><span class="line">	sp := getcallersp()</span><br><span class="line">	gp := getg()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> startpanic_m() &amp;&amp; msgs != <span class="literal">nil</span> &#123;</span><br><span class="line">		atomic.Xadd(&amp;runningPanicDefers, <span class="number">-1</span>)</span><br><span class="line">		printpanics(msgs)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> dopanic_m(gp, pc, sp) &#123;</span><br><span class="line">		crash()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	exit(<span class="number">2</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>打印 <code>panic</code> 消息之后会通过 <a href="https://github.com/golang/go/blob/cbaa666682386fe5350bf87d7d70171704c90fe4/src/runtime/sys_darwin.go#L231-L233" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.exit</code></a> 退出当前程序并返回错误码 2，而程序的正常退出也是通过 <a href="https://github.com/golang/go/blob/cbaa666682386fe5350bf87d7d70171704c90fe4/src/runtime/sys_darwin.go#L231-L233" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.exit</code></a> 函数实现的。</p>
@@ -412,24 +405,18 @@
 </li>
 <li><p>在运行过程中遇到 <code>gopanic</code> 方法时，会从 Goroutine 的链表依次取出 <code>_defer</code> 结构体并执行；</p>
 </li>
-<li><p>如果调用延迟执行函数时遇到了</p>
-</li>
-</ol>
-   <figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">gorecover</span></span><br></pre></td></tr></table></figure>
-<p>   就会将</p>
-   <figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="module-access"><span class="module"><span class="identifier">_panic</span>.</span></span>recovered</span><br></pre></td></tr></table></figure>
-<p>   标记成</p>
-   <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="literal">true</span></span><br></pre></td></tr></table></figure>
-<p>   并返回</p>
-   <figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">panic</span></span><br></pre></td></tr></table></figure>
-<p>   的参数；</p>
+<li><p>如果调用延迟执行函数时遇到了 <code>gorecover</code> 就会将 <code>_panic.recovered</code> 标记成 <code>true</code> 并返回 <code>panic</code> 的参数；</p>
 <ol>
 <li>在这次调用结束之后，<code>gopanic</code> 会从 <code>_defer</code> 结构体中取出程序计数器 <code>pc</code> 和栈指针 <code>sp</code> 并调用 <code>recovery</code> 函数进行恢复程序；</li>
-<li><code>recovery</code> 会根据传入的 <code>pc</code> 和 <code>sp</code> 跳转回 <code>deferproc</code>；</li>
+</ol>
+</li>
+<li><p><code>recovery</code> 会根据传入的 <code>pc</code> 和 <code>sp</code> 跳转回 <code>deferproc</code>；</p>
+<ol>
 <li>编译器自动生成的代码会发现 <code>deferproc</code> 的返回值不为 0，这时会跳回 <code>deferreturn</code> 并恢复到正常的执行流程；</li>
 </ol>
-<ol>
-<li>如果没有遇到 <code>gorecover</code> 就会依次遍历所有的 <code>_defer</code> 结构，并在最后调用 <code>fatalpanic</code> 中止程序、打印 <code>panic</code> 的参数并返回错误码 <code>2</code>；</li>
+</li>
+<li><p>如果没有遇到 <code>gorecover</code> 就会依次遍历所有的 <code>_defer</code> 结构，并在最后调用 <code>fatalpanic</code> 中止程序、打印 <code>panic</code> 的参数并返回错误码 <code>2</code>；</p>
+</li>
 </ol>
 <p>分析的过程涉及了很多语言底层的知识，源代码阅读起来也比较晦涩，其中充斥着反常规的控制流程，通过程序计数器来回跳转，不过对于我们理解程序的执行流程还是很有帮助。</p>
 <h2 id="延伸阅读"><a href="#延伸阅读" class="headerlink" title="延伸阅读"></a>延伸阅读</h2><ul>
@@ -446,19 +433,19 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
-    </li>
-    <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/c3c43baa/" rel="bookmark">【Go语言设计与实现】Hash Table</a></div>
-    </li>
-    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/e87a4e07/" rel="bookmark">【Go语言设计与实现】String</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/c31234d9/" rel="bookmark">【Go语言设计与实现】Interface</a></div>
+      <div class="popular-posts-title"><a href="/posts/44c65087/" rel="bookmark">【Go语言设计与实现】循环</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/540e2781/" rel="bookmark">【Go语言设计与实现】Defer</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/93e1c454/" rel="bookmark">【Go语言设计与实现】Channel</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/9e0b725c/" rel="bookmark">【Go语言设计与实现】Make 与 New</a></div>
     </li>
   </ul>
 
@@ -579,7 +566,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">159</span>
+          <span class="site-state-item-count">170</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -591,7 +578,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">223</span>
+        <span class="site-state-item-count">230</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -659,13 +646,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">2m</span>
+    <span title="站点总字数">2.2m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">59:37</span>
+    <span title="站点阅读时长">65:25</span>
 </div>
 
         

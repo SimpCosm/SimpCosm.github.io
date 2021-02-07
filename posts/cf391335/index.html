@@ -56,7 +56,7 @@
 </script>
 
   <meta name="description" content="原生的 k8s 基于 Device Plugin 和 Extended Resource 机制实现了在容器中使用GPU，但是只支持GPU的独占使用，不允许在Pod间共享GPU，这大大降低了对集群中GPU的利用率。为了在集群层面共享GPU，我们需要实现GPU资源的隔离与调度，本文将依次介绍阿里的 GPUShare 与腾讯的 GPUManager，分析其实现机制。">
-<meta name="keywords" content="k8s,GPU,device plugin,资源隔离,scheduler extender">
+<meta name="keywords" content="k8s,GPU,资源隔离,scheduler extender,device plugin">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【异构计算】GPU 共享">
 <meta property="og:url" content="http://houmin.cc/posts/cf391335/index.html">
@@ -629,9 +629,9 @@
           <div class="post-tags">
               <a href="/tags/k8s/" rel="tag"><i class="fa fa-tag"></i> k8s</a>
               <a href="/tags/GPU/" rel="tag"><i class="fa fa-tag"></i> GPU</a>
-              <a href="/tags/device-plugin/" rel="tag"><i class="fa fa-tag"></i> device plugin</a>
               <a href="/tags/%E8%B5%84%E6%BA%90%E9%9A%94%E7%A6%BB/" rel="tag"><i class="fa fa-tag"></i> 资源隔离</a>
               <a href="/tags/scheduler-extender/" rel="tag"><i class="fa fa-tag"></i> scheduler extender</a>
+              <a href="/tags/device-plugin/" rel="tag"><i class="fa fa-tag"></i> device plugin</a>
           </div>
 
         
@@ -703,7 +703,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">159</span>
+          <span class="site-state-item-count">170</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -715,7 +715,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">223</span>
+        <span class="site-state-item-count">230</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -783,13 +783,13 @@
       <i class="fa fa-area-chart"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">2m</span>
+    <span title="站点总字数">2.2m</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">59:37</span>
+    <span title="站点阅读时长">65:25</span>
 </div>
 
         
