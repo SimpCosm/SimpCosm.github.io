@@ -66,7 +66,7 @@
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-in-memory-string.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-string-concat-and-copy.png">
 <meta property="og:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-string-bytes-conversion.png">
-<meta property="og:updated_time" content="2021-02-07T11:14:29.650Z">
+<meta property="og:updated_time" content="2021-02-08T09:49:47.995Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-in-memory-string.png">
 
@@ -303,14 +303,14 @@
                 <i class="fa fa-file-word-o"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>11k</span>
+              <span>8.4k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>19 分钟</span>
+              <span>15 分钟</span>
             </span>
 
         </div>
@@ -324,12 +324,45 @@
       
         <p>字符串是 Go 语言中最常用的基础数据类型之一，虽然字符串往往被看做一个整体，但是实际上字符串是一片连续的内存空间，我们也可以将它理解成一个由字符组成的数组，在这一节中就会详细介绍字符串的实现原理、相关转换过程以及常见操作的实现。</p>
 <a id="more"></a>
-<p>字符串虽然在 Go 语言中是基本类型 <code>string</code>，但是它实际上是由字符组成的数组，C 语言中的字符串就使用字符数组 <code>char[]</code> 表示，作为数组会占用一片连续的内存空间，这片内存空间存储了的字节共同组成了字符串，Go 语言中的字符串其实是一个只读的字节数组，下图展示了 <code>&quot;hello&quot;</code> 字符串在内存中的存储方式：</p>
+<h2 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h2><p>Go 语言中的 <code>string</code> 本质上是 <strong>只读的字节数组</strong> (read only slice of bytes)，类似于 C 语言中的字符数组 <code>char[]</code>，但是 Go 语言中专门封装了 <code>string</code> 类型。该  <strong>只读字节数组</strong> 作为数组会占用一片连续的内存空间，这片内存空间存储了的字节共同组成了字符串。下图展示了 <code>&quot;hello&quot;</code> 字符串在内存中的存储方式：</p>
 <p><img alt data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-in-memory-string.png"></p>
-<p>如果是代码中存在的字符串，会在编译期间被标记成只读数据 <code>SRODATA</code> 符号，假设我们有以下的一段代码，其中包含了一个字符串，当我们将这段代码编译成汇编语言时，就能够看到 <code>hello</code> 字符串有一个 <code>SRODATA</code> 的标记：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h3 id="中文字符相关"><a href="#中文字符相关" class="headerlink" title="中文字符相关"></a>中文字符相关</h3><p>下面是一个使用<code>%#U</code>格式化的例子，它显示了代码点的Unicode值及其打印的表现形式。</p>
+<p>而一个range循环会在每次迭代时，解码一个 UTF-8 编码的符文。每次循环时，循环的索引是当前文字的起始位置，以字节为单位，代码点是它的值。</p>
+<p>除了Go源码是UTF-8外，Go只提供一种方法特殊处理UTF-8，那就是在字符串上使用for range循环。我们已经知道使用for循环会发生什么了。</p>
+<h3 id="range循环"><a href="#range循环" class="headerlink" title="range循环"></a>range循环</h3><ul>
+<li>Go源码总是UTF-8</li>
+<li>一个字符串包含任意个byte</li>
+<li>字符串常量如果缺少字节级转义，将始终保持UTF-8序列。</li>
+<li>Unicode的代码点在Go语言中被称为rune</li>
+<li>Go不保证字符串中的字符是规范化的。</li>
+</ul>
+<p>总结一些前面的内容：</p>
+<p>Go语言将rune定义为int32类型的别名，因此在使用一个整型值表达一个“代码点”时，代码更加清晰。此外，一个你可能认为是字符常数在Go中是符文常数。’⌘’的类型和值分别是rune和0x2318。</p>
+<p>“代码点”这样的说法有点绕口，所以Go语言介绍了一个较短的术语概念：rune，符文。该术语出现字库和源代码中，和“代码点”表达的意思完全相同。还有一个有趣的补充。</p>
+<p>因此，计算中的字符概念是模糊的，至少是混乱的，所以我们需要谨慎地使用它。有规范化的技术来保证字符和代码点的映射，不过这个领域和本文讨论的内容相去甚远。</p>
+<p>举一个更普遍的例子，Unicode代码点U+0061表示小写拉丁字母’A’：a。但是小写的重音字母’A’: à怎么表示呢？这是一个字符，它可以用代码点U+00E0表示，但也有其它表示。例如，可以“组合”严重重音代码点U+0300，并将其附加到小写字母a，U+0061，以创建字符à。通常情况下，字符可以由多个不同的代码点序列表示，由此可以用不同的UTF-8字节序列表示。</p>
+<p>我们一直非常小心地使用“字节”和“字符”这样说法。这部分是因为字符串中保存了字节，还有部分是因为“字符”的概念有点难以定义。Unicode标准使用术语“代码点”来用单个值表示一个字符。比如具有16进制值2318的代码点，U+2318表示符号⌘。</p>
+<h3 id="字节点，字符和rune"><a href="#字节点，字符和rune" class="headerlink" title="字节点，字符和rune"></a>字节点，字符和rune</h3><p>总而言之，字符串可以包含任意字节，但是当从字符串文字构造时，这些字节（几乎总是）是UTF-8。</p>
+<p>有些人认为Go字符串总是UTF-8，但是不是这样：只有字符串字面量是UTF-8。正如上面所示，字符串值可以包含任意字节，只要没有字节级转义，字符串文字总是包含UTF-8文本。</p>
+<p>简单来说，Go源码是UTF-8，因此字符串文字的源代码是UTF-8文本。如果该字符串文字不包含转义序列，构造的字符串将精确保存引号之间的源文本。因此，通过定义和构造，原始字符串将总是包含其内容的有效UTF-8表示。类似的，除非它包含类似上面例子中的UTF-8拆分转义，否则常规字符串字面值也将始终包含有效的UTF-8。</p>
+<p>Go语言中的源代码定义为UTF-8文本，不允许其他的表示。也就是说，在代码中写下字符<code>⌘</code>时，用于创建程序的文本编辑器将符号⌘的UTF-8编码放入源文本中。当打印16进制字节时，我们只是将文件中的数据打印出来。</p>
+<p>上面的例子告诉我们，Unicode字符值U+2318，名胜古迹符号”⌘”的字节表示为”e2 8c 98”，这些字节是16进制值”2318”的UTF-8编码。</p>
+<p>下面的程序用三种不同的方式打印一个字符串常量，一次作为纯字符串，一次作为只有ASCII的字符串，一次作为16进制的字节。为了避免混淆，创建一个“原始字符串”，用反括号括起来，因此它只包含文本。</p>
+<p>正如我们看到的，索引一个字符串返回的是byte，而不是字符：一个字符串就是一堆字节。这意味着，当我们将字符存储在字符串中时，实际存储的是这个字符的字节。来看一个例子。</p>
+<h3 id="UTF-8和字符串"><a href="#UTF-8和字符串" class="headerlink" title="UTF-8和字符串"></a>UTF-8和字符串</h3><p>这些打印的小技巧在调试字符串内容的时候很有用，并且会方便下面的讨论。值得注意的是，上面的小技巧对于byte的切片一样适用。</p>
+<p>如果不熟悉字符串中奇怪的字符，可以在打印的时候使用”+q”标识，这个标识采用UTF-8编码，它不仅会转义不可打印的字节序列，还会转义非ASCII码的字节。下面的代码将字符串中非ASCII数据对应的Unicode值打印出来。字符串中的瑞典字符作为Unicode字符，打印出来带有\u的转义符。</p>
+<p>仔细观察，在一堆乱码中我们可以看到一个’=’号和一个空格符号，最后面是瑞典表示“名胜古迹”的符号，这个符号的Unicode值为U+2318，UTF-8编码为”e28c98”。</p>
+<p>还有一些小技巧。使用q标识，可以将字符串中任何不可打印的字节序列转义。</p>
+<p>还有一个打印的小技巧。</p>
+<p>下面一种更简单的打印方式。</p>
+<p>使用for循环遍历所有的字节。</p>
+<p>要了解这个字符串究竟是什么，我们需要把它分开来检查一下。正如上面提到的，索引一个字符串，得到的是byte，而不是字符。</p>
+<p>在上面的例子中，有一些byte并不是ASCII码，甚至也不是UTF-8编码，直接打印出来会出现乱码</p>
+<h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><p>如果是代码中存在的字符串，会在编译期间被标记成只读数据 <code>SRODATA</code> 符号，假设我们有以下的一段代码，其中包含了一个字符串，当我们将这段代码编译成汇编语言时，就能够看到 <code>hello</code> 字符串有一个 <code>SRODATA</code> 的标记：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">$ cat main.go</span><br><span class="line">package main</span><br><span class="line"></span><br><span class="line">func <span class="function"><span class="title">main</span></span>() &#123;</span><br><span class="line">	str := <span class="string">"hello"</span></span><br><span class="line">	println([]byte(str))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">$ GOOS=linux GOARCH=amd64 go tool compile -S main.go</span><br><span class="line">...</span><br><span class="line">go.string.<span class="string">"hello"</span> SRODATA dupok size=5</span><br><span class="line">	0x0000 68 65 6c 6c 6f                                   hello</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
 <p>只读只意味着字符串会分配到只读的内存空间并且这块内存不会被修改，但是在运行时我们其实还是可以将这段内存拷贝到堆或者栈上，将变量的类型转换成 <code>[]byte</code> 之后就可以进行，修改后通过类型转换就可以变回 <code>string</code>，Go 语言只是不支持直接修改 <code>string</code> 类型变量的内存空间。</p>
-<h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><p>字符串在 Go 语言中的接口其实非常简单，每一个字符串在运行时都会使用如下的 <code>StringHeader</code> 结构体表示，在运行时包的内部其实有一个私有的结构 <code>stringHeader</code>，它有着完全相同的结构只是用于存储数据的 <code>Data</code> 字段使用了 <code>unsafe.Pointer</code> 类型：</p>
+<p>字符串在 Go 语言中的接口其实非常简单，每一个字符串在运行时都会使用如下的 <code>StringHeader</code> 结构体表示，在运行时包的内部其实有一个私有的结构 <code>stringHeader</code>，它有着完全相同的结构只是用于存储数据的 <code>Data</code> 字段使用了 <code>unsafe.Pointer</code> 类型：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> StringHeader <span class="keyword">struct</span> &#123;</span><br><span class="line">	Data <span class="keyword">uintptr</span></span><br><span class="line">	Len  <span class="keyword">int</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>我们会经常会说字符串是一个只读的<a href="https://draveness.me/golang/docs/part2-foundation/ch03-datastructure/golang-array-and-slice/" target="_blank" rel="external nofollow noopener noreferrer">切片</a>类型，这是因为切片在 Go 语言的运行时表示与字符串高度相似：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> SliceHeader <span class="keyword">struct</span> &#123;</span><br><span class="line">	Data <span class="keyword">uintptr</span></span><br><span class="line">	Len  <span class="keyword">int</span></span><br><span class="line">	Cap  <span class="keyword">int</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -362,7 +395,7 @@
 <p>如果非空字符串的数量为 1 并且当前的字符串不在栈上就可以直接返回该字符串，不需要进行额外的任何操作。</p>
 <p><img alt="字符串的拼接和拷贝" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-string-concat-and-copy.png"></p>
 <p>但是在正常情况下，运行时会调用 <code>copy</code> 将输入的多个字符串拷贝到目标字符串所在的内存空间中，新的字符串是一片新的内存空间，与原来的字符串也没有任何关联，一旦需要拼接的字符串非常大，拷贝带来的性能损失就是无法忽略的。</p>
-<h2 id="类型转换"><a href="#类型转换" class="headerlink" title="类型转换"></a>类型转换</h2><p>当我们使用 Go 语言解析和序列化 JSON 等数据格式时，经常需要将数据在 <code>string</code> 和 <code>[]byte</code> 之间来回转换，类型转换的开销并没有想象的那么小，我们经常会看到 <a href="https://github.com/golang/go/blob/8174f7fb2b64c221f7f80c9f7fd4d7eb317ac8bb/src/runtime/string.go#L75-L108" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.slicebytetostring</code></a> 等函数出现在火焰图<a href="https://draveness.me/golang/docs/part2-foundation/ch03-datastructure/golang-string/#fn:1" target="_blank" rel="external nofollow noopener noreferrer">1</a>中，成为程序的性能热点。</p>
+<h2 id="类型转换"><a href="#类型转换" class="headerlink" title="类型转换"></a>类型转换</h2><p>当我们使用 Go 语言解析和序列化 JSON 等数据格式时，经常需要将数据在 <code>string</code> 和 <code>[]byte</code> 之间来回转换，类型转换的开销并没有想象的那么小，我们经常会看到 <a href="https://github.com/golang/go/blob/8174f7fb2b64c221f7f80c9f7fd4d7eb317ac8bb/src/runtime/string.go#L75-L108" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.slicebytetostring</code></a> 等函数出现在火焰图中，成为程序的性能热点。</p>
 <p>从字节数组到字符串的转换就需要使用 <a href="https://github.com/golang/go/blob/8174f7fb2b64c221f7f80c9f7fd4d7eb317ac8bb/src/runtime/string.go#L75-L108" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.slicebytetostring</code></a> 函数，例如：<code>string(bytes)</code>，该函数在函数体中会先处理两种比较常见的情况，也就是字节数组的长度为 0 或者 1，这两个情况处理起来都非常简单：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">slicebytetostring</span><span class="params">(buf *tmpBuf, b []<span class="keyword">byte</span>)</span> <span class="params">(str <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">	l := <span class="built_in">len</span>(b)</span><br><span class="line">	<span class="keyword">if</span> l == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="string">""</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> l == <span class="number">1</span> &#123;</span><br><span class="line">		stringStructOf(&amp;str).str = unsafe.Pointer(&amp;staticbytes[b[<span class="number">0</span>]])</span><br><span class="line">		stringStructOf(&amp;str).<span class="built_in">len</span> = <span class="number">1</span></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">var</span> p unsafe.Pointer</span><br><span class="line">	<span class="keyword">if</span> buf != <span class="literal">nil</span> &amp;&amp; <span class="built_in">len</span>(b) &lt;= <span class="built_in">len</span>(buf) &#123;</span><br><span class="line">		p = unsafe.Pointer(buf)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		p = mallocgc(<span class="keyword">uintptr</span>(<span class="built_in">len</span>(b)), <span class="literal">nil</span>, <span class="literal">false</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	stringStructOf(&amp;str).str = p</span><br><span class="line">	stringStructOf(&amp;str).<span class="built_in">len</span> = <span class="built_in">len</span>(b)</span><br><span class="line">	memmove(p, (*(*slice)(unsafe.Pointer(&amp;b))).array, <span class="keyword">uintptr</span>(<span class="built_in">len</span>(b)))</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>处理过后会根据传入的缓冲区大小决定是否需要为新的字符串分配一片内存空间，<a href="https://github.com/golang/go/blob/8174f7fb2b64c221f7f80c9f7fd4d7eb317ac8bb/src/runtime/string.go#L229-L231" target="_blank" rel="external nofollow noopener noreferrer"><code>runtime.stringStructOf</code></a> 会将传入的字符串指针转换成 <code>stringStruct</code> 结构体指针，然后设置结构体持有的字符串指针 <code>str</code> 和长度 <code>len</code>，最后通过 <code>memmove</code> 将原 <code>[]byte</code> 中的字节全部复制到新的内存空间中。</p>
@@ -372,51 +405,6 @@
 <p><img alt="字符串和字节数组的转换" data-src="https://cosmos-1251905798.cos.ap-beijing.myqcloud.com/blog/2021-02-07_go-string-bytes-conversion.png"></p>
 <p>字符串和 <code>[]byte</code> 中的内容虽然一样，但是字符串的内容是只读的，我们不能通过下标或者其他形式改变其中的数据，而 <code>[]byte</code> 中的内容是可以读写的，无论从哪种类型转换到另一种都需要对其中的内容进行拷贝，而内存拷贝的性能损耗会随着字符串和 <code>[]byte</code> 长度的增长而增长。</p>
 <h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>字符串是 Go 语言中相对来说比较简单的一种数据结构，我们在这一节中详细分析了字符串与 <code>[]byte</code> 类型的关系，从词法分析阶段理解字符串是如何被解析的，作为只读的数据类型，我们无法改变其本身的结构，但是在做拼接和类型转换等操作时时一定要注意性能的损耗，遇到需要极致性能的场景一定要尽量减少类型转换的次数。</p>
-<p>在Go里面，字符串实际上是类型为byte的只读切片。</p>
-<p>一个字符串包含了任意个byte。它并不限定Unicode，UTF-8或者任何其他预定义的编码。在内容上，它完全等价于一个类型为byte的切片。</p>
-<p>下面是一个字符串变量，它使用\xNN这样的形式来表示一些特殊的byte。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> sample = <span class="string">"\xbd\xb2\x3d\xbc\x20\xe2\x8c\x98"</span></span><br><span class="line">fmt.Println(sample)</span><br><span class="line"></span><br><span class="line"><span class="comment">// ��=� ⌘  </span></span><br><span class="line"><span class="comment">// 这个结果和程序执行的环境有关</span></span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt;<span class="built_in">len</span>(sample); i++ &#123;</span><br><span class="line">    fmt.Printf(<span class="string">"%x "</span>, sample[i])</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// bd b2 3d bc 20 e2 8c 98</span></span><br><span class="line">fmt.Printf(<span class="string">"%x\n"</span>, sample)</span><br><span class="line"></span><br><span class="line"><span class="comment">// bdb23dbc20e28c98</span></span><br><span class="line">fmt.Printf(<span class="string">"% x\n"</span>, sample)</span><br><span class="line"></span><br><span class="line"><span class="comment">// bd b2 3d bc 20 e2 8c 98</span></span><br><span class="line">fmt.Printf(<span class="string">"%q\n"</span>, sample)</span><br><span class="line"></span><br><span class="line"><span class="comment">// \xbd\xb2=\xbc ⌘</span></span><br><span class="line">fmt.Printf(<span class="string">"%+q\n"</span>, sample)</span><br><span class="line"></span><br><span class="line"><span class="comment">// "\xbd\xb2=\xbc \u2318"</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">const</span> placeOfInterest = <span class="string">`⌘`</span></span><br><span class="line">    fmt.Printf(<span class="string">"plain string: "</span>)</span><br><span class="line">    fmt.Printf(<span class="string">"%s"</span>, placeOfInterest)</span><br><span class="line">    fmt.Printf(<span class="string">"\n"</span>)</span><br><span class="line"></span><br><span class="line">    fmt.Printf(<span class="string">"quoted string: "</span>)</span><br><span class="line">    fmt.Printf(<span class="string">"%+q"</span>, placeOfInterest)</span><br><span class="line">    fmt.Printf(<span class="string">"\n"</span>)</span><br><span class="line"></span><br><span class="line">    fmt.Printf(<span class="string">"hex bytes: "</span>)</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(placeOfInterest); i++ &#123;</span><br><span class="line">        fmt.Printf(<span class="string">"%x "</span>, placeOfInterest[i])</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Printf(<span class="string">"\n"</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// plain string: ⌘</span></span><br><span class="line"><span class="comment">// quoted string: "\u2318"</span></span><br><span class="line"><span class="comment">// hex bytes: e2 8c 98</span></span><br><span class="line"><span class="keyword">const</span> nihongo = <span class="string">"日本語"</span></span><br><span class="line"><span class="keyword">for</span> index, runeValue := <span class="keyword">range</span> nihongo &#123;</span><br><span class="line">    fmt.Printf(<span class="string">"%#U starts at byte position %d\n"</span>, runeValue, index)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// U+65E5 '日' starts at byte position 0</span></span><br><span class="line"><span class="comment">// U+672C '本' starts at byte position 3</span></span><br><span class="line"><span class="comment">// U+8A9E '語' starts at byte position 6</span></span><br><span class="line"></span><br><span class="line">s = u<span class="string">"你好，中国"</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">len</span>(s))   # <span class="number">5</span></span><br><span class="line"><span class="built_in">print</span>(s[<span class="number">1</span>])     # 打印<span class="string">'好'</span></span><br><span class="line"></span><br><span class="line">s = <span class="string">"你好，中国"</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">len</span>(s))   # <span class="number">15</span></span><br><span class="line"><span class="built_in">print</span>(s[<span class="number">1</span>])     # 打印的不是<span class="string">'好'</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    s := <span class="string">"hello，中国"</span></span><br><span class="line">    fmt.Println(<span class="built_in">len</span>(s))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    r := []<span class="keyword">rune</span>(s)</span><br><span class="line">    r[<span class="number">6</span>] = <span class="string">'美'</span></span><br><span class="line">    fmt.Println(<span class="built_in">len</span>(r))</span><br><span class="line"></span><br><span class="line">    e := <span class="keyword">string</span>(r)</span><br><span class="line">    fmt.Println(e)</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 14</span></span><br><span class="line"><span class="comment">// 8</span></span><br><span class="line"><span class="comment">// hello，美国</span></span><br></pre></td></tr></table></figure>
-<p>关于Unicode，UTF-8和多语言文本处理，还有很多可以聊的。现在，我们希望您已经更好地了解Go字符串，尽管它们可能包含任意字节，但UTF-8是其设计的核心。</p>
-<p>回答文章刚开始时提出的问题：字符串是由字节构建的，所以索引它们返回字节，而不是字符。字符串甚至可能不包含字符。事实上，“字符”的定义是不明确的，尝试通过定义字符串由字符组成来解决歧义是一个错误。</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>对于上面的例子也可以看到，需要统计中文字符串长度时，也需要转换成对应的rune数组</p>
-<p>因此必须先将字符串转换成字节数组(或者rune数组，对于中文等)，然后再通过修改数组中的元素值来达到修改字符串的目的，最后将字节数组转换回字符串格式。</p>
-<p>因为Go 语言中的字符串是不可变的，也就是说 str[index] 这样的表达式是不可以被放在等号左侧的。如果尝试运行 str[i] = ‘D’会得到错误：cannot assign to str[i]。</p>
-<p>字符串的本质就是一个字节数组。在Go 语言里面字符串和字节数组可以相互进行显式转换，这一性质通常被用来“修改”字符串的内容。</p>
-<p>同样我们知道string[index]获取的是字符byte,就无法像Python中通过加u前缀之后直接索引，在Go中需要将字符串转换成rune数组，runne数组中就可以通过数组下标获取一个汉字所标识的Unicode码，再将Unicode码按创建成字符串即可。</p>
-<p>分析Python代码，我们可以看到，字符串前面加了u标识符，表示按照unicode方式索引，否则默认情况下按照索引得到的是字节索引(unicode下面中文用三个字节表示)。</p>
-<p>编码过程中避免不了中文字符，那我们该如何提取一个中文呢？ 在Python中，我们有：</p>
-<h2 id="中文字符相关"><a href="#中文字符相关" class="headerlink" title="中文字符相关"></a>中文字符相关</h2><p>下面是一个使用<code>%#U</code>格式化的例子，它显示了代码点的Unicode值及其打印的表现形式。</p>
-<p>而一个range循环会在每次迭代时，解码一个UTF-8编码的符文。每次循环时，循环的索引是当前文字的起始位置，以字节为单位，代码点是它的值。</p>
-<p>除了Go源码是UTF-8外，Go只提供一种方法特殊处理UTF-8，那就是在字符串上使用for range循环。我们已经知道使用for循环会发生什么了。</p>
-<h2 id="range循环"><a href="#range循环" class="headerlink" title="range循环"></a>range循环</h2><ul>
-<li>Go源码总是UTF-8</li>
-<li>一个字符串包含任意个byte</li>
-<li>字符串常量如果缺少字节级转义，将始终保持UTF-8序列。</li>
-<li>Unicode的代码点在Go语言中被称为rune</li>
-<li>Go不保证字符串中的字符是规范化的。</li>
-</ul>
-<p>总结一些前面的内容：</p>
-<p>Go语言将rune定义为int32类型的别名，因此在使用一个整型值表达一个“代码点”时，代码更加清晰。此外，一个你可能认为是字符常数在Go中是符文常数。’⌘’的类型和值分别是rune和0x2318。</p>
-<p>“代码点”这样的说法有点绕口，所以Go语言介绍了一个较短的术语概念：rune，符文。该术语出现字库和源代码中，和“代码点”表达的意思完全相同。还有一个有趣的补充。</p>
-<p>因此，计算中的字符概念是模糊的，至少是混乱的，所以我们需要谨慎地使用它。有规范化的技术来保证字符和代码点的映射，不过这个领域和本文讨论的内容相去甚远。</p>
-<p>举一个更普遍的例子，Unicode代码点U+0061表示小写拉丁字母’A’：a。但是小写的重音字母’A’: à怎么表示呢？这是一个字符，它可以用代码点U+00E0表示，但也有其它表示。例如，可以“组合”严重重音代码点U+0300，并将其附加到小写字母a，U+0061，以创建字符à。通常情况下，字符可以由多个不同的代码点序列表示，由此可以用不同的UTF-8字节序列表示。</p>
-<p>我们一直非常小心地使用“字节”和“字符”这样说法。这部分是因为字符串中保存了字节，还有部分是因为“字符”的概念有点难以定义。Unicode标准使用术语“代码点”来用单个值表示一个字符。比如具有16进制值2318的代码点，U+2318表示符号⌘。</p>
-<h2 id="字节点，字符和rune"><a href="#字节点，字符和rune" class="headerlink" title="字节点，字符和rune"></a>字节点，字符和rune</h2><p>总而言之，字符串可以包含任意字节，但是当从字符串文字构造时，这些字节（几乎总是）是UTF-8。</p>
-<p>有些人认为Go字符串总是UTF-8，但是不是这样：只有字符串字面量是UTF-8。正如上面所示，字符串值可以包含任意字节，只要没有字节级转义，字符串文字总是包含UTF-8文本。</p>
-<p>简单来说，Go源码是UTF-8，因此字符串文字的源代码是UTF-8文本。如果该字符串文字不包含转义序列，构造的字符串将精确保存引号之间的源文本。因此，通过定义和构造，原始字符串将总是包含其内容的有效UTF-8表示。类似的，除非它包含类似上面例子中的UTF-8拆分转义，否则常规字符串字面值也将始终包含有效的UTF-8。</p>
-<p>Go语言中的源代码定义为UTF-8文本，不允许其他的表示。也就是说，在代码中写下字符<code>⌘</code>时，用于创建程序的文本编辑器将符号⌘的UTF-8编码放入源文本中。当打印16进制字节时，我们只是将文件中的数据打印出来。</p>
-<p>上面的例子告诉我们，Unicode字符值U+2318，名胜古迹符号”⌘”的字节表示为”e2 8c 98”，这些字节是16进制值”2318”的UTF-8编码。</p>
-<p>下面的程序用三种不同的方式打印一个字符串常量，一次作为纯字符串，一次作为只有ASCII的字符串，一次作为16进制的字节。为了避免混淆，创建一个“原始字符串”，用反括号括起来，因此它只包含文本。</p>
-<p>正如我们看到的，索引一个字符串返回的是byte，而不是字符：一个字符串就是一堆字节。这意味着，当我们将字符存储在字符串中时，实际存储的是这个字符的字节。来看一个例子。</p>
-<h2 id="UTF-8和字符串"><a href="#UTF-8和字符串" class="headerlink" title="UTF-8和字符串"></a>UTF-8和字符串</h2><p>这些打印的小技巧在调试字符串内容的时候很有用，并且会方便下面的讨论。值得注意的是，上面的小技巧对于byte的切片一样适用。</p>
-<p>如果不熟悉字符串中奇怪的字符，可以在打印的时候使用”+q”标识，这个标识采用UTF-8编码，它不仅会转义不可打印的字节序列，还会转义非ASCII码的字节。下面的代码将字符串中非ASCII数据对应的Unicode值打印出来。字符串中的瑞典字符作为Unicode字符，打印出来带有\u的转义符。</p>
-<p>仔细观察，在一堆乱码中我们可以看到一个’=’号和一个空格符号，最后面是瑞典表示“名胜古迹”的符号，这个符号的Unicode值为U+2318，UTF-8编码为”e28c98”。</p>
-<p>还有一些小技巧。使用q标识，可以将字符串中任何不可打印的字节序列转义。</p>
-<p>还有一个打印的小技巧。</p>
-<p>下面一种更简单的打印方式。</p>
-<p>使用for循环遍历所有的字节。</p>
-<p>要了解这个字符串究竟是什么，我们需要把它分开来检查一下。正如上面提到的，索引一个字符串，得到的是byte，而不是字符。</p>
-<p>在上面的例子中，有一些byte并不是ASCII码，甚至也不是UTF-8编码，直接打印出来会出现乱码</p>
 <h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
 <li><a href="https://go101.org/article/string.html" target="_blank" rel="external nofollow noopener noreferrer">Strings in Go</a></li>
 <li><a href="https://blog.golang.org/strings" target="_blank" rel="external nofollow noopener noreferrer">Strings, bytes, runes and characters in Go</a></li>
@@ -435,16 +423,16 @@
   <div class="popular-posts-header">相关文章推荐</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
-    </li>
-    <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/251346e5/" rel="bookmark">【Go语言设计与实现】Slice</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/posts/44c65087/" rel="bookmark">【Go语言设计与实现】循环</a></div>
+      <div class="popular-posts-title"><a href="/posts/b9b1d0f7/" rel="bookmark">【Go语言设计与实现】Array</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/c3c43baa/" rel="bookmark">【Go语言设计与实现】Hash Table</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="/posts/44c65087/" rel="bookmark">【Go语言设计与实现】循环</a></div>
     </li>
     <li class="popular-posts-item">
       <div class="popular-posts-title"><a href="/posts/540e2781/" rel="bookmark">【Go语言设计与实现】Defer</a></div>
@@ -553,7 +541,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#数据结构"><span class="nav-number">1.</span> <span class="nav-text">数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解析过程"><span class="nav-number">2.</span> <span class="nav-text">解析过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#拼接"><span class="nav-number">3.</span> <span class="nav-text">拼接</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#类型转换"><span class="nav-number">4.</span> <span class="nav-text">类型转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">5.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">6.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#中文字符相关"><span class="nav-number">7.</span> <span class="nav-text">中文字符相关</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#range循环"><span class="nav-number">8.</span> <span class="nav-text">range循环</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#字节点，字符和rune"><span class="nav-number">9.</span> <span class="nav-text">字节点，字符和rune</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UTF-8和字符串"><span class="nav-number">10.</span> <span class="nav-text">UTF-8和字符串</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">11.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#基本使用"><span class="nav-number">1.</span> <span class="nav-text">基本使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#中文字符相关"><span class="nav-number">1.1.</span> <span class="nav-text">中文字符相关</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#range循环"><span class="nav-number">1.2.</span> <span class="nav-text">range循环</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#字节点，字符和rune"><span class="nav-number">1.3.</span> <span class="nav-text">字节点，字符和rune</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#UTF-8和字符串"><span class="nav-number">1.4.</span> <span class="nav-text">UTF-8和字符串</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据结构"><span class="nav-number">2.</span> <span class="nav-text">数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解析过程"><span class="nav-number">3.</span> <span class="nav-text">解析过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#拼接"><span class="nav-number">4.</span> <span class="nav-text">拼接</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#类型转换"><span class="nav-number">5.</span> <span class="nav-text">类型转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">6.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">7.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -568,7 +556,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">170</span>
+          <span class="site-state-item-count">171</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -580,7 +568,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">230</span>
+        <span class="site-state-item-count">234</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -654,7 +642,7 @@
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">65:25</span>
+    <span title="站点阅读时长">65:30</span>
 </div>
 
         
